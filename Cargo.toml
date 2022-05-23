@@ -1,5 +1,5 @@
 [package]
-name = "wukong-cli"
+name = "wukong"
 version = "0.0.1"
 edition = "2021"
 
