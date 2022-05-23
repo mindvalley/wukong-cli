@@ -28,7 +28,7 @@ rustc --version
 # rustc 1.61.0 (fe5b13d68 2022-05-18)
 ```
 > **Note**
-> `rustc` is rust compiler
+> `rustc` is the Rust compiler
 
 Since this CLI is a binary program, you can use `cargo run` to start the program
 > **Note**
@@ -39,7 +39,7 @@ Use [rust-analyzer](https://rust-analyzer.github.io/), a new implementation of t
 It is now [officially a part of the wider Rust organization](https://blog.rust-lang.org/2022/02/21/rust-analyzer-joins-rust-org.html).
 
 ## Safety
-This crate uses `#![forbid(unsafe_code)]` to ensure everything is implemented in **100% Safe Rust**.
+This program uses `#![forbid(unsafe_code)]` to ensure everything is implemented in **100% Safe Rust**.
 
 ## License
 
