@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 use clap::Parser;
 
 /// A Swiss-army Knife CLI For Mindvalley Developers
