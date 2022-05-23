@@ -9,15 +9,15 @@
 <p align="center">This is a <strong>Work In Progress 🚧</strong>.</p>
 
 ## The Idea
-The Wukong CLI is a set of tools to manages Mindvalley DevOps resources. Its goal is to provide a one-stop shop for developers to interact with the Mindvalley DevOps ecosystem. By centralizing different tasks on different tools into a single CLI, It will solve these problems when it comes to adopting DevOps practices:  
-- Knowledge Gaps: Learning to use a new tool can be painful. Each tool has a unique UI & UX, as well as different workflows. 
-- Getting Lost in the ecosystem: It’s completely normal for a company to have 20+ different DevOps tools, so knowing which tool to use and remember where to access it can be a problem. Afterall developers are having enough trouble dealing with their day to day tasks. 
+The Wukong CLI is a set of tools to manages Mindvalley DevOps resources. Its goal is to provide a one-stop shop for developers to interact with the Mindvalley DevOps ecosystem. By centralizing different tasks on different tools into a single CLI, It will solve these problems when it comes to adopting DevOps practices:
+- Knowledge Gaps: Learning to use a new tool can be painful. Each tool has a unique UI & UX, as well as different workflows.
+- Getting Lost in the ecosystem: It’s completely normal for a company to have 20+ different DevOps tools, so knowing which tool to use and remember where to access it can be a problem. After all developers are having enough trouble dealing with their day to day tasks.
 
 > **Note**
 > You can read more from [here](https://mindvalley.atlassian.net/wiki/spaces/PXP/pages/450396161/PD2+-+A+Swiss-army+Knife+CLI+For+Mindvalley+Developers)
 
 ## Get Started
-Make sure you have [Rust](https://www.rust-lang.org/) installed. The recommanded way is to install [Rustup](https://www.rust-lang.org/learn/get-started), the Rust installer and version management tool, using:
+Make sure you have [Rust](https://www.rust-lang.org/) installed. The recommended way is to install [Rustup](https://www.rust-lang.org/learn/get-started), the Rust installer and version management tool, using:
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
@@ -30,7 +30,24 @@ rustc --version
 > **Note**
 > `rustc` is the Rust compiler
 
-Since this CLI is a binary program, you can use `cargo run` to start the program
+Since this CLI is a binary program, you can start the program using:
+```bash
+# compile and run the cli program
+cargo run
+
+# compile and run the cli program with help flag
+cargo run -- --help
+```
+
+To build the cli program, use:
+```bash
+# using --release flag will output the release build
+cargo build --release
+
+# run the cli
+./target/release/wukong --help
+```
+
 > **Note**
 > `cargo` is the Rust build tool and package manager
 
