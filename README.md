@@ -41,7 +41,7 @@ cargo run -- --help
 
 To build the cli program, use:
 ```bash
-# using --release flag will output the release build
+# using --release flag will trigger the release build, optimized and no debug info
 cargo build --release
 
 # run the cli

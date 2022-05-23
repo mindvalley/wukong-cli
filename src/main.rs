@@ -29,3 +29,15 @@ fn main() {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::Cli;
+
+    #[test]
+    fn verify_app() {
+        use clap::CommandFactory;
+
+        Cli::command().debug_assert()
+    }
+}
