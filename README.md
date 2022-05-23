@@ -17,11 +17,11 @@ The Wukong CLI is a set of tools to manages Mindvalley DevOps resources. Its goa
 > You can read more from [here](https://mindvalley.atlassian.net/wiki/spaces/PXP/pages/450396161/PD2+-+A+Swiss-army+Knife+CLI+For+Mindvalley+Developers)
 
 ## Get Started
-1. Make sure you have Rust installed. The recommanded way is to install Rustup, the Rust installer and version management tool:
+Make sure you have [Rust](https://www.rust-lang.org/) installed. The recommanded way is to install [Rustup](https://www.rust-lang.org/learn/get-started), the Rust installer and version management tool, using:
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
-The you can check your rust version using:
+Then you should be able to check your rust version using:
 ```bash
 rustc --version
 # output
@@ -30,9 +30,13 @@ rustc --version
 > **Note**
 > `rustc` is rust compiler
 
-2. Since this CLI is a binary program, you can use `cargo run` to start the program
+Since this CLI is a binary program, you can use `cargo run` to start the program
 > **Note**
 > `cargo` is the Rust build tool and package manager
+
+## Recommendation
+Use [rust-analyzer](https://rust-analyzer.github.io/), a new implementation of the Language Server Protocol (LSP) for Rust. 
+It is now [officially a part of the wider Rust organization](https://blog.rust-lang.org/2022/02/21/rust-analyzer-joins-rust-org.html).
 
 ## Safety
 This crate uses `#![forbid(unsafe_code)]` to ensure everything is implemented in **100% Safe Rust**.
