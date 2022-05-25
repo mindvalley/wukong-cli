@@ -4,7 +4,7 @@ mod command_group;
 
 use clap::Parser;
 use command_group::{pipeline::PipelineSubcommand, CommandGroup};
-use indicatif::{HumanDuration, MultiProgress, ProgressBar, ProgressStyle};
+use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
 use std::fmt::Display;
 use std::process::Command;
 use std::str;
