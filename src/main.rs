@@ -212,14 +212,19 @@ fn main() {
                 ConfigSubcommand::List => {
                     if let Some(ref config_file) = *CONFIG_FILE {
                         let config = Config::load(config_file).unwrap();
-                        println!("{:?}", config);
+                        println!("{}", toml::to_string(&config).unwrap());
                     }
                 }
                 ConfigSubcommand::Set {
                     config_name,
                     config_value,
                 } => todo!(),
-                ConfigSubcommand::Get { config_name  } => todo!(),
+                ConfigSubcommand::Get { config_name } => {
+                    if let Some(ref config_file) = *CONFIG_FILE {
+                        let config = Config::load(config_file).unwrap();
+                        println!("{}", toml::to_string(&config).unwrap());
+                    }
+                }
             };
         }
         CommandGroup::Init => {
