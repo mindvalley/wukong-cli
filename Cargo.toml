@@ -7,5 +7,9 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "3.1.18", features = ["derive"] }
+dirs-next = "2.0.0"
 indicatif = "0.16.2"
+lazy_static = "1.4.0"
+serde = { version = "1.0.137", features = ["derive"] }
+toml = "0.5"
 tabled = "0.7.0"

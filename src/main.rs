@@ -1,9 +1,12 @@
 #![forbid(unsafe_code)]
 
 mod command_group;
+mod config;
 
+use clap::Args;
 use clap::Parser;
-use command_group::{pipeline::PipelineSubcommand, CommandGroup};
+use command_group::{config::ConfigSubcommand, pipeline::PipelineSubcommand, CommandGroup};
+use config::{Config, CONFIG_FILE};
 use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
 use std::fmt::Display;
 use std::process::Command;
@@ -62,6 +65,21 @@ struct PipelinePullRequest {
 
 fn main() {
     let cli = Cli::parse();
+    // let cli = Cli::command();
+    // if let Some(ref config_file) = *CONFIG_FILE {
+    //     cli.arg(Arg::new("config_file")
+    //             .short('C')
+    //             .long("config")
+    //             .help("search remote repositories for matching strings")
+    //             .default_value(&config_file));
+    // } else {
+    //     cli.arg(Arg::new("config_file")
+    //             .short('C')
+    //             .long("config")
+    //             .help("search remote repositories for matching strings"));
+    // }
+
+    // let matches = cli.get_matches();
 
     match cli.command_group {
         CommandGroup::Pipeline(pipeline) => match pipeline.subcommand {
@@ -189,6 +207,28 @@ fn main() {
                 todo!()
             }
         },
+        CommandGroup::Config(config) => {
+            match config.subcommand {
+                ConfigSubcommand::List => {
+                    if let Some(ref config_file) = *CONFIG_FILE {
+                        let config = Config::load(config_file).unwrap();
+                        println!("{:?}", config);
+                    }
+                }
+                ConfigSubcommand::Set {
+                    config_name,
+                    config_value,
+                } => todo!(),
+                ConfigSubcommand::Get { config_name  } => todo!(),
+            };
+        }
+        CommandGroup::Init => {
+            println!("Initialize");
+            if let Some(ref config_file) = *CONFIG_FILE {
+                let config = Config::default();
+                config.save(config_file).expect("Config file save failed");
+            }
+        }
     }
 }
 
