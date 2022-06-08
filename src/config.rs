@@ -28,8 +28,8 @@ lazy_static! {
 /// The Wukong CLI configuration.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
-    core: CoreConfig,
-    log: LogConfig,
+    pub core: CoreConfig,
+    pub log: LogConfig,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -47,6 +47,9 @@ pub struct LogConfig {
 
 impl Default for Config {
     fn default() -> Self {
+        let mut home_dir = dirs_next::home_dir().unwrap();
+        home_dir.extend(&[".config", "wukong", "log*"]);
+
         Self {
             core: CoreConfig {
                 application: "".to_string(),
@@ -54,7 +57,7 @@ impl Default for Config {
             },
             log: LogConfig {
                 enable: true,
-                log_dir: "~/.config/wukong/log*".to_string(),
+                log_dir: home_dir.to_str().unwrap().to_string(),
             },
         }
     }
