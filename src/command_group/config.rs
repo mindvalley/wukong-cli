@@ -30,7 +30,7 @@ pub enum ConfigSubcommand {
 #[derive(Debug, ArgEnum, Clone)]
 pub enum ConfigName {
     Application,
-    EnableTelemetry,
+    CollectTelemetry,
     EnableLog,
     LogDir,
 }
@@ -38,57 +38,62 @@ pub enum ConfigName {
 impl Config {
     pub fn perform_action(&self) {
         match &self.subcommand {
-            ConfigSubcommand::List => {
-                if let Some(ref config_file) = *CONFIG_FILE {
+            ConfigSubcommand::List => match *CONFIG_FILE {
+                Some(ref config_file) => {
                     let config = CLIConfig::load(config_file).unwrap();
                     println!("{}", toml::to_string(&config).unwrap());
                 }
-            }
+                None => {
+                    eprintln!("Config file path not found");
+                }
+            },
             ConfigSubcommand::Set {
                 config_name,
                 config_value,
-            } => {
-                if let Some(ref config_file) = *CONFIG_FILE {
+            } => match *CONFIG_FILE {
+                Some(ref config_file) => {
                     let mut config = CLIConfig::load(config_file).unwrap();
 
                     match config_name {
                         ConfigName::Application => {
-                            println!("{}", config.core.application);
                             config.core.application = config_value.to_string();
                             config.save(config_file).unwrap();
+                            println!("Updated property [core/application].");
                         }
-                        ConfigName::EnableTelemetry => {
-                            println!("{}", config.core.collect_telemetry);
-                            // config.core.application = config_value.to_string();
-                            // config.save(config_file).unwrap();
+                        ConfigName::CollectTelemetry => {
+                            config.core.collect_telemetry = config_value.trim().parse().unwrap();
+                            config.save(config_file).unwrap();
+                            println!("Updated property [core/collect_telemetry].");
                         }
                         ConfigName::EnableLog => {
-                            println!("{}", config.log.enable);
-                            // config.core.application = config_value.to_string();
-                            // config.save(config_file).unwrap();
+                            config.log.enable = config_value.trim().parse().unwrap();
+                            config.save(config_file).unwrap();
+                            println!("Updated property [log/enable].");
                         }
                         ConfigName::LogDir => {
-                            println!("{}", config.log.log_dir);
                             config.log.log_dir = config_value.to_string();
                             config.save(config_file).unwrap();
+                            println!("Updated property [log/log_dir].");
                         }
                     }
                 }
-            }
-            ConfigSubcommand::Get { config_name } => {
-                if let Some(ref config_file) = *CONFIG_FILE {
+                None => todo!(),
+            },
+            ConfigSubcommand::Get { config_name } => match *CONFIG_FILE {
+                Some(ref config_file) => {
                     let config = CLIConfig::load(config_file).unwrap();
 
                     match config_name {
                         ConfigName::Application => println!("{}", config.core.application),
-                        ConfigName::EnableTelemetry => {
+                        ConfigName::CollectTelemetry => {
                             println!("{}", config.core.collect_telemetry);
                         }
                         ConfigName::EnableLog => println!("{}", config.log.enable),
                         ConfigName::LogDir => println!("{}", config.log.log_dir),
                     }
                 }
-            }
+                None => todo!(),
+            },
         };
     }
 }

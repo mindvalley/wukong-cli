@@ -11,7 +11,7 @@ lazy_static! {
     ///
     /// This is a [lazy_static] of `Option<String>`, the value of which is
     ///
-    /// > `~/.config/wukong/cli/config.yml`
+    /// > `~/.config/wukong/config.yml`
     ///
     /// It will only be `None` if it is unable to identify the user's home
     /// directory, which should not happen under typical OS environments.

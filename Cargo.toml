@@ -13,3 +13,4 @@ lazy_static = "1.4.0"
 serde = { version = "1.0.137", features = ["derive"] }
 toml = "0.5"
 tabled = "0.7.0"
+dialoguer = "0.10.1"
