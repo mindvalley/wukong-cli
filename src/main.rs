@@ -14,6 +14,11 @@ use dialoguer::{theme::ColorfulTheme, Select};
 struct Cli {
     #[clap(subcommand)]
     command_group: CommandGroup,
+
+    /// Override the application name that the CLI will perform the command against.
+    /// If the flag is not used, then the CLI will use the default application name from the config.
+    #[clap(long, short)]
+    application: Option<String>,
 }
 
 fn main() {
