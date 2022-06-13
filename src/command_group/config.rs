@@ -40,8 +40,15 @@ impl Config {
         match &self.subcommand {
             ConfigSubcommand::List => match *CONFIG_FILE {
                 Some(ref config_file) => {
-                    let config = CLIConfig::load(config_file).unwrap();
-                    println!("{}", toml::to_string(&config).unwrap());
+                    // let config = CLIConfig::load(config_file).unwrap();
+                    match CLIConfig::load("./abc.txt") {
+                        Ok(config) => {
+                            println!("{}", toml::to_string(&config).unwrap());
+                        }
+                        Err(e) => {
+                            println!("{:?}", e);
+                        }
+                    }
                 }
                 None => {
                     eprintln!("Config file path not found");
