@@ -4,15 +4,16 @@ mod command_group;
 mod config;
 
 use clap::Parser;
-use command_group::{config::ConfigSubcommand, pipeline::PipelineSubcommand, CommandGroup};
+use command_group::{pipeline::PipelineSubcommand, CommandGroup};
 use config::{Config, CONFIG_FILE};
-use dialoguer::{theme::ColorfulTheme, Confirm, Select};
+use dialoguer::{theme::ColorfulTheme, Select};
 use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
-use std::fmt::Display;
-use std::process::Command;
-use std::str;
-use std::thread;
-use std::time::{Duration, Instant};
+use std::{
+    fmt::Display,
+    process::Command,
+    str, thread,
+    time::{Duration, Instant},
+};
 use tabled::{Table, Tabled};
 
 /// A Swiss-army Knife CLI For Mindvalley Developers
