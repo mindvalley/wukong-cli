@@ -72,6 +72,7 @@ impl Config {
     /// This function may return typical file I/O errors.
     pub fn load(path: &str) -> Result<Self> {
         let config_file_path = Path::new(path);
+
         let content =
             std::fs::read_to_string(config_file_path.to_str().unwrap()).with_context(|| {
                 format!(

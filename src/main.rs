@@ -34,17 +34,6 @@ fn main() {
         CommandGroup::Init => {
             println!("Welcome! This command will take you through the configuration of Wukong.\n");
 
-            // if Confirm::with_theme(&ColorfulTheme::default())
-            //     .with_prompt("Do you really want to continue?")
-            //     .wait_for_newline(true)
-            //     .interact()
-            //     .unwrap()
-            // {
-            //     println!("Looks like you want to continue");
-            // } else {
-            //     println!("nevermind then :(");
-            // }
-
             let login_selections = &["junkai.gan@mindvalley.com", "Log in with a new account"];
 
             let selection = Select::with_theme(&ColorfulTheme::default())

@@ -1,5 +1,5 @@
-use crate::{Config as CLIConfig, CONFIG_FILE};
-use clap::{ArgEnum, Args, Subcommand};
+use crate::{Cli, Config as CLIConfig, CONFIG_FILE};
+use clap::{ArgEnum, Args, IntoApp, Subcommand};
 
 #[derive(Debug, Args)]
 pub struct Config {
@@ -37,6 +37,8 @@ pub enum ConfigName {
 
 impl Config {
     pub fn perform_action(&self) {
+        let mut cmd = Cli::command();
+
         match &self.subcommand {
             ConfigSubcommand::List => {
                 let config_file = CONFIG_FILE
@@ -48,7 +50,7 @@ impl Config {
                         println!("{}", toml::to_string(&config).unwrap());
                     }
                     Err(e) => {
-                        eprintln!("{:?}", e);
+                        cmd.error(clap::ErrorKind::Io, e).exit();
                     }
                 }
             }
@@ -84,7 +86,7 @@ impl Config {
                         }
                     },
                     Err(e) => {
-                        eprintln!("{:?}", e);
+                        cmd.error(clap::ErrorKind::Io, e).exit();
                     }
                 }
             }
@@ -103,7 +105,7 @@ impl Config {
                         ConfigName::LogDir => println!("{}", config.log.log_dir),
                     },
                     Err(e) => {
-                        eprintln!("{:?}", e);
+                        cmd.error(clap::ErrorKind::Io, e).exit();
                     }
                 }
             }
