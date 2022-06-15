@@ -2,6 +2,7 @@
 
 mod command_group;
 mod config;
+mod graphql;
 
 use clap::Parser;
 use command_group::CommandGroup;
@@ -21,12 +22,13 @@ struct Cli {
     application: Option<String>,
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let cli = Cli::parse();
 
     match cli.command_group {
         CommandGroup::Pipeline(pipeline) => {
-            pipeline.perform_action();
+            pipeline.perform_action().await.unwrap();
         }
         CommandGroup::Config(config) => {
             config.perform_action();

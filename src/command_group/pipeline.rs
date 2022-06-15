@@ -1,5 +1,8 @@
+use crate::graphql::pipeline::PipelinesQuery;
+use anyhow::{Error as AnyhowError, Result as AnyhowResult};
 use clap::{Args, Subcommand};
 use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
+use serde::{Deserialize, Serialize};
 use std::{
     fmt::Display,
     process::Command,
@@ -15,15 +18,15 @@ fn fmt_option<T: Display>(o: &Option<T>) -> String {
     }
 }
 
-#[derive(Tabled)]
+#[derive(Tabled, Serialize, Deserialize, Debug)]
 struct PipelineData {
-    name: &'static str,
+    name: String,
     #[tabled(display_with = "fmt_option")]
-    last_succeed_at: Option<&'static str>,
+    last_succeeded_at: Option<String>,
     #[tabled(display_with = "fmt_option")]
-    last_failed_at: Option<&'static str>,
+    last_failed_at: Option<String>,
     #[tabled(display_with = "fmt_option")]
-    last_duration: Option<&'static str>,
+    last_duration: Option<String>,
 }
 
 #[derive(Tabled)]
@@ -68,53 +71,47 @@ pub enum PipelineSubcommand {
 }
 
 impl Pipeline {
-    pub fn perform_action(&self) {
+    pub async fn perform_action(&self) -> AnyhowResult<(), AnyhowError> {
         match &self.subcommand {
             PipelineSubcommand::List => {
                 let started = Instant::now();
-                let deps = 1234;
-                let progress_bar = ProgressBar::new(deps);
+                let progress_bar = ProgressBar::new(1234);
                 progress_bar.set_style(ProgressStyle::default_spinner());
                 println!("Fetching pipelines list ...");
-                for _ in 0..deps {
-                    progress_bar.inc(1);
-                    thread::sleep(Duration::from_millis(3));
-                }
+
+                progress_bar.inc(1);
+
+                // Calling API ...
+                let pipelines_data = PipelinesQuery::fetch()
+                    .await?
+                    .data
+                    .ok_or(anyhow::anyhow!("Error"))?
+                    .pipelines;
+
                 progress_bar.finish_and_clear();
 
-                let pipelines = vec![
-                    PipelineData {
-                        name: "mv-platform-ci",
-                        last_succeed_at: None,
-                        last_failed_at: None,
-                        last_duration: None,
-                    },
-                    PipelineData {
-                        name: "mv-platform-production-master-branch-build",
-                        last_succeed_at: Some("1 hr 20 min"),
-                        last_failed_at: Some("6 days 19 hr"),
-                        last_duration: Some("14 min"),
-                    },
-                    PipelineData {
-                        name: "mv-platform-staging-build",
-                        last_succeed_at: Some("1 min 2 sec"),
-                        last_failed_at: None,
-                        last_duration: Some("2.3 sec"),
-                    },
-                    PipelineData {
-                        name: "mv-platform-staging-developer-build",
-                        last_succeed_at: Some("18 hr"),
-                        last_failed_at: None,
-                        last_duration: Some("34 sec"),
-                    },
-                ];
+                println!("{:?}", pipelines_data);
 
-                let table = Table::new(pipelines).to_string();
-                println!("{table}");
+                if let Some(pipelines_data) = pipelines_data {
+                    let mut pipelines = Vec::new();
 
+                    for raw_pipeline in pipelines_data {
+                        let pipeline_value = serde_json::to_value(raw_pipeline)
+                            .expect("Failed converting raw pipeline data to json value");
+                        println!("value: {:?}", pipeline_value);
+                        let pipeline: PipelineData = serde_json::from_value(pipeline_value)
+                            .expect("Failed converting json value to Pipeline object");
+                        pipelines.push(pipeline);
+                    }
+
+                    println!("{:#?}", pipelines);
+
+                    let table = Table::new(pipelines).to_string();
+                    println!("{table}");
+                }
                 println!("Fetch in {}.", HumanDuration(started.elapsed()));
 
-                todo!()
+                Ok(())
             }
             PipelineSubcommand::Describe { name } => {
                 let deps = 1234;

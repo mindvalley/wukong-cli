@@ -1,0 +1,8 @@
+query PipelinesQuery {
+  pipelines {
+    lastDuration
+    lastFailedAt
+    lastSucceededAt
+    name
+  }
+}
