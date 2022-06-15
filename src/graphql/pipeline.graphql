@@ -1,0 +1,8 @@
+query PipelineQuery($application: String!) {
+  pipeline(application: $application) {
+    lastDuration
+    lastFailedAt
+    lastSucceededAt
+    name
+  }
+}

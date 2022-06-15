@@ -1,14 +1,9 @@
-use crate::graphql::pipeline::PipelinesQuery;
+use crate::graphql::pipeline::{PipelineQuery, PipelinesQuery};
 use anyhow::{Error as AnyhowError, Result as AnyhowResult};
 use clap::{Args, Subcommand};
 use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
-use std::{
-    fmt::Display,
-    process::Command,
-    str, thread,
-    time::{Duration, Instant},
-};
+use std::{fmt::Display, process::Command, str, time::Instant};
 use tabled::{Table, Tabled};
 
 fn fmt_option<T: Display>(o: &Option<T>) -> String {
@@ -124,10 +119,27 @@ impl Pipeline {
                 let progress_bar = ProgressBar::new(deps);
                 progress_bar.set_style(ProgressStyle::default_spinner());
                 println!("Fetching pipeline data ...");
-                for _ in 0..deps {
-                    progress_bar.inc(1);
-                    thread::sleep(Duration::from_millis(3));
+                // for _ in 0..deps {
+                //     progress_bar.inc(1);
+                //     thread::sleep(Duration::from_millis(3));
+                // }
+
+                // Calling API ...
+                let pipeline_data = PipelineQuery::fetch(name.to_string())
+                    .await?
+                    .data
+                    .ok_or(anyhow::anyhow!("Error"))?
+                    .pipeline;
+
+                if let Some(pipeline_data) = pipeline_data {
+                    let _pipeline = PipelineData {
+                        name: pipeline_data.name,
+                        last_succeeded_at: pipeline_data.last_succeeded_at,
+                        last_duration: pipeline_data.last_duration,
+                        last_failed_at: pipeline_data.last_failed_at,
+                    };
                 }
+
                 progress_bar.finish_and_clear();
 
                 println!("Pipeline \"{}\":\n", name);
@@ -182,7 +194,8 @@ impl Pipeline {
                 println!("Pull Requests");
                 println!("{table}");
 
-                todo!()
+                Ok(())
+                // todo!()
             }
             PipelineSubcommand::CiStatus => {
                 println!("CI Status");

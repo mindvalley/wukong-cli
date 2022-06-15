@@ -29,3 +29,32 @@ impl PipelinesQuery {
         Ok(response)
     }
 }
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/graphql/schema.json",
+    query_path = "src/graphql/pipeline.graphql",
+    response_derives = "Debug, Serialize, Deserialize"
+)]
+pub struct PipelineQuery;
+
+impl PipelineQuery {
+    pub async fn fetch(
+        application: String,
+    ) -> Result<Response<pipeline_query::ResponseData>, reqwest::Error> {
+        let mut headers = header::HeaderMap::new();
+        headers.insert(
+            header::AUTHORIZATION,
+            header::HeaderValue::from_static("Bearer valid"),
+        );
+
+        let client = reqwest::Client::builder()
+            .default_headers(headers)
+            .build()?;
+
+        let variables = pipeline_query::Variables { application };
+
+        let response = post_graphql::<PipelineQuery, _>(&client, URL, variables).await?;
+        Ok(response)
+    }
+}
