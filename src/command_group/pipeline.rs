@@ -77,7 +77,7 @@ impl Pipeline {
                 let started = Instant::now();
                 let progress_bar = ProgressBar::new(1234);
                 progress_bar.set_style(ProgressStyle::default_spinner());
-                println!("Fetching pipelines list ...");
+                println!("Fetching pipelines list ...\n");
 
                 progress_bar.inc(1);
 
@@ -90,21 +90,27 @@ impl Pipeline {
 
                 progress_bar.finish_and_clear();
 
-                println!("{:?}", pipelines_data);
-
                 if let Some(pipelines_data) = pipelines_data {
                     let mut pipelines = Vec::new();
 
                     for raw_pipeline in pipelines_data {
-                        let pipeline_value = serde_json::to_value(raw_pipeline)
-                            .expect("Failed converting raw pipeline data to json value");
-                        println!("value: {:?}", pipeline_value);
-                        let pipeline: PipelineData = serde_json::from_value(pipeline_value)
-                            .expect("Failed converting json value to Pipeline object");
-                        pipelines.push(pipeline);
-                    }
+                        if let Some(raw_pipeline) = raw_pipeline {
+                            let pipeline = PipelineData {
+                                name: raw_pipeline.name,
+                                last_succeeded_at: raw_pipeline.last_succeeded_at,
+                                last_duration: raw_pipeline.last_duration,
+                                last_failed_at: raw_pipeline.last_failed_at,
+                            };
 
-                    println!("{:#?}", pipelines);
+                            // let pipeline_value = serde_json::to_value(raw_pipeline)
+                            //     .expect("Failed converting raw pipeline data to json value");
+                            // println!("value: {:?}", pipeline_value);
+                            // let pipeline: PipelineData = serde_json::from_value(pipeline_value)
+                            //     .expect("Failed converting json value to Pipeline object");
+
+                            pipelines.push(pipeline);
+                        }
+                    }
 
                     let table = Table::new(pipelines).to_string();
                     println!("{table}");
