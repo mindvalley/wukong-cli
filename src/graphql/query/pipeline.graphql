@@ -1,4 +1,4 @@
-query PipelineQuery($application: String!) {
+query PipelineQuery($application: String) {
   pipeline(application: $application) {
     lastDuration
     lastFailedAt

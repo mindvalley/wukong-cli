@@ -1,7 +1,11 @@
-use crate::graphql::pipeline::{PipelineQuery, PipelinesQuery};
+use crate::{
+    error::CliError,
+    graphql::pipeline::{PipelineQuery, PipelinesQuery},
+};
 use anyhow::{Error as AnyhowError, Result as AnyhowResult};
 use clap::{Args, Subcommand};
 use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
+use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, process::Command, str, time::Instant};
 use tabled::{Table, Tabled};
@@ -129,6 +133,7 @@ impl Pipeline {
                     .await?
                     .data
                     .ok_or(anyhow::anyhow!("Error"))?
+                    // .unwrap()
                     .pipeline;
 
                 if let Some(pipeline_data) = pipeline_data {

@@ -2,16 +2,20 @@
 
 mod command_group;
 mod config;
+mod error;
 mod graphql;
+mod logger;
 
+use anyhow::{Error as AnyhowError, Result as AnyhowResult};
 use clap::Parser;
 use command_group::CommandGroup;
 use config::{Config, CONFIG_FILE};
 use dialoguer::{theme::ColorfulTheme, Select};
+use logger::Logger;
 
 /// A Swiss-army Knife CLI For Mindvalley Developers
 #[derive(Debug, Parser)]
-#[clap(version)]
+#[clap(version, author)]
 struct Cli {
     #[clap(subcommand)]
     command_group: CommandGroup,
@@ -23,13 +27,15 @@ struct Cli {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> AnyhowResult<(), AnyhowError> {
+    // Logger::new().init();
+
     let cli = Cli::parse();
 
     match cli.command_group {
         CommandGroup::Pipeline(pipeline) => {
-            pipeline.perform_action().await.unwrap();
-        }
+            pipeline.perform_action().await?
+        },
         CommandGroup::Config(config) => {
             config.perform_action();
         }
@@ -89,6 +95,8 @@ Some things to try next:
             }
         }
     }
+
+    Ok(())
 }
 
 #[cfg(test)]

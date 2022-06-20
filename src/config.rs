@@ -1,7 +1,9 @@
-use anyhow::{Context, Result};
+use crate::error::CliError;
+// use anyhow::{Context, Result};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use std::{
+    error::Error,
     fs::{create_dir_all, File},
     io::{self, Write},
     path::Path,
@@ -70,23 +72,56 @@ impl Config {
     /// # Errors
     ///
     /// This function may return typical file I/O errors.
-    pub fn load(path: &str) -> Result<Self> {
+    pub fn load(path: &str) -> Result<Self, CliError> {
         let config_file_path = Path::new(path);
+        // if !config_file_path.is_file() {
+        //     return Err(CliError::ConfigFileNotFound { path })?;
+        // }
+
+        // let content =
+        //     std::fs::read_to_string(config_file_path.to_str().unwrap()).with_context(|| {
+        //         format!(
+        //             "Could not read file `{}`",
+        //             config_file_path.to_str().unwrap()
+        //         )
+        //     })?;
+
+        // let config = toml::from_str(&content).with_context(|| {
+        //     format!(
+        //         "`{:?}` could not be deserialized as Config TOML format",
+        //         &content
+        //     )
+        // })?;
 
         let content =
-            std::fs::read_to_string(config_file_path.to_str().unwrap()).with_context(|| {
-                format!(
-                    "Could not read file `{}`",
-                    config_file_path.to_str().unwrap()
-                )
+            std::fs::read_to_string(config_file_path.to_str().unwrap()).map_err(|err| match err
+                .kind()
+            {
+                io::ErrorKind::NotFound => CliError::ConfigFileNotFound { path, source: err },
+                io::ErrorKind::PermissionDenied => todo!(),
+                io::ErrorKind::ConnectionRefused => todo!(),
+                io::ErrorKind::ConnectionReset => todo!(),
+                io::ErrorKind::ConnectionAborted => todo!(),
+                io::ErrorKind::NotConnected => todo!(),
+                io::ErrorKind::AddrInUse => todo!(),
+                io::ErrorKind::AddrNotAvailable => todo!(),
+                io::ErrorKind::BrokenPipe => todo!(),
+                io::ErrorKind::AlreadyExists => todo!(),
+                io::ErrorKind::WouldBlock => todo!(),
+                io::ErrorKind::InvalidInput => todo!(),
+                io::ErrorKind::InvalidData => todo!(),
+                io::ErrorKind::TimedOut => todo!(),
+                io::ErrorKind::WriteZero => todo!(),
+                io::ErrorKind::Interrupted => todo!(),
+                io::ErrorKind::Unsupported => todo!(),
+                io::ErrorKind::UnexpectedEof => todo!(),
+                io::ErrorKind::OutOfMemory => todo!(),
+                io::ErrorKind::Other => todo!(),
+                _ => todo!(),
             })?;
 
-        let config = toml::from_str(&content).with_context(|| {
-            format!(
-                "`{:?}` could not be deserialized as Config TOML format",
-                &content
-            )
-        })?;
+        let config = toml::from_str(&content).unwrap();
+
         Ok(config)
     }
 
@@ -98,7 +133,7 @@ impl Config {
     /// # Errors
     ///
     /// This function may return typical file I/O errors.
-    pub fn save(&self, path: &str) -> Result<(), std::io::Error> {
+    pub fn save(&self, path: &str) -> Result<(), CliError> {
         let config_file_path = Path::new(path);
         let serialized = toml::to_string(self)
             .map_err(|err| io::Error::new(io::ErrorKind::Other, format!("{:?}", err)))?;

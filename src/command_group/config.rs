@@ -1,4 +1,4 @@
-use crate::{Cli, Config as CLIConfig, CONFIG_FILE};
+use crate::{error::handle_error, Cli, Config as CLIConfig, CONFIG_FILE};
 use clap::{ArgEnum, Args, IntoApp, Subcommand};
 
 #[derive(Debug, Args)]
@@ -50,7 +50,8 @@ impl Config {
                         println!("{}", toml::to_string(&config).unwrap());
                     }
                     Err(e) => {
-                        cmd.error(clap::ErrorKind::Io, e).exit();
+                        handle_error(e);
+                        // cmd.error(clap::ErrorKind::Io, e).exit();
                     }
                 }
             }
