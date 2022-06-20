@@ -101,25 +101,7 @@ impl Config {
                 io::ErrorKind::PermissionDenied => {
                     CliError::ConfigFilePermissionDenied { path, source: err }
                 }
-                io::ErrorKind::ConnectionRefused => todo!(),
-                io::ErrorKind::ConnectionReset => todo!(),
-                io::ErrorKind::ConnectionAborted => todo!(),
-                io::ErrorKind::NotConnected => todo!(),
-                io::ErrorKind::AddrInUse => todo!(),
-                io::ErrorKind::AddrNotAvailable => todo!(),
-                io::ErrorKind::BrokenPipe => todo!(),
-                io::ErrorKind::AlreadyExists => todo!(),
-                io::ErrorKind::WouldBlock => todo!(),
-                io::ErrorKind::InvalidInput => todo!(),
-                io::ErrorKind::InvalidData => todo!(),
-                io::ErrorKind::TimedOut => todo!(),
-                io::ErrorKind::WriteZero => todo!(),
-                io::ErrorKind::Interrupted => todo!(),
-                io::ErrorKind::Unsupported => todo!(),
-                io::ErrorKind::UnexpectedEof => todo!(),
-                io::ErrorKind::OutOfMemory => todo!(),
-                io::ErrorKind::Other => todo!(),
-                _ => todo!(),
+                _ => CliError::Io(err),
             })?;
 
         let config = toml::from_str(&content).unwrap();

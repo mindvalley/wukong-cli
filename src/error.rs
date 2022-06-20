@@ -40,7 +40,7 @@ pub fn handle_error(error: CliError) {
     eprintln!("Error:");
     eprintln!("\t{}", error);
 
-    // for verbose
+    //TODO: for --verbose only
     if let Some(source) = error.source() {
         eprintln!("\nCaused by:");
         eprintln!("\t{}", source);
