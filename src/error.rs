@@ -14,7 +14,7 @@ pub enum CliError<'a> {
         #[source]
         source: ::std::io::Error,
     },
-    #[error("Permission Denied: \"{path}\".")]
+    #[error("Permission denied: \"{path}\".")]
     ConfigFilePermissionDenied {
         path: &'a str,
         #[source]
@@ -23,14 +23,14 @@ pub enum CliError<'a> {
 }
 
 impl<'a> CliError<'a> {
-    pub fn suggestion(&self) -> Option<&'static str> {
+    pub fn suggestion(&self) -> Option<String> {
         match self {
-            CliError::ConfigFileNotFound { .. } => {
-                Some("Run \"wukong init\" to initialise configuration.")
-            }
-            CliError::ConfigFilePermissionDenied { path, .. } => {
-                Some("Run \"chmod +rw config.toml\" to provide read and write permissions.")
-            }
+            CliError::ConfigFileNotFound { .. } => Some(String::from(
+                "Run \"wukong init\" to initialise configuration.",
+            )),
+            CliError::ConfigFilePermissionDenied { path, .. } => Some(format!(
+                "Run \"chmod +rw {path}\" to give read and write permissions."
+            )),
             _ => None,
         }
     }

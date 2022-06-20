@@ -98,7 +98,9 @@ impl Config {
                 .kind()
             {
                 io::ErrorKind::NotFound => CliError::ConfigFileNotFound { path, source: err },
-                io::ErrorKind::PermissionDenied => todo!(),
+                io::ErrorKind::PermissionDenied => {
+                    CliError::ConfigFilePermissionDenied { path, source: err }
+                }
                 io::ErrorKind::ConnectionRefused => todo!(),
                 io::ErrorKind::ConnectionReset => todo!(),
                 io::ErrorKind::ConnectionAborted => todo!(),
