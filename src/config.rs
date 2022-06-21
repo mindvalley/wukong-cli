@@ -1,9 +1,8 @@
-use crate::error::CliError;
+use crate::error::{CliError, ConfigFileError};
 // use anyhow::{Context, Result};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use std::{
-    error::Error,
     fs::{create_dir_all, File},
     io::{self, Write},
     path::Path,
@@ -97,9 +96,14 @@ impl Config {
             std::fs::read_to_string(config_file_path.to_str().unwrap()).map_err(|err| match err
                 .kind()
             {
-                io::ErrorKind::NotFound => CliError::ConfigFileNotFound { path, source: err },
+                io::ErrorKind::NotFound => {
+                    CliError::ConfigFileError(ConfigFileError::NotFound { path, source: err })
+                }
                 io::ErrorKind::PermissionDenied => {
-                    CliError::ConfigFilePermissionDenied { path, source: err }
+                    CliError::ConfigFileError(ConfigFileError::PermissionDenied {
+                        path,
+                        source: err,
+                    })
                 }
                 _ => CliError::Io(err),
             })?;

@@ -51,7 +51,7 @@ impl Config {
                     }
                     Err(e) => {
                         handle_error(e);
-                        // cmd.error(clap::ErrorKind::Io, e).exit();
+                        std::process::exit(1);
                     }
                 }
             }

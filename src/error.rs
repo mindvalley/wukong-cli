@@ -1,5 +1,4 @@
 use std::error::Error;
-
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -8,14 +7,20 @@ pub enum CliError<'a> {
     // ReqwtError(#[from] reqwest::Error),
     #[error(transparent)]
     Io(#[from] ::std::io::Error),
+    #[error(transparent)]
+    ConfigFileError(ConfigFileError<'a>),
+}
+
+#[derive(Debug, Error)]
+pub enum ConfigFileError<'a> {
     #[error("Config file not found at \"{path}\".")]
-    ConfigFileNotFound {
+    NotFound {
         path: &'a str,
         #[source]
         source: ::std::io::Error,
     },
     #[error("Permission denied: \"{path}\".")]
-    ConfigFilePermissionDenied {
+    PermissionDenied {
         path: &'a str,
         #[source]
         source: ::std::io::Error,
@@ -25,12 +30,14 @@ pub enum CliError<'a> {
 impl<'a> CliError<'a> {
     pub fn suggestion(&self) -> Option<String> {
         match self {
-            CliError::ConfigFileNotFound { .. } => Some(String::from(
-                "Run \"wukong init\" to initialise configuration.",
-            )),
-            CliError::ConfigFilePermissionDenied { path, .. } => Some(format!(
-                "Run \"chmod +rw {path}\" to give read and write permissions."
-            )),
+            CliError::ConfigFileError(error) => match error {
+                ConfigFileError::NotFound { .. } => Some(String::from(
+                    "Run \"wukong init\" to initialise configuration.",
+                )),
+                ConfigFileError::PermissionDenied { path, .. } => Some(format!(
+                    "Run \"chmod +rw {path}\" to provide read and write permissions."
+                )),
+            },
             _ => None,
         }
     }
