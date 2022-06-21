@@ -1,5 +1,4 @@
 use super::auth_headers;
-use anyhow::{Error as AnyhowError, Result as AnyhowResult};
 use graphql_client::{reqwest::post_graphql, GraphQLQuery, Response};
 
 const URL: &'static str = "http://localhost:4000/api";
@@ -37,7 +36,7 @@ pub struct PipelineQuery;
 impl PipelineQuery {
     pub async fn fetch(
         application: String,
-    ) -> AnyhowResult<Response<pipeline_query::ResponseData>, AnyhowError> {
+    ) -> Result<Response<pipeline_query::ResponseData>, reqwest::Error> {
         let client = reqwest::Client::builder()
             .default_headers(auth_headers())
             .build()?;
@@ -49,9 +48,9 @@ impl PipelineQuery {
         // let variables = pipeline_query::Variables { application };
 
         let response = post_graphql::<PipelineQuery, _>(&client, URL, variables).await?;
-        if let Some(errors) = response.errors {
-            return Err(anyhow::anyhow!(errors[0].clone()));
-        }
+        // if let Some(errors) = response.errors {
+        //     return Err(anyhow::anyhow!(errors[0].clone()));
+        // }
         println!("{:?}", response);
         todo!();
     }

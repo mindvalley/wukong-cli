@@ -70,7 +70,7 @@ pub enum PipelineSubcommand {
 }
 
 impl Pipeline {
-    pub async fn perform_action(&self) -> AnyhowResult<(), AnyhowError> {
+    pub async fn perform_action<'a>(&self) -> AnyhowResult<(), CliError<'a>> {
         match &self.subcommand {
             PipelineSubcommand::List => {
                 let started = Instant::now();
@@ -84,7 +84,8 @@ impl Pipeline {
                 let pipelines_data = PipelinesQuery::fetch()
                     .await?
                     .data
-                    .ok_or(anyhow::anyhow!("Error"))?
+                    .unwrap()
+                    // .ok_or(anyhow::anyhow!("Error"))?
                     .pipelines;
 
                 progress_bar.finish_and_clear();
@@ -132,8 +133,8 @@ impl Pipeline {
                 let pipeline_data = PipelineQuery::fetch(name.to_string())
                     .await?
                     .data
-                    .ok_or(anyhow::anyhow!("Error"))?
-                    // .unwrap()
+                    // .ok_or(anyhow::anyhow!("Error"))?
+                    .unwrap()
                     .pipeline;
 
                 if let Some(pipeline_data) = pipeline_data {

@@ -4,14 +4,16 @@ mod command_group;
 mod config;
 mod error;
 mod graphql;
-mod logger;
+// mod logger;
 
-use anyhow::{Error as AnyhowError, Result as AnyhowResult};
+use anyhow::Result as AnyhowResult;
 use clap::Parser;
 use command_group::CommandGroup;
 use config::{Config, CONFIG_FILE};
 use dialoguer::{theme::ColorfulTheme, Select};
-use logger::Logger;
+use error::{handle_error, CliError};
+// use logger::Logger;
+use std::process;
 
 /// A Swiss-army Knife CLI For Mindvalley Developers
 #[derive(Debug, Parser)]
@@ -27,15 +29,30 @@ struct Cli {
 }
 
 #[tokio::main]
-async fn main() -> AnyhowResult<(), AnyhowError> {
+async fn main() {
     // Logger::new().init();
 
+    let result = run();
+
+    match result.await {
+        Err(error) => {
+            handle_error(error);
+            process::exit(1);
+        }
+        Ok(false) => {
+            process::exit(1);
+        }
+        Ok(true) => {
+            process::exit(0);
+        }
+    }
+}
+
+async fn run<'a>() -> AnyhowResult<bool, CliError<'a>> {
     let cli = Cli::parse();
 
     match cli.command_group {
-        CommandGroup::Pipeline(pipeline) => {
-            pipeline.perform_action().await?
-        },
+        CommandGroup::Pipeline(pipeline) => pipeline.perform_action().await?,
         CommandGroup::Config(config) => {
             config.perform_action();
         }
@@ -96,7 +113,7 @@ Some things to try next:
         }
     }
 
-    Ok(())
+    Ok(true)
 }
 
 #[cfg(test)]
