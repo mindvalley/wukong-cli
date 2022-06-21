@@ -1,4 +1,4 @@
-use crate::error::{CliError, ConfigFileError};
+use crate::error::{CliError, ConfigError};
 // use anyhow::{Context, Result};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
@@ -73,42 +73,22 @@ impl Config {
     /// This function may return typical file I/O errors.
     pub fn load(path: &str) -> Result<Self, CliError> {
         let config_file_path = Path::new(path);
-        // if !config_file_path.is_file() {
-        //     return Err(CliError::ConfigFileNotFound { path })?;
-        // }
-
-        // let content =
-        //     std::fs::read_to_string(config_file_path.to_str().unwrap()).with_context(|| {
-        //         format!(
-        //             "Could not read file `{}`",
-        //             config_file_path.to_str().unwrap()
-        //         )
-        //     })?;
-
-        // let config = toml::from_str(&content).with_context(|| {
-        //     format!(
-        //         "`{:?}` could not be deserialized as Config TOML format",
-        //         &content
-        //     )
-        // })?;
 
         let content =
             std::fs::read_to_string(config_file_path.to_str().unwrap()).map_err(|err| match err
                 .kind()
             {
                 io::ErrorKind::NotFound => {
-                    CliError::ConfigFileError(ConfigFileError::NotFound { path, source: err })
+                    CliError::ConfigError(ConfigError::NotFound { path, source: err })
                 }
                 io::ErrorKind::PermissionDenied => {
-                    CliError::ConfigFileError(ConfigFileError::PermissionDenied {
-                        path,
-                        source: err,
-                    })
+                    CliError::ConfigError(ConfigError::PermissionDenied { path, source: err })
                 }
                 _ => CliError::Io(err),
             })?;
 
-        let config = toml::from_str(&content).unwrap();
+        let config = toml::from_str(&content)
+            .map_err(|err| CliError::ConfigError(ConfigError::BadTomlData(err)))?;
 
         Ok(config)
     }
@@ -124,7 +104,7 @@ impl Config {
     pub fn save(&self, path: &str) -> Result<(), CliError> {
         let config_file_path = Path::new(path);
         let serialized = toml::to_string(self)
-            .map_err(|err| io::Error::new(io::ErrorKind::Other, format!("{:?}", err)))?;
+            .map_err(|err| CliError::ConfigError(ConfigError::SerializeTomlError(err)))?;
 
         if let Some(outdir) = config_file_path.parent() {
             create_dir_all(outdir)?;

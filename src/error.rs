@@ -8,11 +8,11 @@ pub enum CliError<'a> {
     #[error(transparent)]
     Io(#[from] ::std::io::Error),
     #[error(transparent)]
-    ConfigFileError(ConfigFileError<'a>),
+    ConfigError(ConfigError<'a>),
 }
 
 #[derive(Debug, Error)]
-pub enum ConfigFileError<'a> {
+pub enum ConfigError<'a> {
     #[error("Config file not found at \"{path}\".")]
     NotFound {
         path: &'a str,
@@ -25,18 +25,26 @@ pub enum ConfigFileError<'a> {
         #[source]
         source: ::std::io::Error,
     },
+    #[error("Bad TOML data.")]
+    BadTomlData(#[source] toml::de::Error),
+    #[error("Failed to serialize configuration data into TOML")]
+    SerializeTomlError(#[source] toml::ser::Error),
 }
 
 impl<'a> CliError<'a> {
     pub fn suggestion(&self) -> Option<String> {
         match self {
-            CliError::ConfigFileError(error) => match error {
-                ConfigFileError::NotFound { .. } => Some(String::from(
+            CliError::ConfigError(error) => match error {
+                ConfigError::NotFound { .. } => Some(String::from(
                     "Run \"wukong init\" to initialise configuration.",
                 )),
-                ConfigFileError::PermissionDenied { path, .. } => Some(format!(
+                ConfigError::PermissionDenied { path, .. } => Some(format!(
                     "Run \"chmod +rw {path}\" to provide read and write permissions."
                 )),
+                ConfigError::BadTomlData(_) => Some(String::from(
+                    "Check if your config.toml file is in valid TOML format.",
+                )),
+                _ => None,
             },
             _ => None,
         }
