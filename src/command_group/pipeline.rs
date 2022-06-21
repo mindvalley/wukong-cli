@@ -70,7 +70,7 @@ pub enum PipelineSubcommand {
 }
 
 impl Pipeline {
-    pub async fn perform_action<'a>(&self) -> AnyhowResult<(), CliError<'a>> {
+    pub async fn perform_action<'a>(&self) -> AnyhowResult<bool, CliError<'a>> {
         match &self.subcommand {
             PipelineSubcommand::List => {
                 let started = Instant::now();
@@ -117,7 +117,7 @@ impl Pipeline {
                 }
                 println!("Fetch in {}.", HumanDuration(started.elapsed()));
 
-                Ok(())
+                Ok(true)
             }
             PipelineSubcommand::Describe { name } => {
                 let deps = 1234;
@@ -200,7 +200,7 @@ impl Pipeline {
                 println!("Pull Requests");
                 println!("{table}");
 
-                Ok(())
+                Ok(true)
                 // todo!()
             }
             PipelineSubcommand::CiStatus => {

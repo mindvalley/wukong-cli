@@ -1,4 +1,7 @@
-use crate::{error::handle_error, Cli, Config as CLIConfig, CONFIG_FILE};
+use crate::{
+    error::{handle_error, CliError},
+    Cli, Config as CLIConfig, CONFIG_FILE,
+};
 use clap::{ArgEnum, Args, IntoApp, Subcommand};
 
 #[derive(Debug, Args)]
@@ -36,7 +39,7 @@ pub enum ConfigName {
 }
 
 impl Config {
-    pub fn perform_action(&self) {
+    pub fn perform_action<'a>(&self) -> Result<bool, CliError<'a>> {
         let mut cmd = Cli::command();
 
         match &self.subcommand {
@@ -45,16 +48,9 @@ impl Config {
                     .as_ref()
                     .expect("Unable to identify user's home directory");
 
-                match CLIConfig::load(config_file) {
-                    Ok(config) => {
-                        println!("{}", toml::to_string(&config).unwrap());
-                        // .map_err(|err| CliError::ConfigError(ConfigError::SerializeTomlError(err)))?;
-                    }
-                    Err(e) => {
-                        handle_error(e);
-                        std::process::exit(1);
-                    }
-                }
+                let config = CLIConfig::load(config_file)?;
+                println!("{}", toml::to_string(&config).unwrap());
+                // .map_err(|err| CliError::ConfigError(ConfigError::SerializeTomlError(err)))?;
             }
             ConfigSubcommand::Set {
                 config_name,
@@ -112,5 +108,7 @@ impl Config {
                 }
             }
         };
+
+        Ok(true)
     }
 }

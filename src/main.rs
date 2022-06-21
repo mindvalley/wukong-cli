@@ -52,10 +52,8 @@ async fn run<'a>() -> AnyhowResult<bool, CliError<'a>> {
     let cli = Cli::parse();
 
     match cli.command_group {
-        CommandGroup::Pipeline(pipeline) => pipeline.perform_action().await?,
-        CommandGroup::Config(config) => {
-            config.perform_action();
-        }
+        CommandGroup::Pipeline(pipeline) => pipeline.perform_action().await,
+        CommandGroup::Config(config) => config.perform_action(),
         CommandGroup::Init => {
             println!("Welcome! This command will take you through the configuration of Wukong.\n");
 
@@ -110,10 +108,10 @@ Some things to try next:
                 config.core.application = application_selections[application_selection].to_string();
                 config.save(config_file).expect("Config file save failed");
             }
+
+            Ok(true)
         }
     }
-
-    Ok(true)
 }
 
 #[cfg(test)]
