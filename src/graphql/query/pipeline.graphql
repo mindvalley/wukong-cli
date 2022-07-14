@@ -1,5 +1,6 @@
 query PipelineQuery($application: String) {
   pipeline(application: $application) {
+    __typename
     lastDuration
     lastFailedAt
     lastSucceededAt

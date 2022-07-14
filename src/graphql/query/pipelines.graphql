@@ -1,8 +1,17 @@
 query PipelinesQuery {
   pipelines {
-    lastDuration
-    lastFailedAt
-    lastSucceededAt
-    name
+    __typename
+    ... on MultiBranchPipeline {
+      name
+      lastSucceededAt
+      lastDuration
+      lastFailedAt
+    }
+    ... on Job {
+      name
+      lastSucceededAt
+      lastDuration
+      lastFailedAt
+    }
   }
 }

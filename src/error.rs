@@ -32,6 +32,8 @@ pub enum ConfigError<'a> {
 }
 
 impl<'a> CliError<'a> {
+    /// Try to second-guess what the user was trying to do, depending on what
+    /// went wrong.
     pub fn suggestion(&self) -> Option<String> {
         match self {
             CliError::ConfigError(error) => match error {

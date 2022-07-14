@@ -1,32 +1,20 @@
 #![forbid(unsafe_code)]
 
+mod app;
+mod clap_app;
 mod command_group;
 mod config;
 mod error;
 mod graphql;
 // mod logger;
 
-use anyhow::Result as AnyhowResult;
-use clap::Parser;
 use command_group::CommandGroup;
 use config::{Config, CONFIG_FILE};
 use dialoguer::{theme::ColorfulTheme, Select};
 use error::{handle_error, CliError};
 // use logger::Logger;
+use app::App;
 use std::process;
-
-/// A Swiss-army Knife CLI For Mindvalley Developers
-#[derive(Debug, Parser)]
-#[clap(version, author)]
-struct Cli {
-    #[clap(subcommand)]
-    command_group: CommandGroup,
-
-    /// Override the application name that the CLI will perform the command against.
-    /// If the flag is not used, then the CLI will use the default application name from the config.
-    #[clap(long, short)]
-    application: Option<String>,
-}
 
 #[tokio::main]
 async fn main() {
@@ -48,10 +36,10 @@ async fn main() {
     }
 }
 
-async fn run<'a>() -> AnyhowResult<bool, CliError<'a>> {
-    let cli = Cli::parse();
+async fn run<'a>() -> Result<bool, CliError<'a>> {
+    let app = App::new()?;
 
-    match cli.command_group {
+    match app.cli.command_group {
         CommandGroup::Pipeline(pipeline) => pipeline.perform_action().await,
         CommandGroup::Config(config) => config.perform_action(),
         CommandGroup::Init => {
@@ -116,12 +104,12 @@ Some things to try next:
 
 #[cfg(test)]
 mod test {
-    use crate::Cli;
+    use crate::clap_app::ClapApp;
 
     #[test]
     fn verify_app() {
         use clap::CommandFactory;
 
-        Cli::command().debug_assert()
+        ClapApp::command().debug_assert()
     }
 }

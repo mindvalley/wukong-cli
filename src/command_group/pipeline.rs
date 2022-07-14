@@ -2,10 +2,8 @@ use crate::{
     error::CliError,
     graphql::pipeline::{PipelineQuery, PipelinesQuery},
 };
-use anyhow::{Error as AnyhowError, Result as AnyhowResult};
 use clap::{Args, Subcommand};
 use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
-use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, process::Command, str, time::Instant};
 use tabled::{Table, Tabled};
@@ -21,11 +19,11 @@ fn fmt_option<T: Display>(o: &Option<T>) -> String {
 struct PipelineData {
     name: String,
     #[tabled(display_with = "fmt_option")]
-    last_succeeded_at: Option<String>,
+    last_succeeded_at: Option<i64>,
     #[tabled(display_with = "fmt_option")]
-    last_failed_at: Option<String>,
+    last_failed_at: Option<i64>,
     #[tabled(display_with = "fmt_option")]
-    last_duration: Option<String>,
+    last_duration: Option<i64>,
 }
 
 #[derive(Tabled)]
@@ -70,7 +68,7 @@ pub enum PipelineSubcommand {
 }
 
 impl Pipeline {
-    pub async fn perform_action<'a>(&self) -> AnyhowResult<bool, CliError<'a>> {
+    pub async fn perform_action<'a>(&self) -> Result<bool, CliError<'a>> {
         match &self.subcommand {
             PipelineSubcommand::List => {
                 let started = Instant::now();
@@ -95,18 +93,24 @@ impl Pipeline {
 
                     for raw_pipeline in pipelines_data {
                         if let Some(raw_pipeline) = raw_pipeline {
-                            let pipeline = PipelineData {
-                                name: raw_pipeline.name,
-                                last_succeeded_at: raw_pipeline.last_succeeded_at,
-                                last_duration: raw_pipeline.last_duration,
-                                last_failed_at: raw_pipeline.last_failed_at,
+                            let pipeline = match raw_pipeline {
+                                crate::graphql::pipeline::pipelines_query::PipelinesQueryPipelines::Job(p) => {
+                                    PipelineData {
+                                        name: p.name,
+                                        last_succeeded_at: p.last_succeeded_at,
+                                        last_duration: p.last_duration,
+                                        last_failed_at: p.last_failed_at,
+                                    }
+                                },
+                                crate::graphql::pipeline::pipelines_query::PipelinesQueryPipelines::MultiBranchPipeline(p) => {
+                                    PipelineData {
+                                        name: p.name,
+                                        last_succeeded_at: p.last_succeeded_at,
+                                        last_duration: p.last_duration,
+                                        last_failed_at: p.last_failed_at,
+                                    }
+                                }
                             };
-
-                            // let pipeline_value = serde_json::to_value(raw_pipeline)
-                            //     .expect("Failed converting raw pipeline data to json value");
-                            // println!("value: {:?}", pipeline_value);
-                            // let pipeline: PipelineData = serde_json::from_value(pipeline_value)
-                            //     .expect("Failed converting json value to Pipeline object");
 
                             pipelines.push(pipeline);
                         }
@@ -201,7 +205,6 @@ impl Pipeline {
                 println!("{table}");
 
                 Ok(true)
-                // todo!()
             }
             PipelineSubcommand::CiStatus => {
                 println!("CI Status");

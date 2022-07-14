@@ -20,8 +20,7 @@ impl PipelinesQuery {
         let variables = pipelines_query::Variables {};
 
         let response = post_graphql::<PipelinesQuery, _>(&client, URL, variables).await?;
-        println!("{:?}", response);
-        todo!();
+        Ok(response)
     }
 }
 
