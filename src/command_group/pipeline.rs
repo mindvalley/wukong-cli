@@ -48,6 +48,25 @@ struct PipelinePullRequest {
     last_duration: Option<&'static str>,
 }
 
+#[derive(Tabled)]
+struct JobBuild {
+    build_number: i64,
+    timestamp: i64,
+    #[tabled(display_with = "fmt_option")]
+    wait_duration: Option<i64>,
+    #[tabled(display_with = "fmt_option")]
+    build_duration: Option<i64>,
+    #[tabled(display_with = "fmt_option")]
+    total_duration: Option<i64>,
+    #[tabled(display_with = "fmt_option")]
+    commit_id: Option<String>,
+    #[tabled(display_with = "fmt_option")]
+    commit_msg: Option<String>,
+    #[tabled(display_with = "fmt_option")]
+    commit_author: Option<String>,
+    result: String,
+}
+
 #[derive(Debug, Args)]
 pub struct Pipeline {
     #[clap(subcommand)]
@@ -138,11 +157,49 @@ impl Pipeline {
                     .pipeline;
 
                 if let Some(pipeline_data) = pipeline_data {
-                    let _pipeline = PipelineData {
-                        name: pipeline_data.name,
-                        last_succeeded_at: pipeline_data.last_succeeded_at,
-                        last_duration: pipeline_data.last_duration,
-                        last_failed_at: pipeline_data.last_failed_at,
+                    match pipeline_data {
+                        crate::graphql::pipeline::pipeline_query::PipelineQueryPipeline::Job(p) => {
+                            if let Some(builds) = p.builds {
+                                let mut build_list = Vec::new();
+                                println!("{:?}", builds);
+
+                                for build in builds.iter() {
+                                    if let Some(build) = build {
+                                        let build_data = JobBuild {
+                                            build_number: build.build_number,
+                                            timestamp: build.timestamp,
+                                            wait_duration: build.wait_duration,
+                                            build_duration: build.build_duration,
+                                            total_duration: build.total_duration,
+                                            commit_id: build.commit_id.clone(),
+                                            commit_msg: build.commit_msg.clone(),
+                                            commit_author: build.commit_author.clone(),
+                                            result: build.result.clone(),
+                                        };
+
+                                        build_list.push(build_data);
+                                    }
+                                }
+
+                                let table = Table::new(build_list).to_string();
+                                println!("{table}");
+                            }
+                            PipelineData {
+                                name: p.name,
+                                last_succeeded_at: p.last_succeeded_at,
+                                last_duration: p.last_duration,
+                                last_failed_at: p.last_failed_at,
+                            }
+                        },
+                        crate::graphql::pipeline::pipeline_query::PipelineQueryPipeline::MultiBranchPipeline(p) => {
+                            println!("{:?}", p);
+                            PipelineData {
+                                name: p.name,
+                                last_succeeded_at: p.last_succeeded_at,
+                                last_duration: p.last_duration,
+                                last_failed_at: p.last_failed_at,
+                            }
+                        }
                     };
                 }
 

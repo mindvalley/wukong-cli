@@ -60,6 +60,7 @@ impl PipelineQuery {
         let variables = pipeline_query::Variables { name: application };
 
         let response = post_graphql::<PipelineQuery, _>(&client, URL, variables).await?;
+        // println!("{:#?}", response);
 
         if let Some(errors) = response.errors {
             println!("errors: {:?}", errors);
