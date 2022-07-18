@@ -4,11 +4,21 @@ use thiserror::Error as ThisError;
 #[derive(Debug, ThisError)]
 pub enum CliError<'a> {
     #[error(transparent)]
-    ReqwtError(#[from] reqwest::Error),
+    APIError(#[from] APIError),
+    // #[error(transparent)]
+    // ReqwestError(#[from] reqwest::Error),
     #[error(transparent)]
     Io(#[from] ::std::io::Error),
     #[error(transparent)]
     ConfigError(ConfigError<'a>),
+}
+
+#[derive(Debug, ThisError)]
+pub enum APIError {
+    #[error(transparent)]
+    ReqwestError(#[from] reqwest::Error),
+    #[error("Response Error: {message}")]
+    ResponseError { code: String, message: String },
 }
 
 #[derive(Debug, ThisError)]
@@ -46,6 +56,15 @@ impl<'a> CliError<'a> {
                 ConfigError::BadTomlData(_) => Some(String::from(
                     "Check if your config.toml file is in valid TOML format.",
                 )),
+                _ => None,
+            },
+            CliError::APIError(error) => match error {
+                APIError::ResponseError { code, .. } if code == "unable_to_get_pipeline" => Some(
+                    String::from("Please check your pipeline's name. It could be invalid."),
+                ),
+                APIError::ResponseError { code, .. } if code == "unable_to_get_pipelines" => Some(
+                    String::from("Please check your application's name. It could be invalid."),
+                ),
                 _ => None,
             },
             _ => None,

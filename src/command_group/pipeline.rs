@@ -128,10 +128,6 @@ impl Pipeline {
                 let progress_bar = ProgressBar::new(deps);
                 progress_bar.set_style(ProgressStyle::default_spinner());
                 println!("Fetching pipeline data ...");
-                // for _ in 0..deps {
-                //     progress_bar.inc(1);
-                //     thread::sleep(Duration::from_millis(3));
-                // }
 
                 // Calling API ...
                 let pipeline_data = PipelineQuery::fetch(name.to_string())
