@@ -2,6 +2,7 @@ use crate::{
     error::CliError,
     graphql::pipeline::{PipelineQuery, PipelinesQuery},
 };
+use chrono::{DateTime, NaiveDate, NaiveDateTime, TimeZone, Utc};
 use clap::{Args, Subcommand};
 use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
@@ -48,23 +49,45 @@ struct PipelinePullRequest {
     last_duration: Option<&'static str>,
 }
 
-#[derive(Tabled)]
 struct JobBuild {
     build_number: i64,
     timestamp: i64,
-    #[tabled(display_with = "fmt_option")]
     wait_duration: Option<i64>,
-    #[tabled(display_with = "fmt_option")]
     build_duration: Option<i64>,
-    #[tabled(display_with = "fmt_option")]
     total_duration: Option<i64>,
-    #[tabled(display_with = "fmt_option")]
     commit_id: Option<String>,
-    #[tabled(display_with = "fmt_option")]
     commit_msg: Option<String>,
-    #[tabled(display_with = "fmt_option")]
     commit_author: Option<String>,
     result: String,
+}
+
+impl Display for JobBuild {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let naive = NaiveDateTime::from_timestamp_opt(
+            self.timestamp / 1000,
+            (self.timestamp % 1000) as u32 * 1_000_000,
+        )
+        .unwrap();
+        let started_at = DateTime::<Utc>::from_utc(naive, Utc);
+
+        let commit_msg = match self.commit_msg {
+            Some(ref msg) => msg,
+            None => "No commit message",
+        };
+        let commit_id = match self.commit_id {
+            Some(ref id) => &id[0..7],
+            None => "",
+        };
+
+        write!(
+            f,
+            "#{} ({})\n{} (commit: {})",
+            self.build_number,
+            started_at.to_rfc2822(),
+            commit_msg,
+            commit_id
+        )
+    }
 }
 
 #[derive(Debug, Args)]
@@ -160,8 +183,7 @@ impl Pipeline {
                     match pipeline_data {
                         crate::graphql::pipeline::pipeline_query::PipelineQueryPipeline::Job(p) => {
                             if let Some(builds) = p.builds {
-                                let mut build_list = Vec::new();
-                                println!("{:?}", builds);
+                                println!("Changes: ");
 
                                 for build in builds.iter() {
                                     if let Some(build) = build {
@@ -177,12 +199,9 @@ impl Pipeline {
                                             result: build.result.clone(),
                                         };
 
-                                        build_list.push(build_data);
+                                        println!("{build_data}");
                                     }
                                 }
-
-                                let table = Table::new(build_list).to_string();
-                                println!("{table}");
                             }
                             PipelineData {
                                 name: p.name,
