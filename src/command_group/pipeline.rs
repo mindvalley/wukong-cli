@@ -1,6 +1,6 @@
 use crate::{
     error::CliError,
-    graphql::pipeline::{PipelineQuery, PipelinesQuery},
+    graphql::pipeline::{MultiBranchPipelineQuery, PipelineQuery, PipelinesQuery},
 };
 use chrono::{DateTime, NaiveDate, NaiveDateTime, TimeZone, Utc};
 use clap::{Args, Subcommand};
@@ -29,24 +29,24 @@ struct PipelineData {
 
 #[derive(Tabled)]
 struct PipelineBranch {
-    name: &'static str,
+    name: String,
     #[tabled(display_with = "fmt_option")]
-    last_succeed_at: Option<&'static str>,
+    last_succeed_at: Option<i64>,
     #[tabled(display_with = "fmt_option")]
-    last_failed_at: Option<&'static str>,
+    last_failed_at: Option<i64>,
     #[tabled(display_with = "fmt_option")]
-    last_duration: Option<&'static str>,
+    last_duration: Option<i64>,
 }
 
 #[derive(Tabled)]
 struct PipelinePullRequest {
-    name: &'static str,
+    name: String,
     #[tabled(display_with = "fmt_option")]
-    last_succeed_at: Option<&'static str>,
+    last_succeed_at: Option<i64>,
     #[tabled(display_with = "fmt_option")]
-    last_failed_at: Option<&'static str>,
+    last_failed_at: Option<i64>,
     #[tabled(display_with = "fmt_option")]
-    last_duration: Option<&'static str>,
+    last_duration: Option<i64>,
 }
 
 struct JobBuild {
@@ -81,11 +81,12 @@ impl Display for JobBuild {
 
         write!(
             f,
-            "#{} ({})\n{} (commit: {})",
+            "[{}] #{} ({})\n{} (commit: {})\n",
+            self.result,
             self.build_number,
             started_at.to_rfc2822(),
             commit_msg,
-            commit_id
+            commit_id,
         )
     }
 }
@@ -172,14 +173,14 @@ impl Pipeline {
                 println!("Fetching pipeline data ...");
 
                 // Calling API ...
-                let pipeline_data = PipelineQuery::fetch(name.to_string())
+                let pipeline_resp = PipelineQuery::fetch(name.to_string())
                     .await?
                     .data
                     // .ok_or(anyhow::anyhow!("Error"))?
                     .unwrap()
                     .pipeline;
 
-                if let Some(pipeline_data) = pipeline_data {
+                if let Some(pipeline_data) = pipeline_resp {
                     match pipeline_data {
                         crate::graphql::pipeline::pipeline_query::PipelineQueryPipeline::Job(p) => {
                             if let Some(builds) = p.builds {
@@ -203,79 +204,60 @@ impl Pipeline {
                                     }
                                 }
                             }
-                            PipelineData {
-                                name: p.name,
-                                last_succeeded_at: p.last_succeeded_at,
-                                last_duration: p.last_duration,
-                                last_failed_at: p.last_failed_at,
-                            }
                         },
                         crate::graphql::pipeline::pipeline_query::PipelineQueryPipeline::MultiBranchPipeline(p) => {
-                            println!("{:?}", p);
-                            PipelineData {
-                                name: p.name,
-                                last_succeeded_at: p.last_succeeded_at,
-                                last_duration: p.last_duration,
-                                last_failed_at: p.last_failed_at,
+                            let multi_branch_pipeline_resp = MultiBranchPipelineQuery::fetch(p.name)
+                                .await?
+                                .data
+                                // .ok_or(anyhow::anyhow!("Error"))?
+                                .unwrap()
+                                .multi_branch_pipeline;
+
+                            if let Some(multi_branch_pipeline) = multi_branch_pipeline_resp {
+                                if let Some(pipeline_branches) = multi_branch_pipeline.branches {
+                                    let mut branches = Vec::new();
+                                    for pipeline_branch in pipeline_branches {
+                                        if let Some(branch) = pipeline_branch {
+                                            branches.push(PipelineBranch {
+                                                name: branch.name,
+                                                last_succeed_at: branch.last_succeeded_at,
+                                                last_failed_at: branch.last_failed_at,
+                                                last_duration: branch.last_duration,
+                                            });
+                                        }
+                                    }
+
+                                    let table = Table::new(branches).to_string();
+
+                                    println!("Branches");
+                                    println!("{table}");
+
+                                }
+                                if let Some(pipeline_pull_requests) = multi_branch_pipeline.pull_requests {
+                                    let mut pull_requests = Vec::new();
+                                    for pipeline_pull_request in pipeline_pull_requests {
+                                        if let Some(pull_request) = pipeline_pull_request {
+                                            pull_requests.push(PipelinePullRequest {
+                                                name: pull_request.name,
+                                                last_succeed_at: pull_request.last_succeeded_at,
+                                                last_failed_at: pull_request.last_failed_at,
+                                                last_duration: pull_request.last_duration,
+                                            });
+                                        }
+                                    }
+
+                                    let table = Table::new(pull_requests).to_string();
+
+                                    println!("Pull Requests:");
+                                    println!("{table}");
+
+                                }
                             }
                         }
-                    };
+                    }
+
+                    progress_bar.finish_and_clear();
                 }
-
-                progress_bar.finish_and_clear();
-
-                println!("Pipeline \"{}\":\n", name);
-
-                let branches = vec![PipelineBranch {
-                    name: "master",
-                    last_succeed_at: Some("1 hr 20 min"),
-                    last_failed_at: Some("6 days 19 hr"),
-                    last_duration: Some("14 min"),
-                }];
-
-                let table = Table::new(branches).to_string();
-
-                println!("Branches");
-                println!("{table}");
-
-                let pull_requests = vec![
-                    PipelinePullRequest {
-                        name: "PR-3985",
-                        last_succeed_at: None,
-                        last_failed_at: None,
-                        last_duration: None,
-                    },
-                    PipelinePullRequest {
-                        name: "PR-4037",
-                        last_succeed_at: Some("1 hr 20 min"),
-                        last_failed_at: Some("6 days 19 hr"),
-                        last_duration: Some("14 min"),
-                    },
-                    PipelinePullRequest {
-                        name: "PR-4086",
-                        last_succeed_at: Some("1 min 2 sec"),
-                        last_failed_at: None,
-                        last_duration: Some("2.3 sec"),
-                    },
-                    PipelinePullRequest {
-                        name: "PR-4096",
-                        last_succeed_at: Some("1 min 2 sec"),
-                        last_failed_at: None,
-                        last_duration: Some("4.3 sec"),
-                    },
-                    PipelinePullRequest {
-                        name: "PR-4113",
-                        last_succeed_at: Some("18 hr"),
-                        last_failed_at: None,
-                        last_duration: Some("34 sec"),
-                    },
-                ];
-
-                let table = Table::new(pull_requests).to_string();
-
-                println!("Pull Requests");
-                println!("{table}");
-
                 Ok(true)
             }
             PipelineSubcommand::CiStatus => {

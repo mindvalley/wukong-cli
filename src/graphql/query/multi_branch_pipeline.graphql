@@ -1,0 +1,19 @@
+query MultiBranchPipelineQuery($name: String!) {
+  multiBranchPipeline(name: $name) {
+    lastSucceededAt
+    lastDuration
+    lastFailedAt
+    branches {
+      name
+      lastSucceededAt
+      lastDuration
+      lastFailedAt
+    }
+    pullRequests {
+      name
+      lastSucceededAt
+      lastDuration
+      lastFailedAt
+    }
+  }
+}

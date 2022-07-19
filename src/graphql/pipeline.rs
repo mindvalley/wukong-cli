@@ -21,7 +21,6 @@ impl PipelinesQuery {
         let variables = pipelines_query::Variables {};
 
         let response = post_graphql::<PipelinesQuery, _>(&client, URL, variables).await?;
-        println!("{:?}", response);
         if let Some(errors) = response.errors {
             println!("errors: {:?}", errors);
             let first_error = errors[0].clone();
@@ -60,8 +59,45 @@ impl PipelineQuery {
         let variables = pipeline_query::Variables { name: application };
 
         let response = post_graphql::<PipelineQuery, _>(&client, URL, variables).await?;
-        // println!("{:#?}", response);
 
+        if let Some(errors) = response.errors {
+            println!("errors: {:?}", errors);
+            let first_error = errors[0].clone();
+            if first_error.message == "unable_to_get_pipeline" {
+                return Err(APIError::ResponseError {
+                    code: first_error.message,
+                    message: "Unable to get pipeline.".to_string(),
+                });
+            }
+
+            return Err(APIError::ResponseError {
+                code: first_error.message,
+                message: format!("{}", errors[0].clone()),
+            });
+        }
+        Ok(response)
+    }
+}
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/graphql/schema.json",
+    query_path = "src/graphql/query/multi_branch_pipeline.graphql",
+    response_derives = "Debug, Serialize, Deserialize"
+)]
+pub struct MultiBranchPipelineQuery;
+
+impl MultiBranchPipelineQuery {
+    pub async fn fetch(
+        name: String,
+    ) -> Result<Response<multi_branch_pipeline_query::ResponseData>, APIError> {
+        let client = reqwest::Client::builder()
+            .default_headers(auth_headers())
+            .build()?;
+
+        let variables = multi_branch_pipeline_query::Variables { name };
+
+        let response = post_graphql::<MultiBranchPipelineQuery, _>(&client, URL, variables).await?;
         if let Some(errors) = response.errors {
             println!("errors: {:?}", errors);
             let first_error = errors[0].clone();
