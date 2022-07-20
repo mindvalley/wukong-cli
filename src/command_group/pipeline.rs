@@ -2,7 +2,7 @@ use crate::{
     error::CliError,
     graphql::pipeline::{MultiBranchPipelineQuery, PipelineQuery, PipelinesQuery},
 };
-use chrono::{DateTime, NaiveDate, NaiveDateTime, TimeZone, Utc};
+use chrono::{DateTime, Duration, NaiveDate, NaiveDateTime, TimeZone, Utc};
 use clap::{Args, Subcommand};
 use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
@@ -16,36 +16,60 @@ fn fmt_option<T: Display>(o: &Option<T>) -> String {
     }
 }
 
+fn fmt_option_milliseconds(o: &Option<i64>) -> String {
+    match o {
+        Some(s) => {
+            let duration = Duration::milliseconds(*s);
+            let seconds = duration.num_seconds() % 60;
+            let minutes = (duration.num_seconds() / 60) % 60;
+            format!("{} mins {} secs", minutes, seconds)
+        }
+        None => "N/A".to_string(),
+    }
+}
+
+fn fmt_option_timestamp(o: &Option<i64>) -> String {
+    match o {
+        Some(s) => {
+            let naive =
+                NaiveDateTime::from_timestamp_opt(s / 1000, (s % 1000) as u32 * 1_000_000).unwrap();
+            let dt = DateTime::<Utc>::from_utc(naive, Utc);
+            format!("{}", dt.to_rfc3339())
+        }
+        None => "N/A".to_string(),
+    }
+}
+
 #[derive(Tabled, Serialize, Deserialize, Debug)]
 struct PipelineData {
     name: String,
-    #[tabled(display_with = "fmt_option")]
+    #[tabled(display_with = "fmt_option_timestamp")]
     last_succeeded_at: Option<i64>,
-    #[tabled(display_with = "fmt_option")]
+    #[tabled(display_with = "fmt_option_timestamp")]
     last_failed_at: Option<i64>,
-    #[tabled(display_with = "fmt_option")]
+    #[tabled(display_with = "fmt_option_milliseconds")]
     last_duration: Option<i64>,
 }
 
 #[derive(Tabled)]
 struct PipelineBranch {
     name: String,
-    #[tabled(display_with = "fmt_option")]
+    #[tabled(display_with = "fmt_option_timestamp")]
     last_succeed_at: Option<i64>,
-    #[tabled(display_with = "fmt_option")]
+    #[tabled(display_with = "fmt_option_timestamp")]
     last_failed_at: Option<i64>,
-    #[tabled(display_with = "fmt_option")]
+    #[tabled(display_with = "fmt_option_milliseconds")]
     last_duration: Option<i64>,
 }
 
 #[derive(Tabled)]
 struct PipelinePullRequest {
     name: String,
-    #[tabled(display_with = "fmt_option")]
+    #[tabled(display_with = "fmt_option_timestamp")]
     last_succeed_at: Option<i64>,
-    #[tabled(display_with = "fmt_option")]
+    #[tabled(display_with = "fmt_option_timestamp")]
     last_failed_at: Option<i64>,
-    #[tabled(display_with = "fmt_option")]
+    #[tabled(display_with = "fmt_option_milliseconds")]
     last_duration: Option<i64>,
 }
 
@@ -229,7 +253,7 @@ impl Pipeline {
 
                                     let table = Table::new(branches).to_string();
 
-                                    println!("Branches");
+                                    println!("Branches:");
                                     println!("{table}");
 
                                 }
