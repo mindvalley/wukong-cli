@@ -1,11 +1,13 @@
+use super::PipelineCiStatus;
 use crate::{error::CliError, graphql::pipeline::CiStatusQuery};
 use std::process::Command;
+use tabled::Table;
 
 pub async fn handle_ci_status<'a>(
     repo_url: &Option<String>,
     branch: &Option<String>,
 ) -> Result<bool, CliError<'a>> {
-    println!("CI Status");
+    println!("CI Status: ");
 
     let repo_url = match repo_url {
         Some(url) => url.clone(),
@@ -32,19 +34,24 @@ pub async fn handle_ci_status<'a>(
         }
     };
 
-    println!("repo_url: {:?}", repo_url);
-    println!("branch: {:?}", branch);
-
-    let ci_status_resp = CiStatusQuery::fetch(repo_url, branch)
+    let ci_status_resp = CiStatusQuery::fetch(&repo_url, &branch)
         .await?
         .data
         // .ok_or(anyhow::anyhow!("Error"))?
         .unwrap()
         .ci_status;
 
-    println!("{:?}", ci_status_resp);
-
     if let Some(ci_status) = ci_status_resp {
+        let pipeline_ci_status = PipelineCiStatus {
+            branch,
+            pull_request: ci_status.name,
+            ci_status: ci_status.result,
+            build_url: ci_status.build_url,
+            timestamp: ci_status.timestamp,
+        };
+
+        let table = Table::new([pipeline_ci_status]).to_string();
+        println!("{table}");
     } else {
         println!("No result.")
     }

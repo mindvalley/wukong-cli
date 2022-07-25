@@ -75,6 +75,15 @@ struct PipelinePullRequest {
     last_duration: Option<i64>,
 }
 
+#[derive(Tabled)]
+struct PipelineCiStatus {
+    branch: String,
+    pull_request: String,
+    ci_status: String,
+    build_url: String,
+    timestamp: i64,
+}
+
 struct JobBuild {
     build_number: i64,
     timestamp: i64,

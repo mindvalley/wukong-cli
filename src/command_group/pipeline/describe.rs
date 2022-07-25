@@ -1,11 +1,10 @@
-use indicatif::{ProgressBar, ProgressStyle};
-use tabled::Table;
-
+use super::{JobBuild, PipelineBranch, PipelinePullRequest};
 use crate::{
-    command_group::pipeline::{JobBuild, PipelineBranch, PipelinePullRequest},
     error::CliError,
     graphql::pipeline::{MultiBranchPipelineQuery, PipelineQuery},
 };
+use indicatif::{ProgressBar, ProgressStyle};
+use tabled::Table;
 
 pub async fn handle_describe<'a>(name: &str) -> Result<bool, CliError<'a>> {
     let deps = 1234;
@@ -14,7 +13,7 @@ pub async fn handle_describe<'a>(name: &str) -> Result<bool, CliError<'a>> {
     println!("Fetching pipeline data ...");
 
     // Calling API ...
-    let pipeline_resp = PipelineQuery::fetch(name.to_string())
+    let pipeline_resp = PipelineQuery::fetch(name)
         .await?
         .data
         // .ok_or(anyhow::anyhow!("Error"))?
@@ -47,7 +46,7 @@ pub async fn handle_describe<'a>(name: &str) -> Result<bool, CliError<'a>> {
                             }
                         },
                         crate::graphql::pipeline::pipeline_query::PipelineQueryPipeline::MultiBranchPipeline(p) => {
-                            let multi_branch_pipeline_resp = MultiBranchPipelineQuery::fetch(p.name)
+                            let multi_branch_pipeline_resp = MultiBranchPipelineQuery::fetch(&p.name)
                                 .await?
                                 .data
                                 // .ok_or(anyhow::anyhow!("Error"))?

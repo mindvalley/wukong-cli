@@ -22,7 +22,6 @@ impl PipelinesQuery {
 
         let response = post_graphql::<PipelinesQuery, _>(&client, URL, variables).await?;
         if let Some(errors) = response.errors {
-            println!("errors: {:?}", errors);
             let first_error = errors[0].clone();
             if first_error.message == "unable_to_get_pipelines" {
                 return Err(APIError::ResponseError {
@@ -50,18 +49,19 @@ pub struct PipelineQuery;
 
 impl PipelineQuery {
     pub async fn fetch(
-        application: String,
+        application: &str,
     ) -> Result<Response<pipeline_query::ResponseData>, APIError> {
         let client = reqwest::Client::builder()
             .default_headers(auth_headers())
             .build()?;
 
-        let variables = pipeline_query::Variables { name: application };
+        let variables = pipeline_query::Variables {
+            name: application.to_string(),
+        };
 
         let response = post_graphql::<PipelineQuery, _>(&client, URL, variables).await?;
 
         if let Some(errors) = response.errors {
-            println!("errors: {:?}", errors);
             let first_error = errors[0].clone();
             if first_error.message == "unable_to_get_pipeline" {
                 return Err(APIError::ResponseError {
@@ -89,17 +89,18 @@ pub struct MultiBranchPipelineQuery;
 
 impl MultiBranchPipelineQuery {
     pub async fn fetch(
-        name: String,
+        name: &str,
     ) -> Result<Response<multi_branch_pipeline_query::ResponseData>, APIError> {
         let client = reqwest::Client::builder()
             .default_headers(auth_headers())
             .build()?;
 
-        let variables = multi_branch_pipeline_query::Variables { name };
+        let variables = multi_branch_pipeline_query::Variables {
+            name: name.to_string(),
+        };
 
         let response = post_graphql::<MultiBranchPipelineQuery, _>(&client, URL, variables).await?;
         if let Some(errors) = response.errors {
-            println!("errors: {:?}", errors);
             let first_error = errors[0].clone();
             if first_error.message == "unable_to_get_pipeline" {
                 return Err(APIError::ResponseError {
@@ -127,18 +128,20 @@ pub struct CiStatusQuery;
 
 impl CiStatusQuery {
     pub async fn fetch(
-        repo_url: String,
-        branch: String,
+        repo_url: &str,
+        branch: &str,
     ) -> Result<Response<ci_status_query::ResponseData>, APIError> {
         let client = reqwest::Client::builder()
             .default_headers(auth_headers())
             .build()?;
 
-        let variables = ci_status_query::Variables { repo_url, branch };
+        let variables = ci_status_query::Variables {
+            repo_url: repo_url.to_string(),
+            branch: branch.to_string(),
+        };
 
         let response = post_graphql::<CiStatusQuery, _>(&client, URL, variables).await?;
         if let Some(errors) = response.errors.clone() {
-            println!("errors: {:?}", errors);
             let first_error = errors[0].clone();
             match first_error.message.as_str() {
                 "application_not_found" => {
