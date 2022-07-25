@@ -13,12 +13,16 @@ const URL: &'static str = "http://localhost:4000/api";
 pub struct PipelinesQuery;
 
 impl PipelinesQuery {
-    pub async fn fetch() -> Result<Response<pipelines_query::ResponseData>, APIError> {
+    pub async fn fetch(
+        application: &str,
+    ) -> Result<Response<pipelines_query::ResponseData>, APIError> {
         let client = reqwest::Client::builder()
             .default_headers(auth_headers())
             .build()?;
 
-        let variables = pipelines_query::Variables {};
+        let variables = pipelines_query::Variables {
+            application: Some(application.to_string()),
+        };
 
         let response = post_graphql::<PipelinesQuery, _>(&client, URL, variables).await?;
         if let Some(errors) = response.errors {
@@ -26,7 +30,7 @@ impl PipelinesQuery {
             if first_error.message == "unable_to_get_pipelines" {
                 return Err(APIError::ResponseError {
                     code: first_error.message,
-                    message: "Unable to get pipelines.".to_string(),
+                    message: format!("Unable to get pipelines for application `{}`.", application),
                 });
             }
 
@@ -48,15 +52,13 @@ impl PipelinesQuery {
 pub struct PipelineQuery;
 
 impl PipelineQuery {
-    pub async fn fetch(
-        application: &str,
-    ) -> Result<Response<pipeline_query::ResponseData>, APIError> {
+    pub async fn fetch(name: &str) -> Result<Response<pipeline_query::ResponseData>, APIError> {
         let client = reqwest::Client::builder()
             .default_headers(auth_headers())
             .build()?;
 
         let variables = pipeline_query::Variables {
-            name: application.to_string(),
+            name: name.to_string(),
         };
 
         let response = post_graphql::<PipelineQuery, _>(&client, URL, variables).await?;
@@ -66,7 +68,7 @@ impl PipelineQuery {
             if first_error.message == "unable_to_get_pipeline" {
                 return Err(APIError::ResponseError {
                     code: first_error.message,
-                    message: "Unable to get pipeline.".to_string(),
+                    message: format!("Unable to get pipeline `{}`.", name),
                 });
             }
 
@@ -105,7 +107,7 @@ impl MultiBranchPipelineQuery {
             if first_error.message == "unable_to_get_pipeline" {
                 return Err(APIError::ResponseError {
                     code: first_error.message,
-                    message: "Unable to get pipeline.".to_string(),
+                    message: format!("Unable to get pipeline `{}`.", name),
                 });
             }
 
@@ -147,7 +149,7 @@ impl CiStatusQuery {
                 "application_not_found" => {
                     return Err(APIError::ResponseError {
                         code: first_error.message,
-                        message: "Application not found.".to_string(),
+                        message: format!("Application `{}` not found.", repo_url),
                     });
                 }
                 "no_builds_associated_with_this_branch" => {

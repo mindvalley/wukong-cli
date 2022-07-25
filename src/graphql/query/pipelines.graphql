@@ -1,5 +1,5 @@
-query PipelinesQuery {
-  pipelines {
+query PipelinesQuery($application: String) {
+  pipelines(application: $application) {
     __typename
     ... on MultiBranchPipeline {
       name
