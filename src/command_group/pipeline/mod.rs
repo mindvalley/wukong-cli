@@ -11,13 +11,6 @@ use tabled::Tabled;
 
 use self::{ci_status::handle_ci_status, describe::handle_describe, list::handle_list};
 
-// fn fmt_option<T: Display>(o: &Option<T>) -> String {
-//     match o {
-//         Some(s) => format!("{}", s),
-//         None => "N/A".to_string(),
-//     }
-// }
-
 fn fmt_option_milliseconds(o: &Option<i64>) -> String {
     match o {
         Some(s) => {

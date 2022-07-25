@@ -13,11 +13,6 @@ pub async fn handle_list<'a>() -> Result<bool, CliError<'a>> {
     println!("Fetching pipelines list ...\n");
 
     progress_bar.inc(1);
-    progress_bar.inc(10);
-    progress_bar.inc(20);
-    progress_bar.inc(10);
-    progress_bar.inc(1);
-    progress_bar.inc(1);
 
     let config_file = CONFIG_FILE
         .as_ref()

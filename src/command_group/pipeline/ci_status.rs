@@ -7,8 +7,6 @@ pub async fn handle_ci_status<'a>(
     repo_url: &Option<String>,
     branch: &Option<String>,
 ) -> Result<bool, CliError<'a>> {
-    println!("CI Status: ");
-
     let repo_url = match repo_url {
         Some(url) => url.clone(),
         None => {
@@ -16,7 +14,7 @@ pub async fn handle_ci_status<'a>(
                 .arg("config")
                 .args(["--get", "remote.origin.url"])
                 .output()
-                .expect("failed to execute process");
+                .expect("failed to execute `git config --get remote.origin.url` command");
 
             String::from_utf8(output.stdout).unwrap()
         }
@@ -28,7 +26,7 @@ pub async fn handle_ci_status<'a>(
             let output = Command::new("git")
                 .args(["branch", "--show-current"])
                 .output()
-                .expect("failed to execute process");
+                .expect("failed to execute `git branch --show-current` command");
 
             String::from_utf8(output.stdout).unwrap()
         }
@@ -51,6 +49,8 @@ pub async fn handle_ci_status<'a>(
         };
 
         let table = Table::new([pipeline_ci_status]).to_string();
+
+        println!("CI Status: ");
         println!("{table}");
     } else {
         println!("No result.")
