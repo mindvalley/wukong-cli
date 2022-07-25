@@ -3,7 +3,7 @@ pub mod describe;
 pub mod list;
 
 use crate::error::CliError;
-use chrono::{DateTime, Duration, NaiveDateTime, Utc};
+use chrono::{DateTime, Duration, Local, NaiveDateTime, Utc};
 use clap::{Args, Subcommand};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, str};
@@ -32,14 +32,15 @@ fn fmt_option_milliseconds(o: &Option<i64>) -> String {
 
 fn fmt_option_timestamp(o: &Option<i64>) -> String {
     match o {
-        Some(s) => {
-            let naive =
-                NaiveDateTime::from_timestamp_opt(s / 1000, (s % 1000) as u32 * 1_000_000).unwrap();
-            let dt = DateTime::<Utc>::from_utc(naive, Utc);
-            format!("{}", dt.to_rfc3339())
-        }
+        Some(s) => fmt_timestamp(s),
         None => "N/A".to_string(),
     }
+}
+
+fn fmt_timestamp(o: &i64) -> String {
+    let naive = NaiveDateTime::from_timestamp_opt(o / 1000, (o % 1000) as u32 * 1_000_000).unwrap();
+    let dt = DateTime::<Utc>::from_utc(naive, Utc).with_timezone(&Local);
+    format!("{}", dt.format("%Y %b %d %H:%M:%S %p"))
 }
 
 #[derive(Tabled, Serialize, Deserialize, Debug)]
@@ -81,6 +82,7 @@ struct PipelineCiStatus {
     pull_request: String,
     ci_status: String,
     build_url: String,
+    #[tabled(display_with = "fmt_timestamp")]
     timestamp: i64,
 }
 
