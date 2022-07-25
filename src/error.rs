@@ -65,6 +65,9 @@ impl<'a> CliError<'a> {
                 APIError::ResponseError { code, .. } if code == "unable_to_get_pipelines" => Some(
                     String::from("Please check your application's name. It could be invalid."),
                 ),
+                APIError::ResponseError { code, .. } if code == "application_not_found" => Some(
+                    String::from("Please check your repo url. It's unrecognized by wukong."),
+                ),
                 _ => None,
             },
             _ => None,
