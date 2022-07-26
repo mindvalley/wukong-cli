@@ -5,8 +5,13 @@ use crate::{
 };
 use clap::Parser;
 
+pub enum ConfigState {
+    Initialized(Config),
+    Uninitialized,
+}
+
 pub struct App {
-    pub config: Config,
+    pub config: ConfigState,
     pub cli: ClapApp,
 }
 
@@ -16,7 +21,19 @@ impl App {
             .as_ref()
             .expect("Unable to identify user's home directory");
 
-        let config = Config::load(config_file)?;
+        let config = match Config::load(config_file) {
+            Ok(config) => ConfigState::Initialized(config),
+            Err(error) => {
+                match error {
+                    CliError::ConfigError(ref config_error) => match config_error {
+                        crate::error::ConfigError::NotFound { .. } => ConfigState::Uninitialized,
+                        _ => return Err(error),
+                    },
+                    _ => return Err(error),
+                }
+            }
+        };
+
         Ok(Self {
             config,
             cli: ClapApp::parse(),
