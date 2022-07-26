@@ -16,7 +16,9 @@ pub async fn handle_ci_status<'a>(
                 .output()
                 .expect("failed to execute `git config --get remote.origin.url` command");
 
-            String::from_utf8(output.stdout).unwrap()
+            let mut repo_url = String::from_utf8(output.stdout).unwrap();
+            repo_url.pop(); // remove trailing newline
+            repo_url
         }
     };
 
@@ -28,7 +30,9 @@ pub async fn handle_ci_status<'a>(
                 .output()
                 .expect("failed to execute `git branch --show-current` command");
 
-            String::from_utf8(output.stdout).unwrap()
+            let mut branch = String::from_utf8(output.stdout).unwrap();
+            branch.pop(); // remove trailing newline
+            branch
         }
     };
 
