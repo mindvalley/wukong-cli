@@ -16,6 +16,10 @@ use error::{handle_error, CliError};
 use app::App;
 use std::process;
 
+pub struct GlobalContext {
+    application: Option<String>,
+}
+
 #[tokio::main]
 async fn main() {
     // Logger::new().init();
@@ -39,8 +43,12 @@ async fn main() {
 async fn run<'a>() -> Result<bool, CliError<'a>> {
     let app = App::new()?;
 
+    let context = GlobalContext {
+        application: app.cli.application,
+    };
+
     match app.cli.command_group {
-        CommandGroup::Pipeline(pipeline) => pipeline.perform_action().await,
+        CommandGroup::Pipeline(pipeline) => pipeline.perform_action(context).await,
         CommandGroup::Config(config) => config.perform_action(),
         CommandGroup::Init => {
             println!("Welcome! This command will take you through the configuration of Wukong.\n");

@@ -1,12 +1,13 @@
 use super::PipelineData;
 use crate::{
     config::CONFIG_FILE, error::CliError, graphql::pipeline::PipelinesQuery, Config as CLIConfig,
+    GlobalContext,
 };
 use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
 use std::time::Instant;
 use tabled::Table;
 
-pub async fn handle_list<'a>() -> Result<bool, CliError<'a>> {
+pub async fn handle_list<'a>(context: GlobalContext) -> Result<bool, CliError<'a>> {
     let started = Instant::now();
     let progress_bar = ProgressBar::new(1234);
     progress_bar.set_style(ProgressStyle::default_spinner());
@@ -18,7 +19,10 @@ pub async fn handle_list<'a>() -> Result<bool, CliError<'a>> {
         .as_ref()
         .expect("Unable to identify user's home directory");
 
-    let application = CLIConfig::load(config_file).unwrap().core.application;
+    let application = match context.application {
+        Some(application) => application,
+        None => CLIConfig::load(config_file).unwrap().core.application,
+    };
 
     // Calling API ...
     let pipelines_data = PipelinesQuery::fetch(&application)

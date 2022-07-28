@@ -10,6 +10,6 @@ pub struct ClapApp {
 
     /// Override the application name that the CLI will perform the command against.
     /// If the flag is not used, then the CLI will use the default application name from the config.
-    #[clap(long, short)]
+    #[clap(long, short, global = true)]
     pub application: Option<String>,
 }

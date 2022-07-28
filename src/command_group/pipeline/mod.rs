@@ -2,7 +2,7 @@ pub mod ci_status;
 pub mod describe;
 pub mod list;
 
-use crate::error::CliError;
+use crate::{error::CliError, GlobalContext};
 use chrono::{DateTime, Duration, Local, NaiveDateTime, Utc};
 use clap::{Args, Subcommand};
 use serde::{Deserialize, Serialize};
@@ -148,9 +148,9 @@ pub enum PipelineSubcommand {
 }
 
 impl Pipeline {
-    pub async fn perform_action<'a>(&self) -> Result<bool, CliError<'a>> {
+    pub async fn perform_action<'a>(&self, context: GlobalContext) -> Result<bool, CliError<'a>> {
         match &self.subcommand {
-            PipelineSubcommand::List => handle_list().await,
+            PipelineSubcommand::List => handle_list(context).await,
             PipelineSubcommand::Describe { name } => handle_describe(name).await,
             PipelineSubcommand::CiStatus { repo_url, branch } => {
                 handle_ci_status(repo_url, branch).await
