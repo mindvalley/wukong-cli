@@ -1,7 +1,9 @@
 use super::PipelineData;
 use crate::{
-    config::CONFIG_FILE, error::CliError, graphql::pipeline::PipelinesQuery, Config as CLIConfig,
-    GlobalContext,
+    config::CONFIG_FILE,
+    error::CliError,
+    graphql::pipeline::{pipelines_query::PipelinesQueryPipelines, PipelinesQuery},
+    Config as CLIConfig, GlobalContext,
 };
 use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
 use std::time::Instant;
@@ -40,22 +42,18 @@ pub async fn handle_list<'a>(context: GlobalContext) -> Result<bool, CliError<'a
         for raw_pipeline in pipelines_data {
             if let Some(raw_pipeline) = raw_pipeline {
                 let pipeline = match raw_pipeline {
-                    crate::graphql::pipeline::pipelines_query::PipelinesQueryPipelines::Job(p) => {
-                        PipelineData {
-                            name: p.name,
-                            last_succeeded_at: p.last_succeeded_at,
-                            last_duration: p.last_duration,
-                            last_failed_at: p.last_failed_at,
-                        }
+                    PipelinesQueryPipelines::Job(p) => PipelineData {
+                        name: p.name,
+                        last_succeeded_at: p.last_succeeded_at,
+                        last_duration: p.last_duration,
+                        last_failed_at: p.last_failed_at,
                     },
-                    crate::graphql::pipeline::pipelines_query::PipelinesQueryPipelines::MultiBranchPipeline(p) => {
-                        PipelineData {
-                            name: p.name,
-                            last_succeeded_at: p.last_succeeded_at,
-                            last_duration: p.last_duration,
-                            last_failed_at: p.last_failed_at,
-                        }
-                    }
+                    PipelinesQueryPipelines::MultiBranchPipeline(p) => PipelineData {
+                        name: p.name,
+                        last_succeeded_at: p.last_succeeded_at,
+                        last_duration: p.last_duration,
+                        last_failed_at: p.last_failed_at,
+                    },
                 };
 
                 pipelines.push(pipeline);

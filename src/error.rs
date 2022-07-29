@@ -5,8 +5,6 @@ use thiserror::Error as ThisError;
 pub enum CliError<'a> {
     #[error(transparent)]
     APIError(#[from] APIError),
-    // #[error(transparent)]
-    // ReqwestError(#[from] reqwest::Error),
     #[error(transparent)]
     Io(#[from] ::std::io::Error),
     #[error(transparent)]

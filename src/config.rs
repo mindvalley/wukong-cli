@@ -146,6 +146,12 @@ mod test {
     #[test]
     fn load_non_exist_file() {
         let path = "./non/exist/path";
-        assert!(Config::load(path).is_err());
+        let result = Config::load(path);
+
+        assert!(result.is_err());
+        assert!(matches!(
+            result,
+            Err(CliError::ConfigError(ConfigError::NotFound { .. }))
+        ));
     }
 }
