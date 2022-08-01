@@ -1,0 +1,28 @@
+query PipelineQuery($name: String!) {
+  pipeline(name: $name) {
+    __typename
+    ... on MultiBranchPipeline {
+      name
+      lastSucceededAt
+      lastDuration
+      lastFailedAt
+    }
+    ... on Job {
+      name
+      lastSucceededAt
+      lastDuration
+      lastFailedAt
+      builds {
+        buildNumber
+        buildDuration
+        commitAuthor
+        commitId
+        commitMsg
+        result
+        timestamp
+        totalDuration
+        waitDuration
+      }
+    }
+  }
+}

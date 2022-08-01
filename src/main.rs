@@ -1,36 +1,55 @@
 #![forbid(unsafe_code)]
 
+mod app;
+mod clap_app;
 mod command_group;
 mod config;
+mod error;
+mod graphql;
+// mod logger;
 
-use clap::Parser;
 use command_group::CommandGroup;
 use config::{Config, CONFIG_FILE};
 use dialoguer::{theme::ColorfulTheme, Select};
+use error::{handle_error, CliError};
+// use logger::Logger;
+use app::App;
+use std::process;
 
-/// A Swiss-army Knife CLI For Mindvalley Developers
-#[derive(Debug, Parser)]
-#[clap(version)]
-struct Cli {
-    #[clap(subcommand)]
-    command_group: CommandGroup,
-
-    /// Override the application name that the CLI will perform the command against.
-    /// If the flag is not used, then the CLI will use the default application name from the config.
-    #[clap(long, short)]
+pub struct GlobalContext {
     application: Option<String>,
 }
 
-fn main() {
-    let cli = Cli::parse();
+#[tokio::main]
+async fn main() {
+    // Logger::new().init();
 
-    match cli.command_group {
-        CommandGroup::Pipeline(pipeline) => {
-            pipeline.perform_action();
+    let result = run();
+
+    match result.await {
+        Err(error) => {
+            handle_error(error);
+            process::exit(1);
         }
-        CommandGroup::Config(config) => {
-            config.perform_action();
+        Ok(false) => {
+            process::exit(1);
         }
+        Ok(true) => {
+            process::exit(0);
+        }
+    }
+}
+
+async fn run<'a>() -> Result<bool, CliError<'a>> {
+    let app = App::new()?;
+
+    let context = GlobalContext {
+        application: app.cli.application,
+    };
+
+    match app.cli.command_group {
+        CommandGroup::Pipeline(pipeline) => pipeline.perform_action(context).await,
+        CommandGroup::Config(config) => config.perform_action(),
         CommandGroup::Init => {
             println!("Welcome! This command will take you through the configuration of Wukong.\n");
 
@@ -85,18 +104,20 @@ Some things to try next:
                 config.core.application = application_selections[application_selection].to_string();
                 config.save(config_file).expect("Config file save failed");
             }
+
+            Ok(true)
         }
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::Cli;
+    use crate::clap_app::ClapApp;
 
     #[test]
     fn verify_app() {
         use clap::CommandFactory;
 
-        Cli::command().debug_assert()
+        ClapApp::command().debug_assert()
     }
 }

@@ -1,0 +1,17 @@
+query PipelinesQuery($application: String) {
+  pipelines(application: $application) {
+    __typename
+    ... on MultiBranchPipeline {
+      name
+      lastSucceededAt
+      lastDuration
+      lastFailedAt
+    }
+    ... on Job {
+      name
+      lastSucceededAt
+      lastDuration
+      lastFailedAt
+    }
+  }
+}

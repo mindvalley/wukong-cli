@@ -1,4 +1,5 @@
-use anyhow::{Context, Result};
+use crate::error::{CliError, ConfigError};
+// use anyhow::{Context, Result};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -70,23 +71,25 @@ impl Config {
     /// # Errors
     ///
     /// This function may return typical file I/O errors.
-    pub fn load(path: &str) -> Result<Self> {
+    pub fn load(path: &str) -> Result<Self, CliError> {
         let config_file_path = Path::new(path);
 
         let content =
-            std::fs::read_to_string(config_file_path.to_str().unwrap()).with_context(|| {
-                format!(
-                    "Could not read file `{}`",
-                    config_file_path.to_str().unwrap()
-                )
+            std::fs::read_to_string(config_file_path.to_str().unwrap()).map_err(|err| match err
+                .kind()
+            {
+                io::ErrorKind::NotFound => {
+                    CliError::ConfigError(ConfigError::NotFound { path, source: err })
+                }
+                io::ErrorKind::PermissionDenied => {
+                    CliError::ConfigError(ConfigError::PermissionDenied { path, source: err })
+                }
+                _ => CliError::Io(err),
             })?;
 
-        let config = toml::from_str(&content).with_context(|| {
-            format!(
-                "`{:?}` could not be deserialized as Config TOML format",
-                &content
-            )
-        })?;
+        let config = toml::from_str(&content)
+            .map_err(|err| CliError::ConfigError(ConfigError::BadTomlData(err)))?;
+
         Ok(config)
     }
 
@@ -98,10 +101,10 @@ impl Config {
     /// # Errors
     ///
     /// This function may return typical file I/O errors.
-    pub fn save(&self, path: &str) -> Result<(), std::io::Error> {
+    pub fn save(&self, path: &str) -> Result<(), CliError> {
         let config_file_path = Path::new(path);
         let serialized = toml::to_string(self)
-            .map_err(|err| io::Error::new(io::ErrorKind::Other, format!("{:?}", err)))?;
+            .map_err(|err| CliError::ConfigError(ConfigError::SerializeTomlError(err)))?;
 
         if let Some(outdir) = config_file_path.parent() {
             create_dir_all(outdir)?;
@@ -143,6 +146,12 @@ mod test {
     #[test]
     fn load_non_exist_file() {
         let path = "./non/exist/path";
-        assert!(Config::load(path).is_err());
+        let result = Config::load(path);
+
+        assert!(result.is_err());
+        assert!(matches!(
+            result,
+            Err(CliError::ConfigError(ConfigError::NotFound { .. }))
+        ));
     }
 }

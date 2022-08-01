@@ -1,4 +1,4 @@
-use crate::{Cli, Config as CLIConfig, CONFIG_FILE};
+use crate::{error::CliError, clap_app::ClapApp, Config as CLIConfig, CONFIG_FILE};
 use clap::{ArgEnum, Args, IntoApp, Subcommand};
 
 #[derive(Debug, Args)]
@@ -36,8 +36,8 @@ pub enum ConfigName {
 }
 
 impl Config {
-    pub fn perform_action(&self) {
-        let mut cmd = Cli::command();
+    pub fn perform_action<'a>(&self) -> Result<bool, CliError<'a>> {
+        let mut cmd = ClapApp::command();
 
         match &self.subcommand {
             ConfigSubcommand::List => {
@@ -45,14 +45,9 @@ impl Config {
                     .as_ref()
                     .expect("Unable to identify user's home directory");
 
-                match CLIConfig::load(config_file) {
-                    Ok(config) => {
-                        println!("{}", toml::to_string(&config).unwrap());
-                    }
-                    Err(e) => {
-                        cmd.error(clap::ErrorKind::Io, e).exit();
-                    }
-                }
+                let config = CLIConfig::load(config_file)?;
+                println!("{}", toml::to_string(&config).unwrap());
+                // .map_err(|err| CliError::ConfigError(ConfigError::SerializeTomlError(err)))?;
             }
             ConfigSubcommand::Set {
                 config_name,
@@ -110,5 +105,7 @@ impl Config {
                 }
             }
         };
+
+        Ok(true)
     }
 }

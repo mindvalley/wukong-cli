@@ -1,0 +1,15 @@
+query CiStatusQuery($repoUrl: String!, $branch: String!) {
+  ciStatus(repoUrl: $repoUrl, branch: $branch) {
+    name
+    buildUrl
+    buildDuration
+    buildNumber
+    commitAuthor
+    commitId
+    commitMsg
+    result
+    timestamp
+    totalDuration
+    waitDuration
+  }
+}
