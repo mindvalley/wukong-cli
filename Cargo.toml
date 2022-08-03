@@ -30,3 +30,8 @@ thiserror = "1.0.31"
 log = "0.4.17"
 ansi_term = "0.12.1"
 chrono = "0.4.19"
+
+# Auth
+openidconnect = "2.3.2"
+url = "2.2.2"
+webbrowser = "0.7.1"

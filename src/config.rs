@@ -32,6 +32,7 @@ lazy_static! {
 pub struct Config {
     pub core: CoreConfig,
     pub log: LogConfig,
+    pub auth: AuthConfig,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -47,6 +48,13 @@ pub struct LogConfig {
     pub log_dir: String,
 }
 
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct AuthConfig {
+    pub access_token: Option<String>,
+    pub expiry_time: Option<String>,
+    pub refresh_token: Option<String>,
+}
+
 impl Default for Config {
     fn default() -> Self {
         let mut home_dir = dirs_next::home_dir().unwrap();
@@ -60,6 +68,11 @@ impl Default for Config {
             log: LogConfig {
                 enable: true,
                 log_dir: home_dir.to_str().unwrap().to_string(),
+            },
+            auth: AuthConfig {
+                access_token: None,
+                expiry_time: None,
+                refresh_token: None,
             },
         }
     }

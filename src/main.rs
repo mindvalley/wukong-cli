@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 mod app;
+mod auth;
 mod clap_app;
 mod command_group;
 mod config;
@@ -18,6 +19,11 @@ use std::process;
 
 pub struct GlobalContext {
     application: Option<String>,
+
+    // auth
+    access_token: Option<String>,
+    expiry_time: Option<String>,
+    refresh_token: Option<String>,
 }
 
 #[tokio::main]
@@ -42,9 +48,24 @@ async fn main() {
 
 async fn run<'a>() -> Result<bool, CliError<'a>> {
     let app = App::new()?;
+    auth::login().await;
+
+    let current_application = {
+        if let Some(ref application) = app.cli.application {
+            Some(application.clone())
+        } else {
+            match app.config {
+                app::ConfigState::Initialized(config) => Some(config.core.application),
+                app::ConfigState::Uninitialized => None,
+            }
+        }
+    };
 
     let context = GlobalContext {
-        application: app.cli.application,
+        application: current_application,
+        access_token: None,
+        expiry_time: None,
+        refresh_token: None,
     };
 
     match app.cli.command_group {
