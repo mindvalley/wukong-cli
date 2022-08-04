@@ -32,7 +32,7 @@ lazy_static! {
 pub struct Config {
     pub core: CoreConfig,
     pub log: LogConfig,
-    pub auth: AuthConfig,
+    pub auth: Option<AuthConfig>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -50,9 +50,9 @@ pub struct LogConfig {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct AuthConfig {
-    pub access_token: Option<String>,
-    pub expiry_time: Option<String>,
-    pub refresh_token: Option<String>,
+    pub access_token: String,
+    pub expiry_time: String,
+    pub refresh_token: String,
 }
 
 impl Default for Config {
@@ -69,11 +69,7 @@ impl Default for Config {
                 enable: true,
                 log_dir: home_dir.to_str().unwrap().to_string(),
             },
-            auth: AuthConfig {
-                access_token: None,
-                expiry_time: None,
-                refresh_token: None,
-            },
+            auth: None,
         }
     }
 }

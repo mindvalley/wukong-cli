@@ -30,6 +30,7 @@ pub struct GlobalContext {
 async fn main() {
     // Logger::new().init();
 
+    // auth::login().await;
     let result = run();
 
     match result.await {
@@ -48,7 +49,6 @@ async fn main() {
 
 async fn run<'a>() -> Result<bool, CliError<'a>> {
     let app = App::new()?;
-    auth::login().await;
 
     let current_application = {
         if let Some(ref application) = app.cli.application {

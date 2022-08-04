@@ -1,7 +1,6 @@
 use openidconnect::{
     core::{
-        CoreClient, CoreGenderClaim, CoreIdTokenClaims, CoreIdTokenVerifier, CoreProviderMetadata,
-        CoreResponseType,
+        CoreClient, CoreIdTokenClaims, CoreIdTokenVerifier, CoreProviderMetadata, CoreResponseType,
     },
     reqwest::async_http_client,
     AccessTokenHash, AdditionalClaims, AuthenticationFlow, AuthorizationCode, ClientId, CsrfToken,
@@ -67,6 +66,8 @@ pub async fn login() {
         // This example is requesting access to the the user's profile including email.
         .add_scope(Scope::new("email".to_string()))
         .add_scope(Scope::new("profile".to_string()))
+        .add_scope(Scope::new("openid".to_string()))
+        .add_scope(Scope::new("offline_access".to_string()))
         // Set the PKCE code challenge.
         .set_pkce_challenge(pkce_challenge)
         .url();
@@ -153,6 +154,18 @@ pub async fn login() {
         .extra_fields()
         .id_token()
         .expect("Server did not return an ID token");
+
+    let refresh_token = token_response
+        .refresh_token()
+        .expect("Server did not return a refresh token");
+
+    println!("resp: {:?}", token_response);
+    let access_token = token_response.access_token();
+
+    let expires_in = token_response
+        .expires_in()
+        .expect("Server did not return access token expiration");
+
     let id_token_claims: &CoreIdTokenClaims = id_token
         .claims(&id_token_verifier, &nonce)
         .unwrap_or_else(|err| {
@@ -160,6 +173,9 @@ pub async fn login() {
             unreachable!();
         });
     println!("Okta returned ID token: {:?}\n", id_token_claims);
+    println!("Okta returned refresh token: {:?}", refresh_token);
+    println!("Okta returned access token: {:?}", access_token);
+    println!("Okta returned access token expiration: {:?}", expires_in);
 
     // Verify the access token hash to ensure that the access token hasn't been substituted for
     // another user's.
@@ -171,9 +187,6 @@ pub async fn login() {
         .unwrap();
         if actual_access_token_hash != *expected_access_token_hash {
             println!("Invalid access token");
-            // return Err(MyErr::from(failure::Error::from_boxed_compat(
-            //     "Invalid access token".into(),
-            // )));
         }
     }
 
