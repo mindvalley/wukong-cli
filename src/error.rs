@@ -9,6 +9,8 @@ pub enum CliError<'a> {
     Io(#[from] ::std::io::Error),
     #[error(transparent)]
     ConfigError(ConfigError<'a>),
+    #[error("You are un-authenticated.")]
+    UnAuthenticated,
 }
 
 #[derive(Debug, ThisError)]
@@ -44,6 +46,9 @@ impl<'a> CliError<'a> {
     /// went wrong.
     pub fn suggestion(&self) -> Option<String> {
         match self {
+            CliError::UnAuthenticated => Some(String::from(
+                "Run \"wukong login\" to authenticate with your okta account.",
+            )),
             CliError::ConfigError(error) => match error {
                 ConfigError::NotFound { .. } => Some(String::from(
                     "Run \"wukong init\" to initialise configuration.",

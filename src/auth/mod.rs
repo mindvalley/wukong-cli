@@ -226,7 +226,7 @@ pub async fn login() {
     match CLIConfig::load(&config_file) {
         Ok(mut config) => {
             config.auth = Some(AuthConfig {
-                current_user: current_user_email.to_string(),
+                account: current_user_email.to_string(),
                 access_token: access_token.secret().to_owned(),
                 expiry_time: expiry.to_string(),
                 refresh_token: refresh_token.secret().to_owned(),

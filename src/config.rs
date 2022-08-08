@@ -49,7 +49,7 @@ pub struct LogConfig {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct AuthConfig {
-    pub current_user: String,
+    pub account: String,
     pub access_token: String,
     pub expiry_time: String,
     pub refresh_token: String,
