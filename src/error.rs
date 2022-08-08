@@ -11,6 +11,8 @@ pub enum CliError<'a> {
     ConfigError(ConfigError<'a>),
     #[error("You are un-authenticated.")]
     UnAuthenticated,
+    #[error("You are un-initialised.")]
+    UnInitialised,
 }
 
 #[derive(Debug, ThisError)]
@@ -48,6 +50,9 @@ impl<'a> CliError<'a> {
         match self {
             CliError::UnAuthenticated => Some(String::from(
                 "Run \"wukong login\" to authenticate with your okta account.",
+            )),
+            CliError::UnInitialised => Some(String::from(
+                "Run \"wukong init\" to initialise Wukong's configuration.",
             )),
             CliError::ConfigError(error) => match error {
                 ConfigError::NotFound { .. } => Some(String::from(
