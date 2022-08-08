@@ -1,5 +1,5 @@
-pub mod pipeline;
 pub mod config;
+pub mod pipeline;
 
 use clap::Subcommand;
 
@@ -11,4 +11,6 @@ pub enum CommandGroup {
     Pipeline(pipeline::Pipeline),
     /// This contains the commands to view & interact with Wukong's configurations
     Config(config::Config),
+    /// Login to start using wukong command
+    Login,
 }

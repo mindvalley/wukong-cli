@@ -1,3 +1,8 @@
+use crate::{
+    config::{AuthConfig, CONFIG_FILE},
+    Config as CLIConfig,
+};
+use chrono::{Duration, Utc};
 use openidconnect::{
     core::{
         CoreClient, CoreIdTokenClaims, CoreIdTokenVerifier, CoreProviderMetadata, CoreResponseType,
@@ -72,9 +77,10 @@ pub async fn login() {
         .set_pkce_challenge(pkce_challenge)
         .url();
 
-    println!("csrf state: {:?}", csrf_state);
-
-    println!("Open this URL in your browser:\n{}\n", authorize_url);
+    println!(
+        "Your browser has been opened to visit:\n\n\t{}\n",
+        authorize_url
+    );
 
     webbrowser::open(&authorize_url.to_string()).unwrap();
 
@@ -116,7 +122,7 @@ pub async fn login() {
         state = CsrfToken::new(value.into_owned());
     }
 
-    let message = "Go back to your terminal :)";
+    let message = "You are now authenticated with the wukong CLI! The authentication flow has completed successfully. You can close this window and go back to your terminal :)";
     let response = format!(
         "HTTP/1.1 200 OK\r\ncontent-length: {}\r\n\r\n{}",
         message.len(),
@@ -124,12 +130,12 @@ pub async fn login() {
     );
     stream.write_all(response.as_bytes()).unwrap();
 
-    println!("Okta returned the following code:\n{}\n", code.secret());
-    println!(
-        "Okta returned the following state:\n{} (expected `{}`)\n",
-        state.secret(),
-        csrf_state.secret()
-    );
+    // println!("Okta returned the following code:\n{}\n", code.secret());
+    // println!(
+    //     "Okta returned the following state:\n{} (expected `{}`)\n",
+    //     state.secret(),
+    //     csrf_state.secret()
+    // );
 
     // Exchange the code with a token.
     let token_response = client
@@ -143,11 +149,11 @@ pub async fn login() {
             unreachable!();
         });
 
-    println!(
-        "Okta returned access token:\n{}\n",
-        token_response.access_token().secret()
-    );
-    println!("Okta returned scopes: {:?}", token_response.scopes());
+    // println!(
+    //     "Okta returned access token:\n{}\n",
+    //     token_response.access_token().secret()
+    // );
+    // println!("Okta returned scopes: {:?}", token_response.scopes());
 
     let id_token_verifier: CoreIdTokenVerifier = client.id_token_verifier();
     let id_token = token_response
@@ -159,7 +165,7 @@ pub async fn login() {
         .refresh_token()
         .expect("Server did not return a refresh token");
 
-    println!("resp: {:?}", token_response);
+    // println!("resp: {:?}", token_response);
     let access_token = token_response.access_token();
 
     let expires_in = token_response
@@ -172,10 +178,10 @@ pub async fn login() {
             handle_error(&err, "Failed to verify ID token");
             unreachable!();
         });
-    println!("Okta returned ID token: {:?}\n", id_token_claims);
-    println!("Okta returned refresh token: {:?}", refresh_token);
-    println!("Okta returned access token: {:?}", access_token);
-    println!("Okta returned access token expiration: {:?}", expires_in);
+    // println!("Okta returned ID token: {:?}\n", id_token_claims);
+    // println!("Okta returned refresh token: {:?}", refresh_token.secret());
+    // println!("Okta returned access token: {:?}", access_token.secret());
+    // println!("Okta returned access token expiration: {:?}", expires_in);
 
     // Verify the access token hash to ensure that the access token hasn't been substituted for
     // another user's.
@@ -186,20 +192,51 @@ pub async fn login() {
         )
         .unwrap();
         if actual_access_token_hash != *expected_access_token_hash {
-            println!("Invalid access token");
+            panic!("Invalid access token");
         }
     }
 
     // The authenticated user's identity is now available. See the IdTokenClaims struct for a
     // complete listing of the available claims.
-    println!(
-        "User {} with e-mail address {} has authenticated successfully",
-        id_token_claims.subject().as_str(),
-        id_token_claims
-            .email()
-            .map(|email| email.as_str())
-            .unwrap_or("<not provided>"),
-    );
+    // println!(
+    //     "User {} with e-mail address {} has authenticated successfully",
+    //     id_token_claims.subject().as_str(),
+    //     id_token_claims
+    //         .email()
+    //         .map(|email| email.as_str())
+    //         .unwrap_or("<not provided>"),
+    // );
+
+    let current_user_email = id_token_claims
+        .email()
+        .map(|email| email.as_str())
+        .unwrap_or("<email not provided>");
+
+    let config_file = CONFIG_FILE
+        .as_ref()
+        .expect("Unable to identify user's home directory");
+
+    let now = Utc::now();
+    let expiry = now
+        .checked_add_signed(Duration::from_std(expires_in).unwrap())
+        .unwrap()
+        .to_rfc3339();
+    // println!("expiry: {:?}", expiry);
+
+    match CLIConfig::load(&config_file) {
+        Ok(mut config) => {
+            config.auth = Some(AuthConfig {
+                current_user: current_user_email.to_string(),
+                access_token: access_token.secret().to_owned(),
+                expiry_time: expiry.to_string(),
+                refresh_token: refresh_token.secret().to_owned(),
+            });
+            // config.core.application = config_value.to_string();
+            config.save(&config_file).unwrap();
+            println!("You are now logged in as [{}].", current_user_email);
+        }
+        Err(_err) => todo!(),
+    };
 
     // let userinfo_claims: UserInfoClaims<OktaClaims, CoreGenderClaim> = client
     //     .user_info(token_response.access_token().to_owned(), None)

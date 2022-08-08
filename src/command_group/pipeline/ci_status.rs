@@ -1,9 +1,10 @@
 use super::PipelineCiStatus;
-use crate::{error::CliError, graphql::pipeline::CiStatusQuery};
+use crate::{error::CliError, graphql::QueryClientBuilder, GlobalContext};
 use std::process::Command;
 use tabled::Table;
 
 pub async fn handle_ci_status<'a>(
+    context: GlobalContext,
     repo_url: &Option<String>,
     branch: &Option<String>,
 ) -> Result<bool, CliError<'a>> {
@@ -36,7 +37,12 @@ pub async fn handle_ci_status<'a>(
         }
     };
 
-    let ci_status_resp = CiStatusQuery::fetch(&repo_url, &branch)
+    let client = QueryClientBuilder::new()
+        .with_access_token(context.access_token.unwrap())
+        .build()?;
+
+    let ci_status_resp = client
+        .fetch_ci_status(&repo_url, &branch)
         .await?
         .data
         // .ok_or(anyhow::anyhow!("Error"))?

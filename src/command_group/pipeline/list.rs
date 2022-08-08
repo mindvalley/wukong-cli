@@ -2,7 +2,7 @@ use super::PipelineData;
 use crate::{
     config::CONFIG_FILE,
     error::CliError,
-    graphql::pipeline::{pipelines_query::PipelinesQueryPipelines, PipelinesQuery},
+    graphql::{pipeline::pipelines_query::PipelinesQueryPipelines, QueryClientBuilder},
     Config as CLIConfig, GlobalContext,
 };
 use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
@@ -27,11 +27,15 @@ pub async fn handle_list<'a>(context: GlobalContext) -> Result<bool, CliError<'a
     };
 
     // Calling API ...
-    let pipelines_data = PipelinesQuery::fetch(&application)
+    let client = QueryClientBuilder::new()
+        .with_access_token(context.access_token.unwrap())
+        .build()?;
+
+    let pipelines_data = client
+        .fetch_pipeline_list(&application)
         .await?
         .data
         .unwrap()
-        // .ok_or(anyhow::anyhow!("Error"))?
         .pipelines;
 
     progress_bar.finish_and_clear();

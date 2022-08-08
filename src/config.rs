@@ -1,5 +1,4 @@
 use crate::error::{CliError, ConfigError};
-// use anyhow::{Context, Result};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -50,6 +49,7 @@ pub struct LogConfig {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct AuthConfig {
+    pub current_user: String,
     pub access_token: String,
     pub expiry_time: String,
     pub refresh_token: String,

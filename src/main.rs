@@ -55,18 +55,26 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
             Some(application.clone())
         } else {
             match app.config {
-                app::ConfigState::Initialized(config) => Some(config.core.application),
+                app::ConfigState::Initialized(ref config) => Some(config.core.application.clone()),
                 app::ConfigState::Uninitialized => None,
             }
         }
     };
 
-    let context = GlobalContext {
+    let mut context = GlobalContext {
         application: current_application,
         access_token: None,
         expiry_time: None,
         refresh_token: None,
     };
+
+    if let app::ConfigState::Initialized(config) = app.config {
+        if let Some(auth_config) = &config.auth {
+            context.access_token = Some(auth_config.access_token.clone());
+            context.refresh_token = Some(auth_config.refresh_token.clone());
+            context.expiry_time = Some(auth_config.expiry_time.clone());
+        }
+    }
 
     match app.cli.command_group {
         CommandGroup::Pipeline(pipeline) => pipeline.perform_action(context).await,
@@ -126,6 +134,10 @@ Some things to try next:
                 config.save(config_file).expect("Config file save failed");
             }
 
+            Ok(true)
+        }
+        CommandGroup::Login => {
+            auth::login().await;
             Ok(true)
         }
     }

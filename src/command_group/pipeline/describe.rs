@@ -1,21 +1,25 @@
 use super::{JobBuild, PipelineBranch, PipelinePullRequest};
 use crate::{
     error::CliError,
-    graphql::pipeline::{
-        pipeline_query::PipelineQueryPipeline, MultiBranchPipelineQuery, PipelineQuery,
-    },
+    graphql::{pipeline::pipeline_query::PipelineQueryPipeline, QueryClientBuilder},
+    GlobalContext,
 };
 use indicatif::{ProgressBar, ProgressStyle};
 use tabled::Table;
 
-pub async fn handle_describe<'a>(name: &str) -> Result<bool, CliError<'a>> {
+pub async fn handle_describe<'a>(context: GlobalContext, name: &str) -> Result<bool, CliError<'a>> {
     let deps = 1234;
     let progress_bar = ProgressBar::new(deps);
     progress_bar.set_style(ProgressStyle::default_spinner());
     println!("Fetching pipeline data ...");
 
     // Calling API ...
-    let pipeline_resp = PipelineQuery::fetch(name)
+    let client = QueryClientBuilder::new()
+        .with_access_token(context.access_token.unwrap())
+        .build()?;
+
+    let pipeline_resp = client
+        .fetch_pipeline(name)
         .await?
         .data
         // .ok_or(anyhow::anyhow!("Error"))?
@@ -48,7 +52,8 @@ pub async fn handle_describe<'a>(name: &str) -> Result<bool, CliError<'a>> {
                 }
             }
             PipelineQueryPipeline::MultiBranchPipeline(p) => {
-                let multi_branch_pipeline_resp = MultiBranchPipelineQuery::fetch(&p.name)
+                let multi_branch_pipeline_resp = client
+                    .fetch_multi_branch_pipeline(&p.name)
                     .await?
                     .data
                     // .ok_or(anyhow::anyhow!("Error"))?
