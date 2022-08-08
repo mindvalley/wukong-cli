@@ -19,6 +19,7 @@ use std::process;
 #[derive(Default)]
 pub struct GlobalContext {
     application: Option<String>,
+    account: Option<String>,
     access_token: Option<String>,
 }
 
@@ -49,11 +50,11 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
     match app.config {
         app::ConfigState::InitialisedAndAuthenticated(ref config) => {
             context.application = Some(config.core.application.clone());
+            context.account = Some(config.auth.as_ref().unwrap().account.clone());
             context.access_token = Some(config.auth.as_ref().unwrap().access_token.clone());
         }
         app::ConfigState::InitialisedButUnAuthenticated(ref config) => {
             context.application = Some(config.core.application.clone());
-            context.access_token = None;
         }
         app::ConfigState::Uninitialised => {}
     };
@@ -74,7 +75,7 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
             | ConfigState::InitialisedButUnAuthenticated(_) => config.perform_action(context),
             ConfigState::Uninitialised => return Err(CliError::UnInitialised),
         },
-        CommandGroup::Init => handle_init(context),
+        CommandGroup::Init => handle_init(context).await,
         CommandGroup::Login => match app.config {
             ConfigState::InitialisedAndAuthenticated(_)
             | ConfigState::InitialisedButUnAuthenticated(_) => handle_login(context).await,

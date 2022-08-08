@@ -1,5 +1,6 @@
 use crate::{
     config::{AuthConfig, CONFIG_FILE},
+    error::CliError,
     Config as CLIConfig,
 };
 use chrono::{Duration, Utc};
@@ -9,10 +10,12 @@ use openidconnect::{
     },
     reqwest::async_http_client,
     AccessTokenHash, AdditionalClaims, AuthenticationFlow, AuthorizationCode, ClientId, CsrfToken,
-    IssuerUrl, Nonce, OAuth2TokenResponse, PkceCodeChallenge, RedirectUrl, Scope, UserInfoClaims,
+    DiscoveryError, IssuerUrl, Nonce, OAuth2TokenResponse, PkceCodeChallenge, RedirectUrl, Scope,
+    UserInfoClaims,
 };
 use serde::{Deserialize, Serialize};
 use std::{
+    error::Error,
     io::{BufRead, BufReader, Write},
     net::TcpListener,
     process::exit,
@@ -24,9 +27,17 @@ use webbrowser;
 struct OktaClaims;
 impl AdditionalClaims for OktaClaims {}
 
-fn handle_error<T: std::error::Error>(fail: &T, msg: &'static str) {
+#[derive(Debug)]
+pub struct AuthInfo {
+    pub account: String,
+    pub access_token: String,
+    pub expiry_time: String,
+    pub refresh_token: String,
+}
+
+fn handle_error(fail: &impl Error, msg: &'static str) {
     let mut err_msg = format!("ERROR: {}", msg);
-    let mut cur_fail: Option<&dyn std::error::Error> = Some(fail);
+    let mut cur_fail: Option<&dyn Error> = Some(fail);
     while let Some(cause) = cur_fail {
         err_msg += &format!("\n    caused by: {}", cause);
         cur_fail = cause.source();
@@ -35,7 +46,7 @@ fn handle_error<T: std::error::Error>(fail: &T, msg: &'static str) {
     exit(1);
 }
 
-pub async fn login() {
+pub async fn login<'a>() -> Result<AuthInfo, CliError<'a>> {
     let okta_client_id = ClientId::new("0oakfxaegyAV5JDD5357".to_string());
 
     let issuer_url =
@@ -44,15 +55,14 @@ pub async fn login() {
     // Fetch Okta's OpenID Connect discovery document.
     let provider_metadata = CoreProviderMetadata::discover_async(issuer_url, async_http_client)
         .await
-        .unwrap_or_else(|err| {
-            handle_error(&err, "Failed to discover OpenID Provider");
-            unreachable!();
-        });
+        .map_err(|_err| CliError::OpenIDDiscoveryError)?;
+    // .unwrap_or_else(|err| {
+    //     handle_error(&err, "Failed to discover OpenID Provider");
+    //     unreachable!();
+    // });
 
     // Set up the config for the Okta OAuth2 process.
     let client = CoreClient::from_provider_metadata(provider_metadata, okta_client_id, None)
-        // This example will be running its own server at localhost:8080.
-        // See below for the server implementation.
         .set_redirect_uri(
             RedirectUrl::new("http://localhost:6758/login/callback".to_string())
                 .expect("Invalid redirect URL"),
@@ -68,7 +78,6 @@ pub async fn login() {
             CsrfToken::new_random,
             Nonce::new_random,
         )
-        // This example is requesting access to the the user's profile including email.
         .add_scope(Scope::new("email".to_string()))
         .add_scope(Scope::new("profile".to_string()))
         .add_scope(Scope::new("openid".to_string()))
@@ -212,31 +221,37 @@ pub async fn login() {
         .map(|email| email.as_str())
         .unwrap_or("<email not provided>");
 
-    let config_file = CONFIG_FILE
-        .as_ref()
-        .expect("Unable to identify user's home directory");
+    // let config_file = CONFIG_FILE
+    //     .as_ref()
+    //     .expect("Unable to identify user's home directory");
 
     let now = Utc::now();
     let expiry = now
         .checked_add_signed(Duration::from_std(expires_in).unwrap())
         .unwrap()
         .to_rfc3339();
-    // println!("expiry: {:?}", expiry);
 
-    match CLIConfig::load(&config_file) {
-        Ok(mut config) => {
-            config.auth = Some(AuthConfig {
-                account: current_user_email.to_string(),
-                access_token: access_token.secret().to_owned(),
-                expiry_time: expiry.to_string(),
-                refresh_token: refresh_token.secret().to_owned(),
-            });
-            // config.core.application = config_value.to_string();
-            config.save(&config_file).unwrap();
-            println!("You are now logged in as [{}].", current_user_email);
-        }
-        Err(_err) => todo!(),
-    };
+    // match CLIConfig::load(&config_file) {
+    //     Ok(mut config) => {
+    //         config.auth = Some(AuthConfig {
+    //             account: current_user_email.to_string(),
+    //             access_token: access_token.secret().to_owned(),
+    //             expiry_time: expiry.to_string(),
+    //             refresh_token: refresh_token.secret().to_owned(),
+    //         });
+    //         // config.core.application = config_value.to_string();
+    //         config.save(&config_file).unwrap();
+    //         println!("You are now logged in as [{}].", current_user_email);
+    //     }
+    //     Err(_err) => todo!(),
+    // };
+
+    Ok(AuthInfo {
+        account: current_user_email.to_string(),
+        access_token: access_token.secret().to_owned(),
+        expiry_time: expiry.to_string(),
+        refresh_token: refresh_token.secret().to_owned(),
+    })
 
     // let userinfo_claims: UserInfoClaims<OktaClaims, CoreGenderClaim> = client
     //     .user_info(token_response.access_token().to_owned(), None)

@@ -9,6 +9,8 @@ pub enum CliError<'a> {
     Io(#[from] ::std::io::Error),
     #[error(transparent)]
     ConfigError(ConfigError<'a>),
+    #[error("Failed to discover OpenID Provider")]
+    OpenIDDiscoveryError,
     #[error("You are un-authenticated.")]
     UnAuthenticated,
     #[error("You are un-initialised.")]
@@ -62,7 +64,7 @@ impl<'a> CliError<'a> {
                     "Run \"chmod +rw {path}\" to provide read and write permissions."
                 )),
                 ConfigError::BadTomlData(_) => Some(String::from(
-                    "Check if your config.toml file is in valid TOML format.",
+                    "Check if your config.toml file is in valid TOML format. You may want to remove the config.toml file and run \"wukong init\" to re-initialise configuration again.",
                 )),
                 _ => None,
             },

@@ -1,15 +1,19 @@
 use dialoguer::{theme::ColorfulTheme, Select};
 
 use crate::{
-    config::{Config, CONFIG_FILE},
+    auth::login,
+    config::{AuthConfig, Config, CONFIG_FILE},
     error::CliError,
     GlobalContext,
 };
 
-pub fn handle_init<'a>(_context: GlobalContext) -> Result<bool, CliError<'a>> {
+pub async fn handle_init<'a>(context: GlobalContext) -> Result<bool, CliError<'a>> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
 
-    let login_selections = &["junkai.gan@mindvalley.com", "Log in with a new account"];
+    let mut login_selections = vec!["Log in with a new account"];
+    if let Some(ref account) = context.account {
+        login_selections.splice(..0, vec![account.as_str()]);
+    };
 
     let selection = Select::with_theme(&ColorfulTheme::default())
                 .with_prompt("Choose the account you would like to use to perform operations for this configuration:")
@@ -18,7 +22,21 @@ pub fn handle_init<'a>(_context: GlobalContext) -> Result<bool, CliError<'a>> {
                 .interact()
                 .unwrap();
 
-    println!("You are logged in as: [{}].\n", login_selections[selection]);
+    let mut config = Config::default();
+
+    if selection == login_selections.len() - 1 {
+        // login
+        let auth_info = login().await?;
+
+        config.auth = Some(AuthConfig {
+            account: auth_info.account,
+            access_token: auth_info.access_token,
+            expiry_time: auth_info.expiry_time,
+            refresh_token: auth_info.refresh_token,
+        });
+    } else {
+        println!("You are logged in as: [{}].\n", login_selections[selection]);
+    }
 
     let application_selections = &[
         "mv-prod-applications-hub",
@@ -56,7 +74,6 @@ Some things to try next:
     );
 
     if let Some(ref config_file) = *CONFIG_FILE {
-        let mut config = Config::default();
         config.core.application = application_selections[application_selection].to_string();
         config.save(config_file).expect("Config file save failed");
     }
