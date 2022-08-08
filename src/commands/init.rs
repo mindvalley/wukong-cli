@@ -1,18 +1,21 @@
-use dialoguer::{theme::ColorfulTheme, Select};
-
 use crate::{
     auth::login,
     config::{AuthConfig, Config, CONFIG_FILE},
     error::CliError,
     GlobalContext,
 };
+use dialoguer::{theme::ColorfulTheme, Select};
 
-pub async fn handle_init<'a>(context: GlobalContext) -> Result<bool, CliError<'a>> {
+pub async fn handle_init<'a>(
+    context: GlobalContext,
+    existing_config: Option<Config>,
+) -> Result<bool, CliError<'a>> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
 
     let mut login_selections = vec!["Log in with a new account"];
     if let Some(ref account) = context.account {
         login_selections.splice(..0, vec![account.as_str()]);
+        println!("login selections: {:?}", login_selections);
     };
 
     let selection = Select::with_theme(&ColorfulTheme::default())
@@ -22,10 +25,13 @@ pub async fn handle_init<'a>(context: GlobalContext) -> Result<bool, CliError<'a
                 .interact()
                 .unwrap();
 
-    let mut config = Config::default();
+    let mut config = match existing_config {
+        Some(config) => config,
+        None => Config::default(),
+    };
 
+    // "Log in with a new account" is selected
     if selection == login_selections.len() - 1 {
-        // login
         let auth_info = login().await?;
 
         config.auth = Some(AuthConfig {
@@ -38,6 +44,7 @@ pub async fn handle_init<'a>(context: GlobalContext) -> Result<bool, CliError<'a
         println!("You are logged in as: [{}].\n", login_selections[selection]);
     }
 
+    // TODO: get applications from API
     let application_selections = &[
         "mv-prod-applications-hub",
         "mv-prod-linode",

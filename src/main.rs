@@ -16,7 +16,7 @@ use error::{handle_error, CliError};
 use app::{App, ConfigState};
 use std::process;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct GlobalContext {
     application: Option<String>,
     account: Option<String>,
@@ -75,7 +75,14 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
             | ConfigState::InitialisedButUnAuthenticated(_) => config.perform_action(context),
             ConfigState::Uninitialised => return Err(CliError::UnInitialised),
         },
-        CommandGroup::Init => handle_init(context).await,
+        CommandGroup::Init => {
+            let existing_config = match app.config {
+                ConfigState::InitialisedButUnAuthenticated(config)
+                | ConfigState::InitialisedAndAuthenticated(config) => Some(config),
+                ConfigState::Uninitialised => None,
+            };
+            handle_init(context, existing_config).await
+        }
         CommandGroup::Login => match app.config {
             ConfigState::InitialisedAndAuthenticated(_)
             | ConfigState::InitialisedButUnAuthenticated(_) => handle_login(context).await,
