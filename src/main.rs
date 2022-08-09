@@ -20,8 +20,8 @@ macro_rules! must_init {
     (@check $config:expr, $function_call:expr) => {
         {
             match $config {
-                ConfigState::InitialisedAndAuthenticated(_) => $function_call,
-                ConfigState::InitialisedButUnAuthenticated(_) => return Err(CliError::UnAuthenticated),
+                ConfigState::InitialisedAndAuthenticated(_)
+                | ConfigState::InitialisedButUnAuthenticated(_) => $function_call,
                 ConfigState::Uninitialised => return Err(CliError::UnInitialised),
             }
         }
@@ -40,27 +40,27 @@ macro_rules! must_init {
     };
 }
 
-macro_rules! must_login {
+macro_rules! must_init_and_login {
     (@check $config:expr, $function_call:expr) => {
         {
             match $config {
-                ConfigState::InitialisedAndAuthenticated(_)
-                | ConfigState::InitialisedButUnAuthenticated(_) => $function_call,
+                ConfigState::InitialisedAndAuthenticated(_) => $function_call,
+                ConfigState::InitialisedButUnAuthenticated(_) => return Err(CliError::UnAuthenticated),
                 ConfigState::Uninitialised => return Err(CliError::UnInitialised),
             }
         }
     };
     ($config:expr, $instance:ident.$method:ident($($params:tt)*)) => {
-        must_login!(@check $config, $instance.$method($($params)*))
+        must_init_and_login!(@check $config, $instance.$method($($params)*))
     };
     ($config:expr, $instance:ident.$method:ident($($params:tt)*).await) => {
-        must_login!(@check $config, $instance.$method($($params)*)).await
+        must_init_and_login!(@check $config, $instance.$method($($params)*)).await
     };
     ($config:expr, $function:ident($($params:tt)*)) => {
-        must_login!(@check $config, $function($($params)*))
+        must_init_and_login!(@check $config, $function($($params)*))
     };
     ($config:expr, $function:ident($($params:tt)*).await) => {
-        must_login!(@check $config, $function($($params)*)).await
+        must_init_and_login!(@check $config, $function($($params)*)).await
     };
 }
 
@@ -113,7 +113,7 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
 
     match app.cli.command_group {
         CommandGroup::Pipeline(pipeline) => {
-            must_login!(app.config, pipeline.handle_command(context).await)
+            must_init_and_login!(app.config, pipeline.handle_command(context).await)
         }
         CommandGroup::Config(config) => must_init!(app.config, config.handle_command(context)),
         CommandGroup::Init => {
