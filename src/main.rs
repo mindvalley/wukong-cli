@@ -93,15 +93,18 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
     let app = App::new()?;
 
     let mut context = GlobalContext::default();
+    let mut existing_config = None;
 
     match app.config {
         app::ConfigState::InitialisedAndAuthenticated(ref config) => {
             context.application = Some(config.core.application.clone());
             context.account = Some(config.auth.as_ref().unwrap().account.clone());
             context.access_token = Some(config.auth.as_ref().unwrap().access_token.clone());
+            existing_config = Some(config);
         }
         app::ConfigState::InitialisedButUnAuthenticated(ref config) => {
             context.application = Some(config.core.application.clone());
+            existing_config = Some(config);
         }
         app::ConfigState::Uninitialised => {}
     };
@@ -116,15 +119,8 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
             must_init_and_login!(app.config, pipeline.handle_command(context).await)
         }
         CommandGroup::Config(config) => must_init!(app.config, config.handle_command(context)),
-        CommandGroup::Init => {
-            let existing_config = match app.config {
-                ConfigState::InitialisedButUnAuthenticated(config)
-                | ConfigState::InitialisedAndAuthenticated(config) => Some(config),
-                ConfigState::Uninitialised => None,
-            };
-            handle_init(context, existing_config).await
-        }
         CommandGroup::Login => must_init!(app.config, handle_login(context).await),
+        CommandGroup::Init => handle_init(context, existing_config).await,
     }
 }
 
