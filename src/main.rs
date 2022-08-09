@@ -17,80 +17,50 @@ use app::{App, ConfigState};
 use std::process;
 
 macro_rules! must_init {
-    ($config:expr, $instance:ident.$method:ident($($params:tt)*)) => {
+    (@check $config:expr, $function_call:expr) => {
         {
             match $config {
-                ConfigState::InitialisedAndAuthenticated(_) => $instance.$method($($params)*),
+                ConfigState::InitialisedAndAuthenticated(_) => $function_call,
                 ConfigState::InitialisedButUnAuthenticated(_) => return Err(CliError::UnAuthenticated),
                 ConfigState::Uninitialised => return Err(CliError::UnInitialised),
             }
         }
+    };
+    ($config:expr, $instance:ident.$method:ident($($params:tt)*)) => {
+        must_init!(@check $config, $instance.$method($($params)*))
     };
     ($config:expr, $instance:ident.$method:ident($($params:tt)*).await) => {
-        {
-            match $config {
-                ConfigState::InitialisedAndAuthenticated(_) => $instance.$method($($params)*).await,
-                ConfigState::InitialisedButUnAuthenticated(_) => return Err(CliError::UnAuthenticated),
-                ConfigState::Uninitialised => return Err(CliError::UnInitialised),
-            }
-        }
+        must_init!(@check $config, $instance.$method($($params)*).await)
     };
     ($config:expr, $function:ident($($params:tt)*)) => {
-        {
-            match $config {
-                ConfigState::InitialisedAndAuthenticated(_) => $function($($params)*),
-                ConfigState::InitialisedButUnAuthenticated(_) => return Err(CliError::UnAuthenticated),
-                ConfigState::Uninitialised => return Err(CliError::UnInitialised),
-            }
-        }
+        must_init!(@check $config, $function($($params)*))
     };
     ($config:expr, $function:ident($($params:tt)*).await) => {
-        {
-            match $config {
-                ConfigState::InitialisedAndAuthenticated(_) => $function($($params)*).await,
-                ConfigState::InitialisedButUnAuthenticated(_) => return Err(CliError::UnAuthenticated),
-                ConfigState::Uninitialised => return Err(CliError::UnInitialised),
-            }
-        }
+        must_init!(@check $config, $function($($params)*)).await
     };
 }
 
 macro_rules! must_login {
-    ($config:expr, $instance:ident.$method:ident($($params:tt)*)) => {
+    (@check $config:expr, $function_call:expr) => {
         {
             match $config {
                 ConfigState::InitialisedAndAuthenticated(_)
-                | ConfigState::InitialisedButUnAuthenticated(_) => $instance.$method($($params)*),
+                | ConfigState::InitialisedButUnAuthenticated(_) => $function_call,
                 ConfigState::Uninitialised => return Err(CliError::UnInitialised),
             }
         }
+    };
+    ($config:expr, $instance:ident.$method:ident($($params:tt)*)) => {
+        must_login!(@check $config, $instance.$method($($params)*))
     };
     ($config:expr, $instance:ident.$method:ident($($params:tt)*).await) => {
-        {
-            match $config {
-                ConfigState::InitialisedAndAuthenticated(_)
-                | ConfigState::InitialisedButUnAuthenticated(_) => $instance.$method($($params)*).await,
-                ConfigState::Uninitialised => return Err(CliError::UnInitialised),
-            }
-        }
+        must_login!(@check $config, $instance.$method($($params)*)).await
     };
     ($config:expr, $function:ident($($params:tt)*)) => {
-        {
-            match $config {
-                ConfigState::InitialisedAndAuthenticated(_)
-                | ConfigState::InitialisedButUnAuthenticated(_) => $function($($params)*),
-                ConfigState::Uninitialised => return Err(CliError::UnInitialised),
-            }
-        }
+        must_login!(@check $config, $function($($params)*))
     };
     ($config:expr, $function:ident($($params:tt)*).await) => {
-        {
-            match $config {
-                ConfigState::InitialisedAndAuthenticated(_)
-                | ConfigState::InitialisedButUnAuthenticated(_) => $function($($params)*).await,
-                ConfigState::Uninitialised => return Err(CliError::UnInitialised),
-            }
-        }
+        must_login!(@check $config, $function($($params)*)).await
     };
 }
 
