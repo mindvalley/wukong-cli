@@ -15,7 +15,6 @@ pub async fn handle_init<'a>(
     let mut login_selections = vec!["Log in with a new account"];
     if let Some(ref account) = context.account {
         login_selections.splice(..0, vec![account.as_str()]);
-        println!("login selections: {:?}", login_selections);
     };
 
     let selection = Select::with_theme(&ColorfulTheme::default())
@@ -66,6 +65,8 @@ pub async fn handle_init<'a>(
         &application_selections[application_selection]
     );
 
+    config.core.application = application_selections[application_selection].to_string();
+
     println!(
         r#"
 Your Wukong CLI is configured and ready to use!
@@ -81,7 +82,6 @@ Some things to try next:
     );
 
     if let Some(ref config_file) = *CONFIG_FILE {
-        config.core.application = application_selections[application_selection].to_string();
         config.save(config_file).expect("Config file save failed");
     }
 

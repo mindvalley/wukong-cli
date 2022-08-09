@@ -36,7 +36,7 @@ pub enum ConfigName {
 }
 
 impl Config {
-    pub fn perform_action<'a>(&self, _context: GlobalContext) -> Result<bool, CliError<'a>> {
+    pub fn handle_command<'a>(&self, _context: GlobalContext) -> Result<bool, CliError<'a>> {
         let mut cmd = ClapApp::command();
 
         match &self.subcommand {

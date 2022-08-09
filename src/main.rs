@@ -16,6 +16,84 @@ use error::{handle_error, CliError};
 use app::{App, ConfigState};
 use std::process;
 
+macro_rules! must_init {
+    ($config:expr, $instance:ident.$method:ident($($params:tt)*)) => {
+        {
+            match $config {
+                ConfigState::InitialisedAndAuthenticated(_) => $instance.$method($($params)*),
+                ConfigState::InitialisedButUnAuthenticated(_) => return Err(CliError::UnAuthenticated),
+                ConfigState::Uninitialised => return Err(CliError::UnInitialised),
+            }
+        }
+    };
+    ($config:expr, $instance:ident.$method:ident($($params:tt)*).await) => {
+        {
+            match $config {
+                ConfigState::InitialisedAndAuthenticated(_) => $instance.$method($($params)*).await,
+                ConfigState::InitialisedButUnAuthenticated(_) => return Err(CliError::UnAuthenticated),
+                ConfigState::Uninitialised => return Err(CliError::UnInitialised),
+            }
+        }
+    };
+    ($config:expr, $function:ident($($params:tt)*)) => {
+        {
+            match $config {
+                ConfigState::InitialisedAndAuthenticated(_) => $function($($params)*),
+                ConfigState::InitialisedButUnAuthenticated(_) => return Err(CliError::UnAuthenticated),
+                ConfigState::Uninitialised => return Err(CliError::UnInitialised),
+            }
+        }
+    };
+    ($config:expr, $function:ident($($params:tt)*).await) => {
+        {
+            match $config {
+                ConfigState::InitialisedAndAuthenticated(_) => $function($($params)*).await,
+                ConfigState::InitialisedButUnAuthenticated(_) => return Err(CliError::UnAuthenticated),
+                ConfigState::Uninitialised => return Err(CliError::UnInitialised),
+            }
+        }
+    };
+}
+
+macro_rules! must_login {
+    ($config:expr, $instance:ident.$method:ident($($params:tt)*)) => {
+        {
+            match $config {
+                ConfigState::InitialisedAndAuthenticated(_)
+                | ConfigState::InitialisedButUnAuthenticated(_) => $instance.$method($($params)*),
+                ConfigState::Uninitialised => return Err(CliError::UnInitialised),
+            }
+        }
+    };
+    ($config:expr, $instance:ident.$method:ident($($params:tt)*).await) => {
+        {
+            match $config {
+                ConfigState::InitialisedAndAuthenticated(_)
+                | ConfigState::InitialisedButUnAuthenticated(_) => $instance.$method($($params)*).await,
+                ConfigState::Uninitialised => return Err(CliError::UnInitialised),
+            }
+        }
+    };
+    ($config:expr, $function:ident($($params:tt)*)) => {
+        {
+            match $config {
+                ConfigState::InitialisedAndAuthenticated(_)
+                | ConfigState::InitialisedButUnAuthenticated(_) => $function($($params)*),
+                ConfigState::Uninitialised => return Err(CliError::UnInitialised),
+            }
+        }
+    };
+    ($config:expr, $function:ident($($params:tt)*).await) => {
+        {
+            match $config {
+                ConfigState::InitialisedAndAuthenticated(_)
+                | ConfigState::InitialisedButUnAuthenticated(_) => $function($($params)*).await,
+                ConfigState::Uninitialised => return Err(CliError::UnInitialised),
+            }
+        }
+    };
+}
+
 #[derive(Default, Debug)]
 pub struct GlobalContext {
     application: Option<String>,
@@ -27,7 +105,6 @@ pub struct GlobalContext {
 async fn main() {
     // Logger::new().init();
 
-    // auth::login().await;
     match run().await {
         Err(error) => {
             handle_error(error);
@@ -65,16 +142,10 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
     }
 
     match app.cli.command_group {
-        CommandGroup::Pipeline(pipeline) => match app.config {
-            ConfigState::InitialisedAndAuthenticated(_) => pipeline.perform_action(context).await,
-            ConfigState::InitialisedButUnAuthenticated(_) => return Err(CliError::UnAuthenticated),
-            ConfigState::Uninitialised => return Err(CliError::UnInitialised),
-        },
-        CommandGroup::Config(config) => match app.config {
-            ConfigState::InitialisedAndAuthenticated(_)
-            | ConfigState::InitialisedButUnAuthenticated(_) => config.perform_action(context),
-            ConfigState::Uninitialised => return Err(CliError::UnInitialised),
-        },
+        CommandGroup::Pipeline(pipeline) => {
+            must_login!(app.config, pipeline.handle_command(context).await)
+        }
+        CommandGroup::Config(config) => must_init!(app.config, config.handle_command(context)),
         CommandGroup::Init => {
             let existing_config = match app.config {
                 ConfigState::InitialisedButUnAuthenticated(config)
@@ -83,11 +154,7 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
             };
             handle_init(context, existing_config).await
         }
-        CommandGroup::Login => match app.config {
-            ConfigState::InitialisedAndAuthenticated(_)
-            | ConfigState::InitialisedButUnAuthenticated(_) => handle_login(context).await,
-            ConfigState::Uninitialised => return Err(CliError::UnInitialised),
-        },
+        CommandGroup::Login => must_init!(app.config, handle_login(context).await),
     }
 }
 

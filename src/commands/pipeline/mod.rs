@@ -148,7 +148,7 @@ pub enum PipelineSubcommand {
 }
 
 impl Pipeline {
-    pub async fn perform_action<'a>(&self, context: GlobalContext) -> Result<bool, CliError<'a>> {
+    pub async fn handle_command<'a>(&self, context: GlobalContext) -> Result<bool, CliError<'a>> {
         match &self.subcommand {
             PipelineSubcommand::List => handle_list(context).await,
             PipelineSubcommand::Describe { name } => handle_describe(context, name).await,
