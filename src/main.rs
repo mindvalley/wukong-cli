@@ -17,7 +17,7 @@ use app::{App, ConfigState};
 use std::process;
 
 macro_rules! must_init {
-    (@check $config:expr, $function_call:expr) => {
+    ($config:expr, $function_call:expr) => {
         {
             match $config {
                 ConfigState::InitialisedAndAuthenticated(_)
@@ -26,22 +26,10 @@ macro_rules! must_init {
             }
         }
     };
-    ($config:expr, $instance:ident.$method:ident($($params:tt)*)) => {
-        must_init!(@check $config, $instance.$method($($params)*))
-    };
-    ($config:expr, $instance:ident.$method:ident($($params:tt)*).await) => {
-        must_init!(@check $config, $instance.$method($($params)*).await)
-    };
-    ($config:expr, $function:ident($($params:tt)*)) => {
-        must_init!(@check $config, $function($($params)*))
-    };
-    ($config:expr, $function:ident($($params:tt)*).await) => {
-        must_init!(@check $config, $function($($params)*)).await
-    };
 }
 
 macro_rules! must_init_and_login {
-    (@check $config:expr, $function_call:expr) => {
+    ($config:expr, $function_call:expr) => {
         {
             match $config {
                 ConfigState::InitialisedAndAuthenticated(_) => $function_call,
@@ -49,18 +37,6 @@ macro_rules! must_init_and_login {
                 ConfigState::Uninitialised => return Err(CliError::UnInitialised),
             }
         }
-    };
-    ($config:expr, $instance:ident.$method:ident($($params:tt)*)) => {
-        must_init_and_login!(@check $config, $instance.$method($($params)*))
-    };
-    ($config:expr, $instance:ident.$method:ident($($params:tt)*).await) => {
-        must_init_and_login!(@check $config, $instance.$method($($params)*)).await
-    };
-    ($config:expr, $function:ident($($params:tt)*)) => {
-        must_init_and_login!(@check $config, $function($($params)*))
-    };
-    ($config:expr, $function:ident($($params:tt)*).await) => {
-        must_init_and_login!(@check $config, $function($($params)*)).await
     };
 }
 
