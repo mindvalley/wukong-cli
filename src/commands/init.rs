@@ -8,7 +8,7 @@ use dialoguer::{theme::ColorfulTheme, Select};
 
 pub async fn handle_init<'a>(
     context: GlobalContext,
-    existing_config: Option<&Config>,
+    existing_config: Option<Config>,
 ) -> Result<bool, CliError<'a>> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
 
@@ -25,7 +25,7 @@ pub async fn handle_init<'a>(
                 .unwrap();
 
     let mut config = match existing_config {
-        Some(ref config) => config.clone().to_owned(),
+        Some(ref config) => config.clone(),
         None => Config::default(),
     };
 

@@ -10,8 +10,8 @@ use openidconnect::{
     },
     reqwest::async_http_client,
     AccessTokenHash, AdditionalClaims, AuthenticationFlow, AuthorizationCode, ClientId, CsrfToken,
-    DiscoveryError, IssuerUrl, Nonce, OAuth2TokenResponse, PkceCodeChallenge, RedirectUrl, Scope,
-    UserInfoClaims,
+    DiscoveryError, IssuerUrl, Nonce, OAuth2TokenResponse, PkceCodeChallenge, RedirectUrl,
+    RefreshToken, Scope, UserInfoClaims,
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -30,6 +30,13 @@ impl AdditionalClaims for OktaClaims {}
 #[derive(Debug)]
 pub struct AuthInfo {
     pub account: String,
+    pub access_token: String,
+    pub expiry_time: String,
+    pub refresh_token: String,
+}
+
+#[derive(Debug)]
+pub struct TokenInfo {
     pub access_token: String,
     pub expiry_time: String,
     pub refresh_token: String,
@@ -267,4 +274,55 @@ pub async fn login<'a>() -> Result<AuthInfo, CliError<'a>> {
     //         unreachable!();
     //     });
     // println!("Okta returned UserInfo: {:?}", userinfo_claims);
+}
+
+pub async fn refresh_tokens(refresh_token: &RefreshToken) -> Result<TokenInfo, CliError> {
+    let okta_client_id = ClientId::new("0oakfxaegyAV5JDD5357".to_string());
+
+    let issuer_url =
+        IssuerUrl::new("https://mindvalley.okta.com".to_string()).expect("Invalid issuer URL");
+
+    // Fetch Okta's OpenID Connect discovery document.
+    let provider_metadata = CoreProviderMetadata::discover_async(issuer_url, async_http_client)
+        .await
+        .map_err(|_err| CliError::OpenIDDiscoveryError)?;
+
+    // Set up the config for the Okta OAuth2 process.
+    let client = CoreClient::from_provider_metadata(provider_metadata, okta_client_id, None)
+        .set_redirect_uri(
+            RedirectUrl::new("http://localhost:6758/login/callback".to_string())
+                .expect("Invalid redirect URL"),
+        );
+
+    let token_response = client
+        .exchange_refresh_token(refresh_token)
+        .request_async(async_http_client)
+        .await
+        .unwrap_or_else(|err| {
+            println!("{:?}", err);
+            handle_error(&err, "Failed to contact token endpoint");
+            unreachable!();
+        });
+
+    let refresh_token = token_response
+        .refresh_token()
+        .expect("Server did not return a refresh token");
+
+    let access_token = token_response.access_token();
+
+    let expires_in = token_response
+        .expires_in()
+        .expect("Server did not return access token expiration");
+
+    let now = Utc::now();
+    let expiry = now
+        .checked_add_signed(Duration::from_std(expires_in).unwrap())
+        .unwrap()
+        .to_rfc3339();
+
+    Ok(TokenInfo {
+        access_token: access_token.secret().to_owned(),
+        expiry_time: expiry.to_string(),
+        refresh_token: refresh_token.secret().to_owned(),
+    })
 }
