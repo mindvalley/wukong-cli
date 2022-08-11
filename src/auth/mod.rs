@@ -1,8 +1,4 @@
-use crate::{
-    config::{AuthConfig, CONFIG_FILE},
-    error::CliError,
-    Config as CLIConfig,
-};
+use crate::error::CliError;
 use chrono::{Duration, Utc};
 use openidconnect::{
     core::{
@@ -10,8 +6,7 @@ use openidconnect::{
     },
     reqwest::async_http_client,
     AccessTokenHash, AdditionalClaims, AuthenticationFlow, AuthorizationCode, ClientId, CsrfToken,
-    DiscoveryError, IssuerUrl, Nonce, OAuth2TokenResponse, PkceCodeChallenge, RedirectUrl,
-    RefreshToken, Scope, UserInfoClaims,
+    IssuerUrl, Nonce, OAuth2TokenResponse, PkceCodeChallenge, RedirectUrl, RefreshToken, Scope,
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -79,7 +74,7 @@ pub async fn login<'a>() -> Result<AuthInfo, CliError<'a>> {
     let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
 
     // Generate the authorization URL to which we'll redirect the user.
-    let (authorize_url, csrf_state, nonce) = client
+    let (authorize_url, _csrf_state, nonce) = client
         .authorize_url(
             AuthenticationFlow::<CoreResponseType>::AuthorizationCode,
             CsrfToken::new_random,
@@ -105,7 +100,7 @@ pub async fn login<'a>() -> Result<AuthInfo, CliError<'a>> {
     // Accept one connection
     let (mut stream, _) = listener.accept().unwrap();
     let code;
-    let state;
+    // let state;
     {
         let mut reader = BufReader::new(&stream);
 
@@ -134,8 +129,8 @@ pub async fn login<'a>() -> Result<AuthInfo, CliError<'a>> {
             })
             .unwrap();
 
-        let (_, value) = state_pair;
-        state = CsrfToken::new(value.into_owned());
+        let (_, _value) = state_pair;
+        // state = CsrfToken::new(value.into_owned());
     }
 
     let message = "You are now authenticated with the wukong CLI! The authentication flow has completed successfully. You can close this window and go back to your terminal :)";
