@@ -7,7 +7,7 @@
 <p align="center">A Swiss-army Knife CLI For Mindvalley Developers</p>
 
 <div align="center">
-  <img alt="Wukong CLI" src="./github/img/wukong-help.png" >
+  <img alt="Wukong CLI" src="./.github/img/wukong-help.png" >
 </div>
 
 <p align="center">This is a <strong>Work In Progress 🚧</strong>.</p>
