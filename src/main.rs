@@ -80,9 +80,6 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
                 .with_timezone(&Local);
 
             if local >= expiry {
-                println!("local: {:?}", local);
-                println!("expiry: {:?}", expiry);
-
                 let new_tokens = refresh_tokens(&RefreshToken::new(
                     config.auth.as_ref().unwrap().refresh_token.clone(),
                 ))
