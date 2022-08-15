@@ -1,11 +1,10 @@
-use dialoguer::{theme::ColorfulTheme, Select};
-
 use crate::{
     auth,
     config::{AuthConfig, CONFIG_FILE},
     error::CliError,
     Config as CLIConfig, GlobalContext,
 };
+use dialoguer::{theme::ColorfulTheme, Select};
 
 pub async fn handle_login<'a>(context: GlobalContext) -> Result<bool, CliError<'a>> {
     if let Some(account) = context.account {

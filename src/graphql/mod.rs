@@ -1,14 +1,18 @@
+pub mod application;
+pub mod pipeline;
+
+use self::{
+    application::{applications_query, ApplicationsQuery},
+    pipeline::{
+        ci_status_query, multi_branch_pipeline_query, pipeline_query, pipelines_query,
+        CiStatusQuery, MultiBranchPipelineQuery, PipelineQuery, PipelinesQuery,
+    },
+};
+use crate::error::APIError;
 use graphql_client::Response;
 use reqwest::header;
 
-use crate::error::APIError;
-
-use self::pipeline::{
-    ci_status_query, multi_branch_pipeline_query, pipeline_query, pipelines_query, CiStatusQuery,
-    MultiBranchPipelineQuery, PipelineQuery, PipelinesQuery,
-};
-
-pub mod pipeline;
+pub const URL: &'static str = "http://localhost:4000/api";
 
 pub struct QueryClientBuilder {
     access_token: Option<String>,
@@ -79,5 +83,11 @@ impl QueryClient {
         branch: &str,
     ) -> Result<Response<ci_status_query::ResponseData>, APIError> {
         CiStatusQuery::fetch(self, repo_url, branch).await
+    }
+
+    pub async fn fetch_application_list(
+        &self,
+    ) -> Result<Response<applications_query::ResponseData>, APIError> {
+        ApplicationsQuery::fetch(self).await
     }
 }

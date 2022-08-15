@@ -2,6 +2,7 @@ use crate::{
     auth::login,
     config::{AuthConfig, Config, CONFIG_FILE},
     error::CliError,
+    graphql::QueryClientBuilder,
     GlobalContext,
 };
 use dialoguer::{theme::ColorfulTheme, Select};
@@ -45,29 +46,39 @@ pub async fn handle_init<'a>(
         println!("You are logged in as: [{}].\n", login_selections[selection]);
     }
 
-    // TODO: get applications from API
-    let application_selections = &[
-        "mv-prod-applications-hub",
-        "mv-prod-linode",
-        "mv-prod-platform-osiris",
-        "mv-stg-applications-hub",
-        "mv-stg-dev-platform-osiris",
-        "mv-stg-linode",
-    ];
+    // Calling API ...
+    let client = QueryClientBuilder::new()
+        .with_access_token(context.access_token.unwrap())
+        .build()?;
+
+    let applications_data: Vec<String> = client
+        .fetch_application_list()
+        .await?
+        .data
+        .unwrap()
+        .applications
+        .expect("Application list can't be empty.")
+        .iter()
+        .filter(|application| application.is_some())
+        .map(|application| {
+            // unwrap is safe here because we are already filtered out None in previous step
+            application.as_ref().unwrap().name.clone()
+        })
+        .collect();
 
     let application_selection = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Please select the application")
         .default(0)
-        .items(&application_selections[..])
+        .items(&applications_data[..])
         .interact()
         .unwrap();
 
     println!(
         "Your current application has been set to: [{}].",
-        &application_selections[application_selection]
+        &applications_data[application_selection]
     );
 
-    config.core.application = application_selections[application_selection].to_string();
+    config.core.application = applications_data[application_selection].clone();
 
     println!(
         r#"
