@@ -34,11 +34,13 @@ pub async fn handle_init<'a>(
         let auth_info = login().await?;
 
         config.auth = Some(AuthConfig {
-            account: auth_info.account,
+            account: auth_info.account.clone(),
             access_token: auth_info.access_token,
             expiry_time: auth_info.expiry_time,
             refresh_token: auth_info.refresh_token,
         });
+
+        println!("You are logged in as: [{}].\n", auth_info.account);
     } else {
         println!("You are logged in as: [{}].\n", login_selections[selection]);
     }
