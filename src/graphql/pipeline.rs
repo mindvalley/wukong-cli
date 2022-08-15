@@ -1,8 +1,6 @@
-use super::QueryClient;
+use super::{QueryClient, URL};
 use crate::error::APIError;
 use graphql_client::{reqwest::post_graphql, GraphQLQuery, Response};
-
-const URL: &'static str = "http://localhost:4000/api";
 
 #[derive(GraphQLQuery)]
 #[graphql(
