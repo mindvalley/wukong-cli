@@ -58,10 +58,6 @@ pub async fn login<'a>() -> Result<AuthInfo, CliError<'a>> {
     let provider_metadata = CoreProviderMetadata::discover_async(issuer_url, async_http_client)
         .await
         .map_err(|_err| CliError::OpenIDDiscoveryError)?;
-    // .unwrap_or_else(|err| {
-    //     handle_error(&err, "Failed to discover OpenID Provider");
-    //     unreachable!();
-    // });
 
     // Set up the config for the Okta OAuth2 process.
     let client = CoreClient::from_provider_metadata(provider_metadata, okta_client_id, None)
@@ -141,13 +137,6 @@ pub async fn login<'a>() -> Result<AuthInfo, CliError<'a>> {
     );
     stream.write_all(response.as_bytes()).unwrap();
 
-    // println!("Okta returned the following code:\n{}\n", code.secret());
-    // println!(
-    //     "Okta returned the following state:\n{} (expected `{}`)\n",
-    //     state.secret(),
-    //     csrf_state.secret()
-    // );
-
     // Exchange the code with a token.
     let token_response = client
         .exchange_code(code)
@@ -159,12 +148,6 @@ pub async fn login<'a>() -> Result<AuthInfo, CliError<'a>> {
             handle_error(&err, "Failed to contact token endpoint");
             unreachable!();
         });
-
-    // println!(
-    //     "Okta returned access token:\n{}\n",
-    //     token_response.access_token().secret()
-    // );
-    // println!("Okta returned scopes: {:?}", token_response.scopes());
 
     let id_token_verifier: CoreIdTokenVerifier = client.id_token_verifier();
     let id_token = token_response
@@ -189,10 +172,6 @@ pub async fn login<'a>() -> Result<AuthInfo, CliError<'a>> {
             handle_error(&err, "Failed to verify ID token");
             unreachable!();
         });
-    // println!("Okta returned ID token: {:?}\n", id_token_claims);
-    // println!("Okta returned refresh token: {:?}", refresh_token.secret());
-    // println!("Okta returned access token: {:?}", access_token.secret());
-    // println!("Okta returned access token expiration: {:?}", expires_in);
 
     // Verify the access token hash to ensure that the access token hasn't been substituted for
     // another user's.
@@ -207,25 +186,10 @@ pub async fn login<'a>() -> Result<AuthInfo, CliError<'a>> {
         }
     }
 
-    // The authenticated user's identity is now available. See the IdTokenClaims struct for a
-    // complete listing of the available claims.
-    // println!(
-    //     "User {} with e-mail address {} has authenticated successfully",
-    //     id_token_claims.subject().as_str(),
-    //     id_token_claims
-    //         .email()
-    //         .map(|email| email.as_str())
-    //         .unwrap_or("<not provided>"),
-    // );
-
     let current_user_email = id_token_claims
         .email()
         .map(|email| email.as_str())
         .unwrap_or("<email not provided>");
-
-    // let config_file = CONFIG_FILE
-    //     .as_ref()
-    //     .expect("Unable to identify user's home directory");
 
     let now = Utc::now();
     let expiry = now
@@ -233,42 +197,12 @@ pub async fn login<'a>() -> Result<AuthInfo, CliError<'a>> {
         .unwrap()
         .to_rfc3339();
 
-    // match CLIConfig::load(&config_file) {
-    //     Ok(mut config) => {
-    //         config.auth = Some(AuthConfig {
-    //             account: current_user_email.to_string(),
-    //             access_token: access_token.secret().to_owned(),
-    //             expiry_time: expiry.to_string(),
-    //             refresh_token: refresh_token.secret().to_owned(),
-    //         });
-    //         // config.core.application = config_value.to_string();
-    //         config.save(&config_file).unwrap();
-    //         println!("You are now logged in as [{}].", current_user_email);
-    //     }
-    //     Err(_err) => todo!(),
-    // };
-
     Ok(AuthInfo {
         account: current_user_email.to_string(),
         access_token: access_token.secret().to_owned(),
         expiry_time: expiry.to_string(),
         refresh_token: refresh_token.secret().to_owned(),
     })
-
-    // let userinfo_claims: UserInfoClaims<OktaClaims, CoreGenderClaim> = client
-    //     .user_info(token_response.access_token().to_owned(), None)
-    //     .unwrap_or_else(|err| {
-    //         handle_error(&err, "No user info endpoint");
-    //         unreachable!();
-    //     })
-    //     .request_async(async_http_client)
-    //     .await
-    //     .unwrap_or_else(|err| {
-    //         println!("err: {:?}", err);
-    //         handle_error(&err, "Failed requesting user info");
-    //         unreachable!();
-    //     });
-    // println!("Okta returned UserInfo: {:?}", userinfo_claims);
 }
 
 pub async fn refresh_tokens(refresh_token: &RefreshToken) -> Result<TokenInfo, CliError> {
