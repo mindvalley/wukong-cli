@@ -1,5 +1,5 @@
-use super::{QueryClient, URL};
-use crate::error::APIError;
+use super::QueryClient;
+use crate::{error::APIError, SETTINGS};
 use graphql_client::{reqwest::post_graphql, GraphQLQuery, Response};
 
 #[derive(GraphQLQuery)]
@@ -16,7 +16,9 @@ impl ApplicationsQuery {
     ) -> Result<Response<applications_query::ResponseData>, APIError> {
         let variables = applications_query::Variables {};
 
-        let response = post_graphql::<ApplicationsQuery, _>(client.inner(), URL, variables).await?;
+        let response =
+            post_graphql::<ApplicationsQuery, _>(client.inner(), &SETTINGS.api.url, variables)
+                .await?;
         if let Some(errors) = response.errors {
             let first_error = errors[0].clone();
             // if first_error.message == "unable_to_get_pipelines" {

@@ -12,8 +12,6 @@ use crate::error::APIError;
 use graphql_client::Response;
 use reqwest::header;
 
-pub const URL: &'static str = "http://localhost:4000/api";
-
 pub struct QueryClientBuilder {
     access_token: Option<String>,
 }

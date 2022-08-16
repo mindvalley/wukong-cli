@@ -1,6 +1,5 @@
-use super::{QueryClient, URL};
-use crate::error::APIError;
-use crate::SETTINGS;
+use super::QueryClient;
+use crate::{error::APIError, SETTINGS};
 use graphql_client::{reqwest::post_graphql, GraphQLQuery, Response};
 
 #[derive(GraphQLQuery)]
