@@ -7,6 +7,7 @@ mod commands;
 mod config;
 mod error;
 mod graphql;
+mod settings;
 // mod logger;
 
 use chrono::{DateTime, Local};
@@ -14,11 +15,11 @@ use commands::{init::handle_init, login::handle_login, CommandGroup};
 use config::{Config, CONFIG_FILE};
 use error::{handle_error, CliError};
 // use logger::Logger;
+use crate::{auth::refresh_tokens, settings::Settings};
 use app::{App, ConfigState};
+use lazy_static::lazy_static;
 use openidconnect::RefreshToken;
 use std::process;
-
-use crate::auth::refresh_tokens;
 
 macro_rules! must_init {
     ($config:expr, $function_call:expr) => {{
@@ -38,6 +39,10 @@ macro_rules! must_init_and_login {
             ConfigState::Uninitialised => return Err(CliError::UnInitialised),
         }
     }};
+}
+
+lazy_static! {
+    static ref SETTINGS: Settings = Settings::new().unwrap();
 }
 
 #[derive(Default, Debug)]

@@ -1,8 +1,7 @@
 use super::QueryClient;
 use crate::error::APIError;
+use crate::SETTINGS;
 use graphql_client::{reqwest::post_graphql, GraphQLQuery, Response};
-
-const URL: &'static str = "http://localhost:4000/api";
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -21,7 +20,8 @@ impl PipelinesQuery {
             application: Some(application.to_string()),
         };
 
-        let response = post_graphql::<PipelinesQuery, _>(client.inner(), URL, variables).await?;
+        let response =
+            post_graphql::<PipelinesQuery, _>(client.inner(), &SETTINGS.api.url, variables).await?;
         if let Some(errors) = response.errors {
             let first_error = errors[0].clone();
             if first_error.message == "unable_to_get_pipelines" {
@@ -57,7 +57,8 @@ impl PipelineQuery {
             name: name.to_string(),
         };
 
-        let response = post_graphql::<PipelineQuery, _>(client.inner(), URL, variables).await?;
+        let response =
+            post_graphql::<PipelineQuery, _>(client.inner(), &SETTINGS.api.url, variables).await?;
 
         if let Some(errors) = response.errors {
             let first_error = errors[0].clone();
@@ -94,8 +95,12 @@ impl MultiBranchPipelineQuery {
             name: name.to_string(),
         };
 
-        let response =
-            post_graphql::<MultiBranchPipelineQuery, _>(client.inner(), URL, variables).await?;
+        let response = post_graphql::<MultiBranchPipelineQuery, _>(
+            client.inner(),
+            &SETTINGS.api.url,
+            variables,
+        )
+        .await?;
         if let Some(errors) = response.errors {
             let first_error = errors[0].clone();
             if first_error.message == "unable_to_get_pipeline" {
@@ -133,7 +138,8 @@ impl CiStatusQuery {
             branch: branch.to_string(),
         };
 
-        let response = post_graphql::<CiStatusQuery, _>(client.inner(), URL, variables).await?;
+        let response =
+            post_graphql::<CiStatusQuery, _>(client.inner(), &SETTINGS.api.url, variables).await?;
         if let Some(errors) = response.errors.clone() {
             let first_error = errors[0].clone();
             match first_error.message.as_str() {
