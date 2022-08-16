@@ -21,12 +21,6 @@ impl ApplicationsQuery {
                 .await?;
         if let Some(errors) = response.errors {
             let first_error = errors[0].clone();
-            // if first_error.message == "unable_to_get_pipelines" {
-            //     return Err(APIError::ResponseError {
-            //         code: first_error.message,
-            //         message: format!("Unable to get pipelines for application `{}`.", application),
-            //     });
-            // }
 
             return Err(APIError::ResponseError {
                 code: first_error.message,
