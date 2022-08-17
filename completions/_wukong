@@ -1,0 +1,257 @@
+#compdef wukong
+
+autoload -U is-at-least
+
+_wukong() {
+    typeset -A opt_args
+    typeset -a _arguments_options
+    local ret=1
+
+    if is-at-least 5.2; then
+        _arguments_options=(-s -S -C)
+    else
+        _arguments_options=(-s -C)
+    fi
+
+    local context curcontext="$curcontext" state line
+    _arguments "${_arguments_options[@]}" \
+'--generate=[If provided, outputs the completion file for given shell]:GENERATOR:(bash elvish fish powershell zsh)' \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+'-V[Print version information]' \
+'--version[Print version information]' \
+":: :_wukong_commands" \
+"*::: :->wukong" \
+&& ret=0
+    case $state in
+    (wukong)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-command-$line[1]:"
+        case $line[1] in
+            (init)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+&& ret=0
+;;
+(pipeline)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+":: :_wukong__pipeline_commands" \
+"*::: :->pipeline" \
+&& ret=0
+
+    case $state in
+    (pipeline)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-pipeline-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+&& ret=0
+;;
+(describe)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+':name -- The pipeline name:' \
+&& ret=0
+;;
+(ci-status)
+_arguments "${_arguments_options[@]}" \
+'--repo-url=[Repository url]:REPO_URL: ' \
+'--branch=[Branch name]:BRANCH: ' \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*::subcommand -- The subcommand whose help message to display:' \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(config)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+":: :_wukong__config_commands" \
+"*::: :->config" \
+&& ret=0
+
+    case $state in
+    (config)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-config-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+&& ret=0
+;;
+(set)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+':config-name -- The config name:(application collect-telemetry enable-log log-dir)' \
+':config-value -- The config value:' \
+&& ret=0
+;;
+(get)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+':config-name -- The config name:(application collect-telemetry enable-log log-dir)' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*::subcommand -- The subcommand whose help message to display:' \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(login)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*::subcommand -- The subcommand whose help message to display:' \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+}
+
+(( $+functions[_wukong_commands] )) ||
+_wukong_commands() {
+    local commands; commands=(
+'init:Initialize Wukong'\''s configurations' \
+'pipeline:This contains the commands to view & interact with an application’s pipeline' \
+'config:This contains the commands to view & interact with Wukong'\''s configurations' \
+'login:Login to start using wukong command' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong commands' commands "$@"
+}
+(( $+functions[_wukong__pipeline__ci-status_commands] )) ||
+_wukong__pipeline__ci-status_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong pipeline ci-status commands' commands "$@"
+}
+(( $+functions[_wukong__config_commands] )) ||
+_wukong__config_commands() {
+    local commands; commands=(
+'list:List the configurations' \
+'set:Set the value of a configuration' \
+'get:Print the value of a configuration' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong config commands' commands "$@"
+}
+(( $+functions[_wukong__pipeline__describe_commands] )) ||
+_wukong__pipeline__describe_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong pipeline describe commands' commands "$@"
+}
+(( $+functions[_wukong__config__get_commands] )) ||
+_wukong__config__get_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config get commands' commands "$@"
+}
+(( $+functions[_wukong__config__help_commands] )) ||
+_wukong__config__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config help commands' commands "$@"
+}
+(( $+functions[_wukong__help_commands] )) ||
+_wukong__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help commands' commands "$@"
+}
+(( $+functions[_wukong__pipeline__help_commands] )) ||
+_wukong__pipeline__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong pipeline help commands' commands "$@"
+}
+(( $+functions[_wukong__init_commands] )) ||
+_wukong__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong init commands' commands "$@"
+}
+(( $+functions[_wukong__config__list_commands] )) ||
+_wukong__config__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config list commands' commands "$@"
+}
+(( $+functions[_wukong__pipeline__list_commands] )) ||
+_wukong__pipeline__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong pipeline list commands' commands "$@"
+}
+(( $+functions[_wukong__login_commands] )) ||
+_wukong__login_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong login commands' commands "$@"
+}
+(( $+functions[_wukong__pipeline_commands] )) ||
+_wukong__pipeline_commands() {
+    local commands; commands=(
+'list:List the current pipelines of the application' \
+'describe:Show the details of a pipeline' \
+'ci-status:Show the build status and (possible) errors on branch ci pipeline' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong pipeline commands' commands "$@"
+}
+(( $+functions[_wukong__config__set_commands] )) ||
+_wukong__config__set_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config set commands' commands "$@"
+}
+
+_wukong "$@"

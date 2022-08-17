@@ -2,7 +2,7 @@
 
 mod app;
 mod auth;
-mod clap_app;
+pub mod clap_app;
 mod commands;
 mod config;
 mod error;
