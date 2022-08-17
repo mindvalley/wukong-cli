@@ -48,7 +48,7 @@ pub async fn handle_init<'a>(
 
     // Calling API ...
     let client = QueryClientBuilder::new()
-        .with_access_token(context.access_token.unwrap())
+        .with_access_token(config.auth.as_ref().unwrap().access_token.clone())
         .build()?;
 
     let applications_data: Vec<String> = client
