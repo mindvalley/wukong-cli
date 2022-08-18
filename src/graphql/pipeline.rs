@@ -1,4 +1,4 @@
-use super::QueryClient;
+use super::{check_auth_error, QueryClient};
 use crate::{error::APIError, SETTINGS};
 use graphql_client::{reqwest::post_graphql, GraphQLQuery, Response};
 
@@ -23,17 +23,25 @@ impl PipelinesQuery {
             post_graphql::<PipelinesQuery, _>(client.inner(), &SETTINGS.api.url, variables).await?;
         if let Some(errors) = response.errors {
             let first_error = errors[0].clone();
-            if first_error.message == "unable_to_get_pipelines" {
-                return Err(APIError::ResponseError {
-                    code: first_error.message,
-                    message: format!("Unable to get pipelines for application `{}`.", application),
-                });
-            }
+            match check_auth_error(&first_error) {
+                Some(err) => return Err(err),
+                None => {
+                    if first_error.message == "unable_to_get_pipelines" {
+                        return Err(APIError::ResponseError {
+                            code: first_error.message,
+                            message: format!(
+                                "Unable to get pipelines for application `{}`.",
+                                application
+                            ),
+                        });
+                    }
 
-            return Err(APIError::ResponseError {
-                code: first_error.message,
-                message: format!("{}", errors[0].clone()),
-            });
+                    return Err(APIError::ResponseError {
+                        code: first_error.message,
+                        message: format!("{}", errors[0].clone()),
+                    });
+                }
+            }
         }
         Ok(response)
     }
@@ -61,17 +69,22 @@ impl PipelineQuery {
 
         if let Some(errors) = response.errors {
             let first_error = errors[0].clone();
-            if first_error.message == "unable_to_get_pipeline" {
-                return Err(APIError::ResponseError {
-                    code: first_error.message,
-                    message: format!("Unable to get pipeline `{}`.", name),
-                });
-            }
+            match check_auth_error(&first_error) {
+                Some(err) => return Err(err),
+                None => {
+                    if first_error.message == "unable_to_get_pipeline" {
+                        return Err(APIError::ResponseError {
+                            code: first_error.message,
+                            message: format!("Unable to get pipeline `{}`.", name),
+                        });
+                    }
 
-            return Err(APIError::ResponseError {
-                code: first_error.message,
-                message: format!("{}", errors[0].clone()),
-            });
+                    return Err(APIError::ResponseError {
+                        code: first_error.message,
+                        message: format!("{}", errors[0].clone()),
+                    });
+                }
+            }
         }
         Ok(response)
     }
@@ -102,17 +115,22 @@ impl MultiBranchPipelineQuery {
         .await?;
         if let Some(errors) = response.errors {
             let first_error = errors[0].clone();
-            if first_error.message == "unable_to_get_pipeline" {
-                return Err(APIError::ResponseError {
-                    code: first_error.message,
-                    message: format!("Unable to get pipeline `{}`.", name),
-                });
-            }
+            match check_auth_error(&first_error) {
+                Some(err) => return Err(err),
+                None => {
+                    if first_error.message == "unable_to_get_pipeline" {
+                        return Err(APIError::ResponseError {
+                            code: first_error.message,
+                            message: format!("Unable to get pipeline `{}`.", name),
+                        });
+                    }
 
-            return Err(APIError::ResponseError {
-                code: first_error.message,
-                message: format!("{}", errors[0].clone()),
-            });
+                    return Err(APIError::ResponseError {
+                        code: first_error.message,
+                        message: format!("{}", errors[0].clone()),
+                    });
+                }
+            }
         }
         Ok(response)
     }
@@ -141,22 +159,25 @@ impl CiStatusQuery {
             post_graphql::<CiStatusQuery, _>(client.inner(), &SETTINGS.api.url, variables).await?;
         if let Some(errors) = response.errors.clone() {
             let first_error = errors[0].clone();
-            match first_error.message.as_str() {
-                "application_not_found" => {
-                    return Err(APIError::ResponseError {
-                        code: first_error.message,
-                        message: format!("Application `{}` not found.", repo_url),
-                    });
-                }
-                "no_builds_associated_with_this_branch" => {
-                    return Ok(response);
-                }
-                _ => {
-                    return Err(APIError::ResponseError {
-                        code: first_error.message,
-                        message: format!("{}", errors[0].clone()),
-                    });
-                }
+            match check_auth_error(&first_error) {
+                Some(err) => return Err(err),
+                None => match first_error.message.as_str() {
+                    "application_not_found" => {
+                        return Err(APIError::ResponseError {
+                            code: first_error.message,
+                            message: format!("Application `{}` not found.", repo_url),
+                        });
+                    }
+                    "no_builds_associated_with_this_branch" => {
+                        return Ok(response);
+                    }
+                    _ => {
+                        return Err(APIError::ResponseError {
+                            code: first_error.message,
+                            message: format!("{}", errors[0].clone()),
+                        });
+                    }
+                },
             }
         }
         Ok(response)

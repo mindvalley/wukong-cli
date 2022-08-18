@@ -1,4 +1,4 @@
-use super::QueryClient;
+use super::{check_auth_error, QueryClient};
 use crate::{error::APIError, SETTINGS};
 use graphql_client::{reqwest::post_graphql, GraphQLQuery, Response};
 
@@ -22,10 +22,15 @@ impl ApplicationsQuery {
         if let Some(errors) = response.errors {
             let first_error = errors[0].clone();
 
-            return Err(APIError::ResponseError {
-                code: first_error.message,
-                message: format!("{}", errors[0].clone()),
-            });
+            match check_auth_error(&first_error) {
+                Some(err) => return Err(err),
+                None => {
+                    return Err(APIError::ResponseError {
+                        code: first_error.message,
+                        message: format!("{}", errors[0].clone()),
+                    });
+                }
+            }
         }
         Ok(response)
     }

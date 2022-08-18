@@ -89,3 +89,11 @@ impl QueryClient {
         ApplicationsQuery::fetch(self).await
     }
 }
+
+pub fn check_auth_error(error: &graphql_client::Error) -> Option<APIError> {
+    if error.message == "Unauthenticated" {
+        return Some(APIError::UnAuthenticated);
+    }
+
+    None
+}

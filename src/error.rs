@@ -23,6 +23,8 @@ pub enum APIError {
     ReqwestError(#[from] reqwest::Error),
     #[error("Response Error: {message}")]
     ResponseError { code: String, message: String },
+    #[error("You are un-authenticated.")]
+    UnAuthenticated,
 }
 
 #[derive(Debug, ThisError)]
@@ -77,6 +79,9 @@ impl<'a> CliError<'a> {
                 ),
                 APIError::ResponseError { code, .. } if code == "application_not_found" => Some(
                     String::from("Please check your repo url. It's unrecognized by wukong."),
+                ),
+                APIError::UnAuthenticated => Some(
+                    "Run \"wukong login\" to authenticate with your okta account.".to_string()
                 ),
                 _ => None,
             },
