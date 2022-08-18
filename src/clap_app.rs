@@ -1,15 +1,10 @@
 use crate::commands::CommandGroup;
 use clap::Parser;
-use clap_complete::{generate, Generator, Shell};
 
 /// A Swiss-army Knife CLI For Mindvalley Developers
 #[derive(Debug, Parser)]
 #[clap(version, author)]
 pub struct ClapApp {
-    /// If provided, outputs the completion file for given shell
-    #[clap(long = "generate", arg_enum)]
-    pub generator: Option<Shell>,
-
     #[clap(subcommand)]
     pub command_group: CommandGroup,
 

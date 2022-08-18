@@ -15,6 +15,9 @@ _wukong() {
             ci-status)
                 cmd+="__ci__status"
                 ;;
+            completions)
+                cmd+="__completions"
+                ;;
             config)
                 cmd+="__config"
                 ;;
@@ -49,16 +52,34 @@ _wukong() {
 
     case "${cmd}" in
         wukong)
-            opts="-h -V -a --help --version --generate --application init pipeline config login help"
+            opts="-h -V -a --help --version --application init pipeline config login completions help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --generate)
-                    COMPREPLY=($(compgen -W "bash elvish fish powershell zsh" -- "${cur}"))
+                --application)
+                    COMPREPLY=($(compgen -f "${cur}"))
                     return 0
                     ;;
+                -a)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__completions)
+            opts="-h -a --help --application bash elvish fish powershell zsh"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
                 --application)
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0

@@ -11,7 +11,9 @@ mod settings;
 // mod logger;
 
 use chrono::{DateTime, Local};
-use commands::{init::handle_init, login::handle_login, CommandGroup};
+use commands::{
+    completions::handle_completions, init::handle_init, login::handle_login, CommandGroup,
+};
 use config::{Config, CONFIG_FILE};
 use error::{handle_error, CliError};
 // use logger::Logger;
@@ -146,6 +148,7 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
         CommandGroup::Config(config) => must_init!(app.config, config.handle_command(context)),
         CommandGroup::Login => must_init!(app.config, handle_login(context).await),
         CommandGroup::Init => handle_init(context, existing_config).await,
+        CommandGroup::Completions { shell } => handle_completions(context, shell),
     }
 }
 
