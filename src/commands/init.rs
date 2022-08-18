@@ -84,14 +84,16 @@ pub async fn handle_init<'a>(
         r#"
 Your Wukong CLI is configured and ready to use!
 
-* Commands that require authentication will use junkai.gan@mindvalley.com by default
-* Commands will reference application `mv-prod-applications-hub` by default
+* Commands that require authentication will use `{}` by default
+* Commands will reference application `{}` by default
 Run `wukong config help` to learn how to change individual settings
 
 Some things to try next:
 
 * Run `wukong --help` to see the wukong command groups you can interact with. And run `wukong COMMAND help` to get help on any wukong command.
-                     "#
+                     "#,
+        config.auth.as_ref().unwrap().account,
+        config.core.application
     );
 
     if let Some(ref config_file) = *CONFIG_FILE {
