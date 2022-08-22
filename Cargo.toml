@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "3.2.5", features = ["derive"] }
+clap_complete = { version = "3.2.4" }
 dirs-next = "2.0.0"
 indicatif = "0.17.0"
 lazy_static = "1.4.0"
@@ -36,3 +37,4 @@ openidconnect = "2.3.2"
 url = "2.2.2"
 webbrowser = "0.7.1"
 env_config = { package = "config", version = "0.13.2"}
+
