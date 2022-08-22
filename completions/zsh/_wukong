@@ -268,4 +268,4 @@ _wukong__config__set_commands() {
     _describe -t commands 'wukong config set commands' commands "$@"
 }
 
-_wukong "$@"
+compdef _wukong wukong
