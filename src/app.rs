@@ -6,8 +6,9 @@ use crate::{
 use clap::Parser;
 
 pub enum ConfigState {
-    Initialized(Config),
-    Uninitialized,
+    InitialisedButUnAuthenticated(Config),
+    InitialisedAndAuthenticated(Config),
+    Uninitialised,
 }
 
 pub struct App {
@@ -22,16 +23,20 @@ impl App {
             .expect("Unable to identify user's home directory");
 
         let config = match Config::load(config_file) {
-            Ok(config) => ConfigState::Initialized(config),
-            Err(error) => {
-                match error {
-                    CliError::ConfigError(ref config_error) => match config_error {
-                        crate::error::ConfigError::NotFound { .. } => ConfigState::Uninitialized,
-                        _ => return Err(error),
-                    },
-                    _ => return Err(error),
+            Ok(config) => {
+                if config.auth.is_none() {
+                    ConfigState::InitialisedButUnAuthenticated(config)
+                } else {
+                    ConfigState::InitialisedAndAuthenticated(config)
                 }
             }
+            Err(error) => match error {
+                CliError::ConfigError(ref config_error) => match config_error {
+                    crate::error::ConfigError::NotFound { .. } => ConfigState::Uninitialised,
+                    _ => return Err(error),
+                },
+                _ => return Err(error),
+            },
         };
 
         Ok(Self {

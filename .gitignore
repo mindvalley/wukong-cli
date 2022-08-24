@@ -14,3 +14,6 @@ Cargo.lock
 
 # Added by cargo
 /target
+
+# env
+/src/env/local.toml

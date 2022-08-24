@@ -1,8 +1,6 @@
-use super::auth_headers;
-use crate::error::APIError;
+use super::{check_auth_error, QueryClient};
+use crate::{error::APIError, SETTINGS};
 use graphql_client::{reqwest::post_graphql, GraphQLQuery, Response};
-
-const URL: &'static str = "http://localhost:4000/api";
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -13,31 +11,37 @@ const URL: &'static str = "http://localhost:4000/api";
 pub struct PipelinesQuery;
 
 impl PipelinesQuery {
-    pub async fn fetch(
+    pub(crate) async fn fetch(
+        client: &QueryClient,
         application: &str,
     ) -> Result<Response<pipelines_query::ResponseData>, APIError> {
-        let client = reqwest::Client::builder()
-            .default_headers(auth_headers())
-            .build()?;
-
         let variables = pipelines_query::Variables {
             application: Some(application.to_string()),
         };
 
-        let response = post_graphql::<PipelinesQuery, _>(&client, URL, variables).await?;
+        let response =
+            post_graphql::<PipelinesQuery, _>(client.inner(), &SETTINGS.api.url, variables).await?;
         if let Some(errors) = response.errors {
             let first_error = errors[0].clone();
-            if first_error.message == "unable_to_get_pipelines" {
-                return Err(APIError::ResponseError {
-                    code: first_error.message,
-                    message: format!("Unable to get pipelines for application `{}`.", application),
-                });
-            }
+            match check_auth_error(&first_error) {
+                Some(err) => return Err(err),
+                None => {
+                    if first_error.message == "unable_to_get_pipelines" {
+                        return Err(APIError::ResponseError {
+                            code: first_error.message,
+                            message: format!(
+                                "Unable to get pipelines for application `{}`.",
+                                application
+                            ),
+                        });
+                    }
 
-            return Err(APIError::ResponseError {
-                code: first_error.message,
-                message: format!("{}", errors[0].clone()),
-            });
+                    return Err(APIError::ResponseError {
+                        code: first_error.message,
+                        message: format!("{}", errors[0].clone()),
+                    });
+                }
+            }
         }
         Ok(response)
     }
@@ -52,30 +56,35 @@ impl PipelinesQuery {
 pub struct PipelineQuery;
 
 impl PipelineQuery {
-    pub async fn fetch(name: &str) -> Result<Response<pipeline_query::ResponseData>, APIError> {
-        let client = reqwest::Client::builder()
-            .default_headers(auth_headers())
-            .build()?;
-
+    pub(crate) async fn fetch(
+        client: &QueryClient,
+        name: &str,
+    ) -> Result<Response<pipeline_query::ResponseData>, APIError> {
         let variables = pipeline_query::Variables {
             name: name.to_string(),
         };
 
-        let response = post_graphql::<PipelineQuery, _>(&client, URL, variables).await?;
+        let response =
+            post_graphql::<PipelineQuery, _>(client.inner(), &SETTINGS.api.url, variables).await?;
 
         if let Some(errors) = response.errors {
             let first_error = errors[0].clone();
-            if first_error.message == "unable_to_get_pipeline" {
-                return Err(APIError::ResponseError {
-                    code: first_error.message,
-                    message: format!("Unable to get pipeline `{}`.", name),
-                });
-            }
+            match check_auth_error(&first_error) {
+                Some(err) => return Err(err),
+                None => {
+                    if first_error.message == "unable_to_get_pipeline" {
+                        return Err(APIError::ResponseError {
+                            code: first_error.message,
+                            message: format!("Unable to get pipeline `{}`.", name),
+                        });
+                    }
 
-            return Err(APIError::ResponseError {
-                code: first_error.message,
-                message: format!("{}", errors[0].clone()),
-            });
+                    return Err(APIError::ResponseError {
+                        code: first_error.message,
+                        message: format!("{}", errors[0].clone()),
+                    });
+                }
+            }
         }
         Ok(response)
     }
@@ -91,30 +100,37 @@ pub struct MultiBranchPipelineQuery;
 
 impl MultiBranchPipelineQuery {
     pub async fn fetch(
+        client: &QueryClient,
         name: &str,
     ) -> Result<Response<multi_branch_pipeline_query::ResponseData>, APIError> {
-        let client = reqwest::Client::builder()
-            .default_headers(auth_headers())
-            .build()?;
-
         let variables = multi_branch_pipeline_query::Variables {
             name: name.to_string(),
         };
 
-        let response = post_graphql::<MultiBranchPipelineQuery, _>(&client, URL, variables).await?;
+        let response = post_graphql::<MultiBranchPipelineQuery, _>(
+            client.inner(),
+            &SETTINGS.api.url,
+            variables,
+        )
+        .await?;
         if let Some(errors) = response.errors {
             let first_error = errors[0].clone();
-            if first_error.message == "unable_to_get_pipeline" {
-                return Err(APIError::ResponseError {
-                    code: first_error.message,
-                    message: format!("Unable to get pipeline `{}`.", name),
-                });
-            }
+            match check_auth_error(&first_error) {
+                Some(err) => return Err(err),
+                None => {
+                    if first_error.message == "unable_to_get_pipeline" {
+                        return Err(APIError::ResponseError {
+                            code: first_error.message,
+                            message: format!("Unable to get pipeline `{}`.", name),
+                        });
+                    }
 
-            return Err(APIError::ResponseError {
-                code: first_error.message,
-                message: format!("{}", errors[0].clone()),
-            });
+                    return Err(APIError::ResponseError {
+                        code: first_error.message,
+                        message: format!("{}", errors[0].clone()),
+                    });
+                }
+            }
         }
         Ok(response)
     }
@@ -130,37 +146,38 @@ pub struct CiStatusQuery;
 
 impl CiStatusQuery {
     pub async fn fetch(
+        client: &QueryClient,
         repo_url: &str,
         branch: &str,
     ) -> Result<Response<ci_status_query::ResponseData>, APIError> {
-        let client = reqwest::Client::builder()
-            .default_headers(auth_headers())
-            .build()?;
-
         let variables = ci_status_query::Variables {
             repo_url: repo_url.to_string(),
             branch: branch.to_string(),
         };
 
-        let response = post_graphql::<CiStatusQuery, _>(&client, URL, variables).await?;
+        let response =
+            post_graphql::<CiStatusQuery, _>(client.inner(), &SETTINGS.api.url, variables).await?;
         if let Some(errors) = response.errors.clone() {
             let first_error = errors[0].clone();
-            match first_error.message.as_str() {
-                "application_not_found" => {
-                    return Err(APIError::ResponseError {
-                        code: first_error.message,
-                        message: format!("Application `{}` not found.", repo_url),
-                    });
-                }
-                "no_builds_associated_with_this_branch" => {
-                    return Ok(response);
-                }
-                _ => {
-                    return Err(APIError::ResponseError {
-                        code: first_error.message,
-                        message: format!("{}", errors[0].clone()),
-                    });
-                }
+            match check_auth_error(&first_error) {
+                Some(err) => return Err(err),
+                None => match first_error.message.as_str() {
+                    "application_not_found" => {
+                        return Err(APIError::ResponseError {
+                            code: first_error.message,
+                            message: format!("Application `{}` not found.", repo_url),
+                        });
+                    }
+                    "no_builds_associated_with_this_branch" => {
+                        return Ok(response);
+                    }
+                    _ => {
+                        return Err(APIError::ResponseError {
+                            code: first_error.message,
+                            message: format!("{}", errors[0].clone()),
+                        });
+                    }
+                },
             }
         }
         Ok(response)

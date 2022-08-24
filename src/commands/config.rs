@@ -1,4 +1,4 @@
-use crate::{error::CliError, clap_app::ClapApp, Config as CLIConfig, CONFIG_FILE};
+use crate::{clap_app::ClapApp, error::CliError, Config as CLIConfig, GlobalContext, CONFIG_FILE};
 use clap::{ArgEnum, Args, IntoApp, Subcommand};
 
 #[derive(Debug, Args)]
@@ -36,7 +36,7 @@ pub enum ConfigName {
 }
 
 impl Config {
-    pub fn perform_action<'a>(&self) -> Result<bool, CliError<'a>> {
+    pub fn handle_command<'a>(&self, _context: GlobalContext) -> Result<bool, CliError<'a>> {
         let mut cmd = ClapApp::command();
 
         match &self.subcommand {

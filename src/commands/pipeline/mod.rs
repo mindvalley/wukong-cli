@@ -148,12 +148,12 @@ pub enum PipelineSubcommand {
 }
 
 impl Pipeline {
-    pub async fn perform_action<'a>(&self, context: GlobalContext) -> Result<bool, CliError<'a>> {
+    pub async fn handle_command<'a>(&self, context: GlobalContext) -> Result<bool, CliError<'a>> {
         match &self.subcommand {
             PipelineSubcommand::List => handle_list(context).await,
-            PipelineSubcommand::Describe { name } => handle_describe(name).await,
+            PipelineSubcommand::Describe { name } => handle_describe(context, name).await,
             PipelineSubcommand::CiStatus { repo_url, branch } => {
-                handle_ci_status(repo_url, branch).await
+                handle_ci_status(context, repo_url, branch).await
             }
         }
     }

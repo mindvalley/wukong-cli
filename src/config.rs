@@ -1,5 +1,4 @@
 use crate::error::{CliError, ConfigError};
-// use anyhow::{Context, Result};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -28,23 +27,32 @@ lazy_static! {
 }
 
 /// The Wukong CLI configuration.
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Config {
     pub core: CoreConfig,
     pub log: LogConfig,
+    pub auth: Option<AuthConfig>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct CoreConfig {
     /// The current application name
     pub application: String,
     pub collect_telemetry: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct LogConfig {
     pub enable: bool,
     pub log_dir: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct AuthConfig {
+    pub account: String,
+    pub access_token: String,
+    pub expiry_time: String,
+    pub refresh_token: String,
 }
 
 impl Default for Config {
@@ -61,6 +69,7 @@ impl Default for Config {
                 enable: true,
                 log_dir: home_dir.to_str().unwrap().to_string(),
             },
+            auth: None,
         }
     }
 }

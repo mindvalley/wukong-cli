@@ -9,6 +9,12 @@ pub enum CliError<'a> {
     Io(#[from] ::std::io::Error),
     #[error(transparent)]
     ConfigError(ConfigError<'a>),
+    #[error("Failed to discover OpenID Provider")]
+    OpenIDDiscoveryError,
+    #[error("You are un-authenticated.")]
+    UnAuthenticated,
+    #[error("You are un-initialised.")]
+    UnInitialised,
 }
 
 #[derive(Debug, ThisError)]
@@ -17,6 +23,8 @@ pub enum APIError {
     ReqwestError(#[from] reqwest::Error),
     #[error("Response Error: {message}")]
     ResponseError { code: String, message: String },
+    #[error("You are un-authenticated.")]
+    UnAuthenticated,
 }
 
 #[derive(Debug, ThisError)]
@@ -44,6 +52,12 @@ impl<'a> CliError<'a> {
     /// went wrong.
     pub fn suggestion(&self) -> Option<String> {
         match self {
+            CliError::UnAuthenticated => Some(String::from(
+                "Run \"wukong login\" to authenticate with your okta account.",
+            )),
+            CliError::UnInitialised => Some(String::from(
+                "Run \"wukong init\" to initialise Wukong's configuration.",
+            )),
             CliError::ConfigError(error) => match error {
                 ConfigError::NotFound { .. } => Some(String::from(
                     "Run \"wukong init\" to initialise configuration.",
@@ -52,7 +66,7 @@ impl<'a> CliError<'a> {
                     "Run \"chmod +rw {path}\" to provide read and write permissions."
                 )),
                 ConfigError::BadTomlData(_) => Some(String::from(
-                    "Check if your config.toml file is in valid TOML format.",
+                    "Check if your config.toml file is in valid TOML format. You may want to remove the config.toml file and run \"wukong init\" to re-initialise configuration again.",
                 )),
                 _ => None,
             },
@@ -65,6 +79,9 @@ impl<'a> CliError<'a> {
                 ),
                 APIError::ResponseError { code, .. } if code == "application_not_found" => Some(
                     String::from("Please check your repo url. It's unrecognized by wukong."),
+                ),
+                APIError::UnAuthenticated => Some(
+                    "Run \"wukong login\" to authenticate with your okta account.".to_string()
                 ),
                 _ => None,
             },

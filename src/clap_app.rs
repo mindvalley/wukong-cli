@@ -1,4 +1,4 @@
-use crate::command_group::CommandGroup;
+use crate::commands::CommandGroup;
 use clap::Parser;
 
 /// A Swiss-army Knife CLI For Mindvalley Developers
