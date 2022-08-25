@@ -1,8 +1,8 @@
+pub mod completions;
 pub mod config;
 pub mod init;
 pub mod login;
 pub mod pipeline;
-pub mod completions;
 
 use clap::Subcommand;
 use clap_complete::Shell;
