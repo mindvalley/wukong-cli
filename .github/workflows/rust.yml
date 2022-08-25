@@ -12,7 +12,11 @@ env:
 jobs:
   ci:
     name: CI
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest]
+        rust: [stable]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
 
