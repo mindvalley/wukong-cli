@@ -11,12 +11,12 @@ use openidconnect::{
 use serde::{Deserialize, Serialize};
 use std::{
     error::Error,
+    fmt::Write as _,
     io::{BufRead, BufReader, Write},
     net::TcpListener,
     process::exit,
 };
 use url::Url;
-use webbrowser;
 
 #[derive(Debug, Deserialize, Serialize)]
 struct OktaClaims;
@@ -43,7 +43,7 @@ fn handle_error(fail: &impl Error, msg: &'static str) {
     let mut err_msg = format!("ERROR: {}", msg);
     let mut cur_fail: Option<&dyn Error> = Some(fail);
     while let Some(cause) = cur_fail {
-        err_msg += &format!("\n    caused by: {}", cause);
+        write!(err_msg, "\n    caused by: {}", cause).unwrap();
         cur_fail = cause.source();
     }
     println!("{}", err_msg);
@@ -91,7 +91,7 @@ pub async fn login<'a>() -> Result<AuthInfo, CliError<'a>> {
         authorize_url
     );
 
-    webbrowser::open(&authorize_url.to_string()).unwrap();
+    webbrowser::open(authorize_url.as_str()).unwrap();
 
     let listener = TcpListener::bind("127.0.0.1:6758").unwrap();
 
@@ -203,7 +203,7 @@ pub async fn login<'a>() -> Result<AuthInfo, CliError<'a>> {
         account: current_user_email.to_string(),
         id_token: id_token.to_string(),
         access_token: access_token.secret().to_owned(),
-        expiry_time: expiry.to_string(),
+        expiry_time: expiry,
         refresh_token: refresh_token.secret().to_owned(),
     })
 }
@@ -260,7 +260,7 @@ pub async fn refresh_tokens(refresh_token: &RefreshToken) -> Result<TokenInfo, C
     Ok(TokenInfo {
         id_token: id_token.to_string(),
         access_token: access_token.secret().to_owned(),
-        expiry_time: expiry.to_string(),
+        expiry_time: expiry,
         refresh_token: refresh_token.secret().to_owned(),
     })
 }
