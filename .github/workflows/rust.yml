@@ -24,8 +24,8 @@ jobs:
           # - { target: x86_64-unknown-linux-gnu    , os: ubuntu-22.04, use-cross: true }
           # - { target: x86_64-unknown-linux-musl   , os: ubuntu-22.04, use-cross: true }
         rust: [ stable ]
-      name: ${{ matrix.job.target }} (${{ matrix.job.os }})
-      runs-on: ${{ matrix.job.os }}
+    name: ${{ matrix.job.target }} (${{ matrix.job.os }})
+    runs-on: ${{ matrix.job.os }}
 
     steps:
       - uses: hecrj/setup-rust-action@v1
