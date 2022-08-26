@@ -11,17 +11,29 @@ env:
 
 jobs:
   ci:
-    name: CI
     strategy:
       matrix:
-        os: [ ubuntu-latest, macOS-latest ]
+        job:
+          - { target: aarch64-apple-darwin        , os: ubuntu-22.04, use-cross: true }
+          # - { target: x86_64-apple-darwin         , os: macos-latest                  }
+          # - { target: aarch64-unknown-linux-gnu   , os: ubuntu-22.04, use-cross: true }
+          # - { target: arm-unknown-linux-gnueabihf , os: ubuntu-22.04, use-cross: true }
+          # - { target: arm-unknown-linux-musleabihf, os: ubuntu-22.04, use-cross: true }
+          # - { target: i686-unknown-linux-gnu      , os: ubuntu-22.04, use-cross: true }
+          # - { target: i686-unknown-linux-musl     , os: ubuntu-22.04, use-cross: true }
+          # - { target: x86_64-unknown-linux-gnu    , os: ubuntu-22.04, use-cross: true }
+          # - { target: x86_64-unknown-linux-musl   , os: ubuntu-22.04, use-cross: true }
         rust: [ stable ]
-    runs-on: ${{ matrix.os }}
+      name: ${{ matrix.job.target }} (${{ matrix.job.os }})
+      runs-on: ${{ matrix.job.os }}
 
     steps:
       - uses: hecrj/setup-rust-action@v1
         with:
           rust-version: ${{ matrix.rust }}
+          target: ${{ matrix.job.target }}
+          override: true
+          profile: minimal # minimal component installation (ie, no documentation)
           components: rustfmt, clippy
       - uses: actions/checkout@v3
 
@@ -55,3 +67,15 @@ jobs:
         with:
           command: test
           args: --verbose
+
+      # - name: Package
+      #   working-directory: ${{github.workspace}}/install
+      #   run: |
+      #     mv bin wukong
+      #     tar -czvf wukong.tar.gz ${PACKAGE_NAME}
+
+      # - name: Upload Artifacts
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #       name: ${{env.PACKAGE_NAME}}
+      #       path: ${{github.workspace}}/install/${{env.PACKAGE_NAME}}.tar.gz
