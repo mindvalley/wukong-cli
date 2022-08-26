@@ -13,9 +13,11 @@ jobs:
   ci:
     strategy:
       matrix:
+        fail-fast: false
+        rust: [ stable ]
         job:
           - { target: aarch64-apple-darwin        , os: ubuntu-22.04, use-cross: true }
-          # - { target: x86_64-apple-darwin         , os: macos-latest                  }
+          - { target: x86_64-apple-darwin         , os: macos-latest                  }
           # - { target: aarch64-unknown-linux-gnu   , os: ubuntu-22.04, use-cross: true }
           # - { target: arm-unknown-linux-gnueabihf , os: ubuntu-22.04, use-cross: true }
           # - { target: arm-unknown-linux-musleabihf, os: ubuntu-22.04, use-cross: true }
@@ -23,7 +25,6 @@ jobs:
           # - { target: i686-unknown-linux-musl     , os: ubuntu-22.04, use-cross: true }
           # - { target: x86_64-unknown-linux-gnu    , os: ubuntu-22.04, use-cross: true }
           # - { target: x86_64-unknown-linux-musl   , os: ubuntu-22.04, use-cross: true }
-        rust: [ stable ]
     name: ${{ matrix.job.target }} (${{ matrix.job.os }})
     runs-on: ${{ matrix.job.os }}
 
@@ -35,6 +36,11 @@ jobs:
       #     override: true
       #     profile: minimal # minimal component installation (ie, no documentation)
       #     components: rustfmt, clippy
+
+      - uses: mbround18/setup-osxcross@v1
+        with:
+          osx-version: "12.3"
+
       - uses: actions/checkout@v3
 
       - uses: actions-rs/toolchain@v1
@@ -51,7 +57,19 @@ jobs:
       #     case ${{ matrix.job.target }} in
       #       arm-unknown-linux-*) sudo apt-get -y update ; sudo apt-get -y install gcc-arm-linux-gnueabihf ;;
       #       aarch64-unknown-linux-gnu) sudo apt-get -y update ; sudo apt-get -y install gcc-aarch64-linux-gnu ;;
+      #       x86_64-apple-darwin) 
+      #         # make sure we have a proper C/C++ native compiler first
+      #         sudo apt-get -y update ; sudo apt-get -y install llvm-dev libclang-dev clang libxml2-dev libz-dev 
+
+      #         export MACOSX_CROSS_COMPILER=$HOME/macosx-cross-compiler
+      #         install -d $MACOSX_CROSS_COMPILER/osxcross
+      #         install -d $MACOSX_CROSS_COMPILER/cross-compiler
+      #         cd $MACOSX_CROSS_COMPILER
+      #         git clone https://github.com/tpoechtrager/osxcross && cd osxcross
+
+      #         ;;
       #     esac
+
 
       - name: Extract crate information
         shell: bash
