@@ -16,8 +16,8 @@ jobs:
       matrix:
         rust: [ stable ]
         job:
-          - { target: aarch64-apple-darwin        , os: ubuntu-22.04, use-cross: true }
-          - { target: x86_64-apple-darwin         , os: ubuntu-22.04, use-cross: true }
+          - { target: aarch64-apple-darwin        , os: ubuntu-22.04 }
+          - { target: x86_64-apple-darwin         , os: ubuntu-22.04 }
           # - { target: x86_64-apple-darwin         , os: macos-latest                  }
           # - { target: aarch64-unknown-linux-gnu   , os: ubuntu-22.04, use-cross: true }
           # - { target: arm-unknown-linux-gnueabihf , os: ubuntu-22.04, use-cross: true }
@@ -48,9 +48,9 @@ jobs:
         with:
           profile: minimal
           toolchain: ${{ matrix.rust }}
-          override: true
           target: ${{ matrix.job.target }}
           components: rustfmt, clippy
+          override: true
 
       # - name: Install prerequisites
       #   shell: bash
