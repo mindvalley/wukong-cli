@@ -12,12 +12,13 @@ env:
 jobs:
   ci:
     strategy:
+      fail-fast: false
       matrix:
-        fail-fast: false
         rust: [ stable ]
         job:
           - { target: aarch64-apple-darwin        , os: ubuntu-22.04, use-cross: true }
-          - { target: x86_64-apple-darwin         , os: macos-latest                  }
+          - { target: x86_64-apple-darwin         , os: ubuntu-22.04, use-cross: true }
+          # - { target: x86_64-apple-darwin         , os: macos-latest                  }
           # - { target: aarch64-unknown-linux-gnu   , os: ubuntu-22.04, use-cross: true }
           # - { target: arm-unknown-linux-gnueabihf , os: ubuntu-22.04, use-cross: true }
           # - { target: arm-unknown-linux-musleabihf, os: ubuntu-22.04, use-cross: true }
