@@ -71,6 +71,9 @@ jobs:
       #         ;;
       #     esac
 
+      - name: Install musl-gcc
+        shell: bash
+        run: sudo apt-get -y update; sudo apt-get -y install musl-tools
 
       - name: Extract crate information
         shell: bash
