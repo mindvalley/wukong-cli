@@ -88,16 +88,26 @@ jobs:
           # echo "TARGET_CC=${LINKER_FILE}" >> $GITHUB_ENV
           # echo "TARGET_AR=${AR_FILE}" >> $GITHUB_ENV
           
-          echo "TARGET_CC=x86_64-apple-darwin21.4-clang" >> $GITHUB_ENV
-          echo "TARGET_AR=x86_64-apple-darwin21.4-ar" >> $GITHUB_ENV
+          # echo "TARGET_CC=x86_64-apple-darwin21.4-clang" >> $GITHUB_ENV
+          # echo "TARGET_AR=x86_64-apple-darwin21.4-ar" >> $GITHUB_ENV
+          case ${{ matrix.job.target }} in
+            aarch64-apple-darwin) 
+              echo "TARGET_CC=aarch64-apple-darwin21.4-clang" >> $GITHUB_ENV
+              echo "TARGET_AR=aarch64-apple-darwin21.4-ar" >> $GITHUB_ENV
+              ;;
+            x86_64-apple-darwin) 
+              echo "TARGET_CC=x86_64-apple-darwin21.4-clang" >> $GITHUB_ENV
+              echo "TARGET_AR=x86_64-apple-darwin21.4-ar" >> $GITHUB_ENV
+              ;;
+          esac
 
           # Make libz-sys (git2-rs -> libgit2-sys -> libz-sys) build as a statically linked lib
           # This prevents the host zlib from being linked
-          echo "LIBZ_SYS_STATIC=1" >> $GITHUB_ENV
+          # echo "LIBZ_SYS_STATIC=1" >> $GITHUB_ENV
 
           # Use Clang for C/C++ builds
-          echo "CC=o64-clang" >> $GITHUB_ENV
-          echo "CXX=o64-clang++" >> $GITHUB_ENV
+          # echo "CC=o64-clang" >> $GITHUB_ENV
+          # echo "CXX=o64-clang++" >> $GITHUB_ENV
 
       - name: Extract crate information
         shell: bash
