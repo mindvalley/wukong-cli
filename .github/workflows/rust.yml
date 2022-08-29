@@ -74,6 +74,8 @@ jobs:
       - name: Set env
         shell: bash
         run: | 
+          OSXCROSS_FOLDER="$(echo "$GITHUB_ACTION_PATH/osxcross" | sed 's/\.\/*//g')"
+
           findTarget() {
             local file="$(find "$OSXCROSS_FOLDER/target/bin" -name "$1")"
             echo "$(basename $file)"
