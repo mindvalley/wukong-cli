@@ -19,13 +19,13 @@ jobs:
         job:
           - { target: aarch64-apple-darwin        , os: ubuntu-22.04 }
           - { target: x86_64-apple-darwin         , os: ubuntu-22.04 }
+          - { target: x86_64-unknown-linux-gnu    , os: ubuntu-22.04, use-cross: true }
           # - { target: x86_64-apple-darwin         , os: macos-latest                  }
           # - { target: aarch64-unknown-linux-gnu   , os: ubuntu-22.04, use-cross: true }
           # - { target: arm-unknown-linux-gnueabihf , os: ubuntu-22.04, use-cross: true }
           # - { target: arm-unknown-linux-musleabihf, os: ubuntu-22.04, use-cross: true }
           # - { target: i686-unknown-linux-gnu      , os: ubuntu-22.04, use-cross: true }
           # - { target: i686-unknown-linux-musl     , os: ubuntu-22.04, use-cross: true }
-          # - { target: x86_64-unknown-linux-gnu    , os: ubuntu-22.04, use-cross: true }
           # - { target: x86_64-unknown-linux-musl   , os: ubuntu-22.04, use-cross: true }
     name: ${{ matrix.job.target }} (${{ matrix.job.os }})
     runs-on: ${{ matrix.job.os }}
@@ -53,43 +53,27 @@ jobs:
           components: rustfmt, clippy
           override: true
 
-      # - name: Install prerequisites
-      #   shell: bash
-      #   run: |
-      #     case ${{ matrix.job.target }} in
-      #       arm-unknown-linux-*) sudo apt-get -y update ; sudo apt-get -y install gcc-arm-linux-gnueabihf ;;
-      #       aarch64-unknown-linux-gnu) sudo apt-get -y update ; sudo apt-get -y install gcc-aarch64-linux-gnu ;;
-      #       x86_64-apple-darwin) 
-      #         # make sure we have a proper C/C++ native compiler first
-      #         sudo apt-get -y update ; sudo apt-get -y install llvm-dev libclang-dev clang libxml2-dev libz-dev 
-
-      #         export MACOSX_CROSS_COMPILER=$HOME/macosx-cross-compiler
-      #         install -d $MACOSX_CROSS_COMPILER/osxcross
-      #         install -d $MACOSX_CROSS_COMPILER/cross-compiler
-      #         cd $MACOSX_CROSS_COMPILER
-      #         git clone https://github.com/tpoechtrager/osxcross && cd osxcross
-
-      #         ;;
-      #     esac
+      - name: Install prerequisites
+        shell: bash
+        run: |
+          case ${{ matrix.job.target }} in
+            arm-unknown-linux-*) sudo apt-get -y update ; sudo apt-get -y install gcc-arm-linux-gnueabihf ;;
+            aarch64-unknown-linux-gnu) sudo apt-get -y update ; sudo apt-get -y install gcc-aarch64-linux-gnu ;;
+          esac
 
       - name: Set env
         shell: bash
         run: | 
-          OSXCROSS_FOLDER="$(echo "$GITHUB_ACTION_PATH/osxcross" | sed 's/\.\/*//g')"
+          # OSXCROSS_FOLDER="$(echo "$GITHUB_ACTION_PATH/osxcross" | sed 's/\.\/*//g')"
 
-          findTarget() {
-            local file="$(find "$OSXCROSS_FOLDER/target/bin" -name "$1")"
-            echo "$(basename $file)"
-          }
+          # findTarget() {
+          #   local file="$(find "$OSXCROSS_FOLDER/target/bin" -name "$1")"
+          #   echo "$(basename $file)"
+          # }
 
           # LINKER_FILE="$(findTarget "x86_64-apple-darwin*-clang")"
           # AR_FILE="$(findTarget "x86_64-apple-darwin*-ar")"
 
-          # echo "TARGET_CC=${LINKER_FILE}" >> $GITHUB_ENV
-          # echo "TARGET_AR=${AR_FILE}" >> $GITHUB_ENV
-          
-          # echo "TARGET_CC=x86_64-apple-darwin21.4-clang" >> $GITHUB_ENV
-          # echo "TARGET_AR=x86_64-apple-darwin21.4-ar" >> $GITHUB_ENV
           case ${{ matrix.job.target }} in
             aarch64-apple-darwin) 
               LINKER_FILE="aarch64-apple-darwin21.4-clang"
@@ -107,14 +91,6 @@ jobs:
               ;;
           esac
 
-          # Make libz-sys (git2-rs -> libgit2-sys -> libz-sys) build as a statically linked lib
-          # This prevents the host zlib from being linked
-          # echo "LIBZ_SYS_STATIC=1" >> $GITHUB_ENV
-
-          # Use Clang for C/C++ builds
-          # echo "CC=o64-clang" >> $GITHUB_ENV
-          # echo "CXX=o64-clang++" >> $GITHUB_ENV
-
       - name: Extract crate information
         shell: bash
         run: |
@@ -123,18 +99,12 @@ jobs:
           echo "PROJECT_MAINTAINER=$(sed -n 's/^authors = \["\(.*\)"\]/\1/p' Cargo.toml)" >> $GITHUB_ENV
           echo "PROJECT_HOMEPAGE=$(sed -n 's/^homepage = "\(.*\)"/\1/p' Cargo.toml)" >> $GITHUB_ENV
 
-      # - name: Build Wukong CLI
-      #   uses: actions-rs/cargo@v1
-      #   with:
-      #     use-cross: ${{ matrix.job.use-cross }}
-      #     command: build
-      #     args: --locked --release --target=${{ matrix.job.target }}
-
-      - name: Build Wukong
-        # working-directory: ./rs-simple-hello-world
-        shell: bash
-        run: RUST_BACKTRACE=1 cargo build --release --target ${{ matrix.job.target}}
-
+      - name: Build Wukong CLI
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: ${{ matrix.job.use-cross }}
+          command: build
+          args: --locked --release --target=${{ matrix.job.target }}
 
       - name: Check formatting
         uses: actions-rs/cargo@v1
