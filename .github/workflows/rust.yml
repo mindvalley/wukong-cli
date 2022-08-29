@@ -61,6 +61,8 @@ jobs:
             aarch64-unknown-linux-gnu) sudo apt-get -y update ; sudo apt-get -y install gcc-aarch64-linux-gnu ;;
           esac
 
+          sudo apt-get -y install libssl-dev
+
       - name: Set env
         shell: bash
         run: | 
