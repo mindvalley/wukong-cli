@@ -74,6 +74,12 @@ jobs:
       - name: Set env
         shell: bash
         run: | 
+          LINKER_FILE="$(findTarget "x86_64-apple-darwin*-clang")"
+          AR_FILE="$(findTarget "x86_64-apple-darwin*-ar")"
+
+          export TARGET_CC=${LINKER_FILE}
+          export TARGET_AR=${AR_FILE}
+
           # Make libz-sys (git2-rs -> libgit2-sys -> libz-sys) build as a statically linked lib
           # This prevents the host zlib from being linked
           export LIBZ_SYS_STATIC=1
