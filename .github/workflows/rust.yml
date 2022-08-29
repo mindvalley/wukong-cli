@@ -17,8 +17,8 @@ jobs:
       matrix:
         rust: [ stable ]
         job:
-          - { target: aarch64-apple-darwin        , os: ubuntu-22.04 }
-          - { target: x86_64-apple-darwin         , os: ubuntu-22.04 }
+          # - { target: aarch64-apple-darwin        , os: ubuntu-22.04 }
+          # - { target: x86_64-apple-darwin         , os: ubuntu-22.04 }
           - { target: x86_64-unknown-linux-gnu    , os: ubuntu-22.04, use-cross: true }
           # - { target: x86_64-apple-darwin         , os: macos-latest                  }
           # - { target: aarch64-unknown-linux-gnu   , os: ubuntu-22.04, use-cross: true }
@@ -31,9 +31,9 @@ jobs:
     runs-on: ${{ matrix.job.os }}
 
     steps:
-      - uses: mbround18/setup-osxcross@v1
-        with:
-          osx-version: "12.3"
+      # - uses: mbround18/setup-osxcross@v1
+      #   with:
+      #     osx-version: "12.3"
 
       - uses: actions/checkout@v3
 
