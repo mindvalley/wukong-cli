@@ -82,16 +82,16 @@ jobs:
           LINKER_FILE="$(findTarget "x86_64-apple-darwin*-clang")"
           AR_FILE="$(findTarget "x86_64-apple-darwin*-ar")"
 
-          export TARGET_CC=${LINKER_FILE}
-          export TARGET_AR=${AR_FILE}
+          echo "TARGET_CC=${LINKER_FILE}" >> $GITHUB_ENV
+          echo "TARGET_AR=${AR_FILE}" >> $GITHUB_ENV
 
           # Make libz-sys (git2-rs -> libgit2-sys -> libz-sys) build as a statically linked lib
           # This prevents the host zlib from being linked
-          export LIBZ_SYS_STATIC=1
+          echo "LIBZ_SYS_STATIC=1" >> $GITHUB_ENV
 
           # Use Clang for C/C++ builds
-          export CC=o64-clang
-          export CXX=o64-clang++
+          echo "CC=o64-clang" >> $GITHUB_ENV
+          echo "CXX=o64-clang++" >> $GITHUB_ENV
 
       - name: Extract crate information
         shell: bash
@@ -110,6 +110,7 @@ jobs:
 
       - name: Build Wukong
         # working-directory: ./rs-simple-hello-world
+        shell: bash
         run: RUST_BACKTRACE=1 cargo build --release --target ${{ matrix.job.target}}
 
 
