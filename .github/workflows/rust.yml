@@ -90,12 +90,17 @@ jobs:
           echo "PROJECT_MAINTAINER=$(sed -n 's/^authors = \["\(.*\)"\]/\1/p' Cargo.toml)" >> $GITHUB_ENV
           echo "PROJECT_HOMEPAGE=$(sed -n 's/^homepage = "\(.*\)"/\1/p' Cargo.toml)" >> $GITHUB_ENV
 
-      - name: Build Wukong CLI
-        uses: actions-rs/cargo@v1
-        with:
-          use-cross: ${{ matrix.job.use-cross }}
-          command: build
-          args: --locked --release --target=${{ matrix.job.target }}
+      # - name: Build Wukong CLI
+      #   uses: actions-rs/cargo@v1
+      #   with:
+      #     use-cross: ${{ matrix.job.use-cross }}
+      #     command: build
+      #     args: --locked --release --target=${{ matrix.job.target }}
+
+      - name: Build Wukong
+        # working-directory: ./rs-simple-hello-world
+        run: RUST_BACKTRACE=1 cargo build --release --target ${{ matrix.job.target}}
+
 
       - name: Check formatting
         uses: actions-rs/cargo@v1
