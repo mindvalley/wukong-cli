@@ -71,9 +71,16 @@ jobs:
       #         ;;
       #     esac
 
-      - name: Install musl-gcc
+      - name: Set env
         shell: bash
-        run: sudo apt-get -y update; sudo apt-get -y install musl-tools
+        run: | 
+          # Make libz-sys (git2-rs -> libgit2-sys -> libz-sys) build as a statically linked lib
+          # This prevents the host zlib from being linked
+          export LIBZ_SYS_STATIC=1
+
+          # Use Clang for C/C++ builds
+          export CC=o64-clang
+          export CXX=o64-clang++
 
       - name: Extract crate information
         shell: bash
