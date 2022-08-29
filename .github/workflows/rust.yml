@@ -31,14 +31,6 @@ jobs:
     runs-on: ${{ matrix.job.os }}
 
     steps:
-      # - uses: hecrj/setup-rust-action@v1
-      #   with:
-      #     rust-version: ${{ matrix.rust }}
-      #     target: ${{ matrix.job.target }}
-      #     override: true
-      #     profile: minimal # minimal component installation (ie, no documentation)
-      #     components: rustfmt, clippy
-
       - uses: mbround18/setup-osxcross@v1
         with:
           osx-version: "12.3"
@@ -59,9 +51,8 @@ jobs:
           case ${{ matrix.job.target }} in
             arm-unknown-linux-*) sudo apt-get -y update ; sudo apt-get -y install gcc-arm-linux-gnueabihf ;;
             aarch64-unknown-linux-gnu) sudo apt-get -y update ; sudo apt-get -y install gcc-aarch64-linux-gnu ;;
+            x86_64-unknown-linux-gnu) sudo apt-get -y update ; sudo apt-get -y install libssl-dev ;;
           esac
-
-          sudo apt-get -y install libssl-dev
 
       - name: Set env
         shell: bash
@@ -157,15 +148,3 @@ jobs:
         with:
           name: ${{ steps.package.outputs.PKG_NAME }}
           path: ${{ steps.package.outputs.PKG_PATH }}
-
-      # - name: Package
-      #   working-directory: ${{github.workspace}}/install
-      #   run: |
-      #     mv bin wukong
-      #     tar -czvf wukong.tar.gz ${PACKAGE_NAME}
-
-      # - name: Upload Artifacts
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #       name: ${{env.PACKAGE_NAME}}
-      #       path: ${{github.workspace}}/install/${{env.PACKAGE_NAME}}.tar.gz
