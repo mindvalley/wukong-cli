@@ -74,6 +74,11 @@ jobs:
       - name: Set env
         shell: bash
         run: | 
+          findTarget() {
+            local file="$(find "$OSXCROSS_FOLDER/target/bin" -name "$1")"
+            echo "$(basename $file)"
+          }
+
           LINKER_FILE="$(findTarget "x86_64-apple-darwin*-clang")"
           AR_FILE="$(findTarget "x86_64-apple-darwin*-ar")"
 
