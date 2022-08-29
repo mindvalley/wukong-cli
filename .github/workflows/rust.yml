@@ -8,6 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  CICD_INTERMEDIATES_DIR: "_cicd-intermediates"
 
 jobs:
   ci:
@@ -147,7 +148,7 @@ jobs:
           echo ::set-output name=PKG_NAME::${PKG_NAME}
           BIN_NAME="${{ env.PROJECT_NAME }}"
           PKG_STAGING="${{ env.CICD_INTERMEDIATES_DIR }}/package"
-          ARCHIVE_DIR="target/${{ matrix.job.target }}/release/${BIN_NAME}"
+          ARCHIVE_DIR="${PKG_STAGING}/${PKG_BASENAME}/"
           mkdir -p "${ARCHIVE_DIR}"
           mkdir -p "${ARCHIVE_DIR}/autocomplete"
           # Binary
@@ -163,7 +164,6 @@ jobs:
           # Let subsequent steps know where to find the compressed package
           echo ::set-output name=PKG_PATH::"${PKG_STAGING}/${PKG_NAME}"
 
-          
       - name: "Artifact upload: tarball"
         uses: actions/upload-artifact@master
         with:
