@@ -84,8 +84,11 @@ jobs:
           LINKER_FILE="$(findTarget "x86_64-apple-darwin*-clang")"
           AR_FILE="$(findTarget "x86_64-apple-darwin*-ar")"
 
-          echo "TARGET_CC=${LINKER_FILE}" >> $GITHUB_ENV
-          echo "TARGET_AR=${AR_FILE}" >> $GITHUB_ENV
+          # echo "TARGET_CC=${LINKER_FILE}" >> $GITHUB_ENV
+          # echo "TARGET_AR=${AR_FILE}" >> $GITHUB_ENV
+          
+          echo "TARGET_CC=x86_64-apple-darwin21.4-clang" >> $GITHUB_ENV
+          echo "TARGET_AR=x86_64-apple-darwin21.4-ar" >> $GITHUB_ENV
 
           # Make libz-sys (git2-rs -> libgit2-sys -> libz-sys) build as a statically linked lib
           # This prevents the host zlib from being linked
