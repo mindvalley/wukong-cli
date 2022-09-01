@@ -28,7 +28,7 @@ pub async fn handle_list<'a>(context: GlobalContext) -> Result<bool, CliError<'a
 
     // Calling API ...
     let client = QueryClientBuilder::new()
-        .with_access_token(context.access_token.unwrap())
+        .with_access_token(context.id_token.unwrap())
         .build()?;
 
     let pipelines_data = client

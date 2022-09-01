@@ -36,6 +36,7 @@ pub async fn handle_init<'a>(
 
         config.auth = Some(AuthConfig {
             account: auth_info.account.clone(),
+            id_token: auth_info.id_token,
             access_token: auth_info.access_token,
             expiry_time: auth_info.expiry_time,
             refresh_token: auth_info.refresh_token,
@@ -48,7 +49,7 @@ pub async fn handle_init<'a>(
 
     // Calling API ...
     let client = QueryClientBuilder::new()
-        .with_access_token(config.auth.as_ref().unwrap().access_token.clone())
+        .with_access_token(config.auth.as_ref().unwrap().id_token.clone())
         .build()?;
 
     let applications_data: Vec<String> = client

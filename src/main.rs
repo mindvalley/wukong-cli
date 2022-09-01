@@ -52,6 +52,7 @@ pub struct GlobalContext {
     application: Option<String>,
     account: Option<String>,
     access_token: Option<String>,
+    id_token: Option<String>,
 }
 
 #[tokio::main]
@@ -102,6 +103,7 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
                         match config.auth.as_mut() {
                             Some(existing_auth_config) => {
                                 existing_auth_config.refresh_token = new_tokens.refresh_token;
+                                existing_auth_config.id_token = new_tokens.id_token;
                                 existing_auth_config.access_token = new_tokens.access_token;
                                 existing_auth_config.expiry_time = new_tokens.expiry_time;
                             }
@@ -113,6 +115,7 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
                         config.save(&config_file).unwrap();
                         context.application = Some(config.core.application.clone());
                         context.account = Some(config.auth.as_ref().unwrap().account.clone());
+                        context.id_token = Some(config.auth.as_ref().unwrap().id_token.clone());
                         context.access_token =
                             Some(config.auth.as_ref().unwrap().access_token.clone());
                         existing_config = Some(config);
@@ -126,6 +129,7 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
                 context.application = Some(config.core.application.clone());
                 context.account = Some(config.auth.as_ref().unwrap().account.clone());
                 context.access_token = Some(config.auth.as_ref().unwrap().access_token.clone());
+                context.id_token = Some(config.auth.as_ref().unwrap().id_token.clone());
                 existing_config = Some(config.clone());
             }
         }

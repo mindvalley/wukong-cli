@@ -50,6 +50,7 @@ pub struct LogConfig {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct AuthConfig {
     pub account: String,
+    pub id_token: String,
     pub access_token: String,
     pub expiry_time: String,
     pub refresh_token: String,
