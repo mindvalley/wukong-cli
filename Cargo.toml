@@ -38,4 +38,5 @@ url = "2.2.2"
 webbrowser = "0.7.1"
 env_config = { package = "config", version = "0.13.2"}
 
+[target.x86_64-unknown-linux-gnu.dependencies]
 openssl = { version = "*", features = ["vendored"] }
