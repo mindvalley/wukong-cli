@@ -10,28 +10,6 @@ env:
   CICD_INTERMEDIATES_DIR: "_cicd-intermediates"
 
 jobs:
-  # create-release:
-  #   name: create-release
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     upload_url: ${{ steps.release.outputs.upload_url }}
-  #     wukong_version: ${{ env.WUKONG_VERSION }}
-  #   steps:
-  #     - name: Get the release version from the tag
-  #       shell: bash
-  #       if: env.WUKONG_VERSION == ''
-  #       run: |
-  #         # See: https://github.community/t5/GitHub-Actions/How-to-get-just-the-tag-name/m-p/32167/highlight/true#M1027
-  #         echo "WUKONG_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-  #         echo "version is: ${{ env.WUKONG_VERSION }}"
-  #     - name: Create GitHub release
-  #       id: release
-  #       uses: actions/create-release@v1
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       with:
-  #         tag_name: ${{ env.WUKONG_VERSION }}
-  #         release_name: ${{ env.WUKONG_VERSION }}
   tag-name:
     name: Get Version Name
     runs-on: ubuntu-latest
@@ -56,7 +34,7 @@ jobs:
         job:
           - { name: "macOS-arm",      target: aarch64-apple-darwin          , os: ubuntu-latest }
           - { name: "macOS-x86",      target: x86_64-apple-darwin           , os: ubuntu-latest }
-          - { name: "linux-x86-gnu",  target: x86_64-unknown-linux-gnu      , os: ubuntu-latest }
+          - { name: "linux-x86",  target: x86_64-unknown-linux-gnu      , os: ubuntu-latest }
           # - { target: x86_64-unknown-linux-musl     , os: ubuntu-22.04, use-cross: true }
           # - { target: x86_64-unknown-linux-musl     , os: ubuntu-22.04, use-cross: true }
           # - { target: x86_64-unknown-linux-gnu    , os: ubuntu-22.04, use-cross: true }
@@ -138,7 +116,7 @@ jobs:
         shell: bash
         run: |
           PKG_suffix=".tar.gz" ; case ${{ matrix.job.target }} in *-pc-windows-*) PKG_suffix=".zip" ;; esac;
-          PKG_BASENAME=${PROJECT_NAME}-v${{ env.WUKONG_VERSION }}-${{ matrix.job.target }}
+          PKG_BASENAME=${PROJECT_NAME}-v${{ needs.tag-name.outputs.wukong_version }}-${{ matrix.job.name }}
           PKG_NAME=${PKG_BASENAME}${PKG_suffix}
           echo ::set-output name=PKG_NAME::${PKG_NAME}
           BIN_NAME="${{ env.PROJECT_NAME }}"
@@ -187,10 +165,19 @@ jobs:
         run: ls -R
         working-directory: ./artifacts
 
-      - if: github.event_name == 'push'
+      - name: Set TAG_NAME
         run: |
           TAG_NAME=${{ github.ref }}
           echo "TAG_NAME=${TAG_NAME#refs/tags/}" >> $GITHUB_ENV
+
+      - run: echo 'PRERELEASE=' >> $GITHUB_ENV
+
+      - if: |
+          contains(env.TAG_NAME, 'dev') ||
+          contains(env.TAG_NAME, 'alpha') ||
+          contains(env.TAG_NAME, 'beta') ||
+          contains(env.TAG_NAME, 'nightly')
+        run: |
           echo 'PRERELEASE=--prerelease' >> $GITHUB_ENV
 
       - name: Publish release
