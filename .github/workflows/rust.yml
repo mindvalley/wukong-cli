@@ -17,10 +17,9 @@ jobs:
       matrix:
         rust: [ stable ]
         job:
-          - { target: aarch64-apple-darwin          , os: ubuntu-22.04 }
-          - { target: x86_64-apple-darwin           , os: ubuntu-22.04 }
-          - { target: x86_64-unknown-linux-gnu      , os: ubuntu-22.04 }
-          - { target: x86_64-unknown-linux-musl     , os: ubuntu-22.04, use-cross: true }
+          - { name: "macOS-arm",      target: aarch64-apple-darwin          , os: ubuntu-latest }
+          - { name: "macOS-x86",      target: x86_64-apple-darwin           , os: ubuntu-latest }
+          - { name: "linux-x86-gnu",  target: x86_64-unknown-linux-gnu      , os: ubuntu-latest }
           # - { target: x86_64-unknown-linux-musl     , os: ubuntu-22.04, use-cross: true }
           # - { target: x86_64-unknown-linux-gnu    , os: ubuntu-22.04, use-cross: true }
           # - { target: x86_64-apple-darwin         , os: macos-latest                  }
@@ -29,17 +28,15 @@ jobs:
           # - { target: arm-unknown-linux-musleabihf, os: ubuntu-22.04, use-cross: true }
           # - { target: i686-unknown-linux-gnu      , os: ubuntu-22.04, use-cross: true }
           # - { target: i686-unknown-linux-musl     , os: ubuntu-22.04, use-cross: true }
-    name: ${{ matrix.job.target }} (${{ matrix.job.os }})
+    name: ${{ matrix.job.name }} (${{ matrix.job.target }})
     runs-on: ${{ matrix.job.os }}
 
     steps:
-      - uses: mbround18/setup-osxcross@v1
-        with:
-          osx-version: "12.3"
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - uses: actions/checkout@v3
-
-      - uses: actions-rs/toolchain@v1
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: ${{ matrix.rust }}
@@ -47,7 +44,14 @@ jobs:
           components: rustfmt, clippy
           override: true
 
-      - name: Install prerequisites
+      - name: Install macOS packages
+        uses: mbround18/setup-osxcross@v1
+        if: contains(matrix.job.target, 'apple-darwin')
+        with:
+          osx-version: "12.3"
+
+      - name: Install Linux packages
+        if: contains(matrix.job.target, 'linux')
         shell: bash
         run: |
           case ${{ matrix.job.target }} in
@@ -59,16 +63,6 @@ jobs:
       - name: Set env
         shell: bash
         run: | 
-          # OSXCROSS_FOLDER="$(echo "$GITHUB_ACTION_PATH/osxcross" | sed 's/\.\/*//g')"
-
-          # findTarget() {
-          #   local file="$(find "$OSXCROSS_FOLDER/target/bin" -name "$1")"
-          #   echo "$(basename $file)"
-          # }
-
-          # LINKER_FILE="$(findTarget "x86_64-apple-darwin*-clang")"
-          # AR_FILE="$(findTarget "x86_64-apple-darwin*-ar")"
-
           case ${{ matrix.job.target }} in
             aarch64-apple-darwin) 
               LINKER_FILE="aarch64-apple-darwin21.4-clang"
@@ -118,35 +112,3 @@ jobs:
         with:
           command: test
           args: --verbose
-
-      - name: Create tarball
-        id: package
-        shell: bash
-        run: |
-          PKG_suffix=".tar.gz" ; case ${{ matrix.job.target }} in *-pc-windows-*) PKG_suffix=".zip" ;; esac;
-          PKG_BASENAME=${PROJECT_NAME}-v${PROJECT_VERSION}-${{ matrix.job.target }}
-          PKG_NAME=${PKG_BASENAME}${PKG_suffix}
-          echo ::set-output name=PKG_NAME::${PKG_NAME}
-          BIN_NAME="${{ env.PROJECT_NAME }}"
-          PKG_STAGING="${{ env.CICD_INTERMEDIATES_DIR }}/package"
-          ARCHIVE_DIR="${PKG_STAGING}/${PKG_BASENAME}/"
-          mkdir -p "${ARCHIVE_DIR}"
-          mkdir -p "${ARCHIVE_DIR}/autocomplete"
-          # Binary
-          cp "target/${{ matrix.job.target }}/release/${BIN_NAME}" "$ARCHIVE_DIR"
-
-          # base compressed package
-          pushd "${PKG_STAGING}/" >/dev/null
-          case ${{ matrix.job.target }} in
-            *-pc-windows-*) 7z -y a "${PKG_NAME}" "${PKG_BASENAME}"/* | tail -2 ;;
-            *) tar czf "${PKG_NAME}" "${PKG_BASENAME}"/* ;;
-          esac;
-          popd >/dev/null
-          # Let subsequent steps know where to find the compressed package
-          echo ::set-output name=PKG_PATH::"${PKG_STAGING}/${PKG_NAME}"
-
-      - name: "Artifact upload: tarball"
-        uses: actions/upload-artifact@master
-        with:
-          name: ${{ steps.package.outputs.PKG_NAME }}
-          path: ${{ steps.package.outputs.PKG_PATH }}
