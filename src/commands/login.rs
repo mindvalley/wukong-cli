@@ -54,4 +54,3 @@ async fn login_and_update_config<'a>() -> Result<bool, CliError<'a>> {
 
     Ok(true)
 }
-
