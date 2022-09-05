@@ -6,11 +6,32 @@ on:
     - "[0-9]+.[0-9]+.[0-9]+*"
 
 jobs:
-  create-release:
-    name: create-release
+  # create-release:
+  #   name: create-release
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     upload_url: ${{ steps.release.outputs.upload_url }}
+  #     wukong_version: ${{ env.WUKONG_VERSION }}
+  #   steps:
+  #     - name: Get the release version from the tag
+  #       shell: bash
+  #       if: env.WUKONG_VERSION == ''
+  #       run: |
+  #         # See: https://github.community/t5/GitHub-Actions/How-to-get-just-the-tag-name/m-p/32167/highlight/true#M1027
+  #         echo "WUKONG_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+  #         echo "version is: ${{ env.WUKONG_VERSION }}"
+  #     - name: Create GitHub release
+  #       id: release
+  #       uses: actions/create-release@v1
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       with:
+  #         tag_name: ${{ env.WUKONG_VERSION }}
+  #         release_name: ${{ env.WUKONG_VERSION }}
+  tag-name:
+    name: tag-name
     runs-on: ubuntu-latest
     outputs:
-      upload_url: ${{ steps.release.outputs.upload_url }}
       wukong_version: ${{ env.WUKONG_VERSION }}
     steps:
       - name: Get the release version from the tag
@@ -20,18 +41,9 @@ jobs:
           # See: https://github.community/t5/GitHub-Actions/How-to-get-just-the-tag-name/m-p/32167/highlight/true#M1027
           echo "WUKONG_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
           echo "version is: ${{ env.WUKONG_VERSION }}"
-      - name: Create GitHub release
-        id: release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ env.WUKONG_VERSION }}
-          release_name: ${{ env.WUKONG_VERSION }}
 
   build-release:
     name: ${{ matrix.job.name }} (${{ matrix.job.target }})
-    needs: ['create-release']
     strategy:
       fail-fast: false
       matrix:
@@ -157,7 +169,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           path: ./artifacts
-    
+
       - name: Display structure of downloaded files
         run: ls -R
         working-directory: ./artifacts
@@ -167,8 +179,8 @@ jobs:
           TAG_NAME=${{ github.ref }}
           echo "TAG_NAME=${TAG_NAME#refs/tags/}" >> $GITHUB_ENV
           echo 'PRERELEASE=--prerelease') >> $GITHUB_ENV
-      - name: Publish release
-        env:
-          DEBUG: api
-        run: |
-          gh release create $TAG_NAME $PRERELEASE --title "$TAG_NAME" --target $GITHUB_SHA 
+      # - name: Publish release
+      #   env:
+      #     DEBUG: api
+      #   run: |
+      #     gh release create $TAG_NAME $PRERELEASE --title "$TAG_NAME" --target $GITHUB_SHA 
