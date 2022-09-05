@@ -137,7 +137,7 @@ jobs:
         shell: bash
         run: |
           PKG_suffix=".tar.gz" ; case ${{ matrix.job.target }} in *-pc-windows-*) PKG_suffix=".zip" ;; esac;
-          PKG_BASENAME=${PROJECT_NAME}-v${PROJECT_VERSION}-${{ matrix.job.target }}
+          PKG_BASENAME=${PROJECT_NAME}-v${env.WUKONG_VERSION}-${{ matrix.job.target }}
           PKG_NAME=${PKG_BASENAME}${PKG_suffix}
           echo ::set-output name=PKG_NAME::${PKG_NAME}
           BIN_NAME="${{ env.PROJECT_NAME }}"
@@ -186,9 +186,10 @@ jobs:
         run: |
           TAG_NAME=${{ github.ref }}
           echo "TAG_NAME=${TAG_NAME#refs/tags/}" >> $GITHUB_ENV
-          echo 'PRERELEASE=--prerelease') >> $GITHUB_ENV
-      # - name: Publish release
-      #   env:
-      #     DEBUG: api
-      #   run: |
-      #     gh release create $TAG_NAME $PRERELEASE --title "$TAG_NAME" --target $GITHUB_SHA 
+          echo 'PRERELEASE=--prerelease' >> $GITHUB_ENV
+
+      - name: Publish release
+        env:
+          DEBUG: api
+        run: |
+          gh release create $TAG_NAME $PRERELEASE --title "$TAG_NAME" --target $GITHUB_SHA wukong-*.tar.gz
