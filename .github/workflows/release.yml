@@ -167,6 +167,9 @@ jobs:
   publish:
     needs: [build-release]
     runs-on: ubuntu-latest
+    env:
+      GH_REPO: ${{ github.repository }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     permissions:
       contents: write
     steps:
