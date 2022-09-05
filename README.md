@@ -7,6 +7,15 @@
 <p align="center">A Swiss-army Knife CLI For Mindvalley Developers</p>
 
 <div align="center">
+    <a href="https://github.com/mindvalley/wukong-cli/actions/workflows/ci.yml">
+      <img alt="GitHub Actions status" src="https://github.com/mindvalley/wukong-cli/actions/workflows/ci.yml/badge.svg">
+    </a>
+    <a href="https://github.com/mindvalley/wukong-cli/actions/workflows/release.yml">
+      <img alt="GitHub Actions status" src="https://github.com/mindvalley/wukong-cli/actions/workflows/release.yml/badge.svg">
+    </a>
+</div>
+
+<div align="center">
   <img alt="Wukong CLI" src="./.github/img/wukong-help.png" >
 </div>
 
