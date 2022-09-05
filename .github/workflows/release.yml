@@ -137,7 +137,7 @@ jobs:
         shell: bash
         run: |
           PKG_suffix=".tar.gz" ; case ${{ matrix.job.target }} in *-pc-windows-*) PKG_suffix=".zip" ;; esac;
-          PKG_BASENAME=${PROJECT_NAME}-v${env.WUKONG_VERSION}-${{ matrix.job.target }}
+          PKG_BASENAME=${PROJECT_NAME}-v${{ env.WUKONG_VERSION }}-${{ matrix.job.target }}
           PKG_NAME=${PKG_BASENAME}${PKG_suffix}
           echo ::set-output name=PKG_NAME::${PKG_NAME}
           BIN_NAME="${{ env.PROJECT_NAME }}"
