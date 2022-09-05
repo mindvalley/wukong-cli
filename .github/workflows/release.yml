@@ -12,7 +12,7 @@ env:
 jobs:
   tag-name:
     name: Get Version Name
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     outputs:
       wukong_version: ${{ env.WUKONG_VERSION }}
     steps:
@@ -32,9 +32,9 @@ jobs:
       matrix:
         rust: [ stable ]
         job:
-          - { name: "macOS-arm",      target: aarch64-apple-darwin          , os: ubuntu-latest }
-          - { name: "macOS-x86",      target: x86_64-apple-darwin           , os: ubuntu-latest }
-          - { name: "linux-x86",      target: x86_64-unknown-linux-gnu      , os: ubuntu-latest }
+          - { name: "macOS-arm",      target: aarch64-apple-darwin          , os: ubuntu-22.04 }
+          - { name: "macOS-x86",      target: x86_64-apple-darwin           , os: ubuntu-22.04 }
+          - { name: "linux-x86",      target: x86_64-unknown-linux-gnu      , os: ubuntu-22.04 }
     runs-on: ${{ matrix.job.os }}
     permissions:
       contents: write
@@ -137,7 +137,7 @@ jobs:
 
   publish:
     needs: [build-release]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       GH_REPO: ${{ github.repository }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
