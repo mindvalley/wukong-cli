@@ -12,7 +12,6 @@ pub async fn handle_login<'a>(context: GlobalContext) -> Result<bool, CliError<'
             "Use the current logged in account",
             "Log in with a new account",
         ];
-
         let selection = Select::with_theme(&ColorfulTheme::default())
             .with_prompt(format!(
                 "You are already logged in as \"{}\", do you want to log in with a new account?",

@@ -53,7 +53,7 @@ jobs:
 
       - name: Set env
         shell: bash
-        run: | 
+        run: |
           case ${{ matrix.job.target }} in
             aarch64-apple-darwin) 
               LINKER_FILE="aarch64-apple-darwin21.4-clang"
