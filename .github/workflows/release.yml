@@ -49,7 +49,7 @@ jobs:
           # - { target: arm-unknown-linux-musleabihf, os: ubuntu-22.04, use-cross: true }
           # - { target: i686-unknown-linux-gnu      , os: ubuntu-22.04, use-cross: true }
           # - { target: i686-unknown-linux-musl     , os: ubuntu-22.04, use-cross: true }
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.job.os }}
 
     steps:
       - name: Checkout repository
