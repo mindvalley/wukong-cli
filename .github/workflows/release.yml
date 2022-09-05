@@ -34,16 +34,7 @@ jobs:
         job:
           - { name: "macOS-arm",      target: aarch64-apple-darwin          , os: ubuntu-latest }
           - { name: "macOS-x86",      target: x86_64-apple-darwin           , os: ubuntu-latest }
-          - { name: "linux-x86",  target: x86_64-unknown-linux-gnu      , os: ubuntu-latest }
-          # - { target: x86_64-unknown-linux-musl     , os: ubuntu-22.04, use-cross: true }
-          # - { target: x86_64-unknown-linux-musl     , os: ubuntu-22.04, use-cross: true }
-          # - { target: x86_64-unknown-linux-gnu    , os: ubuntu-22.04, use-cross: true }
-          # - { target: x86_64-apple-darwin         , os: macos-latest                  }
-          # - { target: aarch64-unknown-linux-gnu   , os: ubuntu-22.04, use-cross: true }
-          # - { target: arm-unknown-linux-gnueabihf , os: ubuntu-22.04, use-cross: true }
-          # - { target: arm-unknown-linux-musleabihf, os: ubuntu-22.04, use-cross: true }
-          # - { target: i686-unknown-linux-gnu      , os: ubuntu-22.04, use-cross: true }
-          # - { target: i686-unknown-linux-musl     , os: ubuntu-22.04, use-cross: true }
+          - { name: "linux-x86",      target: x86_64-unknown-linux-gnu      , os: ubuntu-latest }
     runs-on: ${{ matrix.job.os }}
     permissions:
       contents: write

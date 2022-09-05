@@ -19,15 +19,7 @@ jobs:
         job:
           - { name: "macOS-arm",      target: aarch64-apple-darwin          , os: ubuntu-latest }
           - { name: "macOS-x86",      target: x86_64-apple-darwin           , os: ubuntu-latest }
-          - { name: "linux-x86-gnu",  target: x86_64-unknown-linux-gnu      , os: ubuntu-latest }
-          # - { target: x86_64-unknown-linux-musl     , os: ubuntu-22.04, use-cross: true }
-          # - { target: x86_64-unknown-linux-gnu    , os: ubuntu-22.04, use-cross: true }
-          # - { target: x86_64-apple-darwin         , os: macos-latest                  }
-          # - { target: aarch64-unknown-linux-gnu   , os: ubuntu-22.04, use-cross: true }
-          # - { target: arm-unknown-linux-gnueabihf , os: ubuntu-22.04, use-cross: true }
-          # - { target: arm-unknown-linux-musleabihf, os: ubuntu-22.04, use-cross: true }
-          # - { target: i686-unknown-linux-gnu      , os: ubuntu-22.04, use-cross: true }
-          # - { target: i686-unknown-linux-musl     , os: ubuntu-22.04, use-cross: true }
+          - { name: "linux-x86",      target: x86_64-unknown-linux-gnu      , os: ubuntu-latest }
     name: ${{ matrix.job.name }} (${{ matrix.job.target }})
     runs-on: ${{ matrix.job.os }}
 
@@ -57,7 +49,6 @@ jobs:
           case ${{ matrix.job.target }} in
             arm-unknown-linux-*) sudo apt-get -y update ; sudo apt-get -y install gcc-arm-linux-gnueabihf ;;
             aarch64-unknown-linux-gnu) sudo apt-get -y update ; sudo apt-get -y install gcc-aarch64-linux-gnu ;;
-            # x86_64-unknown-linux-gnu) sudo apt-get -y update ; sudo apt-get -y install libssl-dev ;;
           esac
 
       - name: Set env
