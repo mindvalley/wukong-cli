@@ -38,7 +38,7 @@ pub async fn handle_ci_status<'a>(
     };
 
     let client = QueryClientBuilder::new()
-        .with_access_token(context.access_token.unwrap())
+        .with_access_token(context.id_token.unwrap())
         .build()?;
 
     let ci_status_resp = client

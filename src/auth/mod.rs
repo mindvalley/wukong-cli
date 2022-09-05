@@ -25,6 +25,7 @@ impl AdditionalClaims for OktaClaims {}
 #[derive(Debug)]
 pub struct AuthInfo {
     pub account: String,
+    pub id_token: String,
     pub access_token: String,
     pub expiry_time: String,
     pub refresh_token: String,
@@ -32,6 +33,7 @@ pub struct AuthInfo {
 
 #[derive(Debug)]
 pub struct TokenInfo {
+    pub id_token: String,
     pub access_token: String,
     pub expiry_time: String,
     pub refresh_token: String,
@@ -199,6 +201,7 @@ pub async fn login<'a>() -> Result<AuthInfo, CliError<'a>> {
 
     Ok(AuthInfo {
         account: current_user_email.to_string(),
+        id_token: id_token.to_string(),
         access_token: access_token.secret().to_owned(),
         expiry_time: expiry.to_string(),
         refresh_token: refresh_token.secret().to_owned(),
@@ -233,6 +236,11 @@ pub async fn refresh_tokens(refresh_token: &RefreshToken) -> Result<TokenInfo, C
             unreachable!();
         });
 
+    let id_token = token_response
+        .extra_fields()
+        .id_token()
+        .expect("Server did not return an ID token");
+
     let refresh_token = token_response
         .refresh_token()
         .expect("Server did not return a refresh token");
@@ -250,6 +258,7 @@ pub async fn refresh_tokens(refresh_token: &RefreshToken) -> Result<TokenInfo, C
         .to_rfc3339();
 
     Ok(TokenInfo {
+        id_token: id_token.to_string(),
         access_token: access_token.secret().to_owned(),
         expiry_time: expiry.to_string(),
         refresh_token: refresh_token.secret().to_owned(),

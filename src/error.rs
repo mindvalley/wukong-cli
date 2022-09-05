@@ -53,7 +53,7 @@ impl<'a> CliError<'a> {
     pub fn suggestion(&self) -> Option<String> {
         match self {
             CliError::UnAuthenticated => Some(String::from(
-                "Run \"wukong login\" to authenticate with your okta account.",
+                "Your access token is invalid. Run \"wukong login\" to authenticate with your okta account.",
             )),
             CliError::UnInitialised => Some(String::from(
                 "Run \"wukong init\" to initialise Wukong's configuration.",
