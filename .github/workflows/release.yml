@@ -163,6 +163,7 @@ jobs:
         with:
           name: ${{ steps.package.outputs.PKG_NAME }}
           path: ${{ steps.package.outputs.PKG_PATH }}
+          retention-days: 1
 
   publish:
     needs: [build-release]
@@ -195,4 +196,4 @@ jobs:
         env:
           DEBUG: api
         run: |
-          gh release create $TAG_NAME $PRERELEASE --title "$TAG_NAME" --target $GITHUB_SHA wukong-*.tar.gz
+          gh release create $TAG_NAME $PRERELEASE --title "$TAG_NAME" --target $GITHUB_SHA ./artifacts/*
