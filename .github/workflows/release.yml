@@ -102,6 +102,11 @@ jobs:
           command: build
           args: --locked --release --target=${{ matrix.job.target }}
 
+      - name: Build Wukong CLI Completions
+        shell: bash
+        run: |
+          ./generate-completions.sh
+
       - name: Create tarball
         id: package
         shell: bash
@@ -114,9 +119,12 @@ jobs:
           PKG_STAGING="${{ env.CICD_INTERMEDIATES_DIR }}/package"
           ARCHIVE_DIR="${PKG_STAGING}/${PKG_BASENAME}/"
           mkdir -p "${ARCHIVE_DIR}"
-          mkdir -p "${ARCHIVE_DIR}/autocomplete"
+          mkdir -p "${ARCHIVE_DIR}/completions"
           # Binary
           cp "target/${{ matrix.job.target }}/release/${BIN_NAME}" "$ARCHIVE_DIR"
+
+          # Completions
+          cp -r completions/{bash,fish,zsh} "$ARCHIVE_DIR/completions"
 
           # base compressed package
           pushd "${PKG_STAGING}/" >/dev/null
