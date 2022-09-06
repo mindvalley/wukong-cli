@@ -105,7 +105,27 @@ jobs:
       - name: Build Wukong CLI Completions
         shell: bash
         run: |
-          ./generate-completions.sh
+          BIN_NAME="${{ env.PROJECT_NAME }}"
+          WUKONG_COMMAND="target/${{ matrix.job.target }}/release/${BIN_NAME}"
+
+          mkdir -p completions
+
+          gen() {
+            outdir="completions/$1"
+            mkdir -p ./completions/$1
+            if [ $1 = 'zsh' ]; then
+              # replace the last line so the zsh autocompletion is source-able
+              # https://github.com/starship/starship/issues/2806
+              $WUKONG_COMMAND completions $1 | sed '$s/_wukong "$@"/compdef _wukong wukong/' > ./completions/$1/$2
+            else
+              $WUKONG_COMMAND completions $1 > ./completions/$1/$2
+            fi
+            echo "$1 completions generated successfully at $( cd "$(dirname "$0")" ; pwd -P )/completions/$1/$2."
+          }
+
+          gen bash wukong.bash
+          gen zsh _wukong
+          gen fish wukong.fish
 
       - name: Create tarball
         id: package
