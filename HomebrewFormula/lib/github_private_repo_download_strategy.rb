@@ -10,7 +10,7 @@ class GitHubPrivateRepositoryDownloadStrategy < CurlDownloadStrategy
   require "utils/formatter"
   require "utils/github"
 
-  def initialize(name, resource)
+  def initialize(url, name, version, **meta)
     super
     parse_url_pattern
     set_github_token
