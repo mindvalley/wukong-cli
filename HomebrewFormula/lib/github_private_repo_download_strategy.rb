@@ -1,4 +1,5 @@
-require "download_strategy"
+# Based on https://gist.github.com/ZPascal/b21c652b811872b3f56db9d54d61d6c6
+
 # GitHubPrivateRepositoryDownloadStrategy downloads contents from GitHub
 # Private Repository. To use it, add
 # ":using => GitHubPrivateRepositoryDownloadStrategy" to the URL section of
@@ -8,6 +9,9 @@ require "download_strategy"
 # it lets you use a private GttHub repository for internal distribution.  It
 # works with public one, but in that case simply use CurlDownloadStrategy.
 class GitHubPrivateRepositoryDownloadStrategy < CurlDownloadStrategy
+  require "utils/formatter"
+  require "utils/github"
+
   def initialize(url, name, version, **meta)
     super
     parse_url_pattern
@@ -15,41 +19,41 @@ class GitHubPrivateRepositoryDownloadStrategy < CurlDownloadStrategy
   end
 
   def parse_url_pattern
-    url_pattern = %r{https://github.com/([^/]+)/([^/]+)/(\S+)}
-    unless @url =~ url_pattern
+    unless match = url.match(%r{https://github.com/([^/]+)/([^/]+)/(\S+)})
       raise CurlDownloadStrategyError, "Invalid url pattern for GitHub Repository."
     end
 
-    _, @owner, @repo, @filepath = *@url.match(url_pattern)
+    _, @owner, @repo, @filepath = *match
   end
 
   def download_url
     "https://#{@github_token}@github.com/#{@owner}/#{@repo}/#{@filepath}"
   end
 
-  def _fetch
-    curl download_url, "-C", downloaded_size, "-o", temporary_path
-  end
-
   private
+
+  def _fetch(url:, resolved_url:, timeout:)
+    curl_download download_url, to: temporary_path
+  end
 
   def set_github_token
     @github_token = ENV["HOMEBREW_GITHUB_API_TOKEN"]
     unless @github_token
       raise CurlDownloadStrategyError, "Environmental variable HOMEBREW_GITHUB_API_TOKEN is required."
     end
+
     validate_github_repository_access!
   end
 
   def validate_github_repository_access!
     # Test access to the repository
     GitHub.repository(@owner, @repo)
-  rescue GitHub::HTTPNotFoundError
-    # We only handle HTTPNotFoundError here,
-    # becase AuthenticationFailedError is handled within util/github.
-    message = <<-EOS.undent
-        HOMEBREW_GITHUB_API_TOKEN can not access the repository: #{@owner}/#{@repo}
-        This token may not have permission to access the repository or the url of formula may be incorrect.
+  rescue GitHub::API::HTTPNotFoundError
+    # We switched to GitHub::API::HTTPNotFoundError, 
+    # because we can now handle bad credentials messages
+    message = <<~EOS
+      HOMEBREW_GITHUB_API_TOKEN can not access the repository: #{@owner}/#{@repo}
+      This token may not have permission to access the repository or the url of formula may be incorrect.
     EOS
     raise CurlDownloadStrategyError, message
   end
@@ -57,10 +61,14 @@ end
 
 # GitHubPrivateRepositoryReleaseDownloadStrategy downloads tarballs from GitHub
 # Release assets. To use it, add
-# ":using => GitHubPrivateRepositoryReleaseDownloadStrategy" to the URL section
-# of your formula. This download strategy uses GitHub access tokens (in the
+# `:using => GitHubPrivateRepositoryReleaseDownloadStrategy` to the URL section of
+# your formula. This download strategy uses GitHub access tokens (in the
 # environment variables HOMEBREW_GITHUB_API_TOKEN) to sign the request.
 class GitHubPrivateRepositoryReleaseDownloadStrategy < GitHubPrivateRepositoryDownloadStrategy
+  def initialize(url, name, version, **meta)
+    super
+  end
+
   def parse_url_pattern
     url_pattern = %r{https://github.com/([^/]+)/([^/]+)/releases/download/([^/]+)/(\S+)}
     unless @url =~ url_pattern
@@ -74,13 +82,13 @@ class GitHubPrivateRepositoryReleaseDownloadStrategy < GitHubPrivateRepositoryDo
     "https://#{@github_token}@api.github.com/repos/#{@owner}/#{@repo}/releases/assets/#{asset_id}"
   end
 
-  def _fetch
+  private
+
+  def _fetch(url:, resolved_url:, timeout:)
     # HTTP request header `Accept: application/octet-stream` is required.
     # Without this, the GitHub API will respond with metadata, not binary.
-    curl download_url, "-C", downloaded_size, "-o", temporary_path, "-H", "Accept: application/octet-stream"
+    curl_download download_url, "--header", "Accept: application/octet-stream", to: temporary_path
   end
-
-  private
 
   def asset_id
     @asset_id ||= resolve_asset_id
@@ -95,7 +103,8 @@ class GitHubPrivateRepositoryReleaseDownloadStrategy < GitHubPrivateRepositoryDo
   end
 
   def fetch_release_metadata
-    release_url = "https://api.github.com/repos/#{@owner}/#{@repo}/releases/tags/#{@tag}"
-    GitHub.open(release_url)
+    #release_url = "https://api.github.com/repos/#{@owner}/#{@repo}/releases/tags/#{@tag}"
+    #GitHub::API.open_rest(release_url)
+    GitHub.get_release(@owner, @repo, @tag)
   end
 end
