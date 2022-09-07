@@ -201,8 +201,35 @@ jobs:
         run: |
           echo 'PRERELEASE=--prerelease' >> $GITHUB_ENV
 
-      - name: Publish release
+      - name: Publish Github Release
         env:
           DEBUG: api
         run: |
           gh release create $TAG_NAME $PRERELEASE --title "$TAG_NAME" --target $GITHUB_SHA ./artifacts/*/*.tar.gz
+
+      - name: Update Homebrew Formula
+        shell: bash
+        run: |
+          # remove original formula
+          rm HomebrewFormula/wukong.rb
+
+          cp HomebrewFormula/template.rb HomebrewFormula/wukong.rb
+
+          VERSION=${{ env.TAG_NAME }}
+
+          SHA256_MAC_ARM=$(shasum -a 256 "./artifacts/wukong-v${VERSION}-macOS-arm.tar.gz")
+          SHA256_MAC_X86=$(shasum -a 256 "./artifacts/wukong-v${VERSION}-macOS-x86.tar.gz")
+          SHA256_LINUX_ARM=$(shasum -a 256 "./artifacts/wukong-v${VERSION}-linux-x86.tar.gz")
+
+          echo "${VERSION}"
+          echo "${SHA256_MAC_ARM}"
+          echo "${SHA256_MAC_X86}"
+          echo "${SHA256_LINUX_X86}"
+
+          sed -i "s/__VERSION__/${VERSION}/" HomebrewFormula/wukong.rb
+          sed -i "s/__SHA256_MAC_ARM__/${SHA256_MAC_ARM}/" HomebrewFormula/wukong.rb
+          sed -i "s/__SHA256_MAC_X86__/${SHA256_MAC_X86}/" HomebrewFormula/wukong.rb
+          sed -i "s/__SHA256_LINUX_X86__/${SHA256_LINUX_X86}/" HomebrewFormula/wukong.rb
+
+          cat HomebrewFormula/wukong.rb
+
