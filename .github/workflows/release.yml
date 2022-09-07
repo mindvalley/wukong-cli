@@ -213,7 +213,7 @@ jobs:
           # remove original formula
           rm HomebrewFormula/wukong.rb
 
-          cp HomebrewFormula/template.rb HomebrewFormula/wukong.rb
+          cp HomebrewFormula/wukong.rb.template HomebrewFormula/wukong.rb
 
           VERSION=${{ env.TAG_NAME }}
 
@@ -231,5 +231,9 @@ jobs:
           sed -i "s/__SHA256_MAC_X86__/$SHA256_MAC_X86/" HomebrewFormula/wukong.rb
           sed -i "s/__SHA256_LINUX_X86__/$SHA256_LINUX_X86/" HomebrewFormula/wukong.rb
 
-          cat HomebrewFormula/wukong.rb
-
+      - name: Push a new commit
+        shell: bash
+        run: |
+          git add HomebrewFormula/wukong.rb
+          git commit -m "release: bump version -> ${VERSION}"
+          git push origin main
