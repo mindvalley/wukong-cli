@@ -232,9 +232,12 @@ jobs:
           sed -i "s/__SHA256_LINUX_X86__/$SHA256_LINUX_X86/" HomebrewFormula/wukong.rb
 
       - name: Create a new PR to bump version
-        shell: bash
         run: |
+          git config --global user.email "junkai.gan@mindvalley.com"
+          git config --global user.name "Gan Jun Kai"
+
           git add HomebrewFormula/wukong.rb
           git commit -m "release: bump version -> ${VERSION}"
           # git push origin main
+
           gh pr create --title "Release: Wukong ${VERSION}" --body "Bump version to ${VERSION}."
