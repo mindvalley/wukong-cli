@@ -102,30 +102,22 @@ jobs:
           command: build
           args: --locked --release --target=${{ matrix.job.target }}
 
-      # - name: Build Wukong CLI Completions
-      #   shell: bash
-      #   run: |
-      #     BIN_NAME="${{ env.PROJECT_NAME }}"
-      #     WUKONG_COMMAND="target/${{ matrix.job.target }}/release/${BIN_NAME}"
+      - name: Strip debug information from executable
+        shell: bash
+        run: |
+          BIN_NAME="${{ env.PROJECT_NAME }}"
 
-      #     mkdir -p completions
+          # Figure out what strip tool to use if any
+          STRIP="strip"
+          case ${{ matrix.job.target }} in
+            arm-unknown-linux-*) STRIP="arm-linux-gnueabihf-strip" ;;
+            aarch64-unknown-linux-gnu) STRIP="aarch64-linux-gnu-strip" ;;
+          esac;
 
-      #     gen() {
-      #       outdir="completions/$1"
-      #       mkdir -p ./completions/$1
-      #       if [ $1 = 'zsh' ]; then
-      #         # replace the last line so the zsh autocompletion is source-able
-      #         # https://github.com/starship/starship/issues/2806
-      #         $WUKONG_COMMAND completions $1 | sed '$s/_wukong "$@"/compdef _wukong wukong/' > ./completions/$1/$2
-      #       else
-      #         $WUKONG_COMMAND completions $1 > ./completions/$1/$2
-      #       fi
-      #       echo "$1 completions generated successfully at $( cd "$(dirname "$0")" ; pwd -P )/completions/$1/$2."
-      #     }
-
-      #     gen bash wukong.bash
-      #     gen zsh _wukong
-      #     gen fish wukong.fish
+          # Strip if possible
+          if [ -n "${STRIP}" ]; then
+            "${STRIP}" "target/${{ matrix.job.target }}/release/${BIN_NAME}"
+          fi
 
       - name: Create tarball
         id: package
@@ -248,4 +240,4 @@ jobs:
           git commit -m "release: bump version -> ${VERSION}"
           git push origin "${NEW_BRANCH_NAME}"
 
-          gh pr create --draft --title "Release: Wukong ${VERSION}" --body "Bump version to ${VERSION}."
+          gh pr create --title "Release: Wukong ${VERSION}" --body "Bump version to ${VERSION}."
