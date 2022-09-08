@@ -242,6 +242,7 @@ jobs:
           git config --global user.email "junkai.gan@mindvalley.com"
           git config --global user.name "Gan Jun Kai"
 
+          git switch main
           git switch -c "${NEW_BRANCH_NAME}"
           git add HomebrewFormula/wukong.rb
           git commit -m "release: bump version -> ${VERSION}"
