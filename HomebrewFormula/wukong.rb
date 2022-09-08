@@ -12,20 +12,20 @@ class Wukong < Formula
     on_arm do
       url "https://github.com/mindvalley/wukong-cli/releases/download/#{version}/wukong-v#{version}-macOS-arm.tar.gz", 
         :using => GitHubPrivateRepositoryReleaseDownloadStrategy
-      sha256 "76c2c8697361aac1811545ac71d7055895cdc611eecef98202ed0a2d14878ef7"
+      sha256 "7855372e1a8a11704aeb1cf524d1d82098f2a660c8eae986c1810cd061486c4d"
     end
 
     on_intel do
       url "https://github.com/mindvalley/wukong-cli/releases/download/#{version}/wukong-v#{version}-macOS-x86.tar.gz",
         :using => GitHubPrivateRepositoryReleaseDownloadStrategy
-      sha256 "eb4879a1f614b5cea6e7c1cbf6eaeff16a6d7603e0500038ab2d7f47bddda9ab"
+      sha256 "a07399cabbe79da782fadfa3e81a4c6657871e0af452049b9254a87f3281d53f"
     end
   end
 
   on_linux do
     url "https://github.com/mindvalley/wukong-cli/releases/download/#{version}/wukong-v#{version}-linux-x86.tar.gz",
         :using => GitHubPrivateRepositoryReleaseDownloadStrategy
-    sha256 "3a79fb67d26104c817a1f8fb17a30ad37fa5d98d448e1ebf1ee8afa76b0ae067"
+    sha256 "76af1fbbd96dcb7fd5eb23527860e02324003d580a109bf4c589e94a3d1ad4b3"
   end
 
 
