@@ -173,6 +173,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     permissions:
       contents: write
+      pull-requests: write
     steps:
       # Must perform checkout first, since it deletes the target directory
       # before running, and would therefore delete the downloaded artifacts
@@ -232,6 +233,8 @@ jobs:
           sed -i "s/__SHA256_LINUX_X86__/$SHA256_LINUX_X86/" HomebrewFormula/wukong.rb
 
       - name: Create a new PR to bump version
+        env:
+          DEBUG: api
         run: |
           VERSION=${{ env.TAG_NAME }}
           NEW_BRANCH_NAME="release/${VERSION}"
