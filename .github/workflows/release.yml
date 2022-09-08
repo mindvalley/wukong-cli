@@ -223,4 +223,4 @@ jobs:
           git commit -m "release: bump version -> ${VERSION}"
           git push origin "${NEW_BRANCH_NAME}"
 
-          gh pr create --title "Release: Wukong ${VERSION}" --body "Bump version to ${VERSION}."
+          gh pr create --title "Release: Wukong ${VERSION}" --body "Bump version to ${VERSION}." --label "release"
