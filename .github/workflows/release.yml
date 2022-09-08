@@ -233,9 +233,12 @@ jobs:
 
       - name: Create a new PR to bump version
         run: |
+          VERSION=${{ env.TAG_NAME }}
+
           git config --global user.email "junkai.gan@mindvalley.com"
           git config --global user.name "Gan Jun Kai"
 
+          git switch -c "release/${VERSION}"
           git add HomebrewFormula/wukong.rb
           git commit -m "release: bump version -> ${VERSION}"
           # git push origin main
