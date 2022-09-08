@@ -102,23 +102,6 @@ jobs:
           command: build
           args: --locked --release --target=${{ matrix.job.target }}
 
-      - name: Strip debug information from executable
-        shell: bash
-        run: |
-          BIN_NAME="${{ env.PROJECT_NAME }}"
-
-          # Figure out what strip tool to use if any
-          STRIP="strip"
-          case ${{ matrix.job.target }} in
-            arm-unknown-linux-*) STRIP="arm-linux-gnueabihf-strip" ;;
-            aarch64-unknown-linux-gnu) STRIP="aarch64-linux-gnu-strip" ;;
-          esac;
-
-          # Strip if possible
-          if [ -n "${STRIP}" ]; then
-            "${STRIP}" "target/${{ matrix.job.target }}/release/${BIN_NAME}"
-          fi
-
       - name: Create tarball
         id: package
         shell: bash
