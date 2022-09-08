@@ -11,7 +11,34 @@ env:
   CICD_INTERMEDIATES_DIR: "_cicd-intermediates"
 
 jobs:
-  ci:
+  check-formatting-clippy:
+    name: Check Formatting and Clippy
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          components: rustfmt, clippy
+          override: true
+
+      - name: Check formatting
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+      - name: Check clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: -- -D warnings
+
+  build-and-test:
     strategy:
       fail-fast: false
       matrix:
@@ -22,7 +49,6 @@ jobs:
           - { name: "linux-x86",      target: x86_64-unknown-linux-gnu      , os: ubuntu-22.04 }
     name: ${{ matrix.job.name }} (${{ matrix.job.target }})
     runs-on: ${{ matrix.job.os }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -85,18 +111,6 @@ jobs:
           use-cross: ${{ matrix.job.use-cross }}
           command: build
           args: --locked --release --target=${{ matrix.job.target }}
-
-      - name: Check formatting
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
-
-      - name: Check clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: -- -D warnings --target=${{ matrix.job.target }}
 
       - name: Test Wukong CLI
         uses: actions-rs/cargo@v1
