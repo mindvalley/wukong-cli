@@ -210,9 +210,9 @@ jobs:
         shell: bash
         run: |
           # remove original formula
-          rm HomebrewFormula/wukong.rb
+          rm ./wukong.rb
 
-          cp HomebrewFormula/wukong.rb.template HomebrewFormula/wukong.rb
+          cp ./wukong.rb.template ./wukong.rb
 
           # VERSION=${{ steps.sha256.outputs.VERSION }}
 
@@ -230,10 +230,10 @@ jobs:
           echo "${SHA256_MAC_X86}"
           echo "${SHA256_LINUX_X86}"
 
-          sed -i "s/__VERSION__/$VERSION/" HomebrewFormula/wukong.rb
-          sed -i "s/__SHA256_MAC_ARM__/$SHA256_MAC_ARM/" HomebrewFormula/wukong.rb
-          sed -i "s/__SHA256_MAC_X86__/$SHA256_MAC_X86/" HomebrewFormula/wukong.rb
-          sed -i "s/__SHA256_LINUX_X86__/$SHA256_LINUX_X86/" HomebrewFormula/wukong.rb
+          sed -i "s/__VERSION__/$VERSION/" ./wukong.rb
+          sed -i "s/__SHA256_MAC_ARM__/$SHA256_MAC_ARM/" ./wukong.rb
+          sed -i "s/__SHA256_MAC_X86__/$SHA256_MAC_X86/" ./wukong.rb
+          sed -i "s/__SHA256_LINUX_X86__/$SHA256_LINUX_X86/" ./wukong.rb
 
       - name: Create a new PR to bump version
         env:
