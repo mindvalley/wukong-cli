@@ -149,6 +149,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      repository-projects: write
     steps:
       # Must perform checkout first, since it deletes the target directory
       # before running, and would therefore delete the downloaded artifacts
