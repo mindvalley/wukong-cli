@@ -183,6 +183,28 @@ jobs:
         run: |
           gh release create $TAG_NAME $PRERELEASE --title "$TAG_NAME" --target $GITHUB_SHA ./artifacts/*/*.tar.gz
 
+      - name: Calculate SHA256 Hash
+        id: sha256
+        shell: bash
+        run: |
+          VERSION=${{ env.TAG_NAME }}
+
+          SHA256_MAC_ARM=$(shasum -a 256 "./artifacts/wukong-v${VERSION}-macOS-arm.tar.gz/wukong-v${VERSION}-macOS-arm.tar.gz" | cut -f 1 -d " ")
+          SHA256_MAC_X86=$(shasum -a 256 "./artifacts/wukong-v${VERSION}-macOS-x86.tar.gz/wukong-v${VERSION}-macOS-x86.tar.gz" | cut -f 1 -d " ")
+          SHA256_LINUX_X86=$(shasum -a 256 "./artifacts/wukong-v${VERSION}-linux-x86.tar.gz/wukong-v${VERSION}-linux-x86.tar.gz"| cut -f 1 -d " ")
+
+          echo "${VERSION}"
+          echo "${SHA256_MAC_ARM}"
+          echo "${SHA256_MAC_X86}"
+          echo "${SHA256_LINUX_X86}"
+
+          echo "::set-output name=SHA256_MAC_ARM::${SHA256_MAC_ARM}"
+          echo "::set-output name=SHA256_MAC_X86::${SHA256_MAC_X86}"
+          echo "::set-output name=SHA256_LINUX_X86::${SHA256_LINUX_X86}"
+
+      - uses: actions/checkout@v3
+        repository: mindvalley/homebrew-wukong
+
       - name: Update Homebrew Formula
         shell: bash
         run: |
@@ -191,11 +213,16 @@ jobs:
 
           cp HomebrewFormula/wukong.rb.template HomebrewFormula/wukong.rb
 
-          VERSION=${{ env.TAG_NAME }}
+          # VERSION=${{ steps.sha256.outputs.VERSION }}
 
-          SHA256_MAC_ARM=$(shasum -a 256 "./artifacts/wukong-v${VERSION}-macOS-arm.tar.gz/wukong-v${VERSION}-macOS-arm.tar.gz" | cut -f 1 -d " ")
-          SHA256_MAC_X86=$(shasum -a 256 "./artifacts/wukong-v${VERSION}-macOS-x86.tar.gz/wukong-v${VERSION}-macOS-x86.tar.gz" | cut -f 1 -d " ")
-          SHA256_LINUX_X86=$(shasum -a 256 "./artifacts/wukong-v${VERSION}-linux-x86.tar.gz/wukong-v${VERSION}-linux-x86.tar.gz"| cut -f 1 -d " ")
+          VERSION=${{ env.TAG_NAME }}
+          SHA256_MAC_ARM=${{ steps.sha256.outputs.SHA256_MAC_ARM }}
+          SHA256_MAC_X86=${{ steps.sha256.outputs.SHA256_MAC_X86 }}
+          SHA256_LINUX_X86=${{ steps.sha256.outputs.SHA256_LINUX_X86 }}
+
+          # SHA256_MAC_ARM=$(shasum -a 256 "./artifacts/wukong-v${VERSION}-macOS-arm.tar.gz/wukong-v${VERSION}-macOS-arm.tar.gz" | cut -f 1 -d " ")
+          # SHA256_MAC_X86=$(shasum -a 256 "./artifacts/wukong-v${VERSION}-macOS-x86.tar.gz/wukong-v${VERSION}-macOS-x86.tar.gz" | cut -f 1 -d " ")
+          # SHA256_LINUX_X86=$(shasum -a 256 "./artifacts/wukong-v${VERSION}-linux-x86.tar.gz/wukong-v${VERSION}-linux-x86.tar.gz"| cut -f 1 -d " ")
 
           echo "${VERSION}"
           echo "${SHA256_MAC_ARM}"
@@ -219,8 +246,8 @@ jobs:
 
           git branch
           git switch -c "${NEW_BRANCH_NAME}"
-          git add HomebrewFormula/wukong.rb
+          git add ./wukong.rb
           git commit -m "release: bump version -> ${VERSION}"
           git push origin "${NEW_BRANCH_NAME}"
 
-          gh pr create --title "Release: Wukong ${VERSION}" --body "Bump version to ${VERSION}." --label "release"
+          gh pr create --title "Homebrew Release: Wukong ${VERSION}" --body "Bump version to ${VERSION}." --label "release"
