@@ -203,7 +203,8 @@ jobs:
           echo "::set-output name=SHA256_LINUX_X86::${SHA256_LINUX_X86}"
 
       - uses: actions/checkout@v3
-        repository: mindvalley/homebrew-wukong
+        with:
+          repository: mindvalley/homebrew-wukong
 
       - name: Update Homebrew Formula
         shell: bash
