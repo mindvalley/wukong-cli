@@ -145,8 +145,7 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       GH_REPO: ${{ github.repository }}
-#      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      GH_TOKEN:  ${{ secrets.HOMEBREW_WUKONG_TOKEN }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     permissions:
       contents: write
       pull-requests: write
@@ -206,6 +205,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: mindvalley/homebrew-wukong
+          token:  ${{ secrets.HOMEBREW_WUKONG_TOKEN }}
 
       - name: Update Homebrew Formula
         shell: bash
@@ -251,5 +251,3 @@ jobs:
           git add ./wukong.rb
           git commit -m "release: bump version -> ${VERSION}"
           git push origin "${NEW_BRANCH_NAME}"
-
-          gh pr create --title "Homebrew Release: Wukong ${VERSION}" --body "Bump version to ${VERSION}." --label "release"
