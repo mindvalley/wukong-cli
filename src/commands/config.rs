@@ -57,26 +57,26 @@ impl Config {
                     .as_ref()
                     .expect("Unable to identify user's home directory");
 
-                match CLIConfig::load(&config_file) {
+                match CLIConfig::load(config_file) {
                     Ok(mut config) => match config_name {
                         ConfigName::Application => {
                             config.core.application = config_value.to_string();
-                            config.save(&config_file).unwrap();
+                            config.save(config_file).unwrap();
                             println!("Updated property [core/application].");
                         }
                         ConfigName::CollectTelemetry => {
                             config.core.collect_telemetry = config_value.trim().parse().unwrap();
-                            config.save(&config_file).unwrap();
+                            config.save(config_file).unwrap();
                             println!("Updated property [core/collect_telemetry].");
                         }
                         ConfigName::EnableLog => {
                             config.log.enable = config_value.trim().parse().unwrap();
-                            config.save(&config_file).unwrap();
+                            config.save(config_file).unwrap();
                             println!("Updated property [log/enable].");
                         }
                         ConfigName::LogDir => {
                             config.log.log_dir = config_value.to_string();
-                            config.save(&config_file).unwrap();
+                            config.save(config_file).unwrap();
                             println!("Updated property [log/log_dir].");
                         }
                     },

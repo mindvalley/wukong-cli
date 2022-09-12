@@ -1,0 +1,120 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+  CICD_INTERMEDIATES_DIR: "_cicd-intermediates"
+
+jobs:
+  check-formatting-clippy:
+    name: Check Formatting and Clippy
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: x86_64-unknown-linux-gnu
+          components: rustfmt, clippy
+          override: true
+
+      - name: Check formatting
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+      - name: Check clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --target=x86_64-unknown-linux-gnu -- -D warnings
+
+      - name: Test Wukong CLI
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --verbose --target=x86_64-unknown-linux-gnu
+
+  ci:
+    strategy:
+      fail-fast: false
+      matrix:
+        rust: [ stable ]
+        job:
+          - { name: "macOS-arm",      target: aarch64-apple-darwin          , os: ubuntu-22.04 }
+          - { name: "macOS-x86",      target: x86_64-apple-darwin           , os: ubuntu-22.04 }
+          - { name: "linux-x86",      target: x86_64-unknown-linux-gnu      , os: ubuntu-22.04 }
+    name: ${{ matrix.job.name }} (${{ matrix.job.target }})
+    runs-on: ${{ matrix.job.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.job.target }}
+          components: rustfmt, clippy
+          override: true
+
+      - name: Install macOS packages
+        uses: mbround18/setup-osxcross@v1
+        if: contains(matrix.job.target, 'apple-darwin')
+        with:
+          osx-version: "12.3"
+
+      - name: Install Linux packages
+        if: contains(matrix.job.target, 'linux')
+        shell: bash
+        run: |
+          case ${{ matrix.job.target }} in
+            arm-unknown-linux-*) sudo apt-get -y update ; sudo apt-get -y install gcc-arm-linux-gnueabihf ;;
+            aarch64-unknown-linux-gnu) sudo apt-get -y update ; sudo apt-get -y install gcc-aarch64-linux-gnu ;;
+          esac
+
+      - name: Set env
+        shell: bash
+        run: |
+          case ${{ matrix.job.target }} in
+            aarch64-apple-darwin) 
+              LINKER_FILE="aarch64-apple-darwin21.4-clang"
+              AR_FILE="aarch64-apple-darwin21.4-ar"
+              echo "CARGO_TARGET_AARCH64_APPLE_DARWIN_LINKER=${LINKER_FILE}" >> $GITHUB_ENV
+              echo "CARGO_TARGET_AARCH64_APPLE_DARWIN_RUSTFLAGS=-Car=${AR_FILE},-Clink-arg=-undefined,-Clink-arg=dynamic_lookup" >> $GITHUB_ENV
+              echo "TARGET_CC=${LINKER_FILE}" >> $GITHUB_ENV
+              echo "TARGET_AR=${AR_FILE}" >> $GITHUB_ENV
+              ;;
+            x86_64-apple-darwin) 
+              LINKER_FILE="x86_64-apple-darwin21.4-clang"
+              AR_FILE="x86_64-apple-darwin21.4-ar"
+              echo "TARGET_CC=${LINKER_FILE}" >> $GITHUB_ENV
+              echo "TARGET_AR=${AR_FILE}" >> $GITHUB_ENV
+              ;;
+          esac
+
+      - name: Extract crate information
+        shell: bash
+        run: |
+          echo "PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"/\1/p' Cargo.toml | head -n1)" >> $GITHUB_ENV
+          echo "PROJECT_VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n1)" >> $GITHUB_ENV
+          echo "PROJECT_MAINTAINER=$(sed -n 's/^authors = \["\(.*\)"\]/\1/p' Cargo.toml)" >> $GITHUB_ENV
+          echo "PROJECT_HOMEPAGE=$(sed -n 's/^homepage = "\(.*\)"/\1/p' Cargo.toml)" >> $GITHUB_ENV
+
+      - name: Build Wukong CLI
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --locked --release --target=${{ matrix.job.target }}

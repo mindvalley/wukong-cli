@@ -3,6 +3,10 @@ name = "wukong"
 version = "0.0.1"
 edition = "2021"
 
+[profile.release]
+strip = true
+lto = true
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
@@ -38,3 +42,4 @@ url = "2.2.2"
 webbrowser = "0.7.1"
 env_config = { package = "config", version = "0.13.2"}
 
+openssl = { version = "*", features = ["vendored"] }

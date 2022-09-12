@@ -1,7 +1,7 @@
 use crate::{
     clap_app::ClapApp,
     config::{Config, CONFIG_FILE},
-    error::CliError,
+    error::{CliError, ConfigError},
 };
 use clap::Parser;
 
@@ -31,10 +31,7 @@ impl App {
                 }
             }
             Err(error) => match error {
-                CliError::ConfigError(ref config_error) => match config_error {
-                    crate::error::ConfigError::NotFound { .. } => ConfigState::Uninitialised,
-                    _ => return Err(error),
-                },
+                CliError::ConfigError(ConfigError::NotFound { .. }) => ConfigState::Uninitialised,
                 _ => return Err(error),
             },
         };

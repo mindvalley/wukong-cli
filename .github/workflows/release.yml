@@ -1,0 +1,253 @@
+name: release
+
+on:
+  push:
+    tags:
+    - "[0-9]+.[0-9]+.[0-9]+*"
+
+env:
+  CARGO_TERM_COLOR: always
+  CICD_INTERMEDIATES_DIR: "_cicd-intermediates"
+
+jobs:
+  tag-name:
+    name: Get Version Name
+    runs-on: ubuntu-22.04
+    outputs:
+      wukong_version: ${{ env.WUKONG_VERSION }}
+    steps:
+      - name: Get the release version from the tag
+        shell: bash
+        if: env.WUKONG_VERSION == ''
+        run: |
+          TAG_NAME=${{ github.ref }}
+          echo "WUKONG_VERSION=${TAG_NAME#refs/tags/}" >> $GITHUB_ENV
+          echo "version is: ${{ env.WUKONG_VERSION }}"
+
+  build-release:
+    name: ${{ matrix.job.name }} (${{ matrix.job.target }})
+    needs: [tag-name]
+    strategy:
+      fail-fast: false
+      matrix:
+        rust: [ stable ]
+        job:
+          - { name: "macOS-arm",      target: aarch64-apple-darwin          , os: ubuntu-22.04 }
+          - { name: "macOS-x86",      target: x86_64-apple-darwin           , os: ubuntu-22.04 }
+          - { name: "linux-x86",      target: x86_64-unknown-linux-gnu      , os: ubuntu-22.04 }
+    runs-on: ${{ matrix.job.os }}
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.job.target }}
+          components: rustfmt, clippy
+          override: true
+
+      - name: Install macOS packages
+        uses: mbround18/setup-osxcross@v1
+        if: contains(matrix.job.target, 'apple-darwin')
+        with:
+          osx-version: "12.3"
+
+      - name: Install Linux packages
+        if: contains(matrix.job.target, 'linux')
+        shell: bash
+        run: |
+          case ${{ matrix.job.target }} in
+            arm-unknown-linux-*) sudo apt-get -y update ; sudo apt-get -y install gcc-arm-linux-gnueabihf ;;
+            aarch64-unknown-linux-gnu) sudo apt-get -y update ; sudo apt-get -y install gcc-aarch64-linux-gnu ;;
+          esac
+
+      - name: Set env
+        shell: bash
+        run: | 
+          case ${{ matrix.job.target }} in
+            aarch64-apple-darwin) 
+              LINKER_FILE="aarch64-apple-darwin21.4-clang"
+              AR_FILE="aarch64-apple-darwin21.4-ar"
+              echo "CARGO_TARGET_AARCH64_APPLE_DARWIN_LINKER=${LINKER_FILE}" >> $GITHUB_ENV
+              echo "CARGO_TARGET_AARCH64_APPLE_DARWIN_RUSTFLAGS=-Car=${AR_FILE},-Clink-arg=-undefined,-Clink-arg=dynamic_lookup" >> $GITHUB_ENV
+              echo "TARGET_CC=${LINKER_FILE}" >> $GITHUB_ENV
+              echo "TARGET_AR=${AR_FILE}" >> $GITHUB_ENV
+              ;;
+            x86_64-apple-darwin) 
+              LINKER_FILE="x86_64-apple-darwin21.4-clang"
+              AR_FILE="x86_64-apple-darwin21.4-ar"
+              echo "TARGET_CC=${LINKER_FILE}" >> $GITHUB_ENV
+              echo "TARGET_AR=${AR_FILE}" >> $GITHUB_ENV
+              ;;
+          esac
+
+      - name: Extract crate information
+        shell: bash
+        run: |
+          echo "PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"/\1/p' Cargo.toml | head -n1)" >> $GITHUB_ENV
+          echo "PROJECT_VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n1)" >> $GITHUB_ENV
+          echo "PROJECT_MAINTAINER=$(sed -n 's/^authors = \["\(.*\)"\]/\1/p' Cargo.toml)" >> $GITHUB_ENV
+          echo "PROJECT_HOMEPAGE=$(sed -n 's/^homepage = "\(.*\)"/\1/p' Cargo.toml)" >> $GITHUB_ENV
+
+      - name: Build Wukong CLI
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: ${{ matrix.job.use-cross }}
+          command: build
+          args: --locked --release --target=${{ matrix.job.target }}
+
+      - name: Create tarball
+        id: package
+        shell: bash
+        run: |
+          PKG_suffix=".tar.gz" ; case ${{ matrix.job.target }} in *-pc-windows-*) PKG_suffix=".zip" ;; esac;
+          PKG_BASENAME=${PROJECT_NAME}-v${{ needs.tag-name.outputs.wukong_version }}-${{ matrix.job.name }}
+          PKG_NAME=${PKG_BASENAME}${PKG_suffix}
+          echo ::set-output name=PKG_NAME::${PKG_NAME}
+          BIN_NAME="${{ env.PROJECT_NAME }}"
+          PKG_STAGING="${{ env.CICD_INTERMEDIATES_DIR }}/package"
+          ARCHIVE_DIR="${PKG_STAGING}/${PKG_BASENAME}/"
+
+          mkdir -p "${ARCHIVE_DIR}"
+          mkdir -p "${ARCHIVE_DIR}/completions"
+
+          # Binary
+          cp "target/${{ matrix.job.target }}/release/${BIN_NAME}" "$ARCHIVE_DIR"
+
+          # Completions
+          cp -r completions/{bash,fish,zsh} "$ARCHIVE_DIR/completions"
+
+          # base compressed package
+          pushd "${PKG_STAGING}/" >/dev/null
+          case ${{ matrix.job.target }} in
+            *-pc-windows-*) 7z -y a "${PKG_NAME}" "${PKG_BASENAME}"/* | tail -2 ;;
+            *) tar czf "${PKG_NAME}" "${PKG_BASENAME}"/* ;;
+          esac;
+          popd >/dev/null
+          # Let subsequent steps know where to find the compressed package
+          echo ::set-output name=PKG_PATH::"${PKG_STAGING}/${PKG_NAME}"
+
+      - name: "Artifact upload: tarball"
+        uses: actions/upload-artifact@master
+        with:
+          name: ${{ steps.package.outputs.PKG_NAME }}
+          path: ${{ steps.package.outputs.PKG_PATH }}
+          retention-days: 1
+
+  publish:
+    needs: [build-release]
+    runs-on: ubuntu-22.04
+    env:
+      GH_REPO: ${{ github.repository }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      # Must perform checkout first, since it deletes the target directory
+      # before running, and would therefore delete the downloaded artifacts
+      - uses: actions/checkout@v3
+
+      - uses: actions/download-artifact@v3
+        with:
+          path: ./artifacts
+
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: ./artifacts
+
+      - name: Set TAG_NAME
+        run: |
+          TAG_NAME=${{ github.ref }}
+          echo "TAG_NAME=${TAG_NAME#refs/tags/}" >> $GITHUB_ENV
+
+      - run: echo 'PRERELEASE=' >> $GITHUB_ENV
+
+      - if: |
+          contains(env.TAG_NAME, 'dev') ||
+          contains(env.TAG_NAME, 'alpha') ||
+          contains(env.TAG_NAME, 'beta') ||
+          contains(env.TAG_NAME, 'nightly')
+        run: |
+          echo 'PRERELEASE=--prerelease' >> $GITHUB_ENV
+
+      - name: Publish Github Release
+        env:
+          DEBUG: api
+        run: |
+          gh release create $TAG_NAME $PRERELEASE --title "$TAG_NAME" --target $GITHUB_SHA ./artifacts/*/*.tar.gz
+
+      - name: Calculate SHA256 Hash
+        id: sha256
+        shell: bash
+        run: |
+          VERSION=${{ env.TAG_NAME }}
+
+          SHA256_MAC_ARM=$(shasum -a 256 "./artifacts/wukong-v${VERSION}-macOS-arm.tar.gz/wukong-v${VERSION}-macOS-arm.tar.gz" | cut -f 1 -d " ")
+          SHA256_MAC_X86=$(shasum -a 256 "./artifacts/wukong-v${VERSION}-macOS-x86.tar.gz/wukong-v${VERSION}-macOS-x86.tar.gz" | cut -f 1 -d " ")
+          SHA256_LINUX_X86=$(shasum -a 256 "./artifacts/wukong-v${VERSION}-linux-x86.tar.gz/wukong-v${VERSION}-linux-x86.tar.gz"| cut -f 1 -d " ")
+
+          echo "${VERSION}"
+          echo "${SHA256_MAC_ARM}"
+          echo "${SHA256_MAC_X86}"
+          echo "${SHA256_LINUX_X86}"
+
+          echo "::set-output name=SHA256_MAC_ARM::${SHA256_MAC_ARM}"
+          echo "::set-output name=SHA256_MAC_X86::${SHA256_MAC_X86}"
+          echo "::set-output name=SHA256_LINUX_X86::${SHA256_LINUX_X86}"
+
+      - uses: actions/checkout@v3
+        with:
+          repository: mindvalley/homebrew-wukong
+          token:  ${{ secrets.HOMEBREW_WUKONG_TOKEN }}
+
+      - name: Update Homebrew Formula
+        shell: bash
+        run: |
+          # remove original formula
+          rm ./wukong.rb
+
+          cp ./wukong.rb.template ./wukong.rb
+
+          # VERSION=${{ steps.sha256.outputs.VERSION }}
+
+          VERSION=${{ env.TAG_NAME }}
+          SHA256_MAC_ARM=${{ steps.sha256.outputs.SHA256_MAC_ARM }}
+          SHA256_MAC_X86=${{ steps.sha256.outputs.SHA256_MAC_X86 }}
+          SHA256_LINUX_X86=${{ steps.sha256.outputs.SHA256_LINUX_X86 }}
+
+          # SHA256_MAC_ARM=$(shasum -a 256 "./artifacts/wukong-v${VERSION}-macOS-arm.tar.gz/wukong-v${VERSION}-macOS-arm.tar.gz" | cut -f 1 -d " ")
+          # SHA256_MAC_X86=$(shasum -a 256 "./artifacts/wukong-v${VERSION}-macOS-x86.tar.gz/wukong-v${VERSION}-macOS-x86.tar.gz" | cut -f 1 -d " ")
+          # SHA256_LINUX_X86=$(shasum -a 256 "./artifacts/wukong-v${VERSION}-linux-x86.tar.gz/wukong-v${VERSION}-linux-x86.tar.gz"| cut -f 1 -d " ")
+
+          echo "${VERSION}"
+          echo "${SHA256_MAC_ARM}"
+          echo "${SHA256_MAC_X86}"
+          echo "${SHA256_LINUX_X86}"
+
+          sed -i "s/__VERSION__/$VERSION/" ./wukong.rb
+          sed -i "s/__SHA256_MAC_ARM__/$SHA256_MAC_ARM/" ./wukong.rb
+          sed -i "s/__SHA256_MAC_X86__/$SHA256_MAC_X86/" ./wukong.rb
+          sed -i "s/__SHA256_LINUX_X86__/$SHA256_LINUX_X86/" ./wukong.rb
+
+      - name: Create a new PR to bump version
+        env:
+          DEBUG: api
+        run: |
+          VERSION=${{ env.TAG_NAME }}
+          NEW_BRANCH_NAME="release/${VERSION}"
+
+          git config --global user.email "junkai.gan@mindvalley.com"
+          git config --global user.name "Gan Jun Kai"
+
+          git branch
+          git switch -c "${NEW_BRANCH_NAME}"
+          git add ./wukong.rb
+          git commit -m "release: bump version -> ${VERSION}"
+          git push origin "${NEW_BRANCH_NAME}"

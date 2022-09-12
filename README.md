@@ -7,6 +7,15 @@
 <p align="center">A Swiss-army Knife CLI For Mindvalley Developers</p>
 
 <div align="center">
+    <a href="https://github.com/mindvalley/wukong-cli/actions/workflows/ci.yml">
+      <img alt="GitHub Actions status" src="https://github.com/mindvalley/wukong-cli/actions/workflows/ci.yml/badge.svg">
+    </a>
+    <a href="https://github.com/mindvalley/wukong-cli/actions/workflows/release.yml">
+      <img alt="GitHub Actions status" src="https://github.com/mindvalley/wukong-cli/actions/workflows/release.yml/badge.svg">
+    </a>
+</div>
+
+<div align="center">
   <img alt="Wukong CLI" src="./.github/img/wukong-help.png" >
 </div>
 
@@ -22,7 +31,14 @@ The Wukong CLI is a set of tools to manages Mindvalley DevOps resources. Its goa
 > **Note**
 > You can read more from [here](https://mindvalley.atlassian.net/wiki/spaces/PXP/pages/450396161/PD2+-+A+Swiss-army+Knife+CLI+For+Mindvalley+Developers)
 
-## Get Started
+## Installation
+
+```bash
+brew tap mindvalley/wukong https://github.com/mindvalley/wukong-cli
+brew install wukong
+```
+
+## Get Started for Development
 
 Make sure you have [Rust](https://www.rust-lang.org/) installed. The recommended way is to install [Rustup](https://www.rust-lang.org/learn/get-started), the Rust installer and version management tool, using:
 
@@ -35,7 +51,7 @@ Then you should be able to check your rust version using:
 ```bash
 rustc --version
 # output
-# rustc 1.61.0 (fe5b13d68 2022-05-18)
+# rustc 1.63.0 (4b91a6ea7 2022-08-08)
 ```
 
 > **Note** > `rustc` is the Rust compiler

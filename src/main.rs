@@ -98,7 +98,7 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
                     .as_ref()
                     .expect("Unable to identify user's home directory");
 
-                match Config::load(&config_file) {
+                match Config::load(config_file) {
                     Ok(mut config) => {
                         match config.auth.as_mut() {
                             Some(existing_auth_config) => {
@@ -112,7 +112,7 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
                                 panic!("Auth config is not avaliable.")
                             }
                         };
-                        config.save(&config_file).unwrap();
+                        config.save(config_file).unwrap();
                         context.application = Some(config.core.application.clone());
                         context.account = Some(config.auth.as_ref().unwrap().account.clone());
                         context.id_token = Some(config.auth.as_ref().unwrap().id_token.clone());

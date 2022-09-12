@@ -27,27 +27,27 @@ lazy_static! {
 }
 
 /// The Wukong CLI configuration.
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct Config {
     pub core: CoreConfig,
     pub log: LogConfig,
     pub auth: Option<AuthConfig>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct CoreConfig {
     /// The current application name
     pub application: String,
     pub collect_telemetry: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct LogConfig {
     pub enable: bool,
     pub log_dir: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct AuthConfig {
     pub account: String,
     pub id_token: String,
