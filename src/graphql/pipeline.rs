@@ -1,6 +1,6 @@
-use super::{check_auth_error, QueryClient};
-use crate::{error::APIError, SETTINGS};
-use graphql_client::{reqwest::post_graphql, GraphQLQuery, Response};
+use super::QueryClient;
+use crate::error::APIError;
+use graphql_client::{GraphQLQuery, Response};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -19,30 +19,25 @@ impl PipelinesQuery {
             application: Some(application.to_string()),
         };
 
-        let response =
-            post_graphql::<PipelinesQuery, _>(client.inner(), &SETTINGS.api.url, variables).await?;
-        if let Some(errors) = response.errors {
-            let first_error = errors[0].clone();
-            match check_auth_error(&first_error) {
-                Some(err) => return Err(err),
-                None => {
-                    if first_error.message == "unable_to_get_pipelines" {
-                        return Err(APIError::ResponseError {
-                            code: first_error.message,
-                            message: format!(
-                                "Unable to get pipelines for application `{}`.",
-                                application
-                            ),
-                        });
-                    }
-
+        let response = client
+            .call_api::<Self>(variables, |_, error| {
+                if error.message == "unable_to_get_pipelines" {
                     return Err(APIError::ResponseError {
-                        code: first_error.message,
-                        message: format!("{}", errors[0].clone()),
+                        code: error.message.clone(),
+                        message: format!(
+                            "Unable to get pipelines for application `{}`.",
+                            application
+                        ),
                     });
                 }
-            }
-        }
+
+                return Err(APIError::ResponseError {
+                    code: error.message.clone(),
+                    message: format!("{}", error.clone()),
+                });
+            })
+            .await?;
+
         Ok(response)
     }
 }
@@ -51,7 +46,7 @@ impl PipelinesQuery {
 #[graphql(
     schema_path = "src/graphql/schema.json",
     query_path = "src/graphql/query/pipeline.graphql",
-    response_derives = "Debug, Serialize, Deserialize"
+    response_derives = "Debug, Serialize, Deserialize, PartialEq"
 )]
 pub struct PipelineQuery;
 
@@ -64,28 +59,22 @@ impl PipelineQuery {
             name: name.to_string(),
         };
 
-        let response =
-            post_graphql::<PipelineQuery, _>(client.inner(), &SETTINGS.api.url, variables).await?;
-
-        if let Some(errors) = response.errors {
-            let first_error = errors[0].clone();
-            match check_auth_error(&first_error) {
-                Some(err) => return Err(err),
-                None => {
-                    if first_error.message == "unable_to_get_pipeline" {
-                        return Err(APIError::ResponseError {
-                            code: first_error.message,
-                            message: format!("Unable to get pipeline `{}`.", name),
-                        });
-                    }
-
+        let response = client
+            .call_api::<Self>(variables, |_, error| {
+                if error.message == "unable_to_get_pipeline" {
                     return Err(APIError::ResponseError {
-                        code: first_error.message,
-                        message: format!("{}", errors[0].clone()),
+                        code: error.message.clone(),
+                        message: format!("Unable to get pipeline `{}`.", name),
                     });
                 }
-            }
-        }
+
+                return Err(APIError::ResponseError {
+                    code: error.message.clone(),
+                    message: format!("{}", error.clone()),
+                });
+            })
+            .await?;
+
         Ok(response)
     }
 }
@@ -107,31 +96,22 @@ impl MultiBranchPipelineQuery {
             name: name.to_string(),
         };
 
-        let response = post_graphql::<MultiBranchPipelineQuery, _>(
-            client.inner(),
-            &SETTINGS.api.url,
-            variables,
-        )
-        .await?;
-        if let Some(errors) = response.errors {
-            let first_error = errors[0].clone();
-            match check_auth_error(&first_error) {
-                Some(err) => return Err(err),
-                None => {
-                    if first_error.message == "unable_to_get_pipeline" {
-                        return Err(APIError::ResponseError {
-                            code: first_error.message,
-                            message: format!("Unable to get pipeline `{}`.", name),
-                        });
-                    }
-
+        let response = client
+            .call_api::<Self>(variables, |_, error| {
+                if error.message == "unable_to_get_pipeline" {
                     return Err(APIError::ResponseError {
-                        code: first_error.message,
-                        message: format!("{}", errors[0].clone()),
+                        code: error.message.clone(),
+                        message: format!("Unable to get pipeline `{}`.", name),
                     });
                 }
-            }
-        }
+
+                return Err(APIError::ResponseError {
+                    code: error.message.clone(),
+                    message: format!("{}", error.clone()),
+                });
+            })
+            .await?;
+
         Ok(response)
     }
 }
@@ -155,31 +135,269 @@ impl CiStatusQuery {
             branch: branch.to_string(),
         };
 
-        let response =
-            post_graphql::<CiStatusQuery, _>(client.inner(), &SETTINGS.api.url, variables).await?;
-        if let Some(errors) = response.errors.clone() {
-            let first_error = errors[0].clone();
-            match check_auth_error(&first_error) {
-                Some(err) => return Err(err),
-                None => match first_error.message.as_str() {
-                    "application_not_found" => {
-                        return Err(APIError::ResponseError {
-                            code: first_error.message,
-                            message: format!("Application `{}` not found.", repo_url),
-                        });
-                    }
-                    "no_builds_associated_with_this_branch" => {
-                        return Ok(response);
-                    }
-                    _ => {
-                        return Err(APIError::ResponseError {
-                            code: first_error.message,
-                            message: format!("{}", errors[0].clone()),
-                        });
-                    }
-                },
-            }
-        }
+        let response = client
+            .call_api::<Self>(variables, |resp, error| match error.message.as_str() {
+                "application_not_found" => {
+                    return Err(APIError::ResponseError {
+                        code: error.message.clone(),
+                        message: format!("Application `{}` not found.", repo_url),
+                    });
+                }
+                "no_builds_associated_with_this_branch" => {
+                    return Ok(resp);
+                }
+                _ => {
+                    return Err(APIError::ResponseError {
+                        code: error.message.clone(),
+                        message: format!("{}", error.clone()),
+                    });
+                }
+            })
+            .await?;
+
         Ok(response)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::graphql::QueryClientBuilder;
+    use httpmock::prelude::*;
+
+    #[tokio::test]
+    async fn test_pipeline_list() {
+        let server = MockServer::start();
+        let query_client = QueryClientBuilder::new()
+            .with_access_token("test_access_token".to_string())
+            .with_api_url(server.base_url())
+            .build()
+            .unwrap();
+
+        let expected_resp = r#"
+{
+  "data": {
+    "pipelines": [
+      {
+        "__typename": "MultiBranchPipeline",
+        "lastDuration": null,
+        "lastFailedAt": null,
+        "lastSucceededAt": null,
+        "name": "mv-platform-ci"
+      },
+      {
+        "__typename": "Job",
+        "lastDuration": 522303,
+        "lastFailedAt": 1663844109893,
+        "lastSucceededAt": 1664266988871,
+        "name": "mv-platform-prod-main-branch-build"
+      }
+    ]
+  }
+}"#;
+
+        let mock = server.mock(|when, then| {
+            when.method(POST).path("/");
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(expected_resp);
+        });
+
+        let response = PipelinesQuery::fetch(&query_client, "mv-platform").await;
+
+        mock.assert();
+        assert!(response.is_ok());
+
+        let pipelines = response.unwrap().data.unwrap().pipelines.unwrap();
+        assert_eq!(pipelines.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_pipeline() {
+        let server = MockServer::start();
+        let query_client = QueryClientBuilder::new()
+            .with_access_token("test_access_token".to_string())
+            .with_api_url(server.base_url())
+            .build()
+            .unwrap();
+
+        let expected_resp = r#"
+{
+  "data": {
+    "pipeline": {
+        "__typename": "Job",
+        "lastDuration": 522303,
+        "lastFailedAt": 1663844109893,
+        "lastSucceededAt": null,
+        "name": "mv-platform-main-branch-build"
+    }
+  }
+}
+"#;
+
+        let mock = server.mock(|when, then| {
+            when.method(POST).path("/");
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(expected_resp);
+        });
+
+        let response = PipelineQuery::fetch(&query_client, "mv-platform-main-branch-build").await;
+
+        mock.assert();
+        assert!(response.is_ok());
+
+        match response.unwrap().data.unwrap().pipeline.unwrap() {
+            pipeline_query::PipelineQueryPipeline::Job(job) => {
+                assert_eq!(job.name, "mv-platform-main-branch-build");
+                assert_eq!(job.last_duration, Some(522303));
+                assert_eq!(job.last_failed_at, Some(1663844109893));
+                assert_eq!(job.last_succeeded_at, None);
+            }
+            pipeline_query::PipelineQueryPipeline::MultiBranchPipeline(_pipeline) => {
+                panic!("the test shouldn't reach this line");
+            }
+        };
+    }
+
+    #[tokio::test]
+    async fn test_multi_branch_pipeline() {
+        let server = MockServer::start();
+        let query_client = QueryClientBuilder::new()
+            .with_access_token("test_access_token".to_string())
+            .with_api_url(server.base_url())
+            .build()
+            .unwrap();
+
+        let expected_resp = r#"
+{
+  "data": {
+    "multiBranchPipeline": {
+      "branches": [
+        {
+          "lastDuration": 582271,
+          "lastFailedAt": 1664267048730,
+          "lastSucceededAt": 1664267841689,
+          "name": "main"
+        }
+      ],
+      "lastDuration": null,
+      "lastFailedAt": 1664267048730,
+      "lastSucceededAt": null,
+      "pullRequests": [
+        {
+          "lastDuration": 1259522,
+          "lastFailedAt": null,
+          "lastSucceededAt": 1663063337437,
+          "name": "PR-1000"
+        },
+        {
+          "lastDuration": 1263147,
+          "lastFailedAt": null,
+          "lastSucceededAt": 1663063574604,
+          "name": "PR-1001"
+        }
+      ]
+    }
+  }
+}
+"#;
+
+        let mock = server.mock(|when, then| {
+            when.method(POST).path("/");
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(expected_resp);
+        });
+
+        let response = MultiBranchPipelineQuery::fetch(&query_client, "mv-platform-ci").await;
+
+        mock.assert();
+        assert!(response.is_ok());
+
+        let pipeline = response
+            .unwrap()
+            .data
+            .unwrap()
+            .multi_branch_pipeline
+            .unwrap();
+
+        assert_eq!(pipeline.last_duration, None);
+        assert_eq!(pipeline.last_failed_at, Some(1664267048730));
+        assert_eq!(pipeline.last_succeeded_at, None);
+        assert_eq!(pipeline.branches.as_ref().unwrap().len(), 1);
+        assert_eq!(pipeline.pull_requests.unwrap().len(), 2);
+
+        let branch = pipeline
+            .branches
+            .as_ref()
+            .unwrap()
+            .first()
+            .as_ref()
+            .unwrap()
+            .as_ref()
+            .unwrap();
+        assert_eq!(branch.name, "main");
+        assert_eq!(branch.last_duration, Some(582271));
+        assert_eq!(branch.last_failed_at, Some(1664267048730));
+        assert_eq!(branch.last_succeeded_at, Some(1664267841689));
+    }
+
+    #[tokio::test]
+    async fn test_ci_status() {
+        let server = MockServer::start();
+        let query_client = QueryClientBuilder::new()
+            .with_access_token("test_access_token".to_string())
+            .with_api_url(server.base_url())
+            .build()
+            .unwrap();
+
+        let expected_resp = r#"
+{
+  "data": {
+    "ciStatus": {
+      "buildDuration": 582271,
+      "buildNumber": 101,
+      "buildUrl": "https://ci.mv.dev/mv-platform-ci/job/main/101/",
+      "commitAuthor": null,
+      "commitId": null,
+      "commitMsg": null,
+      "name": "main",
+      "result": "SUCCESS",
+      "timestamp": 1664267841689,
+      "totalDuration": 582274,
+      "waitDuration": 0
+    }
+  }
+}
+"#;
+
+        let mock = server.mock(|when, then| {
+            when.method(POST).path("/");
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(expected_resp);
+        });
+
+        let response =
+            CiStatusQuery::fetch(&query_client, "https://repo.com/mv-platform-ci", "main").await;
+
+        mock.assert();
+        assert!(response.is_ok());
+
+        let ci_status = response.unwrap().data.unwrap().ci_status.unwrap();
+        assert_eq!(ci_status.name, "main");
+        assert_eq!(ci_status.build_duration, Some(582271));
+        assert_eq!(ci_status.build_number, 101);
+        assert_eq!(
+            ci_status.build_url,
+            "https://ci.mv.dev/mv-platform-ci/job/main/101/"
+        );
+        assert_eq!(ci_status.commit_author, None);
+        assert_eq!(ci_status.commit_msg, None);
+        assert_eq!(ci_status.result, "SUCCESS");
+        assert_eq!(ci_status.timestamp, 1664267841689);
+        assert_eq!(ci_status.total_duration, Some(582274));
+        assert_eq!(ci_status.wait_duration, Some(0));
     }
 }

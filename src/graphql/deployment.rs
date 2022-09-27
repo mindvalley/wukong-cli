@@ -1,6 +1,6 @@
-use super::{check_auth_error, QueryClient};
-use crate::{error::APIError, SETTINGS};
-use graphql_client::{reqwest::post_graphql, GraphQLQuery, Response};
+use super::QueryClient;
+use crate::error::APIError;
+use graphql_client::{GraphQLQuery, Response};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -19,20 +19,15 @@ impl CdPipelinesQuery {
             application: application.to_string(),
         };
 
-        let response =
-            post_graphql::<Self, _>(client.inner(), &SETTINGS.api.url, variables).await?;
-        if let Some(errors) = response.errors {
-            let first_error = errors[0].clone();
-            match check_auth_error(&first_error) {
-                Some(err) => return Err(err),
-                None => {
-                    return Err(APIError::ResponseError {
-                        code: first_error.message,
-                        message: format!("{}", errors[0].clone()),
-                    });
-                }
-            }
-        }
+        let response = client
+            .call_api::<Self>(variables, |_, error| {
+                return Err(APIError::ResponseError {
+                    code: error.message.clone(),
+                    message: format!("{}", error.clone()),
+                });
+            })
+            .await?;
+
         Ok(response)
     }
 }

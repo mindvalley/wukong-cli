@@ -45,3 +45,6 @@ env_config = { package = "config", version = "0.13.2"}
 openssl = { version = "*", features = ["vendored"] }
 owo-colors = "3.5.0"
 chrono-humanize = "0.2.2"
+
+[dev-dependencies]
+httpmock = "0.6.6"

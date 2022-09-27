@@ -37,7 +37,7 @@ fn fmt_version(o: &String) -> String {
     match capitalize_first_letter(o).as_str() {
         "Green" => "Green".green().bold().to_string(),
         "Blue" => "Blue".blue().bold().to_string(),
-        version => version.to_string(),
+        version => version.bold().to_string(),
     }
 }
 

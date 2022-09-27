@@ -7,7 +7,7 @@ use crate::{
 };
 use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
 use std::time::Instant;
-use tabled::Table;
+use tabled::{style::Style, Table};
 
 pub async fn handle_list<'a>(context: GlobalContext) -> Result<bool, CliError<'a>> {
     let started = Instant::now();
@@ -62,7 +62,7 @@ pub async fn handle_list<'a>(context: GlobalContext) -> Result<bool, CliError<'a
             pipelines.push(pipeline);
         }
 
-        let table = Table::new(pipelines).to_string();
+        let table = Table::new(pipelines).with(Style::modern()).to_string();
         println!("Pipeline list for application `{}`:", application);
         println!("{table}");
     }
