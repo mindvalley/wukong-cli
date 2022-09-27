@@ -4,15 +4,9 @@ use crate::{
 };
 use chrono::{DateTime, Local, NaiveDateTime, Utc};
 use chrono_humanize::HumanTime;
-use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
+use indicatif::{ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
-use std::{
-    collections::HashMap,
-    iter::Product,
-    time::{Duration, Instant},
-};
-use tabled::{object::Cell, style::Style, Alignment, Modify, Panel, Span, Table, Tabled};
-use tokio::time::interval;
+use tabled::{style::Style, Panel, Table, Tabled};
 
 fn fmt_option_timestamp(o: &Option<i64>) -> String {
     match o {
