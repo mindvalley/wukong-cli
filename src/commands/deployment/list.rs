@@ -5,6 +5,7 @@ use crate::{
 use chrono::{DateTime, Local, NaiveDateTime, Utc};
 use chrono_humanize::HumanTime;
 use indicatif::{ProgressBar, ProgressStyle};
+use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 use tabled::{style::Style, Panel, Table, Tabled};
 
@@ -29,14 +30,33 @@ fn fmt_timestamp(o: &i64) -> String {
 }
 
 fn fmt_version(o: &String) -> String {
+    fn capitalize_first_letter(o: &String) -> String {
+        o[0..1].to_uppercase() + &o[1..]
+    }
     // capitalize the first letter
-    o[0..1].to_uppercase() + &o[1..]
+    match capitalize_first_letter(o).as_str() {
+        "Green" => "Green".green().bold().to_string(),
+        "Blue" => "Blue".blue().bold().to_string(),
+        version => version.to_string(),
+    }
 }
 
 fn fmt_enabled(o: &bool) -> String {
     match o {
         true => "Ready".to_string(),
         false => "Unavailable".to_string(),
+    }
+}
+
+fn fmt_status(o: &Option<String>) -> String {
+    match o {
+        Some(status) => match status.as_str() {
+            "SUCCEEDED" => "SUCCEEDED".green().to_string(),
+            "FAILURE" => "FAILURE".red().to_string(),
+            "TERMINAL" => "TERMINAL".yellow().to_string(),
+            status => status.to_owned(),
+        },
+        None => "N/A".black().to_string(),
     }
 }
 
@@ -52,7 +72,7 @@ struct CdPipeline {
     deployed_ref: Option<String>,
     #[tabled(rename = "Last deployment", display_with = "fmt_option_timestamp")]
     last_deployed_at: Option<i64>,
-    #[tabled(rename = "Status", display_with = "fmt_option_string")]
+    #[tabled(rename = "Status", display_with = "fmt_status")]
     status: Option<String>,
 }
 

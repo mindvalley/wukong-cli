@@ -1,8 +1,11 @@
+pub mod execute;
 pub mod list;
+
+use execute::handle_execute;
+use list::handle_list;
 
 use crate::{CliError, GlobalContext};
 use clap::{ArgEnum, Args, Subcommand};
-use list::handle_list;
 
 #[derive(Debug, Args)]
 pub struct Deployment {
@@ -39,9 +42,11 @@ impl Deployment {
     pub async fn handle_command<'a>(&self, context: GlobalContext) -> Result<bool, CliError<'a>> {
         match &self.subcommand {
             DeploymentSubcommand::List => handle_list(context).await,
-            DeploymentSubcommand::Execute { .. } => {
-                todo!()
-            }
+            DeploymentSubcommand::Execute {
+                namespace,
+                version,
+                artifact,
+            } => handle_execute(context, namespace, version, artifact).await,
         }
     }
 }
