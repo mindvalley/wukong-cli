@@ -1,0 +1,11 @@
+query CdPipelinesQuery($application: String!) {
+  cdPipelines(application: $application) {
+    deployedRef
+    environment
+    enabled
+    lastDeployment
+    name
+    status
+    version
+  }
+}

@@ -1,8 +1,10 @@
 pub mod application;
+pub mod deployment;
 pub mod pipeline;
 
 use self::{
     application::{applications_query, ApplicationsQuery},
+    deployment::{cd_pipelines_query, CdPipelinesQuery},
     pipeline::{
         ci_status_query, multi_branch_pipeline_query, pipeline_query, pipelines_query,
         CiStatusQuery, MultiBranchPipelineQuery, PipelineQuery, PipelinesQuery,
@@ -90,6 +92,13 @@ impl QueryClient {
         &self,
     ) -> Result<Response<applications_query::ResponseData>, APIError> {
         ApplicationsQuery::fetch(self).await
+    }
+
+    pub async fn fetch_cd_pipeline_list(
+        &self,
+        application: &str,
+    ) -> Result<Response<cd_pipelines_query::ResponseData>, APIError> {
+        CdPipelinesQuery::fetch(self, application).await
     }
 }
 

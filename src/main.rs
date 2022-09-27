@@ -153,17 +153,8 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
         CommandGroup::Login => must_init!(app.config, handle_login(context).await),
         CommandGroup::Init => handle_init(context, existing_config).await,
         CommandGroup::Completions { shell } => handle_completions(context, shell),
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::clap_app::ClapApp;
-
-    #[test]
-    fn verify_app() {
-        use clap::CommandFactory;
-
-        ClapApp::command().debug_assert()
+        CommandGroup::Deployment(deployment) => {
+            must_init_and_login!(app.config, deployment.handle_command(context).await)
+        }
     }
 }

@@ -13,3 +13,15 @@ pub struct ClapApp {
     #[clap(long, short, global = true)]
     pub application: Option<String>,
 }
+
+#[cfg(test)]
+mod test {
+    use super::ClapApp;
+
+    #[test]
+    fn verify_app() {
+        use clap::CommandFactory;
+
+        ClapApp::command().debug_assert()
+    }
+}
