@@ -28,11 +28,25 @@ fn fmt_timestamp(o: &i64) -> String {
     format!("{}", HumanTime::from(dt))
 }
 
+fn fmt_version(o: &String) -> String {
+    // capitalize the first letter
+    o[0..1].to_uppercase() + &o[1..]
+}
+
+fn fmt_enabled(o: &bool) -> String {
+    match o {
+        true => "Ready".to_string(),
+        false => "Unavailable".to_string(),
+    }
+}
+
 #[derive(Tabled, Serialize, Deserialize, Debug)]
 struct CdPipeline {
-    #[tabled(rename = "Name")]
+    #[tabled(skip)]
     name: String,
-    #[tabled(rename = "Enabled")]
+    #[tabled(rename = "Name", display_with = "fmt_version")]
+    version: String,
+    #[tabled(rename = "Enabled", display_with = "fmt_enabled")]
     enabled: bool,
     #[tabled(rename = "Deployed Ref", display_with = "fmt_option_string")]
     deployed_ref: Option<String>,
@@ -78,6 +92,7 @@ pub async fn handle_list<'a>(context: GlobalContext) -> Result<bool, CliError<'a
         for raw_cd_pipeline in cd_pipelines_data.into_iter().flatten() {
             let cd_pipeline = CdPipeline {
                 name: raw_cd_pipeline.name,
+                version: raw_cd_pipeline.version,
                 enabled: raw_cd_pipeline.enabled,
                 deployed_ref: raw_cd_pipeline.deployed_ref,
                 last_deployed_at: raw_cd_pipeline.last_deployment,
