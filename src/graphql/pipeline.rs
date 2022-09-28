@@ -160,7 +160,7 @@ mod test {
     use httpmock::prelude::*;
 
     #[tokio::test]
-    async fn test_pipeline_list() {
+    async fn test_fetch_pipeline_list_success_should_return_pipeline_list() {
         let server = MockServer::start();
         let query_client = QueryClientBuilder::new()
             .with_access_token("test_access_token".to_string())
@@ -168,7 +168,7 @@ mod test {
             .build()
             .unwrap();
 
-        let expected_resp = r#"
+        let api_resp = r#"
 {
   "data": {
     "pipelines": [
@@ -194,7 +194,7 @@ mod test {
             when.method(POST).path("/");
             then.status(200)
                 .header("content-type", "application/json; charset=UTF-8")
-                .body(expected_resp);
+                .body(api_resp);
         });
 
         let response = PipelinesQuery::fetch(&query_client, "mv-platform").await;
@@ -207,7 +207,7 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_pipeline() {
+    async fn test_fetch_pipeline_list_failed_should_return_response_error() {
         let server = MockServer::start();
         let query_client = QueryClientBuilder::new()
             .with_access_token("test_access_token".to_string())
@@ -215,7 +215,62 @@ mod test {
             .build()
             .unwrap();
 
-        let expected_resp = r#"
+        let api_resp = r#"
+{
+  "data": {
+    "pipelines": null
+  },
+  "errors": [
+    {
+      "locations": [
+        {
+          "column": 3,
+          "line": 2
+        }
+      ],
+      "message": "unable_to_get_pipelines",
+      "path": [
+        "pipelines"
+      ]
+    }
+  ]
+}"#;
+
+        let mock = server.mock(|when, then| {
+            when.method(POST).path("/");
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+
+        let response = PipelinesQuery::fetch(&query_client, "invalid_application").await;
+
+        mock.assert();
+        assert!(response.is_err());
+
+        match response.as_ref().unwrap_err() {
+            APIError::ReqwestError(_) => panic!("it shouldn't returning ReqwestError"),
+            APIError::ResponseError { code, message } => {
+                assert_eq!(code, "unable_to_get_pipelines");
+                assert_eq!(
+                    message,
+                    "Unable to get pipelines for application `invalid_application`."
+                )
+            }
+            APIError::UnAuthenticated => panic!("it shouldn't returning UnAuthenticated"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_fetch_pipeline_success_should_return_pipeline() {
+        let server = MockServer::start();
+        let query_client = QueryClientBuilder::new()
+            .with_access_token("test_access_token".to_string())
+            .with_api_url(server.base_url())
+            .build()
+            .unwrap();
+
+        let api_resp = r#"
 {
   "data": {
     "pipeline": {
@@ -233,7 +288,7 @@ mod test {
             when.method(POST).path("/");
             then.status(200)
                 .header("content-type", "application/json; charset=UTF-8")
-                .body(expected_resp);
+                .body(api_resp);
         });
 
         let response = PipelineQuery::fetch(&query_client, "mv-platform-main-branch-build").await;
@@ -255,7 +310,7 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_multi_branch_pipeline() {
+    async fn test_fetch_pipeline_failed_should_return_response_error() {
         let server = MockServer::start();
         let query_client = QueryClientBuilder::new()
             .with_access_token("test_access_token".to_string())
@@ -263,7 +318,59 @@ mod test {
             .build()
             .unwrap();
 
-        let expected_resp = r#"
+        let api_resp = r#"
+{
+  "data": {
+    "pipeline": null
+  },
+  "errors": [
+    {
+      "locations": [
+        {
+          "column": 3,
+          "line": 2
+        }
+      ],
+      "message": "unable_to_get_pipeline",
+      "path": [
+        "pipeline"
+      ]
+    }
+  ]
+}"#;
+
+        let mock = server.mock(|when, then| {
+            when.method(POST).path("/");
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+
+        let response = PipelineQuery::fetch(&query_client, "invalid_name").await;
+
+        mock.assert();
+        assert!(response.is_err());
+
+        match response.as_ref().unwrap_err() {
+            APIError::ReqwestError(_) => panic!("it shouldn't returning ReqwestError"),
+            APIError::ResponseError { code, message } => {
+                assert_eq!(code, "unable_to_get_pipeline");
+                assert_eq!(message, "Unable to get pipeline `invalid_name`.")
+            }
+            APIError::UnAuthenticated => panic!("it shouldn't returning UnAuthenticated"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_fetch_multi_branch_pipeline_success_should_return_that_pipeline() {
+        let server = MockServer::start();
+        let query_client = QueryClientBuilder::new()
+            .with_access_token("test_access_token".to_string())
+            .with_api_url(server.base_url())
+            .build()
+            .unwrap();
+
+        let api_resp = r#"
 {
   "data": {
     "multiBranchPipeline": {
@@ -301,7 +408,7 @@ mod test {
             when.method(POST).path("/");
             then.status(200)
                 .header("content-type", "application/json; charset=UTF-8")
-                .body(expected_resp);
+                .body(api_resp);
         });
 
         let response = MultiBranchPipelineQuery::fetch(&query_client, "mv-platform-ci").await;
@@ -338,7 +445,7 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_ci_status() {
+    async fn test_fetch_multi_branch_pipeline_failed_should_return_response_error() {
         let server = MockServer::start();
         let query_client = QueryClientBuilder::new()
             .with_access_token("test_access_token".to_string())
@@ -346,7 +453,59 @@ mod test {
             .build()
             .unwrap();
 
-        let expected_resp = r#"
+        let api_resp = r#"
+{
+  "data": {
+    "multiBranchPipeline": null
+  },
+  "errors": [
+    {
+      "locations": [
+        {
+          "column": 3,
+          "line": 2
+        }
+      ],
+      "message": "unable_to_get_pipeline",
+      "path": [
+        "multiBranchPipeline"
+      ]
+    }
+  ]
+}"#;
+
+        let mock = server.mock(|when, then| {
+            when.method(POST).path("/");
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+
+        let response = MultiBranchPipelineQuery::fetch(&query_client, "invalid_pipeline").await;
+
+        mock.assert();
+        assert!(response.is_err());
+
+        match response.as_ref().unwrap_err() {
+            APIError::ReqwestError(_) => panic!("it shouldn't returning ReqwestError"),
+            APIError::ResponseError { code, message } => {
+                assert_eq!(code, "unable_to_get_pipeline");
+                assert_eq!(message, "Unable to get pipeline `invalid_pipeline`.")
+            }
+            APIError::UnAuthenticated => panic!("it shouldn't returning UnAuthenticated"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_fetch_ci_status_success_should_return_ci_status() {
+        let server = MockServer::start();
+        let query_client = QueryClientBuilder::new()
+            .with_access_token("test_access_token".to_string())
+            .with_api_url(server.base_url())
+            .build()
+            .unwrap();
+
+        let api_resp = r#"
 {
   "data": {
     "ciStatus": {
@@ -370,7 +529,7 @@ mod test {
             when.method(POST).path("/");
             then.status(200)
                 .header("content-type", "application/json; charset=UTF-8")
-                .body(expected_resp);
+                .body(api_resp);
         });
 
         let response =
@@ -393,5 +552,109 @@ mod test {
         assert_eq!(ci_status.timestamp, 1664267841689);
         assert_eq!(ci_status.total_duration, Some(582274));
         assert_eq!(ci_status.wait_duration, Some(0));
+    }
+
+    #[tokio::test]
+    async fn test_fetch_ci_status_failed_and_getting_application_not_found_error_should_return_response_error(
+    ) {
+        let server = MockServer::start();
+        let query_client = QueryClientBuilder::new()
+            .with_access_token("test_access_token".to_string())
+            .with_api_url(server.base_url())
+            .build()
+            .unwrap();
+
+        let api_resp = r#"
+{
+  "data": {
+    "ciStatus": null
+  },
+  "errors": [
+    {
+      "locations": [
+        {
+          "column": 3,
+          "line": 2
+        }
+      ],
+      "message": "application_not_found",
+      "path": [
+        "ciStatus"
+      ]
+    }
+  ]
+}"#;
+
+        let mock = server.mock(|when, then| {
+            when.method(POST).path("/");
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+
+        let response =
+            CiStatusQuery::fetch(&query_client, "http://invalid_repo_url.com", "main").await;
+
+        mock.assert();
+        assert!(response.is_err());
+
+        match response.as_ref().unwrap_err() {
+            APIError::ReqwestError(_) => panic!("it shouldn't returning ReqwestError"),
+            APIError::ResponseError { code, message } => {
+                assert_eq!(code, "application_not_found");
+                assert_eq!(
+                    message,
+                    "Application `http://invalid_repo_url.com` not found."
+                );
+            }
+            APIError::UnAuthenticated => panic!("it shouldn't returning UnAuthenticated"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_fetch_ci_status_failed_and_getting_no_builds_associated_with_this_branch_error_should_return_ok_response(
+    ) {
+        let server = MockServer::start();
+        let query_client = QueryClientBuilder::new()
+            .with_access_token("test_access_token".to_string())
+            .with_api_url(server.base_url())
+            .build()
+            .unwrap();
+
+        let api_resp = r#"
+{
+  "data": {
+    "ciStatus": null
+  },
+  "errors": [
+    {
+      "locations": [
+        {
+          "column": 3,
+          "line": 2
+        }
+      ],
+      "message": "no_builds_associated_with_this_branch",
+      "path": [
+        "ciStatus"
+      ]
+    }
+  ]
+}"#;
+
+        let mock = server.mock(|when, then| {
+            when.method(POST).path("/");
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+
+        let response =
+            CiStatusQuery::fetch(&query_client, "http://valid_repo_url.com", "main").await;
+
+        mock.assert();
+        assert!(response.is_ok());
+        let ci_status = response.unwrap().data.unwrap().ci_status;
+        assert!(ci_status.is_none());
     }
 }
