@@ -28,3 +28,52 @@ impl ApplicationsQuery {
         Ok(response)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::graphql::QueryClientBuilder;
+    use httpmock::prelude::*;
+
+    #[tokio::test]
+    async fn test_fetch_application_list_success_should_return_application_list() {
+        let server = MockServer::start();
+        let query_client = QueryClientBuilder::new()
+            .with_access_token("test_access_token".to_string())
+            .with_api_url(server.base_url())
+            .build()
+            .unwrap();
+
+        let api_resp = r#"
+{
+  "data": {
+    "applications": [
+      {
+        "name": "application-1"
+      },
+      {
+        "name": "application-2"
+      },
+      {
+        "name": "application-3"
+      }
+    ]
+  }
+}"#;
+
+        let mock = server.mock(|when, then| {
+            when.method(POST).path("/");
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+
+        let response = ApplicationsQuery::fetch(&query_client).await;
+
+        mock.assert();
+        assert!(response.is_ok());
+
+        let applications = response.unwrap().data.unwrap().applications.unwrap();
+        assert_eq!(applications.len(), 3);
+    }
+}
