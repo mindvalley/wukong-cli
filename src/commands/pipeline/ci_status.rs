@@ -1,7 +1,7 @@
 use super::PipelineCiStatus;
 use crate::{error::CliError, graphql::QueryClientBuilder, GlobalContext};
 use std::process::Command;
-use tabled::Table;
+use tabled::{style::Style, Table};
 
 pub async fn handle_ci_status<'a>(
     context: GlobalContext,
@@ -58,7 +58,9 @@ pub async fn handle_ci_status<'a>(
             timestamp: ci_status.timestamp,
         };
 
-        let table = Table::new([pipeline_ci_status]).to_string();
+        let table = Table::new([pipeline_ci_status])
+            .with(Style::modern())
+            .to_string();
 
         println!("CI Status: ");
         println!("{table}");

@@ -47,7 +47,6 @@ impl Config {
 
                 let config = CLIConfig::load(config_file)?;
                 println!("{}", toml::to_string(&config).unwrap());
-                // .map_err(|err| CliError::ConfigError(ConfigError::SerializeTomlError(err)))?;
             }
             ConfigSubcommand::Set {
                 config_name,

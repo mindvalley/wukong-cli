@@ -5,7 +5,7 @@ use crate::{
     GlobalContext,
 };
 use indicatif::{ProgressBar, ProgressStyle};
-use tabled::Table;
+use tabled::{style::Style, Table};
 
 pub async fn handle_describe<'a>(context: GlobalContext, name: &str) -> Result<bool, CliError<'a>> {
     let deps = 1234;
@@ -70,7 +70,7 @@ pub async fn handle_describe<'a>(context: GlobalContext, name: &str) -> Result<b
                             });
                         }
 
-                        let table = Table::new(branches).to_string();
+                        let table = Table::new(branches).with(Style::modern()).to_string();
 
                         println!("Branches:");
                         println!("{table}");
@@ -86,7 +86,7 @@ pub async fn handle_describe<'a>(context: GlobalContext, name: &str) -> Result<b
                             });
                         }
 
-                        let table = Table::new(pull_requests).to_string();
+                        let table = Table::new(pull_requests).with(Style::modern()).to_string();
 
                         println!("Pull Requests:");
                         println!("{table}");
