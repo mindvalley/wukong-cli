@@ -207,7 +207,8 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_fetch_pipeline_list_failed_should_return_response_error() {
+    async fn test_fetch_pipeline_list_failed_with_unable_to_get_pipelines_error_should_return_response_error(
+    ) {
         let server = MockServer::start();
         let query_client = QueryClientBuilder::new()
             .with_access_token("test_access_token".to_string())
@@ -310,7 +311,8 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_fetch_pipeline_failed_should_return_response_error() {
+    async fn test_fetch_pipeline_failed_with_unable_to_get_pipeline_error_should_return_response_error(
+    ) {
         let server = MockServer::start();
         let query_client = QueryClientBuilder::new()
             .with_access_token("test_access_token".to_string())
@@ -445,7 +447,8 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_fetch_multi_branch_pipeline_failed_should_return_response_error() {
+    async fn test_fetch_multi_branch_pipeline_with_unable_to_get_pipeline_error_should_return_response_error(
+    ) {
         let server = MockServer::start();
         let query_client = QueryClientBuilder::new()
             .with_access_token("test_access_token".to_string())
@@ -555,7 +558,7 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_fetch_ci_status_failed_and_getting_application_not_found_error_should_return_response_error(
+    async fn test_fetch_ci_status_failed_with_application_not_found_error_should_return_response_error(
     ) {
         let server = MockServer::start();
         let query_client = QueryClientBuilder::new()
@@ -612,7 +615,7 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_fetch_ci_status_failed_and_getting_no_builds_associated_with_this_branch_error_should_return_ok_response(
+    async fn test_fetch_ci_status_failed_with_no_builds_associated_with_this_branch_error_should_return_ok_response(
     ) {
         let server = MockServer::start();
         let query_client = QueryClientBuilder::new()

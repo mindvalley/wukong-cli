@@ -94,7 +94,7 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_fetch_cd_pipeline_list_failed_and_getting_application_not_found_should_return_response_error(
+    async fn test_fetch_cd_pipeline_list_failed_with_application_not_found_error_should_return_response_error(
     ) {
         let server = MockServer::start();
         let query_client = QueryClientBuilder::new()
