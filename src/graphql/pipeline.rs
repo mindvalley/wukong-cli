@@ -23,7 +23,7 @@ impl PipelinesQuery {
             .call_api::<Self>(variables, |_, error| {
                 if error.message == "unable_to_get_pipelines" {
                     return Err(APIError::ResponseError {
-                        code: error.message.clone(),
+                        code: error.message,
                         message: format!(
                             "Unable to get pipelines for application `{}`.",
                             application
@@ -31,10 +31,10 @@ impl PipelinesQuery {
                     });
                 }
 
-                return Err(APIError::ResponseError {
+                Err(APIError::ResponseError {
                     code: error.message.clone(),
-                    message: format!("{}", error.clone()),
-                });
+                    message: format!("{}", error),
+                })
             })
             .await?;
 
@@ -46,7 +46,7 @@ impl PipelinesQuery {
 #[graphql(
     schema_path = "src/graphql/schema.json",
     query_path = "src/graphql/query/pipeline.graphql",
-    response_derives = "Debug, Serialize, Deserialize, PartialEq"
+    response_derives = "Debug, Serialize, Deserialize, PartialEq, Eq"
 )]
 pub struct PipelineQuery;
 
@@ -63,15 +63,15 @@ impl PipelineQuery {
             .call_api::<Self>(variables, |_, error| {
                 if error.message == "unable_to_get_pipeline" {
                     return Err(APIError::ResponseError {
-                        code: error.message.clone(),
+                        code: error.message,
                         message: format!("Unable to get pipeline `{}`.", name),
                     });
                 }
 
-                return Err(APIError::ResponseError {
+                Err(APIError::ResponseError {
                     code: error.message.clone(),
-                    message: format!("{}", error.clone()),
-                });
+                    message: format!("{}", error),
+                })
             })
             .await?;
 
@@ -100,15 +100,15 @@ impl MultiBranchPipelineQuery {
             .call_api::<Self>(variables, |_, error| {
                 if error.message == "unable_to_get_pipeline" {
                     return Err(APIError::ResponseError {
-                        code: error.message.clone(),
+                        code: error.message,
                         message: format!("Unable to get pipeline `{}`.", name),
                     });
                 }
 
-                return Err(APIError::ResponseError {
+                Err(APIError::ResponseError {
                     code: error.message.clone(),
-                    message: format!("{}", error.clone()),
-                });
+                    message: format!("{}", error),
+                })
             })
             .await?;
 
@@ -137,21 +137,15 @@ impl CiStatusQuery {
 
         let response = client
             .call_api::<Self>(variables, |resp, error| match error.message.as_str() {
-                "application_not_found" => {
-                    return Err(APIError::ResponseError {
-                        code: error.message.clone(),
-                        message: format!("Application `{}` not found.", repo_url),
-                    });
-                }
-                "no_builds_associated_with_this_branch" => {
-                    return Ok(resp);
-                }
-                _ => {
-                    return Err(APIError::ResponseError {
-                        code: error.message.clone(),
-                        message: format!("{}", error.clone()),
-                    });
-                }
+                "application_not_found" => Err(APIError::ResponseError {
+                    code: error.message,
+                    message: format!("Application `{}` not found.", repo_url),
+                }),
+                "no_builds_associated_with_this_branch" => Ok(resp),
+                _ => Err(APIError::ResponseError {
+                    code: error.message.clone(),
+                    message: format!("{}", error),
+                }),
             })
             .await?;
 

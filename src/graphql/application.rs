@@ -18,10 +18,10 @@ impl ApplicationsQuery {
 
         let response = client
             .call_api::<ApplicationsQuery>(variables, |_, error| {
-                return Err(APIError::ResponseError {
+                Err(APIError::ResponseError {
                     code: error.message.clone(),
-                    message: format!("{}", error.clone()),
-                });
+                    message: format!("{}", error),
+                })
             })
             .await?;
 

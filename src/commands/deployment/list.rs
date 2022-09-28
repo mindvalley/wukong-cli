@@ -29,8 +29,8 @@ fn fmt_timestamp(o: &i64) -> String {
     format!("{}", HumanTime::from(dt))
 }
 
-fn fmt_version(o: &String) -> String {
-    fn capitalize_first_letter(o: &String) -> String {
+fn fmt_version(o: &str) -> String {
+    fn capitalize_first_letter(o: &str) -> String {
         o[0..1].to_uppercase() + &o[1..]
     }
     // capitalize the first letter

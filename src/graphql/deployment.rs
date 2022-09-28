@@ -21,10 +21,10 @@ impl CdPipelinesQuery {
 
         let response = client
             .call_api::<Self>(variables, |_, error| {
-                return Err(APIError::ResponseError {
+                Err(APIError::ResponseError {
                     code: error.message.clone(),
-                    message: format!("{}", error.clone()),
-                });
+                    message: format!("{}", error),
+                })
             })
             .await?;
 
