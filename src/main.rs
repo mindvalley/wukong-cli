@@ -8,6 +8,7 @@ mod config;
 mod error;
 mod graphql;
 mod settings;
+mod loader;
 // mod logger;
 
 use chrono::{DateTime, Local};

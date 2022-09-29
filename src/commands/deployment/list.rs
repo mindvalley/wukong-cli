@@ -1,10 +1,9 @@
 use crate::{
-    config::CONFIG_FILE, error::CliError, graphql::QueryClientBuilder, Config as CLIConfig,
-    GlobalContext,
+    config::CONFIG_FILE, error::CliError, graphql::QueryClientBuilder,
+    loader::new_spinner_progress_bar, Config as CLIConfig, GlobalContext,
 };
 use chrono::{DateTime, Local, NaiveDateTime, Utc};
 use chrono_humanize::HumanTime;
-use indicatif::{ProgressBar, ProgressStyle};
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 use tabled::{style::Style, Panel, Table, Tabled};
@@ -77,20 +76,18 @@ struct CdPipeline {
 }
 
 pub async fn handle_list<'a>(context: GlobalContext) -> Result<bool, CliError<'a>> {
-    let steps = 1024;
-    let progress_bar = ProgressBar::new(steps);
-    progress_bar.set_style(ProgressStyle::default_spinner());
-    println!("Fetching cd pipelines list ...\n");
-
-    progress_bar.inc(1);
-
-    let config_file = CONFIG_FILE
-        .as_ref()
-        .expect("Unable to identify user's home directory");
+    let progress_bar = new_spinner_progress_bar();
+    progress_bar.set_message("Fetching cd pipeline list ... ");
 
     let application = match context.application {
         Some(application) => application,
-        None => CLIConfig::load(config_file).unwrap().core.application,
+        None => {
+            let config_file = CONFIG_FILE
+                .as_ref()
+                .expect("Unable to identify user's home directory");
+
+            CLIConfig::load(config_file).unwrap().core.application
+        }
     };
 
     // Calling API ...

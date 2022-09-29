@@ -3,19 +3,14 @@ use crate::{
     config::CONFIG_FILE,
     error::CliError,
     graphql::{pipeline::pipelines_query::PipelinesQueryPipelines, QueryClientBuilder},
+    loader::new_spinner_progress_bar,
     Config as CLIConfig, GlobalContext,
 };
-use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
-use std::time::Instant;
 use tabled::{style::Style, Table};
 
 pub async fn handle_list<'a>(context: GlobalContext) -> Result<bool, CliError<'a>> {
-    let started = Instant::now();
-    let progress_bar = ProgressBar::new(1234);
-    progress_bar.set_style(ProgressStyle::default_spinner());
-    println!("Fetching pipelines list ...\n");
-
-    progress_bar.inc(1);
+    let progress_bar = new_spinner_progress_bar();
+    progress_bar.set_message("Fetching pipelines list ...");
 
     let config_file = CONFIG_FILE
         .as_ref()
@@ -63,10 +58,10 @@ pub async fn handle_list<'a>(context: GlobalContext) -> Result<bool, CliError<'a
         }
 
         let table = Table::new(pipelines).with(Style::modern()).to_string();
+
         println!("Pipeline list for application `{}`:", application);
         println!("{table}");
     }
-    println!("Fetch in {}.", HumanDuration(started.elapsed()));
 
     Ok(true)
 }

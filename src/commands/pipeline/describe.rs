@@ -2,16 +2,14 @@ use super::{JobBuild, PipelineBranch, PipelinePullRequest};
 use crate::{
     error::CliError,
     graphql::{pipeline::pipeline_query::PipelineQueryPipeline, QueryClientBuilder},
+    loader::new_spinner_progress_bar,
     GlobalContext,
 };
-use indicatif::{ProgressBar, ProgressStyle};
 use tabled::{style::Style, Table};
 
 pub async fn handle_describe<'a>(context: GlobalContext, name: &str) -> Result<bool, CliError<'a>> {
-    let deps = 1234;
-    let progress_bar = ProgressBar::new(deps);
-    progress_bar.set_style(ProgressStyle::default_spinner());
-    println!("Fetching pipeline data ...");
+    let progress_bar = new_spinner_progress_bar();
+    progress_bar.set_message("Fetching pipeline data ...");
 
     // Calling API ...
     let client = QueryClientBuilder::new()
@@ -25,6 +23,8 @@ pub async fn handle_describe<'a>(context: GlobalContext, name: &str) -> Result<b
         // .ok_or(anyhow::anyhow!("Error"))?
         .unwrap()
         .pipeline;
+
+    progress_bar.finish_and_clear();
 
     if let Some(pipeline_data) = pipeline_resp {
         match pipeline_data {
@@ -94,8 +94,6 @@ pub async fn handle_describe<'a>(context: GlobalContext, name: &str) -> Result<b
                 }
             }
         }
-
-        progress_bar.finish_and_clear();
     }
     Ok(true)
 }

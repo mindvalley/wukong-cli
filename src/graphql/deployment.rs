@@ -36,6 +36,44 @@ impl CdPipelinesQuery {
     }
 }
 
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/graphql/schema.json",
+    query_path = "src/graphql/query/cd_pipeline.graphql",
+    response_derives = "Debug, Serialize, Deserialize"
+)]
+pub struct CdPipelineQuery;
+
+impl CdPipelineQuery {
+    pub(crate) async fn fetch(
+        client: &QueryClient,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<Response<cd_pipeline_query::ResponseData>, APIError> {
+        let variables = cd_pipeline_query::Variables {
+            application: application.to_string(),
+            namespace: namespace.to_string(),
+            version: version.to_string(),
+        };
+
+        let response = client
+            .call_api::<Self>(variables, |_, error| match error.message.as_str() {
+                "application_not_found" => Err(APIError::ResponseError {
+                    code: error.message,
+                    message: format!("Application `{}` not found.", application),
+                }),
+                _ => Err(APIError::ResponseError {
+                    code: error.message.clone(),
+                    message: format!("{}", error),
+                }),
+            })
+            .await?;
+
+        Ok(response)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;

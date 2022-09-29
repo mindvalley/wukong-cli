@@ -11,7 +11,7 @@ use graphql_client::{GraphQLQuery, Response};
 pub struct PipelinesQuery;
 
 impl PipelinesQuery {
-    pub(crate) async fn fetch(
+    pub async fn fetch(
         client: &QueryClient,
         application: &str,
     ) -> Result<Response<pipelines_query::ResponseData>, APIError> {
