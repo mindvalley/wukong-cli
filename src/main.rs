@@ -7,8 +7,9 @@ mod commands;
 mod config;
 mod error;
 mod graphql;
-mod settings;
 mod loader;
+mod output;
+mod settings;
 // mod logger;
 
 use chrono::{DateTime, Local};
@@ -16,7 +17,8 @@ use commands::{
     completions::handle_completions, init::handle_init, login::handle_login, CommandGroup,
 };
 use config::{Config, CONFIG_FILE};
-use error::{handle_error, CliError};
+use error::CliError;
+use output::error::display_error;
 // use logger::Logger;
 use crate::{auth::refresh_tokens, settings::Settings};
 use app::{App, ConfigState};
@@ -58,11 +60,9 @@ pub struct GlobalContext {
 
 #[tokio::main]
 async fn main() {
-    // Logger::new().init();
-
     match run().await {
         Err(error) => {
-            handle_error(error);
+            display_error(error);
             process::exit(1);
         }
         Ok(false) => {
@@ -75,7 +75,10 @@ async fn main() {
 }
 
 async fn run<'a>() -> Result<bool, CliError<'a>> {
-    let app = App::new()?;
+    let config_file = CONFIG_FILE
+        .as_ref()
+        .expect("Unable to identify user's home directory");
+    let app = App::new(config_file)?;
 
     let mut context = GlobalContext::default();
     let mut existing_config = None;
@@ -94,10 +97,6 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
                 ))
                 .await
                 .unwrap();
-
-                let config_file = CONFIG_FILE
-                    .as_ref()
-                    .expect("Unable to identify user's home directory");
 
                 match Config::load(config_file) {
                     Ok(mut config) => {

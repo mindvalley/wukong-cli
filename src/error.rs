@@ -1,4 +1,3 @@
-use std::error::Error;
 use thiserror::Error as ThisError;
 
 #[derive(Debug, ThisError)]
@@ -88,30 +87,4 @@ impl<'a> CliError<'a> {
             _ => None,
         }
     }
-}
-
-pub fn handle_error(error: CliError) {
-    use ansi_term::Colour;
-
-    match error {
-        CliError::Io(ref io_error) if io_error.kind() == ::std::io::ErrorKind::BrokenPipe => {
-            ::std::process::exit(0);
-        }
-        _ => {
-            // writeln!(output, "{}: {}", Red.paint("[bat error]"), error).ok();
-            eprintln!("{}:", Colour::Red.paint("Error"));
-            eprintln!("\t{}", error);
-
-            //TODO: for --verbose only
-            if let Some(source) = error.source() {
-                eprintln!("\n{}:", Colour::Fixed(245).paint("Caused by"));
-                eprintln!("\t{}", source);
-            }
-
-            if let Some(suggestion) = error.suggestion() {
-                eprintln!("\n{}:", Colour::Cyan.paint("Suggestion"));
-                eprintln!("\t{}", suggestion);
-            }
-        }
-    };
 }
