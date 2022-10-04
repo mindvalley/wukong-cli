@@ -1,0 +1,7 @@
+mutation ExecuteCdPipeline($application: String!, $buildNumber: Int, $namespace:
+String!, $version: String!) {
+  executeCdPipeline(application: $application, buildNumber: $buildNumber,
+  namespace: $namespace, version: $version) {
+    url
+  }
+}

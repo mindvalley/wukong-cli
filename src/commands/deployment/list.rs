@@ -7,7 +7,7 @@ use chrono::{DateTime, Local, NaiveDateTime, Utc};
 use chrono_humanize::HumanTime;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
-use tabled::{style::Style, Panel, Table, Tabled};
+use tabled::Tabled;
 
 fn fmt_option_timestamp(o: &Option<i64>) -> String {
     match o {

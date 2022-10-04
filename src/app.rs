@@ -17,7 +17,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new<'a>(config_file: &'a str) -> Result<Self, CliError<'a>> {
+    pub fn new(config_file: &str) -> Result<Self, CliError<'_>> {
         let config = match Config::load(config_file) {
             Ok(config) => {
                 if config.auth.is_none() {

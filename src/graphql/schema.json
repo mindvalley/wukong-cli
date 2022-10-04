@@ -1534,6 +1534,16 @@
                 {
                   "defaultValue": null,
                   "description": null,
+                  "name": "buildNumber",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
                   "name": "namespace",
                   "type": {
                     "kind": "NON_NULL",

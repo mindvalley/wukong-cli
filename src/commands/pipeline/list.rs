@@ -4,9 +4,9 @@ use crate::{
     error::CliError,
     graphql::{pipeline::pipelines_query::PipelinesQueryPipelines, QueryClientBuilder},
     loader::new_spinner_progress_bar,
-    Config as CLIConfig, GlobalContext, output::table::TableOutput,
+    output::table::TableOutput,
+    Config as CLIConfig, GlobalContext,
 };
-use tabled::{style::Style, Table};
 
 pub async fn handle_list<'a>(context: GlobalContext) -> Result<bool, CliError<'a>> {
     let progress_bar = new_spinner_progress_bar();
