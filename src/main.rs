@@ -18,7 +18,7 @@ use commands::{
 };
 use config::{Config, CONFIG_FILE};
 use error::CliError;
-use output::error::display_error;
+use output::error::ErrorOutput;
 // use logger::Logger;
 use crate::{auth::refresh_tokens, settings::Settings};
 use app::{App, ConfigState};
@@ -62,7 +62,7 @@ pub struct GlobalContext {
 async fn main() {
     match run().await {
         Err(error) => {
-            display_error(error);
+            eprintln!("{}", ErrorOutput(error));
             process::exit(1);
         }
         Ok(false) => {

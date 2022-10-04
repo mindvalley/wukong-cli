@@ -1,26 +1,32 @@
 use crate::error::CliError;
 use owo_colors::{colors::CustomColor, OwoColorize};
-use std::error::Error;
+use std::{error::Error, fmt::Display};
 
-pub fn display_error(error: CliError) {
-    match error {
-        CliError::Io(ref io_error) if io_error.kind() == ::std::io::ErrorKind::BrokenPipe => {
-            ::std::process::exit(0);
-        }
-        _ => {
-            eprintln!("{}:", "Error".red());
-            eprintln!("\t{}", error);
+pub struct ErrorOutput<'a>(pub CliError<'a>);
 
-            //TODO: for --verbose only
-            if let Some(source) = error.source() {
-                eprintln!("\n{}:", "Caused by".fg::<CustomColor<245, 245, 245>>());
-                eprintln!("\t{}", source);
+impl<'a> Display for ErrorOutput<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self.0 {
+            CliError::Io(ref io_error) if io_error.kind() == ::std::io::ErrorKind::BrokenPipe => {
+                ::std::process::exit(0);
             }
+            error => {
+                writeln!(f, "{}:", "Error".red())?;
+                writeln!(f, "\t{}", error)?;
 
-            if let Some(suggestion) = error.suggestion() {
-                eprintln!("\n{}:", "Suggestion".cyan());
-                eprintln!("\t{}", suggestion);
+                //TODO: for --verbose only
+                if let Some(source) = error.source() {
+                    writeln!(f, "\n{}:", "Caused by".fg::<CustomColor<245, 245, 245>>())?;
+                    writeln!(f, "\t{}", source)?;
+                }
+
+                if let Some(suggestion) = error.suggestion() {
+                    writeln!(f, "\n{}:", "Suggestion".cyan())?;
+                    writeln!(f, "\t{}", suggestion)?;
+                }
             }
-        }
-    };
+        };
+
+        Ok(())
+    }
 }

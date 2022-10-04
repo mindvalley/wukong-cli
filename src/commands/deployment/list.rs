@@ -1,33 +1,15 @@
 use crate::{
-    config::CONFIG_FILE, error::CliError, graphql::QueryClientBuilder,
-    loader::new_spinner_progress_bar, output::table::TableOutput, Config as CLIConfig,
-    GlobalContext,
+    config::CONFIG_FILE,
+    error::CliError,
+    graphql::QueryClientBuilder,
+    loader::new_spinner_progress_bar,
+    output::table::TableOutput,
+    output::table::{fmt_option_human_timestamp, fmt_option_string},
+    Config as CLIConfig, GlobalContext,
 };
-use chrono::{DateTime, Local, NaiveDateTime, Utc};
-use chrono_humanize::HumanTime;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 use tabled::Tabled;
-
-fn fmt_option_timestamp(o: &Option<i64>) -> String {
-    match o {
-        Some(s) => fmt_timestamp(s),
-        None => "N/A".to_string(),
-    }
-}
-
-fn fmt_option_string(o: &Option<String>) -> String {
-    match o {
-        Some(s) => s.to_string(),
-        None => "N/A".to_string(),
-    }
-}
-
-fn fmt_timestamp(o: &i64) -> String {
-    let naive = NaiveDateTime::from_timestamp_opt(o / 1000, (o % 1000) as u32 * 1_000_000).unwrap();
-    let dt = DateTime::<Utc>::from_utc(naive, Utc).with_timezone(&Local);
-    format!("{}", HumanTime::from(dt))
-}
 
 fn fmt_version(o: &str) -> String {
     fn capitalize_first_letter(o: &str) -> String {
@@ -70,7 +52,10 @@ struct CdPipeline {
     enabled: bool,
     #[tabled(rename = "Deployed Ref", display_with = "fmt_option_string")]
     deployed_ref: Option<String>,
-    #[tabled(rename = "Last deployment", display_with = "fmt_option_timestamp")]
+    #[tabled(
+        rename = "Last deployment",
+        display_with = "fmt_option_human_timestamp"
+    )]
     last_deployed_at: Option<i64>,
     #[tabled(rename = "Status", display_with = "fmt_status")]
     status: Option<String>,
