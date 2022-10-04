@@ -1,11 +1,11 @@
 pub mod error;
 pub mod table;
 
+#[derive(Default)]
 pub enum OutputFormat {
+    #[default]
     Display,
-    Json
+    Json,
 }
 
-// pub trait IntoOutput {
-//     fn into_output() ->
-// }
+

@@ -1,6 +1,6 @@
 use crate::{
     clap_app::ClapApp,
-    config::{Config, CONFIG_FILE},
+    config::Config,
     error::{CliError, ConfigError},
 };
 use clap::Parser;
@@ -17,11 +17,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new<'a>() -> Result<Self, CliError<'a>> {
-        let config_file = CONFIG_FILE
-            .as_ref()
-            .expect("Unable to identify user's home directory");
-
+    pub fn new<'a>(config_file: &'a str) -> Result<Self, CliError<'a>> {
         let config = match Config::load(config_file) {
             Ok(config) => {
                 if config.auth.is_none() {

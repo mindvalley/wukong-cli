@@ -4,7 +4,7 @@ use crate::{
     error::CliError,
     graphql::{pipeline::pipelines_query::PipelinesQueryPipelines, QueryClientBuilder},
     loader::new_spinner_progress_bar,
-    Config as CLIConfig, GlobalContext,
+    Config as CLIConfig, GlobalContext, output::table::TableOutput,
 };
 use tabled::{style::Style, Table};
 
@@ -57,10 +57,12 @@ pub async fn handle_list<'a>(context: GlobalContext) -> Result<bool, CliError<'a
             pipelines.push(pipeline);
         }
 
-        let table = Table::new(pipelines).with(Style::modern()).to_string();
-
-        println!("Pipeline list for application `{}`:", application);
-        println!("{table}");
+        let output = TableOutput {
+            title: Some(format!("Pipeline list for application: `{}`:", application)),
+            header: None,
+            data: pipelines,
+        };
+        println!("{output}");
     }
 
     Ok(true)

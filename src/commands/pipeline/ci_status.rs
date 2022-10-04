@@ -1,9 +1,9 @@
 use super::PipelineCiStatus;
 use crate::{
-    error::CliError, graphql::QueryClientBuilder, loader::new_spinner_progress_bar, GlobalContext,
+    error::CliError, graphql::QueryClientBuilder, loader::new_spinner_progress_bar,
+    output::table::TableOutput, GlobalContext,
 };
 use std::process::Command;
-use tabled::{style::Style, Table};
 
 pub async fn handle_ci_status<'a>(
     context: GlobalContext,
@@ -65,11 +65,12 @@ pub async fn handle_ci_status<'a>(
             timestamp: ci_status.timestamp,
         };
 
-        let table = Table::new([pipeline_ci_status])
-            .with(Style::modern())
-            .to_string();
+        let table = TableOutput {
+            title: Some("CI Status:".to_string()),
+            header: None,
+            data: vec![pipeline_ci_status],
+        };
 
-        println!("CI Status: ");
         println!("{table}");
     } else {
         println!("No result.")

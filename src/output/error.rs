@@ -1,5 +1,5 @@
 use crate::error::CliError;
-use owo_colors::{OwoColorize, colors::CustomColor};
+use owo_colors::{colors::CustomColor, OwoColorize};
 use std::error::Error;
 
 pub fn display_error(error: CliError) {

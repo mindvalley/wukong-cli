@@ -1,6 +1,7 @@
 use crate::{
     config::CONFIG_FILE, error::CliError, graphql::QueryClientBuilder,
-    loader::new_spinner_progress_bar, Config as CLIConfig, GlobalContext,
+    loader::new_spinner_progress_bar, output::table::TableOutput, Config as CLIConfig,
+    GlobalContext,
 };
 use chrono::{DateTime, Local, NaiveDateTime, Utc};
 use chrono_humanize::HumanTime;
@@ -129,14 +130,16 @@ pub async fn handle_list<'a>(context: GlobalContext) -> Result<bool, CliError<'a
 
         progress_bar.finish_and_clear();
 
-        let prod_pipelines_table = Table::new(prod_pipelines)
-            .with(Panel("Prod", 0))
-            .with(Style::modern())
-            .to_string();
-        let staging_pipelines_table = Table::new(staging_pipelines)
-            .with(Panel("Staging", 0))
-            .with(Style::modern())
-            .to_string();
+        let prod_pipelines_table = TableOutput {
+            title: None,
+            header: Some("Prod".to_string()),
+            data: prod_pipelines,
+        };
+        let staging_pipelines_table = TableOutput {
+            title: None,
+            header: Some("Staging".to_string()),
+            data: staging_pipelines,
+        };
 
         println!("CD pipeline list for application `{}`:", application);
 

@@ -24,8 +24,8 @@ pub enum DeploymentSubcommand {
         namespace: Option<String>,
         /// The version that the deployment will perform
         /// against.
-        #[clap(long, arg_enum, default_value_t = DeploymentVersion::Green)]
-        version: DeploymentVersion,
+        #[clap(long, arg_enum)]
+        version: Option<DeploymentVersion>,
         /// The build artifact that the deployment will use.
         #[clap(long)]
         artifact: Option<String>,
