@@ -33,7 +33,7 @@ impl<'a> Display for ErrorOutput<'a> {
 
 #[cfg(test)]
 mod test {
-    use crate::error::{APIError, ConfigError};
+    use crate::error::ConfigError;
 
     use super::*;
 
@@ -49,7 +49,11 @@ mod test {
         "\u{1b}[36mSuggestion\u{1b}[39m:"
     }
 
-    fn error_output_with_caused_by_and_suggestion(error: &str, caused_by: &str, suggestion: &str) -> String {
+    fn error_output_with_caused_by_and_suggestion(
+        error: &str,
+        caused_by: &str,
+        suggestion: &str,
+    ) -> String {
         format!(
             "{}\n\t{}\n\n{}\n\t{}\n\n{}\n\t{}\n",
             error_title_in_red(),
