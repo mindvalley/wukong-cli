@@ -9,7 +9,7 @@ use clap::{Args, Subcommand, ValueEnum};
 
 #[derive(Debug, Args)]
 pub struct Deployment {
-    #[clap(subcommand)]
+    #[command(subcommand)]
     pub subcommand: DeploymentSubcommand,
 }
 
@@ -20,14 +20,14 @@ pub enum DeploymentSubcommand {
     /// Start the deployment pipeline
     Execute {
         /// The namespace to deploy to.
-        #[clap(long, value_enum)]
+        #[arg(long, value_enum)]
         namespace: Option<DeploymentNamespace>,
         /// The version that the deployment will perform
         /// against.
-        #[clap(long, value_enum)]
+        #[arg(long, value_enum)]
         version: Option<DeploymentVersion>,
         /// The build artifact that the deployment will use.
-        #[clap(long)]
+        #[arg(long)]
         artifact: Option<i64>,
     },
 }

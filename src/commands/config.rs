@@ -3,7 +3,7 @@ use clap::{error::ErrorKind, Args, CommandFactory, Subcommand, ValueEnum};
 
 #[derive(Debug, Args)]
 pub struct Config {
-    #[clap(subcommand)]
+    #[command(subcommand)]
     pub subcommand: ConfigSubcommand,
 }
 
@@ -14,7 +14,7 @@ pub enum ConfigSubcommand {
     /// Set the value of a configuration
     Set {
         /// The config name
-        #[clap(value_enum)]
+        #[arg(value_enum)]
         config_name: ConfigName,
         /// The config value
         config_value: String,
@@ -22,7 +22,7 @@ pub enum ConfigSubcommand {
     /// Print the value of a configuration
     Get {
         /// The config name
-        #[clap(value_enum)]
+        #[arg(value_enum)]
         config_name: ConfigName,
     },
 }
