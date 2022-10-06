@@ -24,7 +24,7 @@ where
 
         let mut table = Table::new(&self.data);
         if let Some(header) = &self.header {
-            table = table.with(Panel(header, 0));
+            table.with(Panel::header(header));
         }
 
         let table = table.with(Style::modern()).to_string();
