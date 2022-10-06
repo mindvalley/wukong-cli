@@ -1,5 +1,5 @@
 use crate::{clap_app::ClapApp, error::CliError, Config as CLIConfig, GlobalContext, CONFIG_FILE};
-use clap::{ArgEnum, Args, IntoApp, Subcommand};
+use clap::{error::ErrorKind, Args, CommandFactory, Subcommand, ValueEnum};
 
 #[derive(Debug, Args)]
 pub struct Config {
@@ -14,7 +14,7 @@ pub enum ConfigSubcommand {
     /// Set the value of a configuration
     Set {
         /// The config name
-        #[clap(arg_enum)]
+        #[clap(value_enum)]
         config_name: ConfigName,
         /// The config value
         config_value: String,
@@ -22,12 +22,12 @@ pub enum ConfigSubcommand {
     /// Print the value of a configuration
     Get {
         /// The config name
-        #[clap(arg_enum)]
+        #[clap(value_enum)]
         config_name: ConfigName,
     },
 }
 
-#[derive(Debug, ArgEnum, Clone)]
+#[derive(Debug, ValueEnum, Clone)]
 pub enum ConfigName {
     Application,
     CollectTelemetry,
@@ -80,7 +80,7 @@ impl Config {
                         }
                     },
                     Err(e) => {
-                        cmd.error(clap::ErrorKind::Io, e).exit();
+                        cmd.error(ErrorKind::Io, e).exit();
                     }
                 }
             }
@@ -99,7 +99,7 @@ impl Config {
                         ConfigName::LogDir => println!("{}", config.log.log_dir),
                     },
                     Err(e) => {
-                        cmd.error(clap::ErrorKind::Io, e).exit();
+                        cmd.error(ErrorKind::Io, e).exit();
                     }
                 }
             }
