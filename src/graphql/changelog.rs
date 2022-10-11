@@ -31,6 +31,13 @@ impl ChangelogsQuery {
                     code: error.message,
                     message: format!("Application `{}` not found.", application),
                 }),
+                "unable_to_determine_changelog" => Err(APIError::ResponseError {
+                    code: error.message,
+                    message: format!(
+                        "Unable to determine the changelog for build-{}",
+                        build_number
+                    ),
+                }),
                 _ => Err(APIError::ResponseError {
                     code: error.message.clone(),
                     message: format!("{}", error),
@@ -60,24 +67,14 @@ mod test {
         let api_resp = r#"
 {
   "data": {
-    "cdPipelines": [
+    "changelogs": [
       {
-        "deployedRef": null,
-        "enabled": true,
-        "environment": "prod",
-        "lastDeployment": 1663161661001,
-        "name": "pipeline-blue",
-        "status": "TERMINAL",
-        "version": "blue"
+        "id": "ceaf8d80f1f17a4de80ca4fce655700284a30c9a",
+        "message": "Y29tbWl0IDE="
       },
       {
-        "deployedRef": null,
-        "enabled": true,
-        "environment": "prod",
-        "lastDeployment": null,
-        "name": "pipeline-green",
-        "status": null,
-        "version": "green"
+        "id": "04768172ec0417ded2995d2e2b2a0203de49fcca",
+        "message": "Y29tbWl0IDI="
       }
     ]
   }
@@ -90,17 +87,18 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = ChangelogsQuery::fetch(&query_client, "valid_application", "prod").await;
+        let response =
+            ChangelogsQuery::fetch(&query_client, "valid_application", "prod", "green", 1234).await;
 
         mock.assert();
         assert!(response.is_ok());
 
-        let cd_pipelines = response.unwrap().data.unwrap().cd_pipelines.unwrap();
-        assert_eq!(cd_pipelines.len(), 2);
+        let changelogs = response.unwrap().data.unwrap().changelogs.unwrap();
+        assert_eq!(changelogs.len(), 2);
     }
 
     #[tokio::test]
-    async fn test_fetch_cd_pipeline_list_failed_with_application_not_found_error_should_return_response_error(
+    async fn test_fetch_changelog_list_failed_with_application_not_found_error_should_return_response_error(
     ) {
         let server = MockServer::start();
         let query_client = QueryClientBuilder::new()
@@ -112,7 +110,7 @@ mod test {
         let api_resp = r#"
 {
   "data": {
-    "cdPipelines": null
+    "changelogs": null
   },
   "errors": [
     {
@@ -124,7 +122,7 @@ mod test {
       ],
       "message": "application_not_found",
       "path": [
-        "cdPipelines"
+        "changelogs"
       ]
     }
   ]
@@ -137,7 +135,9 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = CdPipelinesQuery::fetch(&query_client, "invalid_application").await;
+        let response =
+            ChangelogsQuery::fetch(&query_client, "invalid_application", "prod", "green", 1234)
+                .await;
 
         mock.assert();
         assert!(response.is_err());
@@ -147,6 +147,73 @@ mod test {
             APIError::ResponseError { code, message } => {
                 assert_eq!(code, "application_not_found");
                 assert_eq!(message, "Application `invalid_application` not found.");
+            }
+            APIError::UnAuthenticated => panic!("it shouldn't returning UnAuthenticated"),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_fetch_changelog_list_failed_with_unable_to_determine_changelog_error_should_return_response_error(
+    ) {
+        let server = MockServer::start();
+        let query_client = QueryClientBuilder::new()
+            .with_access_token("test_access_token".to_string())
+            .with_api_url(server.base_url())
+            .build()
+            .unwrap();
+
+        let api_resp = r#"
+{
+  "data": {
+    "changelogs": null
+  },
+  "errors": [
+    {
+      "locations": [
+        {
+          "column": 3,
+          "line": 2
+        }
+      ],
+      "message": "unable_to_determine_changelog",
+      "path": [
+        "changelogs"
+      ]
+    }
+  ]
+}"#;
+
+        let mock = server.mock(|when, then| {
+            when.method(POST).path("/");
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+
+        let invalid_build_number = 1234;
+        let response = ChangelogsQuery::fetch(
+            &query_client,
+            "valid_application",
+            "prod",
+            "green",
+            invalid_build_number,
+        )
+        .await;
+
+        mock.assert();
+        assert!(response.is_err());
+
+        match response.as_ref().unwrap_err() {
+            APIError::ReqwestError(_) => panic!("it shouldn't returning ReqwestError"),
+            APIError::ResponseError { code, message } => {
+                assert_eq!(code, "unable_to_determine_changelog");
+                assert_eq!(
+                    message,
+                    &format!(
+                        "Unable to determine the changelog for build-{}",
+                        invalid_build_number
+                    )
+                );
             }
             APIError::UnAuthenticated => panic!("it shouldn't returning UnAuthenticated"),
         }

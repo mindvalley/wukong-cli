@@ -224,7 +224,7 @@ pub async fn handle_execute<'a>(
                 println!("{}", std::str::from_utf8(&decoded).unwrap());
             }
 
-            println!("");
+            println!();
         }
         None => todo!(),
     }

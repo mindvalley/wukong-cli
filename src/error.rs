@@ -1,5 +1,4 @@
 use thiserror::Error as ThisError;
-use base64;
 
 #[derive(Debug, ThisError)]
 pub enum CliError<'a> {
