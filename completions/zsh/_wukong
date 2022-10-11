@@ -118,7 +118,7 @@ _arguments "${_arguments_options[@]}" \
 ;;
 (execute)
 _arguments "${_arguments_options[@]}" \
-'--namespace=[The namespace to deploy to]:NAMESPACE: ' \
+'--namespace=[The namespace to deploy to]:NAMESPACE:(prod staging)' \
 '--version=[The version that the deployment will perform against]:VERSION:(blue green)' \
 '--artifact=[The build artifact that the deployment will use]:ARTIFACT: ' \
 '-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
