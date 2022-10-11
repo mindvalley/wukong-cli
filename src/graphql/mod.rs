@@ -33,8 +33,7 @@ impl QueryClientBuilder {
     }
 
     pub fn with_access_token(mut self, access_token: String) -> Self {
-        // self.access_token = Some(access_token);
-        self.access_token = Some("valid".to_string());
+        self.access_token = Some(access_token);
         self
     }
 
