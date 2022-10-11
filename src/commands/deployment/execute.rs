@@ -1,5 +1,8 @@
 use super::{DeploymentNamespace, DeploymentVersion};
-use crate::{error::CliError, graphql::QueryClientBuilder, GlobalContext};
+use crate::{
+    error::CliError, graphql::QueryClientBuilder, loader::new_spinner_progress_bar, GlobalContext,
+};
+use base64::decode;
 use dialoguer::{theme::ColorfulTheme, Confirm, Select};
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
@@ -110,6 +113,9 @@ pub async fn handle_execute<'a>(
             selected_build_number.green()
         );
     } else {
+        let progress_bar = new_spinner_progress_bar();
+        progress_bar.set_message("Fetch available build artifacts ...");
+
         let cd_pipeline_data = client
             .fetch_cd_pipeline(
                 context.application.as_ref().unwrap(),
@@ -164,6 +170,8 @@ pub async fn handle_execute<'a>(
                     })
                     .collect();
 
+                progress_bar.finish_and_clear();
+
                 let selected_build = Select::with_theme(&ColorfulTheme::default())
                     .with_prompt("Step 3: Please choose the build artifact you want to deploy")
                     .default(0)
@@ -185,41 +193,49 @@ pub async fn handle_execute<'a>(
         };
     }
 
+    let progress_bar = new_spinner_progress_bar();
+    progress_bar.set_message("Generating changelog ...");
+
+    let changelogs_data = client
+        .fetch_changelogs(
+            context.application.as_ref().unwrap(),
+            &selected_namespace.to_lowercase(),
+            &selected_version.to_lowercase(),
+            selected_build_number,
+        )
+        .await?
+        .data
+        .unwrap()
+        .changelogs;
+
+    progress_bar.finish_and_clear();
+
     println!("{}", "Step 4: Review your deployment".bold());
     println!("Please review your deployment CHANGELOG before execute it.\n");
-    println!("CHANGELOG:");
-    let changelog = r#"Move product id to tier charge plan mapping (#1508) (commit: 460ba03) (details / githubweb)
-Add target sub id to upgrade endpoint (#1509) (commit: 765f3e5) (details / githubweb)
-[MVC-444] [Backend] As a B2B user, I can receive Onboard Email when I was added individually to Org through MVE Platform (#1510) (commit: 3d4d673) (details / githubweb)
-added next billing date to segment property (#1515) (commit: b46870d) (details / githubweb)
-better refund resilience for Zuora (#1511) (commit: 2a327ed) (details / githubweb)
-Modify preview upgrade params (#1516) (commit: ff63c8f) (details / githubweb)
-Up 1583 downgrade schema and UI (#1513) (commit: 78e5fbf) (details / githubweb)
-added sales api for tier charge plans (#1514) (commit: 14f0b26) (details / githubweb)"#;
-    println!("{changelog}\n");
 
-    let mut deploy = false;
-    let mut _post_changelog_to_slack = false;
+    println!("CHANGELOG:");
+    match changelogs_data {
+        Some(changelogs_data) => {
+            // let changelogs = Vec::new();
+
+            for changelog in changelogs_data.into_iter().flatten() {
+                // changelogs.push()
+                let decoded = decode(&changelog.message)?;
+                println!("{}", std::str::from_utf8(&decoded).unwrap());
+            }
+
+            println!("");
+        }
+        None => todo!(),
+    }
 
     if Confirm::with_theme(&ColorfulTheme::default())
         .with_prompt("Do you agree to deploy this build ?")
         .interact()
         .unwrap()
     {
-        deploy = true;
-        if Confirm::with_theme(&ColorfulTheme::default())
-            .with_prompt(
-                "Do you want to post the changelog to this Slack channel #mv-up-deployment ?",
-            )
-            .interact()
-            .unwrap()
-        {
-            _post_changelog_to_slack = true;
-        }
-    }
-
-    if deploy {
-        println!("Sending deployment .....");
+        let progress_bar = new_spinner_progress_bar();
+        progress_bar.set_message("Sending deployment ...");
 
         let resp = client
             .execute_cd_pipeline(
@@ -233,10 +249,14 @@ added sales api for tier charge plans (#1514) (commit: 14f0b26) (details / githu
             .unwrap()
             .execute_cd_pipeline;
 
-        if let Some(resp) = resp {
-            println!("Deployment is succefully sent! Please open this URL to check the deployment progress");
-            println!("{}", resp.url.unwrap());
-        }
+        progress_bar.finish_and_clear();
+
+        // SAFRTY: the resp SHOULDN'T be None
+        let deployment_url = resp.expect("There is no deployment url").url;
+        println!(
+            "Deployment is succefully sent! Please open this URL to check the deployment progress"
+        );
+        println!("{}", deployment_url);
     }
 
     Ok(true)

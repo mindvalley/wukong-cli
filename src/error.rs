@@ -1,4 +1,5 @@
 use thiserror::Error as ThisError;
+use base64;
 
 #[derive(Debug, ThisError)]
 pub enum CliError<'a> {
@@ -6,6 +7,8 @@ pub enum CliError<'a> {
     APIError(#[from] APIError),
     #[error(transparent)]
     Io(#[from] ::std::io::Error),
+    #[error(transparent)]
+    Base64(#[from] base64::DecodeError),
     #[error(transparent)]
     ConfigError(ConfigError<'a>),
     #[error("Failed to discover OpenID Provider")]

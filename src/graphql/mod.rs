@@ -1,9 +1,11 @@
 pub mod application;
+pub mod changelog;
 pub mod deployment;
 pub mod pipeline;
 
 use self::{
     application::{applications_query, ApplicationsQuery},
+    changelog::{changelogs_query, ChangelogsQuery},
     deployment::{
         cd_pipeline_query, cd_pipelines_query, execute_cd_pipeline, CdPipelineQuery,
         CdPipelinesQuery, ExecuteCdPipeline,
@@ -31,7 +33,8 @@ impl QueryClientBuilder {
     }
 
     pub fn with_access_token(mut self, access_token: String) -> Self {
-        self.access_token = Some(access_token);
+        // self.access_token = Some(access_token);
+        self.access_token = Some("valid".to_string());
         self
     }
 
@@ -155,6 +158,16 @@ impl QueryClient {
         build_number: Option<i64>,
     ) -> Result<Response<execute_cd_pipeline::ResponseData>, APIError> {
         ExecuteCdPipeline::mutate(self, application, namespace, version, build_number).await
+    }
+
+    pub async fn fetch_changelogs(
+        &self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+        build_number: i64,
+    ) -> Result<Response<changelogs_query::ResponseData>, APIError> {
+        ChangelogsQuery::fetch(self, application, namespace, version, build_number).await
     }
 }
 
