@@ -23,7 +23,7 @@ pub enum CommandGroup {
     Login,
     /// Generate wukong cli completions for your shell to stdout
     Completions {
-        #[clap(arg_enum)]
+        #[arg(value_enum)]
         shell: Shell,
     },
 }

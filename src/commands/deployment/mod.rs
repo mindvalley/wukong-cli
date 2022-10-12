@@ -5,11 +5,11 @@ use execute::handle_execute;
 use list::handle_list;
 
 use crate::{CliError, GlobalContext};
-use clap::{ArgEnum, Args, Subcommand};
+use clap::{Args, Subcommand, ValueEnum};
 
 #[derive(Debug, Args)]
 pub struct Deployment {
-    #[clap(subcommand)]
+    #[command(subcommand)]
     pub subcommand: DeploymentSubcommand,
 }
 
@@ -20,19 +20,19 @@ pub enum DeploymentSubcommand {
     /// Start the deployment pipeline
     Execute {
         /// The namespace to deploy to.
-        #[clap(long, arg_enum)]
+        #[arg(long, value_enum)]
         namespace: Option<DeploymentNamespace>,
         /// The version that the deployment will perform
         /// against.
-        #[clap(long, arg_enum)]
+        #[arg(long, value_enum)]
         version: Option<DeploymentVersion>,
         /// The build artifact that the deployment will use.
-        #[clap(long)]
+        #[arg(long)]
         artifact: Option<i64>,
     },
 }
 
-#[derive(Debug, ArgEnum, Clone)]
+#[derive(Debug, ValueEnum, Clone)]
 pub enum DeploymentVersion {
     Blue,
     Green,
@@ -47,7 +47,7 @@ impl ToString for DeploymentVersion {
     }
 }
 
-#[derive(Debug, ArgEnum, Clone)]
+#[derive(Debug, ValueEnum, Clone)]
 pub enum DeploymentNamespace {
     Prod,
     Staging,

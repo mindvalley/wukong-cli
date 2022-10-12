@@ -101,7 +101,7 @@ impl Display for JobBuild {
 
 #[derive(Debug, Args)]
 pub struct Pipeline {
-    #[clap(subcommand)]
+    #[command(subcommand)]
     pub subcommand: PipelineSubcommand,
 }
 
@@ -117,10 +117,10 @@ pub enum PipelineSubcommand {
     /// Show the build status and (possible) errors on branch ci pipeline
     CiStatus {
         /// Repository url
-        #[clap(long)]
+        #[arg(long)]
         repo_url: Option<String>,
         /// Branch name
-        #[clap(long)]
+        #[arg(long)]
         branch: Option<String>,
     },
 }

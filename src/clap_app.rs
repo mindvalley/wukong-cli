@@ -3,14 +3,14 @@ use clap::Parser;
 
 /// A Swiss-army Knife CLI For Mindvalley Developers
 #[derive(Debug, Parser)]
-#[clap(version, author)]
+#[command(version, author)]
 pub struct ClapApp {
-    #[clap(subcommand)]
+    #[command(subcommand)]
     pub command_group: CommandGroup,
 
     /// Override the application name that the CLI will perform the command against.
     /// If the flag is not used, then the CLI will use the default application name from the config.
-    #[clap(long, short, global = true)]
+    #[arg(long, short, global = true)]
     pub application: Option<String>,
 }
 
