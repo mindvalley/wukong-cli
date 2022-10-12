@@ -9,7 +9,7 @@ mod error;
 mod graphql;
 mod loader;
 mod output;
-mod settings;
+// mod settings;
 // mod logger;
 
 use chrono::{DateTime, Local};
