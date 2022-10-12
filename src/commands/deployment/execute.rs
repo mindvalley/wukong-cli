@@ -216,12 +216,9 @@ pub async fn handle_execute<'a>(
     println!("CHANGELOG:");
     match changelogs_data {
         Some(changelogs_data) => {
-            // let changelogs = Vec::new();
-
             for changelog in changelogs_data.into_iter().flatten() {
-                // changelogs.push()
                 let decoded = decode(&changelog.message)?;
-                println!("{}", std::str::from_utf8(&decoded).unwrap());
+                println!("{}\n", std::str::from_utf8(&decoded).unwrap());
             }
 
             println!();
