@@ -105,6 +105,9 @@ jobs:
               ;;
           esac
 
+          echo "API_URL=${WUKONG_API_URL}" >> $GITHUB_ENV
+          echo "OKTA_CLIENT_ID=${OKTA_CLIENT_ID}" >> $GITHUB_ENV
+
       - name: Extract crate information
         shell: bash
         run: |
