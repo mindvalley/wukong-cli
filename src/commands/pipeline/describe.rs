@@ -2,16 +2,14 @@ use super::{JobBuild, PipelineBranch, PipelinePullRequest};
 use crate::{
     error::CliError,
     graphql::{pipeline::pipeline_query::PipelineQueryPipeline, QueryClientBuilder},
+    loader::new_spinner_progress_bar,
+    output::table::TableOutput,
     GlobalContext,
 };
-use indicatif::{ProgressBar, ProgressStyle};
-use tabled::Table;
 
 pub async fn handle_describe<'a>(context: GlobalContext, name: &str) -> Result<bool, CliError<'a>> {
-    let deps = 1234;
-    let progress_bar = ProgressBar::new(deps);
-    progress_bar.set_style(ProgressStyle::default_spinner());
-    println!("Fetching pipeline data ...");
+    let progress_bar = new_spinner_progress_bar();
+    progress_bar.set_message("Fetching pipeline data ...");
 
     // Calling API ...
     let client = QueryClientBuilder::new()
@@ -25,6 +23,8 @@ pub async fn handle_describe<'a>(context: GlobalContext, name: &str) -> Result<b
         // .ok_or(anyhow::anyhow!("Error"))?
         .unwrap()
         .pipeline;
+
+    progress_bar.finish_and_clear();
 
     if let Some(pipeline_data) = pipeline_resp {
         match pipeline_data {
@@ -70,10 +70,12 @@ pub async fn handle_describe<'a>(context: GlobalContext, name: &str) -> Result<b
                             });
                         }
 
-                        let table = Table::new(branches).to_string();
-
-                        println!("Branches:");
-                        println!("{table}");
+                        let output = TableOutput {
+                            title: Some("Branches:".to_string()),
+                            header: None,
+                            data: branches,
+                        };
+                        println!("{output}");
                     }
                     if let Some(pipeline_pull_requests) = multi_branch_pipeline.pull_requests {
                         let mut pull_requests = Vec::new();
@@ -86,16 +88,16 @@ pub async fn handle_describe<'a>(context: GlobalContext, name: &str) -> Result<b
                             });
                         }
 
-                        let table = Table::new(pull_requests).to_string();
-
-                        println!("Pull Requests:");
-                        println!("{table}");
+                        let output = TableOutput {
+                            title: Some("Pull Requests:".to_string()),
+                            header: None,
+                            data: pull_requests,
+                        };
+                        println!("{output}");
                     }
                 }
             }
         }
-
-        progress_bar.finish_and_clear();
     }
     Ok(true)
 }

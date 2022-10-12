@@ -1,6 +1,6 @@
-use super::{check_auth_error, QueryClient};
-use crate::{error::APIError, SETTINGS};
-use graphql_client::{reqwest::post_graphql, GraphQLQuery, Response};
+use super::QueryClient;
+use crate::error::APIError;
+use graphql_client::{GraphQLQuery, Response};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -16,22 +16,64 @@ impl ApplicationsQuery {
     ) -> Result<Response<applications_query::ResponseData>, APIError> {
         let variables = applications_query::Variables {};
 
-        let response =
-            post_graphql::<ApplicationsQuery, _>(client.inner(), &SETTINGS.api.url, variables)
-                .await?;
-        if let Some(errors) = response.errors {
-            let first_error = errors[0].clone();
+        let response = client
+            .call_api::<ApplicationsQuery>(variables, |_, error| {
+                Err(APIError::ResponseError {
+                    code: error.message.clone(),
+                    message: format!("{}", error),
+                })
+            })
+            .await?;
 
-            match check_auth_error(&first_error) {
-                Some(err) => return Err(err),
-                None => {
-                    return Err(APIError::ResponseError {
-                        code: first_error.message,
-                        message: format!("{}", errors[0].clone()),
-                    });
-                }
-            }
-        }
         Ok(response)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::graphql::QueryClientBuilder;
+    use httpmock::prelude::*;
+
+    #[tokio::test]
+    async fn test_fetch_application_list_success_should_return_application_list() {
+        let server = MockServer::start();
+        let query_client = QueryClientBuilder::new()
+            .with_access_token("test_access_token".to_string())
+            .with_api_url(server.base_url())
+            .build()
+            .unwrap();
+
+        let api_resp = r#"
+{
+  "data": {
+    "applications": [
+      {
+        "name": "application-1"
+      },
+      {
+        "name": "application-2"
+      },
+      {
+        "name": "application-3"
+      }
+    ]
+  }
+}"#;
+
+        let mock = server.mock(|when, then| {
+            when.method(POST).path("/");
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+
+        let response = ApplicationsQuery::fetch(&query_client).await;
+
+        mock.assert();
+        assert!(response.is_ok());
+
+        let applications = response.unwrap().data.unwrap().applications.unwrap();
+        assert_eq!(applications.len(), 3);
     }
 }

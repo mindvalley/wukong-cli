@@ -1,0 +1,25 @@
+query CdPipelineQuery($application: String!, $namespace: String!, $version:
+String!) {
+  cdPipeline(application: $application, namespace: $namespace, version: $version) {
+    deployedRef
+    environment
+    enabled
+    lastDeployment
+    name
+    status
+    version
+    jenkinsBuilds {
+      buildDuration
+      buildNumber
+      buildUrl
+      commitAuthor
+      commitId
+      commitMsg
+      name
+      result
+      timestamp
+      totalDuration
+      waitDuration
+    }
+  }
+}

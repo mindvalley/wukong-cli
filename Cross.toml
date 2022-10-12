@@ -1,0 +1,5 @@
+[build.env]
+passthrough = [
+    "API_URL",
+    "OKTA_CLIENT_ID",
+]

@@ -7,7 +7,9 @@ mod commands;
 mod config;
 mod error;
 mod graphql;
-mod settings;
+mod loader;
+mod output;
+// mod settings;
 // mod logger;
 
 use chrono::{DateTime, Local};
@@ -15,11 +17,11 @@ use commands::{
     completions::handle_completions, init::handle_init, login::handle_login, CommandGroup,
 };
 use config::{Config, CONFIG_FILE};
-use error::{handle_error, CliError};
+use error::CliError;
+use output::error::ErrorOutput;
 // use logger::Logger;
-use crate::{auth::refresh_tokens, settings::Settings};
+use crate::auth::refresh_tokens;
 use app::{App, ConfigState};
-use lazy_static::lazy_static;
 use openidconnect::RefreshToken;
 use std::process;
 
@@ -43,9 +45,8 @@ macro_rules! must_init_and_login {
     }};
 }
 
-lazy_static! {
-    static ref SETTINGS: Settings = Settings::new().unwrap();
-}
+static API_URL: &str = env!("API_URL");
+static OKTA_CLIENT_ID: &str = env!("OKTA_CLIENT_ID");
 
 #[derive(Default, Debug)]
 pub struct GlobalContext {
@@ -57,11 +58,9 @@ pub struct GlobalContext {
 
 #[tokio::main]
 async fn main() {
-    // Logger::new().init();
-
     match run().await {
         Err(error) => {
-            handle_error(error);
+            eprintln!("{}", ErrorOutput(error));
             process::exit(1);
         }
         Ok(false) => {
@@ -74,7 +73,10 @@ async fn main() {
 }
 
 async fn run<'a>() -> Result<bool, CliError<'a>> {
-    let app = App::new()?;
+    let config_file = CONFIG_FILE
+        .as_ref()
+        .expect("Unable to identify user's home directory");
+    let app = App::new(config_file)?;
 
     let mut context = GlobalContext::default();
     let mut existing_config = None;
@@ -93,10 +95,6 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
                 ))
                 .await
                 .unwrap();
-
-                let config_file = CONFIG_FILE
-                    .as_ref()
-                    .expect("Unable to identify user's home directory");
 
                 match Config::load(config_file) {
                     Ok(mut config) => {
@@ -153,17 +151,8 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
         CommandGroup::Login => must_init!(app.config, handle_login(context).await),
         CommandGroup::Init => handle_init(context, existing_config).await,
         CommandGroup::Completions { shell } => handle_completions(context, shell),
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::clap_app::ClapApp;
-
-    #[test]
-    fn verify_app() {
-        use clap::CommandFactory;
-
-        ClapApp::command().debug_assert()
+        CommandGroup::Deployment(deployment) => {
+            must_init_and_login!(app.config, deployment.handle_command(context).await)
+        }
     }
 }

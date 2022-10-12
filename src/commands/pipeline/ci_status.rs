@@ -1,7 +1,9 @@
 use super::PipelineCiStatus;
-use crate::{error::CliError, graphql::QueryClientBuilder, GlobalContext};
+use crate::{
+    error::CliError, graphql::QueryClientBuilder, loader::new_spinner_progress_bar,
+    output::table::TableOutput, GlobalContext,
+};
 use std::process::Command;
-use tabled::Table;
 
 pub async fn handle_ci_status<'a>(
     context: GlobalContext,
@@ -37,6 +39,9 @@ pub async fn handle_ci_status<'a>(
         }
     };
 
+    let progress_bar = new_spinner_progress_bar();
+    progress_bar.set_message("Fetching ci status ...");
+
     let client = QueryClientBuilder::new()
         .with_access_token(context.id_token.unwrap())
         .build()?;
@@ -49,6 +54,8 @@ pub async fn handle_ci_status<'a>(
         .unwrap()
         .ci_status;
 
+    progress_bar.finish_and_clear();
+
     if let Some(ci_status) = ci_status_resp {
         let pipeline_ci_status = PipelineCiStatus {
             branch,
@@ -58,9 +65,12 @@ pub async fn handle_ci_status<'a>(
             timestamp: ci_status.timestamp,
         };
 
-        let table = Table::new([pipeline_ci_status]).to_string();
+        let table = TableOutput {
+            title: Some("CI Status:".to_string()),
+            header: None,
+            data: vec![pipeline_ci_status],
+        };
 
-        println!("CI Status: ");
         println!("{table}");
     } else {
         println!("No result.")

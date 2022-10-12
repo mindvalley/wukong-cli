@@ -1,3 +1,3 @@
 # On Linux GNU, statically link the C runtime
-[target.x86_64-unknown-linux-gnu]
-rustflags = ["-C", "target-feature=+crt-static"]
+# [target.x86_64-unknown-linux-gnu]
+# rustflags = ["-C", "target-feature=+crt-static"]

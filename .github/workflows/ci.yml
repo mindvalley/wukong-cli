@@ -9,6 +9,8 @@ on:
 env:
   CARGO_TERM_COLOR: always
   CICD_INTERMEDIATES_DIR: "_cicd-intermediates"
+  API_URL: ${{ secrets.WUKONG_API_URL }}
+  OKTA_CLIENT_ID: ${{ secrets.OKTA_CLIENT_ID }}
 
 jobs:
   check-formatting-clippy:
@@ -23,7 +25,6 @@ jobs:
         with:
           profile: minimal
           toolchain: stable
-          target: x86_64-unknown-linux-gnu
           components: rustfmt, clippy
           override: true
 
@@ -37,13 +38,13 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --target=x86_64-unknown-linux-gnu -- -D warnings
+          args: -- -D warnings
 
       - name: Test Wukong CLI
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --verbose --target=x86_64-unknown-linux-gnu
+          args: --verbose
 
   ci:
     strategy:
@@ -51,9 +52,10 @@ jobs:
       matrix:
         rust: [ stable ]
         job:
-          - { name: "macOS-arm",      target: aarch64-apple-darwin          , os: ubuntu-22.04 }
-          - { name: "macOS-x86",      target: x86_64-apple-darwin           , os: ubuntu-22.04 }
-          - { name: "linux-x86",      target: x86_64-unknown-linux-gnu      , os: ubuntu-22.04 }
+          - { name: "macOS-arm",          target: aarch64-apple-darwin          , os: ubuntu-22.04                    }
+          - { name: "macOS-x86",          target: x86_64-apple-darwin           , os: ubuntu-22.04                    }
+          - { name: "linux-x86",          target: x86_64-unknown-linux-gnu      , os: ubuntu-22.04,   use-cross: true }
+          - { name: "linux-x86-musl",     target: x86_64-unknown-linux-musl     , os: ubuntu-22.04,   use-cross: true }
     name: ${{ matrix.job.name }} (${{ matrix.job.target }})
     runs-on: ${{ matrix.job.os }}
 
@@ -116,5 +118,6 @@ jobs:
       - name: Build Wukong CLI
         uses: actions-rs/cargo@v1
         with:
+          use-cross: ${{ matrix.job.use-cross }}
           command: build
           args: --locked --release --target=${{ matrix.job.target }}

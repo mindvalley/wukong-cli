@@ -2,39 +2,17 @@ pub mod ci_status;
 pub mod describe;
 pub mod list;
 
-use crate::{error::CliError, GlobalContext};
-use chrono::{DateTime, Duration, Local, NaiveDateTime, Utc};
+use self::{ci_status::handle_ci_status, describe::handle_describe, list::handle_list};
+use crate::{
+    error::CliError,
+    output::table::{fmt_option_milliseconds, fmt_option_timestamp, fmt_timestamp},
+    GlobalContext,
+};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use clap::{Args, Subcommand};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, str};
 use tabled::Tabled;
-
-use self::{ci_status::handle_ci_status, describe::handle_describe, list::handle_list};
-
-fn fmt_option_milliseconds(o: &Option<i64>) -> String {
-    match o {
-        Some(s) => {
-            let duration = Duration::milliseconds(*s);
-            let seconds = duration.num_seconds() % 60;
-            let minutes = (duration.num_seconds() / 60) % 60;
-            format!("{} mins {} secs", minutes, seconds)
-        }
-        None => "N/A".to_string(),
-    }
-}
-
-fn fmt_option_timestamp(o: &Option<i64>) -> String {
-    match o {
-        Some(s) => fmt_timestamp(s),
-        None => "N/A".to_string(),
-    }
-}
-
-fn fmt_timestamp(o: &i64) -> String {
-    let naive = NaiveDateTime::from_timestamp_opt(o / 1000, (o % 1000) as u32 * 1_000_000).unwrap();
-    let dt = DateTime::<Utc>::from_utc(naive, Utc).with_timezone(&Local);
-    format!("{}", dt.format("%Y %b %d %H:%M:%S %p"))
-}
 
 #[derive(Tabled, Serialize, Deserialize, Debug)]
 struct PipelineData {
