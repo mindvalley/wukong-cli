@@ -26,6 +26,12 @@ jobs:
           components: rustfmt, clippy
           override: true
 
+      - name: Set env
+        shell: bash
+        run: |
+          echo "API_URL=${{secrets.WUKONG_API_URL}}" >> $GITHUB_ENV
+          echo "OKTA_CLIENT_ID=${{secrets.OKTA_CLIENT_ID}}" >> $GITHUB_ENV
+
       - name: Check formatting
         uses: actions-rs/cargo@v1
         with:
