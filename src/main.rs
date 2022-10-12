@@ -20,9 +20,8 @@ use config::{Config, CONFIG_FILE};
 use error::CliError;
 use output::error::ErrorOutput;
 // use logger::Logger;
-use crate::{auth::refresh_tokens, settings::Settings};
+use crate::auth::refresh_tokens;
 use app::{App, ConfigState};
-use lazy_static::lazy_static;
 use openidconnect::RefreshToken;
 use std::process;
 
@@ -46,9 +45,8 @@ macro_rules! must_init_and_login {
     }};
 }
 
-lazy_static! {
-    static ref SETTINGS: Settings = Settings::new().unwrap();
-}
+static API_URL: &'static str = env!("API_URL");
+static OKTA_CLIENT_ID: &'static str = env!("OKTA_CLIENT_ID");
 
 #[derive(Default, Debug)]
 pub struct GlobalContext {

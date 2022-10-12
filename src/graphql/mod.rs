@@ -15,7 +15,7 @@ use self::{
         CiStatusQuery, MultiBranchPipelineQuery, PipelineQuery, PipelinesQuery,
     },
 };
-use crate::{error::APIError, SETTINGS};
+use crate::{error::APIError, API_URL};
 use graphql_client::{reqwest::post_graphql, GraphQLQuery, Response};
 use reqwest::header;
 
@@ -28,7 +28,7 @@ impl QueryClientBuilder {
     pub fn new() -> Self {
         Self {
             access_token: None,
-            api_url: SETTINGS.api.url.clone(),
+            api_url: API_URL.to_string(),
         }
     }
 
