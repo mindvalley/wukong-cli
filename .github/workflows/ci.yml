@@ -16,7 +16,6 @@ jobs:
   check-formatting-clippy:
     name: Check Formatting and Clippy
     runs-on: ubuntu-22.04
-    env:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
