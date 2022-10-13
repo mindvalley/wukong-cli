@@ -271,7 +271,7 @@ _arguments "${_arguments_options[@]}" \
 '--help[Print help information]' \
 && ret=0
 ;;
-(completions)
+(completion)
 _arguments "${_arguments_options[@]}" \
 '-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
@@ -380,7 +380,7 @@ esac
 _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
-(completions)
+(completion)
 _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
@@ -405,7 +405,7 @@ _wukong_commands() {
 'deployment:This command group contains the commands to view and interact with the Continuous Delivery pipeline of an application' \
 'config:This contains the commands to view & interact with Wukong'\''s configurations' \
 'login:Login to start using wukong command' \
-'completions:Generate wukong cli completions for your shell to stdout' \
+'completion:Generate wukong cli completions for your shell to stdout' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'wukong commands' commands "$@"
@@ -425,15 +425,15 @@ _wukong__pipeline__help__ci-status_commands() {
     local commands; commands=()
     _describe -t commands 'wukong pipeline help ci-status commands' commands "$@"
 }
-(( $+functions[_wukong__completions_commands] )) ||
-_wukong__completions_commands() {
+(( $+functions[_wukong__completion_commands] )) ||
+_wukong__completion_commands() {
     local commands; commands=()
-    _describe -t commands 'wukong completions commands' commands "$@"
+    _describe -t commands 'wukong completion commands' commands "$@"
 }
-(( $+functions[_wukong__help__completions_commands] )) ||
-_wukong__help__completions_commands() {
+(( $+functions[_wukong__help__completion_commands] )) ||
+_wukong__help__completion_commands() {
     local commands; commands=()
-    _describe -t commands 'wukong help completions commands' commands "$@"
+    _describe -t commands 'wukong help completion commands' commands "$@"
 }
 (( $+functions[_wukong__config_commands] )) ||
 _wukong__config_commands() {
@@ -553,7 +553,7 @@ _wukong__help_commands() {
 'deployment:This command group contains the commands to view and interact with the Continuous Delivery pipeline of an application' \
 'config:This contains the commands to view & interact with Wukong'\''s configurations' \
 'login:Login to start using wukong command' \
-'completions:Generate wukong cli completions for your shell to stdout' \
+'completion:Generate wukong cli completions for your shell to stdout' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'wukong help commands' commands "$@"

@@ -12,8 +12,8 @@ _wukong() {
             ",$1")
                 cmd="wukong"
                 ;;
-            wukong,completions)
-                cmd="wukong__completions"
+            wukong,completion)
+                cmd="wukong__completion"
                 ;;
             wukong,config)
                 cmd="wukong__config"
@@ -75,8 +75,8 @@ _wukong() {
             wukong__deployment__help,list)
                 cmd="wukong__deployment__help__list"
                 ;;
-            wukong__help,completions)
-                cmd="wukong__help__completions"
+            wukong__help,completion)
+                cmd="wukong__help__completion"
                 ;;
             wukong__help,config)
                 cmd="wukong__help__config"
@@ -151,7 +151,7 @@ _wukong() {
 
     case "${cmd}" in
         wukong)
-            opts="-a -h -V --application --help --version init pipeline deployment config login completions help"
+            opts="-a -h -V --application --help --version init pipeline deployment config login completion help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -172,7 +172,7 @@ _wukong() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        wukong__completions)
+        wukong__completion)
             opts="-a -h --application --help bash elvish fish powershell zsh"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -487,7 +487,7 @@ _wukong() {
             return 0
             ;;
         wukong__help)
-            opts="init pipeline deployment config login completions help"
+            opts="init pipeline deployment config login completion help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -500,7 +500,7 @@ _wukong() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        wukong__help__completions)
+        wukong__help__completion)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
