@@ -1,4 +1,4 @@
-pub mod completions;
+pub mod completion;
 pub mod config;
 pub mod deployment;
 pub mod init;
@@ -22,7 +22,7 @@ pub enum CommandGroup {
     /// Login to start using wukong command
     Login,
     /// Generate wukong cli completions for your shell to stdout
-    Completions {
+    Completion {
         #[arg(value_enum)]
         shell: Shell,
     },
