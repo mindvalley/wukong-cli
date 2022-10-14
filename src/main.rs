@@ -8,21 +8,20 @@ mod config;
 mod error;
 mod graphql;
 mod loader;
+mod logger;
 mod output;
-// mod settings;
-// mod logger;
 
+use crate::auth::refresh_tokens;
+use app::{App, ConfigState};
 use chrono::{DateTime, Local};
 use commands::{
     completion::handle_completion, init::handle_init, login::handle_login, CommandGroup,
 };
 use config::{Config, CONFIG_FILE};
 use error::CliError;
-use output::error::ErrorOutput;
-// use logger::Logger;
-use crate::auth::refresh_tokens;
-use app::{App, ConfigState};
+use log::{error, info};
 use openidconnect::RefreshToken;
+use output::error::ErrorOutput;
 use std::process;
 
 macro_rules! must_init {
@@ -60,14 +59,16 @@ pub struct GlobalContext {
 async fn main() {
     match run().await {
         Err(error) => {
+            error!("{:?}", error);
             eprintln!("{}", ErrorOutput(error));
             process::exit(1);
         }
         Ok(false) => {
+            info!("wukong cli session ended unexpectedly.");
             process::exit(1);
         }
         Ok(true) => {
-            process::exit(0);
+            info!("wukong cli session ended successfully.");
         }
     }
 }
@@ -77,6 +78,10 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
         .as_ref()
         .expect("Unable to identify user's home directory");
     let app = App::new(config_file)?;
+
+    logger::Builder::new()
+        .with_max_level(app.cli.verbose.log_level_filter())
+        .init();
 
     let mut context = GlobalContext::default();
     let mut existing_config = None;

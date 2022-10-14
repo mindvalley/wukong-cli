@@ -1,5 +1,12 @@
-use ansi_term::{ANSIString, Colour};
-use log::{Level, Metadata, Record};
+use log::{Level, LevelFilter, Metadata, Record};
+use owo_colors::{
+    colors::css::{DimGray, Gray},
+    OwoColorize,
+};
+
+pub struct Builder {
+    max_log_level: log::LevelFilter,
+}
 
 #[derive(Debug)]
 pub struct Logger;
@@ -14,15 +21,15 @@ impl log::Log for Logger {
 
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
-            let open = Colour::Fixed(243).paint("[");
+            let open = "[".fg::<DimGray>();
             let level = match record.level() {
-                log::Level::Error => Colour::Red.paint("ERROR"),
-                log::Level::Warn => Colour::Yellow.paint("WARN"),
-                log::Level::Info => Colour::Cyan.paint("INFO"),
-                log::Level::Debug => Colour::Blue.paint("DEBUG"),
-                log::Level::Trace => Colour::Fixed(245).paint("TRACE"),
+                Level::Error => "ERROR".red().to_string(),
+                Level::Warn => "WARN".yellow().to_string(),
+                Level::Info => "INFO".cyan().to_string(),
+                Level::Debug => "DEBUG".blue().to_string(),
+                Level::Trace => "TRACE".fg::<Gray>().to_string(),
             };
-            let close = Colour::Fixed(243).paint("]");
+            let close = "]".fg::<DimGray>();
 
             eprintln!(
                 "{}{} {}{} {}",
@@ -38,14 +45,21 @@ impl log::Log for Logger {
     fn flush(&self) {}
 }
 
-impl Logger {
+impl Builder {
     #[must_use = "You must call init() to begin logging"]
     pub fn new() -> Self {
-        Self
+        Self {
+            max_log_level: LevelFilter::Off,
+        }
+    }
+
+    pub fn with_max_level(mut self, max_log_level: LevelFilter) -> Self {
+        self.max_log_level = max_log_level;
+        self
     }
 
     pub fn init(self) {
-        log::set_max_level(log::LevelFilter::Trace);
-        log::set_logger(GLOBAL_LOGGER);
+        log::set_max_level(self.max_log_level);
+        log::set_logger(GLOBAL_LOGGER).expect("unable to init wukong-cli logger");
     }
 }
