@@ -1,14 +1,10 @@
 #!/bin/bash
-
-if ! command -v wukong >/dev/null 2>&1; then
-  if ! command -v ./target/release/wukong > /dev/null 2>&1; then
-    echo "ERROR: wukong command is not available."
-    exit 1
-  else
-    wukong_command=./target/release/wukong
-  fi
+# we always want to use latest wukong version to generate completions
+if ! command -v ./target/release/wukong > /dev/null 2>&1; then
+  echo "ERROR: wukong command is not available."
+  exit 1
 else
-  wukong_command=wukong
+  wukong_command=./target/release/wukong
 fi
 
 cd "$(dirname "$0")"
@@ -23,7 +19,7 @@ gen() {
     # https://github.com/starship/starship/issues/2806
     # $wukong_command completions $1 | sed '$s/_wukong "$@"/compdef _wukong wukong/' > ./completions/$1/$2
   # else
-  $wukong_command completions $1 > ./completions/$1/$2
+  $wukong_command completion $1 > ./completions/$1/$2
   # fi
   echo "$1 completions generated successfully at $( cd "$(dirname "$0")" ; pwd -P )/completions/$1/$2."
 }

@@ -83,10 +83,35 @@ _arguments "${_arguments_options[@]}" \
 ;;
 (help)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'*::subcommand -- The subcommand whose help message to display:' \
+":: :_wukong__pipeline__help_commands" \
+"*::: :->help" \
 && ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-pipeline-help-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(describe)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(ci-status)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+        esac
+    ;;
+esac
 ;;
         esac
     ;;
@@ -129,10 +154,31 @@ _arguments "${_arguments_options[@]}" \
 ;;
 (help)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'*::subcommand -- The subcommand whose help message to display:' \
+":: :_wukong__deployment__help_commands" \
+"*::: :->help" \
 && ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-deployment-help-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(execute)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+        esac
+    ;;
+esac
 ;;
         esac
     ;;
@@ -168,8 +214,8 @@ _arguments "${_arguments_options[@]}" \
 '--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '-h[Print help information]' \
 '--help[Print help information]' \
-':config-name -- The config name:(application collect-telemetry enable-log log-dir)' \
-':config-value -- The config value:' \
+':config_name -- The config name:(application collect-telemetry enable-log log-dir)' \
+':config_value -- The config value:' \
 && ret=0
 ;;
 (get)
@@ -178,15 +224,40 @@ _arguments "${_arguments_options[@]}" \
 '--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '-h[Print help information]' \
 '--help[Print help information]' \
-':config-name -- The config name:(application collect-telemetry enable-log log-dir)' \
+':config_name -- The config name:(application collect-telemetry enable-log log-dir)' \
 && ret=0
 ;;
 (help)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'*::subcommand -- The subcommand whose help message to display:' \
+":: :_wukong__config__help_commands" \
+"*::: :->help" \
 && ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-config-help-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(set)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(get)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+        esac
+    ;;
+esac
 ;;
         esac
     ;;
@@ -200,7 +271,7 @@ _arguments "${_arguments_options[@]}" \
 '--help[Print help information]' \
 && ret=0
 ;;
-(completions)
+(completion)
 _arguments "${_arguments_options[@]}" \
 '-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
@@ -211,10 +282,115 @@ _arguments "${_arguments_options[@]}" \
 ;;
 (help)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'*::subcommand -- The subcommand whose help message to display:' \
+":: :_wukong__help_commands" \
+"*::: :->help" \
 && ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-help-command-$line[1]:"
+        case $line[1] in
+            (init)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(pipeline)
+_arguments "${_arguments_options[@]}" \
+":: :_wukong__help__pipeline_commands" \
+"*::: :->pipeline" \
+&& ret=0
+
+    case $state in
+    (pipeline)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-help-pipeline-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(describe)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(ci-status)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(deployment)
+_arguments "${_arguments_options[@]}" \
+":: :_wukong__help__deployment_commands" \
+"*::: :->deployment" \
+&& ret=0
+
+    case $state in
+    (deployment)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-help-deployment-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(execute)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(config)
+_arguments "${_arguments_options[@]}" \
+":: :_wukong__help__config_commands" \
+"*::: :->config" \
+&& ret=0
+
+    case $state in
+    (config)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-help-config-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(set)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(get)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(login)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(completion)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+        esac
+    ;;
+esac
 ;;
         esac
     ;;
@@ -229,20 +405,35 @@ _wukong_commands() {
 'deployment:This command group contains the commands to view and interact with the Continuous Delivery pipeline of an application' \
 'config:This contains the commands to view & interact with Wukong'\''s configurations' \
 'login:Login to start using wukong command' \
-'completions:Generate wukong cli completions for your shell to stdout' \
+'completion:Generate wukong cli completions for your shell to stdout' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'wukong commands' commands "$@"
+}
+(( $+functions[_wukong__help__pipeline__ci-status_commands] )) ||
+_wukong__help__pipeline__ci-status_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help pipeline ci-status commands' commands "$@"
 }
 (( $+functions[_wukong__pipeline__ci-status_commands] )) ||
 _wukong__pipeline__ci-status_commands() {
     local commands; commands=()
     _describe -t commands 'wukong pipeline ci-status commands' commands "$@"
 }
-(( $+functions[_wukong__completions_commands] )) ||
-_wukong__completions_commands() {
+(( $+functions[_wukong__pipeline__help__ci-status_commands] )) ||
+_wukong__pipeline__help__ci-status_commands() {
     local commands; commands=()
-    _describe -t commands 'wukong completions commands' commands "$@"
+    _describe -t commands 'wukong pipeline help ci-status commands' commands "$@"
+}
+(( $+functions[_wukong__completion_commands] )) ||
+_wukong__completion_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong completion commands' commands "$@"
+}
+(( $+functions[_wukong__help__completion_commands] )) ||
+_wukong__help__completion_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help completion commands' commands "$@"
 }
 (( $+functions[_wukong__config_commands] )) ||
 _wukong__config_commands() {
@@ -254,6 +445,15 @@ _wukong__config_commands() {
     )
     _describe -t commands 'wukong config commands' commands "$@"
 }
+(( $+functions[_wukong__help__config_commands] )) ||
+_wukong__help__config_commands() {
+    local commands; commands=(
+'list:List the configurations' \
+'set:Set the value of a configuration' \
+'get:Print the value of a configuration' \
+    )
+    _describe -t commands 'wukong help config commands' commands "$@"
+}
 (( $+functions[_wukong__deployment_commands] )) ||
 _wukong__deployment_commands() {
     local commands; commands=(
@@ -263,65 +463,194 @@ _wukong__deployment_commands() {
     )
     _describe -t commands 'wukong deployment commands' commands "$@"
 }
+(( $+functions[_wukong__help__deployment_commands] )) ||
+_wukong__help__deployment_commands() {
+    local commands; commands=(
+'list:List the current available deployment pipelines of an application' \
+'execute:Start the deployment pipeline' \
+    )
+    _describe -t commands 'wukong help deployment commands' commands "$@"
+}
+(( $+functions[_wukong__help__pipeline__describe_commands] )) ||
+_wukong__help__pipeline__describe_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help pipeline describe commands' commands "$@"
+}
 (( $+functions[_wukong__pipeline__describe_commands] )) ||
 _wukong__pipeline__describe_commands() {
     local commands; commands=()
     _describe -t commands 'wukong pipeline describe commands' commands "$@"
+}
+(( $+functions[_wukong__pipeline__help__describe_commands] )) ||
+_wukong__pipeline__help__describe_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong pipeline help describe commands' commands "$@"
 }
 (( $+functions[_wukong__deployment__execute_commands] )) ||
 _wukong__deployment__execute_commands() {
     local commands; commands=()
     _describe -t commands 'wukong deployment execute commands' commands "$@"
 }
+(( $+functions[_wukong__deployment__help__execute_commands] )) ||
+_wukong__deployment__help__execute_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong deployment help execute commands' commands "$@"
+}
+(( $+functions[_wukong__help__deployment__execute_commands] )) ||
+_wukong__help__deployment__execute_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help deployment execute commands' commands "$@"
+}
 (( $+functions[_wukong__config__get_commands] )) ||
 _wukong__config__get_commands() {
     local commands; commands=()
     _describe -t commands 'wukong config get commands' commands "$@"
 }
+(( $+functions[_wukong__config__help__get_commands] )) ||
+_wukong__config__help__get_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config help get commands' commands "$@"
+}
+(( $+functions[_wukong__help__config__get_commands] )) ||
+_wukong__help__config__get_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help config get commands' commands "$@"
+}
 (( $+functions[_wukong__config__help_commands] )) ||
 _wukong__config__help_commands() {
-    local commands; commands=()
+    local commands; commands=(
+'list:List the configurations' \
+'set:Set the value of a configuration' \
+'get:Print the value of a configuration' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
     _describe -t commands 'wukong config help commands' commands "$@"
+}
+(( $+functions[_wukong__config__help__help_commands] )) ||
+_wukong__config__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config help help commands' commands "$@"
 }
 (( $+functions[_wukong__deployment__help_commands] )) ||
 _wukong__deployment__help_commands() {
-    local commands; commands=()
+    local commands; commands=(
+'list:List the current available deployment pipelines of an application' \
+'execute:Start the deployment pipeline' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
     _describe -t commands 'wukong deployment help commands' commands "$@"
+}
+(( $+functions[_wukong__deployment__help__help_commands] )) ||
+_wukong__deployment__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong deployment help help commands' commands "$@"
 }
 (( $+functions[_wukong__help_commands] )) ||
 _wukong__help_commands() {
-    local commands; commands=()
+    local commands; commands=(
+'init:Initialize Wukong'\''s configurations' \
+'pipeline:This contains the commands to view & interact with an application’s pipeline' \
+'deployment:This command group contains the commands to view and interact with the Continuous Delivery pipeline of an application' \
+'config:This contains the commands to view & interact with Wukong'\''s configurations' \
+'login:Login to start using wukong command' \
+'completion:Generate wukong cli completions for your shell to stdout' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
     _describe -t commands 'wukong help commands' commands "$@"
+}
+(( $+functions[_wukong__help__help_commands] )) ||
+_wukong__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help help commands' commands "$@"
 }
 (( $+functions[_wukong__pipeline__help_commands] )) ||
 _wukong__pipeline__help_commands() {
-    local commands; commands=()
+    local commands; commands=(
+'list:List the current pipelines of the application' \
+'describe:Show the details of a pipeline' \
+'ci-status:Show the build status and (possible) errors on branch ci pipeline' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
     _describe -t commands 'wukong pipeline help commands' commands "$@"
+}
+(( $+functions[_wukong__pipeline__help__help_commands] )) ||
+_wukong__pipeline__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong pipeline help help commands' commands "$@"
+}
+(( $+functions[_wukong__help__init_commands] )) ||
+_wukong__help__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help init commands' commands "$@"
 }
 (( $+functions[_wukong__init_commands] )) ||
 _wukong__init_commands() {
     local commands; commands=()
     _describe -t commands 'wukong init commands' commands "$@"
 }
+(( $+functions[_wukong__config__help__list_commands] )) ||
+_wukong__config__help__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config help list commands' commands "$@"
+}
 (( $+functions[_wukong__config__list_commands] )) ||
 _wukong__config__list_commands() {
     local commands; commands=()
     _describe -t commands 'wukong config list commands' commands "$@"
+}
+(( $+functions[_wukong__deployment__help__list_commands] )) ||
+_wukong__deployment__help__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong deployment help list commands' commands "$@"
 }
 (( $+functions[_wukong__deployment__list_commands] )) ||
 _wukong__deployment__list_commands() {
     local commands; commands=()
     _describe -t commands 'wukong deployment list commands' commands "$@"
 }
+(( $+functions[_wukong__help__config__list_commands] )) ||
+_wukong__help__config__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help config list commands' commands "$@"
+}
+(( $+functions[_wukong__help__deployment__list_commands] )) ||
+_wukong__help__deployment__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help deployment list commands' commands "$@"
+}
+(( $+functions[_wukong__help__pipeline__list_commands] )) ||
+_wukong__help__pipeline__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help pipeline list commands' commands "$@"
+}
+(( $+functions[_wukong__pipeline__help__list_commands] )) ||
+_wukong__pipeline__help__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong pipeline help list commands' commands "$@"
+}
 (( $+functions[_wukong__pipeline__list_commands] )) ||
 _wukong__pipeline__list_commands() {
     local commands; commands=()
     _describe -t commands 'wukong pipeline list commands' commands "$@"
 }
+(( $+functions[_wukong__help__login_commands] )) ||
+_wukong__help__login_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help login commands' commands "$@"
+}
 (( $+functions[_wukong__login_commands] )) ||
 _wukong__login_commands() {
     local commands; commands=()
     _describe -t commands 'wukong login commands' commands "$@"
+}
+(( $+functions[_wukong__help__pipeline_commands] )) ||
+_wukong__help__pipeline_commands() {
+    local commands; commands=(
+'list:List the current pipelines of the application' \
+'describe:Show the details of a pipeline' \
+'ci-status:Show the build status and (possible) errors on branch ci pipeline' \
+    )
+    _describe -t commands 'wukong help pipeline commands' commands "$@"
 }
 (( $+functions[_wukong__pipeline_commands] )) ||
 _wukong__pipeline_commands() {
@@ -333,10 +662,20 @@ _wukong__pipeline_commands() {
     )
     _describe -t commands 'wukong pipeline commands' commands "$@"
 }
+(( $+functions[_wukong__config__help__set_commands] )) ||
+_wukong__config__help__set_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config help set commands' commands "$@"
+}
 (( $+functions[_wukong__config__set_commands] )) ||
 _wukong__config__set_commands() {
     local commands; commands=()
     _describe -t commands 'wukong config set commands' commands "$@"
+}
+(( $+functions[_wukong__help__config__set_commands] )) ||
+_wukong__help__config__set_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help config set commands' commands "$@"
 }
 
 _wukong "$@"

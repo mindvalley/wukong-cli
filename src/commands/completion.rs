@@ -2,7 +2,7 @@ use crate::{clap_app::ClapApp, error::CliError, loader::new_spinner_progress_bar
 use clap::CommandFactory;
 use clap_complete::{generate, Shell};
 
-pub fn handle_completions<'a>(_context: GlobalContext, shell: Shell) -> Result<bool, CliError<'a>> {
+pub fn handle_completion<'a>(_context: GlobalContext, shell: Shell) -> Result<bool, CliError<'a>> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Generating completion ...");
 

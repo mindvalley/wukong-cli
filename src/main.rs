@@ -14,7 +14,7 @@ mod output;
 
 use chrono::{DateTime, Local};
 use commands::{
-    completions::handle_completions, init::handle_init, login::handle_login, CommandGroup,
+    completion::handle_completion, init::handle_init, login::handle_login, CommandGroup,
 };
 use config::{Config, CONFIG_FILE};
 use error::CliError;
@@ -150,7 +150,7 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
         CommandGroup::Config(config) => must_init!(app.config, config.handle_command(context)),
         CommandGroup::Login => must_init!(app.config, handle_login(context).await),
         CommandGroup::Init => handle_init(context, existing_config).await,
-        CommandGroup::Completions { shell } => handle_completions(context, shell),
+        CommandGroup::Completion { shell } => handle_completion(context, shell),
         CommandGroup::Deployment(deployment) => {
             must_init_and_login!(app.config, deployment.handle_command(context).await)
         }
