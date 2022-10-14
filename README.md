@@ -34,7 +34,7 @@ The Wukong CLI is a set of tools to manages Mindvalley DevOps resources. Its goa
 ## Installation
 
 ```bash
-brew tap mindvalley/wukong https://github.com/mindvalley/wukong-cli
+brew tap mindvalley/wukong
 brew install wukong
 ```
 
@@ -51,7 +51,7 @@ Then you should be able to check your rust version using:
 ```bash
 rustc --version
 # output
-# rustc 1.63.0 (4b91a6ea7 2022-08-08)
+# rustc 1.64.0 (a55dd71d5 2022-09-19)
 ```
 
 > **Note** > `rustc` is the Rust compiler
