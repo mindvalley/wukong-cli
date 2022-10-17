@@ -1,3 +1,5 @@
+use tabled::Tabled;
+
 use super::PipelineCiStatus;
 use crate::{
     error::CliError, graphql::QueryClientBuilder, loader::new_spinner_progress_bar,
@@ -56,24 +58,50 @@ pub async fn handle_ci_status<'a>(
 
     progress_bar.finish_and_clear();
 
-    if let Some(ci_status) = ci_status_resp {
-        let pipeline_ci_status = PipelineCiStatus {
-            branch,
-            pull_request: ci_status.name,
-            ci_status: ci_status.result,
-            build_url: ci_status.build_url,
-            timestamp: ci_status.timestamp,
-        };
+    match ci_status_resp {
+        Some(ci_status) => {
+            let pipeline_ci_status = PipelineCiStatus {
+                branch,
+                pull_request: ci_status.name,
+                ci_status: ci_status.result,
+                build_url: ci_status.build_url,
+                timestamp: ci_status.timestamp,
+            };
 
-        let table = TableOutput {
-            title: Some("CI Status:".to_string()),
-            header: None,
-            data: vec![pipeline_ci_status],
-        };
+            let table = TableOutput {
+                title: Some("CI Status:".to_string()),
+                header: None,
+                data: vec![pipeline_ci_status],
+            };
 
-        println!("{table}");
-    } else {
-        println!("No result.")
+            println!("{table}");
+        }
+        None => {
+            #[derive(Tabled)]
+            struct EmptyPipelineStatus<'a> {
+                branch: &'a str,
+                pull_request: &'a str,
+                ci_status: &'a str,
+                build_url: &'a str,
+                timestamp: &'a str,
+            }
+
+            let pipeline_ci_status = EmptyPipelineStatus {
+                branch: &branch,
+                pull_request: "N/A",
+                ci_status: "N/A",
+                build_url: "N/A",
+                timestamp: "N/A",
+            };
+
+            let table = TableOutput {
+                title: Some("CI Status:".to_string()),
+                header: None,
+                data: vec![pipeline_ci_status],
+            };
+
+            println!("{table}");
+        }
     }
 
     Ok(true)
