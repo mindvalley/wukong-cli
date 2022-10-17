@@ -137,10 +137,7 @@ impl CiStatusQuery {
 
         let response = client
             .call_api::<Self>(variables, |resp, error| match error.message.as_str() {
-                "application_not_found" => Err(APIError::ResponseError {
-                    code: error.message,
-                    message: format!("Application `{}` not found.", repo_url),
-                }),
+                "application_not_found" => Err(APIError::InvalidRepoUrl),
                 "no_builds_associated_with_this_branch" => Ok(resp),
                 _ => Err(APIError::ResponseError {
                     code: error.message.clone(),
