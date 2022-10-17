@@ -8,7 +8,7 @@
 
 <!-- Explain the **motivation** for making this change. What existing problem does the pull request solve? -->
 
-<!-- Link any relevant issues if necessary or include a transcript of any Discord discussion. -->
+<!-- Link any relevant issues or Jira ticket if necessary -->
 
 Ticket:
 
