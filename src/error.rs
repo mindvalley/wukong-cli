@@ -90,7 +90,8 @@ impl<'a> CliError<'a> {
                     r#"You can follow these steps to remedy this error:  
             1. Confirm that you're in the correct working folder.
             2. If you're not, consider moving to the right location and run 'wukong pipeline ci-status' command again.
-        If none of the above steps work for you, please contact the following people on Slack for assistance :slack: @alex.tuan / :slack: @jk-gan / :slack: @Fadhil"#.to_string()
+        If none of the above steps work for you, please contact the following people on Slack for assistance 
+        :slack: @alex.tuan / :slack: @jk-gan / :slack: @Fadhil"#.to_string()
                 ),
                 _ => None,
             },
