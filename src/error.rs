@@ -26,8 +26,6 @@ pub enum APIError {
     ResponseError { code: String, message: String },
     #[error("You are un-authenticated.")]
     UnAuthenticated,
-    #[error("Could not find the application associated with this Git repo.\n\tEither you're not in the correct working folder for your application, or there's a misconfiguration.")]
-    InvalidRepoUrl,
 }
 
 #[derive(Debug, ThisError)]
@@ -83,15 +81,15 @@ impl<'a> CliError<'a> {
                 APIError::ResponseError { code, .. } if code == "application_not_found" => Some(
                     String::from("Please check your repo url. It's unrecognized by wukong."),
                 ),
-                APIError::UnAuthenticated => Some(
-                    "Run \"wukong login\" to authenticate with your okta account.".to_string()
-                ),
-                APIError::InvalidRepoUrl => Some(
+                APIError::ResponseError { code, .. } if code == "ci_status_application_not_found" => Some(
                     r#"You can follow these steps to remedy this error:  
             1. Confirm that you're in the correct working folder.
             2. If you're not, consider moving to the right location and run 'wukong pipeline ci-status' command again.
         If none of the above steps work for you, please contact the following people on Slack for assistance 
         :slack: @alex.tuan / :slack: @jk-gan / :slack: @Fadhil"#.to_string()
+                ),
+                APIError::UnAuthenticated => Some(
+                    "Run \"wukong login\" to authenticate with your okta account.".to_string()
                 ),
                 _ => None,
             },

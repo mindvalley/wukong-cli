@@ -137,7 +137,9 @@ impl CiStatusQuery {
 
         let response = client
             .call_api::<Self>(variables, |resp, error| match error.message.as_str() {
-                "application_not_found" => Err(APIError::InvalidRepoUrl),
+                "application_not_found" => Err(APIError::ResponseError { code: "ci_status_application_not_found".to_string(), message: 
+    "Could not find the application associated with this Git repo.\n\tEither you're not in the correct working folder for your application, or there's a misconfiguration.".to_string()
+                }),
                 "no_builds_associated_with_this_branch" => Ok(resp),
                 _ => Err(APIError::ResponseError {
                     code: error.message.clone(),
@@ -601,10 +603,10 @@ mod test {
         match response.as_ref().unwrap_err() {
             APIError::ReqwestError(_) => panic!("it shouldn't returning ReqwestError"),
             APIError::ResponseError { code, message } => {
-                assert_eq!(code, "application_not_found");
+                assert_eq!(code, "ci_status_application_not_found");
                 assert_eq!(
                     message,
-                    "Application `http://invalid_repo_url.com` not found."
+                    "Could not find the application associated with this Git repo.\n\tEither you're not in the correct working folder for your application, or there's a misconfiguration."
                 );
             }
             APIError::UnAuthenticated => panic!("it shouldn't returning UnAuthenticated"),
