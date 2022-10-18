@@ -1,3 +1,4 @@
+use owo_colors::OwoColorize;
 use thiserror::Error as ThisError;
 
 #[derive(Debug, ThisError)]
@@ -81,13 +82,15 @@ impl<'a> CliError<'a> {
                 APIError::ResponseError { code, .. } if code == "application_not_found" => Some(
                     String::from("Please check your repo url. It's unrecognized by wukong."),
                 ),
-                APIError::ResponseError { code, .. } if code == "ci_status_application_not_found" => Some(
-                    r#"You can follow these steps to remedy this error:  
+                APIError::ResponseError { code, .. } if code == "ci_status_application_not_found" => Some(format!(
+        r#"
+        You can follow these steps to remedy this error:  
             1. Confirm that you're in the correct working folder.
-            2. If you're not, consider moving to the right location and run 'wukong pipeline ci-status' command again.
-        If none of the above steps work for you, please contact the following people on Slack for assistance 
-        :slack: @alex.tuan / :slack: @jk-gan / :slack: @Fadhil"#.to_string()
-                ),
+            2. If you're not, consider moving to the right location and run {} command again.
+        If none of the above steps work for you, please contact the following people on Slack for assistance: @alex.tuan / @jk-gan / @Fadhil
+        "#,
+        "wukong pipeline ci-status".yellow()
+                )),
                 APIError::UnAuthenticated => Some(
                     "Run \"wukong login\" to authenticate with your okta account.".to_string()
                 ),
