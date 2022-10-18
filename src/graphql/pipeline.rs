@@ -606,7 +606,7 @@ mod test {
                 assert_eq!(code, "ci_status_application_not_found");
                 assert_eq!(
                     message,
-                    "Could not find the application associated with this Git repo.\n\tEither you're not in the correct working folder for your application, or there's a misconfiguration."
+                    "Could not find the application associated with this Git repo.\n\t\t\tEither you're not in the correct working folder for your application, or there's a misconfiguration."
                 );
             }
             APIError::UnAuthenticated => panic!("it shouldn't returning UnAuthenticated"),
