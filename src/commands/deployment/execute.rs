@@ -3,9 +3,14 @@ use crate::{
     error::CliError, graphql::QueryClientBuilder, loader::new_spinner_progress_bar, GlobalContext,
 };
 use base64::decode;
+use console::Term;
 use dialoguer::{theme::ColorfulTheme, Confirm, Select};
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
+use std::{
+    io::Write,
+    process::{Command, Stdio},
+};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct CdPipelineWithBuilds {
@@ -213,15 +218,42 @@ pub async fn handle_execute<'a>(
     println!("{}", "Step 4: Review your deployment".bold());
     println!("Please review your deployment CHANGELOG before execute it.\n");
 
-    println!("CHANGELOG:");
     match changelogs_data {
         Some(changelogs_data) => {
-            for changelog in changelogs_data.into_iter().flatten() {
-                let decoded = decode(&changelog.message)?;
-                println!("{}\n", std::str::from_utf8(&decoded).unwrap());
-            }
+            let term = Term::stderr();
+            let (rows, _columns) = term.size();
 
-            println!();
+            let changelogs: Vec<String> = changelogs_data
+                .into_iter()
+                .flatten()
+                .map(|changelog| {
+                    let decoded = decode(&changelog.message).unwrap();
+                    format!("{}\n", std::str::from_utf8(&decoded).unwrap())
+                })
+                .collect();
+
+            // * 2 because the newline
+            if rows as usize > changelogs.len() * 2 {
+                println!("CHANGELOG:");
+                for changelog in changelogs.into_iter() {
+                    eprintln!("{}\n", changelog);
+                }
+            } else {
+                let mut pager = Command::new("less");
+                let mut child = pager
+                    .stdin(Stdio::piped())
+                    .spawn()
+                    .expect("failed to spawn child process");
+                let mut stdin = child.stdin.take().expect("Failed to open stdin");
+                stdin
+                    .write_all(b"CHANGELOG:\n")
+                    .expect("Failed to write to stdin");
+                for changelog in changelogs.into_iter() {
+                    stdin
+                        .write_all(format!("{}\n", changelog).as_bytes())
+                        .expect("Failed to write to stdin");
+                }
+            }
         }
         None => todo!(),
     }
