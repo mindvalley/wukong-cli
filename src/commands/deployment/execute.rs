@@ -2,7 +2,6 @@ use super::{DeploymentNamespace, DeploymentVersion};
 use crate::{
     error::CliError, graphql::QueryClientBuilder, loader::new_spinner_progress_bar, GlobalContext,
 };
-use base64::decode;
 use console::Term;
 use dialoguer::{theme::ColorfulTheme, Confirm, Select};
 use owo_colors::OwoColorize;
@@ -227,8 +226,12 @@ pub async fn handle_execute<'a>(
                 .into_iter()
                 .flatten()
                 .map(|changelog| {
-                    let decoded = decode(&changelog.message).unwrap();
-                    format!("{}\n", std::str::from_utf8(&decoded).unwrap())
+                    format!(
+                        "{} by {} in {}",
+                        changelog.message_headline,
+                        changelog.author.cyan(),
+                        changelog.short_hash.yellow()
+                    )
                 })
                 .collect();
 
@@ -239,7 +242,10 @@ pub async fn handle_execute<'a>(
                     eprintln!("{}\n", changelog);
                 }
             } else {
+                // less needs to be called with the '-R' option in order to display ANSI color
                 let mut pager = Command::new("less");
+                pager.arg("-R");
+
                 let mut child = pager
                     .stdin(Stdio::piped())
                     .spawn()
@@ -250,7 +256,7 @@ pub async fn handle_execute<'a>(
                     .expect("Failed to write to stdin");
                 for changelog in changelogs.into_iter() {
                     stdin
-                        .write_all(format!("{}\n", changelog).as_bytes())
+                        .write_all(format!("{}\n\n", changelog).as_bytes())
                         .expect("Failed to write to stdin");
                 }
             }
