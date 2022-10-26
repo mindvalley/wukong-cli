@@ -3,7 +3,7 @@ use crate::{
     error::CliError, graphql::QueryClientBuilder, loader::new_spinner_progress_bar, GlobalContext,
 };
 use console::Term;
-use dialoguer::{theme::ColorfulTheme, Confirm, Select};
+use dialoguer::{theme::ColorfulTheme, Confirm, Select, Editor};
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -222,77 +222,58 @@ pub async fn handle_execute<'a>(
             let term = Term::stderr();
             let (rows, _columns) = term.size();
 
-            let changelogs: Vec<String> = changelogs_data
+            let changelogs = changelogs_data
                 .into_iter()
                 .flatten()
                 .map(|changelog| {
                     format!(
                         "{} by {} in {}",
                         changelog.message_headline,
-                        changelog.author.cyan(),
-                        changelog.short_hash.yellow()
+                        changelog.author,
+                        changelog.short_hash
                     )
                 })
-                .collect();
+                .collect::<Vec<String>>().join("\n\n");
 
-            // * 2 because the newline
-            if rows as usize > changelogs.len() * 2 {
-                println!("CHANGELOG:");
-                for changelog in changelogs.into_iter() {
-                    eprintln!("{}\n", changelog);
+            if let Some(rv) = Editor::new().edit(&changelogs).unwrap() {
+                println!("{}\n", rv);
+
+                if Confirm::with_theme(&ColorfulTheme::default())
+                    .with_prompt("Do you agree to deploy this build ?")
+                    .interact()
+                    .unwrap()
+                {
+                    let progress_bar = new_spinner_progress_bar();
+                    progress_bar.set_message("Sending deployment ...");
+
+                    let resp = client
+                        .execute_cd_pipeline(
+                            &context.application.unwrap(),
+                            &selected_namespace.to_lowercase(),
+                            &selected_version.to_lowercase(),
+                            Some(selected_build_number),
+                        )
+                        .await?
+                        .data
+                        .unwrap()
+                        .execute_cd_pipeline;
+
+                    progress_bar.finish_and_clear();
+
+                    // SAFRTY: the resp SHOULDN'T be None
+                    let deployment_url = resp.expect("There is no deployment url").url;
+                    println!(
+                        "Deployment is succefully sent! Please open this URL to check the deployment progress"
+                    );
+                    println!("{}", deployment_url);
                 }
             } else {
-                // less needs to be called with the '-R' option in order to display ANSI color
-                let mut pager = Command::new("less");
-                pager.arg("-R");
-
-                let mut child = pager
-                    .stdin(Stdio::piped())
-                    .spawn()
-                    .expect("failed to spawn child process");
-                let mut stdin = child.stdin.take().expect("Failed to open stdin");
-                stdin
-                    .write_all(b"CHANGELOG:\n")
-                    .expect("Failed to write to stdin");
-                for changelog in changelogs.into_iter() {
-                    stdin
-                        .write_all(format!("{}\n\n", changelog).as_bytes())
-                        .expect("Failed to write to stdin");
-                }
+                println!("Abort!");
             }
         }
         None => todo!(),
     }
 
-    if Confirm::with_theme(&ColorfulTheme::default())
-        .with_prompt("Do you agree to deploy this build ?")
-        .interact()
-        .unwrap()
-    {
-        let progress_bar = new_spinner_progress_bar();
-        progress_bar.set_message("Sending deployment ...");
-
-        let resp = client
-            .execute_cd_pipeline(
-                &context.application.unwrap(),
-                &selected_namespace.to_lowercase(),
-                &selected_version.to_lowercase(),
-                Some(selected_build_number),
-            )
-            .await?
-            .data
-            .unwrap()
-            .execute_cd_pipeline;
-
-        progress_bar.finish_and_clear();
-
-        // SAFRTY: the resp SHOULDN'T be None
-        let deployment_url = resp.expect("There is no deployment url").url;
-        println!(
-            "Deployment is succefully sent! Please open this URL to check the deployment progress"
-        );
-        println!("{}", deployment_url);
-    }
 
     Ok(true)
 }
