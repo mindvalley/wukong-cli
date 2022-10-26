@@ -8,8 +8,6 @@ pub enum CliError<'a> {
     #[error(transparent)]
     Io(#[from] ::std::io::Error),
     #[error(transparent)]
-    Base64(#[from] base64::DecodeError),
-    #[error(transparent)]
     ConfigError(ConfigError<'a>),
     #[error("Failed to discover OpenID Provider")]
     OpenIDDiscoveryError,

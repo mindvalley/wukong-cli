@@ -3162,13 +3162,11 @@ name = "wukong"
 version = "0.0.3-alpha1"
 dependencies = [
  "anyhow",
- "base64",
  "chrono",
  "chrono-humanize",
  "clap",
  "clap_complete",
  "config",
- "console",
  "dialoguer",
  "dirs",
  "graphql_client",

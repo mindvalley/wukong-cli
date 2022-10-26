@@ -2,14 +2,9 @@ use super::{DeploymentNamespace, DeploymentVersion};
 use crate::{
     error::CliError, graphql::QueryClientBuilder, loader::new_spinner_progress_bar, GlobalContext,
 };
-use console::Term;
-use dialoguer::{theme::ColorfulTheme, Confirm, Select, Editor};
+use dialoguer::{theme::ColorfulTheme, Confirm, Editor, Select};
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
-use std::{
-    io::Write,
-    process::{Command, Stdio},
-};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct CdPipelineWithBuilds {
@@ -219,21 +214,17 @@ pub async fn handle_execute<'a>(
 
     match changelogs_data {
         Some(changelogs_data) => {
-            let term = Term::stderr();
-            let (rows, _columns) = term.size();
-
             let changelogs = changelogs_data
                 .into_iter()
                 .flatten()
                 .map(|changelog| {
                     format!(
                         "{} by {} in {}",
-                        changelog.message_headline,
-                        changelog.author,
-                        changelog.short_hash
+                        changelog.message_headline, changelog.author, changelog.short_hash
                     )
                 })
-                .collect::<Vec<String>>().join("\n\n");
+                .collect::<Vec<String>>()
+                .join("\n\n");
 
             if let Some(rv) = Editor::new().edit(&changelogs).unwrap() {
                 println!("{}\n", rv);
@@ -273,7 +264,6 @@ pub async fn handle_execute<'a>(
         }
         None => todo!(),
     }
-
 
     Ok(true)
 }
