@@ -1091,6 +1091,22 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
+              "name": "commits",
+              "type": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "Commit",
+                  "ofType": null
+                }
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
               "name": "name",
               "type": {
                 "kind": "NON_NULL",
