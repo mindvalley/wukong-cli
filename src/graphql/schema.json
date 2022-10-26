@@ -1093,12 +1093,16 @@
               "isDeprecated": false,
               "name": "commits",
               "type": {
-                "kind": "LIST",
+                "kind": "NON_NULL",
                 "name": null,
                 "ofType": {
-                  "kind": "OBJECT",
-                  "name": "Commit",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "Commit",
+                    "ofType": null
+                  }
                 }
               }
             },
@@ -2001,12 +2005,16 @@
               "isDeprecated": false,
               "name": "changelogs",
               "type": {
-                "kind": "LIST",
+                "kind": "NON_NULL",
                 "name": null,
                 "ofType": {
-                  "kind": "OBJECT",
-                  "name": "Commit",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "Commit",
+                    "ofType": null
+                  }
                 }
               }
             },
