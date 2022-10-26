@@ -35,34 +35,37 @@ pub async fn handle_list<'a>(context: GlobalContext) -> Result<bool, CliError<'a
 
     progress_bar.finish_and_clear();
 
-    if let Some(pipelines_data) = pipelines_data {
-        let mut pipelines = Vec::new();
+    match pipelines_data {
+        Some(pipelines_data) => {
+            let mut pipelines = Vec::new();
 
-        for raw_pipeline in pipelines_data.into_iter().flatten() {
-            let pipeline = match raw_pipeline {
-                PipelinesQueryPipelines::Job(p) => PipelineData {
-                    name: p.name,
-                    last_succeeded_at: p.last_succeeded_at,
-                    last_duration: p.last_duration,
-                    last_failed_at: p.last_failed_at,
-                },
-                PipelinesQueryPipelines::MultiBranchPipeline(p) => PipelineData {
-                    name: p.name,
-                    last_succeeded_at: p.last_succeeded_at,
-                    last_duration: p.last_duration,
-                    last_failed_at: p.last_failed_at,
-                },
+            for raw_pipeline in pipelines_data.into_iter().flatten() {
+                let pipeline = match raw_pipeline {
+                    PipelinesQueryPipelines::Job(p) => PipelineData {
+                        name: p.name,
+                        last_succeeded_at: p.last_succeeded_at,
+                        last_duration: p.last_duration,
+                        last_failed_at: p.last_failed_at,
+                    },
+                    PipelinesQueryPipelines::MultiBranchPipeline(p) => PipelineData {
+                        name: p.name,
+                        last_succeeded_at: p.last_succeeded_at,
+                        last_duration: p.last_duration,
+                        last_failed_at: p.last_failed_at,
+                    },
+                };
+
+                pipelines.push(pipeline);
+            }
+
+            let output = TableOutput {
+                title: Some(format!("Pipeline list for application: `{}`:", application)),
+                header: None,
+                data: pipelines,
             };
-
-            pipelines.push(pipeline);
+            println!("{output}");
         }
-
-        let output = TableOutput {
-            title: Some(format!("Pipeline list for application: `{}`:", application)),
-            header: None,
-            data: pipelines,
-        };
-        println!("{output}");
+        None => todo!(),
     }
 
     Ok(true)

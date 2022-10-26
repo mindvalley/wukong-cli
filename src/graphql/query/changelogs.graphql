@@ -2,7 +2,9 @@ query ChangelogsQuery($application: String!, $namespace: String!, $version:
 String!, $buildNumber: Int!) {
   changelogs(application: $application, namespace: $namespace, version:
   $version, buildNumber: $buildNumber) {
-    id
-    message
+    author
+    messageHeadline
+    shortHash
+    url
   }
 }

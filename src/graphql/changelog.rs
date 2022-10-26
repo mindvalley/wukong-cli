@@ -69,12 +69,16 @@ mod test {
   "data": {
     "changelogs": [
       {
-        "id": "ceaf8d80f1f17a4de80ca4fce655700284a30c9a",
-        "message": "Y29tbWl0IDE="
+        "shortHash": "ceaf8d80",
+        "messageHeadline": "Y29tbWl0IDE=",
+        "author": "user1@example.com",
+        "url": "https://github.com/xxx/yyy/commit/ceaf8d80"
       },
       {
-        "id": "04768172ec0417ded2995d2e2b2a0203de49fcca",
-        "message": "Y29tbWl0IDI="
+        "shortHash": "04768172",
+        "messageHeadline": "Y29tbWl0IDI=",
+        "author": "user2@example.com",
+        "url": "https://github.com/xxx/yyy/commit/04768172"
       }
     ]
   }
