@@ -20,11 +20,18 @@ struct TwoColumns {
 
 impl Display for TwoColumns {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for (i, value) in self.right.iter().enumerate() {
-            if i == 0 {
-                writeln!(f, "{0: <13} {1}", self.left, value)?;
-            } else {
-                writeln!(f, "  {0: <13} {1}", "", value)?;
+        if self.right.is_empty() {
+            write!(f, "{0: <13}", self.left)?;
+        } else {
+            for (i, value) in self.right.iter().enumerate() {
+                if i == 0 {
+                    write!(f, "{0: <13} {1}", self.left, value)?;
+                } else {
+                    write!(f, "  {0: <13} {1}", "", value)?;
+                }
+                if i != (self.right.len() - 1) {
+                    writeln!(f)?;
+                }
             }
         }
 
@@ -157,6 +164,8 @@ pub async fn handle_execute<'a>(
             .data
             .unwrap()
             .cd_pipeline;
+
+        println!("{:?}", cd_pipeline_data);
 
         selected_build_number = match cd_pipeline_data {
             Some(cd_pipeline_data) => {
