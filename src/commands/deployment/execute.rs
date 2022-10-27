@@ -121,7 +121,6 @@ pub async fn handle_execute<'a>(
         );
     } else {
         let version_selections = vec!["Green", "Blue"];
-        // let selected_version_index = Select::with_theme(&ColorfulTheme::default())
         let selected_version_index = Select::with_theme(&ColorfulTheme::default())
             .with_prompt("Step 2: Please choose the version you want to deploy")
             .default(0)
@@ -164,8 +163,6 @@ pub async fn handle_execute<'a>(
             .data
             .unwrap()
             .cd_pipeline;
-
-        println!("{:?}", cd_pipeline_data);
 
         selected_build_number = match cd_pipeline_data {
             Some(cd_pipeline_data) => {
