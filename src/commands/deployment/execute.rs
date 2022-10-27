@@ -7,9 +7,30 @@ use dialoguer::{theme::ColorfulTheme, Confirm, Select};
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 use std::{
+    fmt::{self, Display},
     io::Write,
     process::{Command, Stdio},
 };
+
+#[derive(Default)]
+struct TwoColumns {
+    left: String,
+    right: Vec<String>,
+}
+
+impl Display for TwoColumns {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for (i, value) in self.right.iter().enumerate() {
+            if i == 0 {
+                writeln!(f, "{0: <13} {1}", self.left, value)?;
+            } else {
+                writeln!(f, "  {0: <13} {1}", "", value)?;
+            }
+        }
+
+        Ok(())
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 struct CdPipelineWithBuilds {
@@ -27,14 +48,19 @@ struct JenkinsBuild {
     build_duration: Option<i64>,
     build_number: i64,
     build_url: String,
-    commit_author: Option<String>,
-    commit_id: Option<String>,
-    commit_message: Option<String>,
     name: String,
     result: String,
     timestamp: i64,
     total_duration: Option<i64>,
     wait_duration: Option<i64>,
+    commits: Vec<Commit>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Commit {
+    id: String,
+    author: String,
+    message_headline: String,
 }
 
 pub async fn handle_execute<'a>(
@@ -88,6 +114,7 @@ pub async fn handle_execute<'a>(
         );
     } else {
         let version_selections = vec!["Green", "Blue"];
+        // let selected_version_index = Select::with_theme(&ColorfulTheme::default())
         let selected_version_index = Select::with_theme(&ColorfulTheme::default())
             .with_prompt("Step 2: Please choose the version you want to deploy")
             .default(0)
@@ -144,33 +171,48 @@ pub async fn handle_execute<'a>(
                         Some(data) => data
                             .into_iter()
                             .flatten()
-                            .map(|build| JenkinsBuild {
-                                build_duration: build.build_duration,
-                                build_number: build.build_number,
-                                build_url: build.build_url,
-                                commit_author: build.commit_author,
-                                commit_id: build.commit_id,
-                                commit_message: build.commit_msg,
-                                name: build.name,
-                                result: build.result,
-                                timestamp: build.timestamp,
-                                total_duration: build.total_duration,
-                                wait_duration: build.wait_duration,
+                            .map(|build| {
+                                let commits: Vec<Commit> = build
+                                    .commits
+                                    .into_iter()
+                                    .map(|commit| Commit {
+                                        id: commit.id,
+                                        author: commit.author,
+                                        message_headline: commit.message_headline,
+                                    })
+                                    .collect();
+
+                                JenkinsBuild {
+                                    build_duration: build.build_duration,
+                                    build_number: build.build_number,
+                                    build_url: build.build_url,
+                                    commits,
+                                    name: build.name,
+                                    result: build.result,
+                                    timestamp: build.timestamp,
+                                    total_duration: build.total_duration,
+                                    wait_duration: build.wait_duration,
+                                }
                             })
                             .collect(),
                         None => Vec::new(),
                     },
                 };
 
-                let build_selections: Vec<String> = cd_pipeline
+                let build_selections: Vec<TwoColumns> = cd_pipeline
                     .jenkins_builds
                     .iter()
                     .map(|build| {
-                        format!(
-                            "build-{}\t{}",
-                            build.build_number,
-                            build.commit_message.as_ref().unwrap_or(&"".to_string())
-                        )
+                        let commits: Vec<String> = build
+                            .commits
+                            .iter()
+                            .map(|commit| commit.message_headline.clone())
+                            .collect();
+
+                        TwoColumns {
+                            left: format!("build-{}", build.build_number),
+                            right: commits,
+                        }
                     })
                     .collect();
 
@@ -183,12 +225,14 @@ pub async fn handle_execute<'a>(
                     .interact()
                     .unwrap();
 
+                let selected_build_number = cd_pipeline.jenkins_builds[selected_build].build_number;
+
                 println!(
                     "You selected `build-{}` as the build artifact for this deployment. \n",
-                    cd_pipeline.jenkins_builds[selected_build].build_number
+                    selected_build_number
                 );
 
-                cd_pipeline.jenkins_builds[selected_build].build_number
+                selected_build_number
             }
             None => {
                 println!("There is no build for this.");
@@ -217,51 +261,45 @@ pub async fn handle_execute<'a>(
     println!("{}", "Step 4: Review your deployment".bold());
     println!("Please review your deployment CHANGELOG before execute it.\n");
 
-    match changelogs_data {
-        Some(changelogs_data) => {
-            let term = Term::stderr();
-            let (rows, _columns) = term.size();
+    let term = Term::stderr();
+    let (rows, _columns) = term.size();
 
-            let changelogs: Vec<String> = changelogs_data
-                .into_iter()
-                .flatten()
-                .map(|changelog| {
-                    format!(
-                        "{} by {} in {}",
-                        changelog.message_headline,
-                        changelog.author.cyan(),
-                        changelog.short_hash.yellow()
-                    )
-                })
-                .collect();
+    let changelogs: Vec<String> = changelogs_data
+        .into_iter()
+        .map(|changelog| {
+            format!(
+                "{} by {} in {}",
+                changelog.message_headline,
+                changelog.author.cyan(),
+                changelog.short_hash.yellow()
+            )
+        })
+        .collect();
 
-            // * 2 because the newline
-            if rows as usize > changelogs.len() * 2 {
-                println!("CHANGELOG:");
-                for changelog in changelogs.into_iter() {
-                    eprintln!("{}\n", changelog);
-                }
-            } else {
-                // less needs to be called with the '-R' option in order to display ANSI color
-                let mut pager = Command::new("less");
-                pager.arg("-R");
-
-                let mut child = pager
-                    .stdin(Stdio::piped())
-                    .spawn()
-                    .expect("failed to spawn child process");
-                let mut stdin = child.stdin.take().expect("Failed to open stdin");
-                stdin
-                    .write_all(b"CHANGELOG:\n")
-                    .expect("Failed to write to stdin");
-                for changelog in changelogs.into_iter() {
-                    stdin
-                        .write_all(format!("{}\n\n", changelog).as_bytes())
-                        .expect("Failed to write to stdin");
-                }
-            }
+    // * 2 because the newline
+    if rows as usize > changelogs.len() * 2 {
+        println!("CHANGELOG:");
+        for changelog in changelogs.into_iter() {
+            eprintln!("{}\n", changelog);
         }
-        None => todo!(),
+    } else {
+        // less needs to be called with the '-R' option in order to display ANSI color
+        let mut pager = Command::new("less");
+        pager.arg("-R");
+
+        let mut child = pager
+            .stdin(Stdio::piped())
+            .spawn()
+            .expect("failed to spawn child process");
+        let mut stdin = child.stdin.take().expect("Failed to open stdin");
+        stdin
+            .write_all(b"CHANGELOG:\n")
+            .expect("Failed to write to stdin");
+        for changelog in changelogs.into_iter() {
+            stdin
+                .write_all(format!("{}\n\n", changelog).as_bytes())
+                .expect("Failed to write to stdin");
+        }
     }
 
     if Confirm::with_theme(&ColorfulTheme::default())
