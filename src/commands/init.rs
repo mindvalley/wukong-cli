@@ -58,13 +58,8 @@ pub async fn handle_init<'a>(
         .data
         .unwrap()
         .applications
-        .expect("Application list can't be empty.")
         .iter()
-        .filter(|application| application.is_some())
-        .map(|application| {
-            // unwrap is safe here because we are already filtered out None in previous step
-            application.as_ref().unwrap().name.clone()
-        })
+        .map(|application| application.name.clone())
         .collect();
 
     let application_selection = Select::with_theme(&ColorfulTheme::default())

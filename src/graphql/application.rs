@@ -73,7 +73,7 @@ mod test {
         mock.assert();
         assert!(response.is_ok());
 
-        let applications = response.unwrap().data.unwrap().applications.unwrap();
+        let applications = response.unwrap().data.unwrap().applications;
         assert_eq!(applications.len(), 3);
     }
 }
