@@ -1052,9 +1052,9 @@
             },
             {
               "args": [],
-              "deprecationReason": null,
+              "deprecationReason": "use 'commits' instead",
               "description": null,
-              "isDeprecated": false,
+              "isDeprecated": true,
               "name": "commitAuthor",
               "type": {
                 "kind": "SCALAR",
@@ -1064,9 +1064,9 @@
             },
             {
               "args": [],
-              "deprecationReason": null,
+              "deprecationReason": "use 'commits' instead",
               "description": null,
-              "isDeprecated": false,
+              "isDeprecated": true,
               "name": "commitId",
               "type": {
                 "kind": "SCALAR",
@@ -1076,9 +1076,9 @@
             },
             {
               "args": [],
-              "deprecationReason": null,
+              "deprecationReason": "use 'commits' instead",
               "description": null,
-              "isDeprecated": false,
+              "isDeprecated": true,
               "name": "commitMsg",
               "type": {
                 "kind": "SCALAR",
@@ -1679,6 +1679,16 @@
                 {
                   "defaultValue": null,
                   "description": null,
+                  "name": "changelogs",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
                   "name": "namespace",
                   "type": {
                     "kind": "NON_NULL",
@@ -1688,6 +1698,16 @@
                       "name": "String",
                       "ofType": null
                     }
+                  }
+                },
+                {
+                  "defaultValue": "false",
+                  "description": null,
+                  "name": "sendToSlack",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
                   }
                 },
                 {
@@ -1840,12 +1860,20 @@
               "isDeprecated": false,
               "name": "applications",
               "type": {
-                "kind": "LIST",
+                "kind": "NON_NULL",
                 "name": null,
                 "ofType": {
-                  "kind": "OBJECT",
-                  "name": "Application",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "OBJECT",
+                      "name": "Application",
+                      "ofType": null
+                    }
+                  }
                 }
               }
             },
