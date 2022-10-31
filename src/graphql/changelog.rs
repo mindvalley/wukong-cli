@@ -97,7 +97,7 @@ mod test {
         mock.assert();
         assert!(response.is_ok());
 
-        let changelogs = response.unwrap().data.unwrap().changelogs.unwrap();
+        let changelogs = response.unwrap().data.unwrap().changelogs;
         assert_eq!(changelogs.len(), 2);
     }
 
@@ -113,9 +113,7 @@ mod test {
 
         let api_resp = r#"
 {
-  "data": {
-    "changelogs": null
-  },
+  "data": null,
   "errors": [
     {
       "locations": [
@@ -168,9 +166,7 @@ mod test {
 
         let api_resp = r#"
 {
-  "data": {
-    "changelogs": null
-  },
+  "data": null,
   "errors": [
     {
       "locations": [
