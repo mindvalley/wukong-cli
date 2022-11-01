@@ -15,9 +15,11 @@ query PipelineQuery($name: String!) {
       builds {
         buildNumber
         buildDuration
-        commitAuthor
-        commitId
-        commitMsg
+        commits {
+          id
+          author
+          messageHeadline
+        }
         result
         timestamp
         totalDuration

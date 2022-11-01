@@ -10,11 +10,8 @@ use openidconnect::{
 };
 use serde::{Deserialize, Serialize};
 use std::{
-    error::Error,
-    fmt::Write as _,
     io::{BufRead, BufReader, Write},
     net::TcpListener,
-    process::exit,
 };
 use url::Url;
 
@@ -134,7 +131,7 @@ pub async fn login() -> Result<AuthInfo, CliError> {
         .set_pkce_verifier(pkce_verifier)
         .request_async(async_http_client)
         .await
-        .map_err(|err| CliError::AuthError {
+        .map_err(|_err| CliError::AuthError {
             message: "Failed to contact token endpoint",
         })?;
 
@@ -158,7 +155,7 @@ pub async fn login() -> Result<AuthInfo, CliError> {
     let id_token_claims: &CoreIdTokenClaims =
         id_token
             .claims(&id_token_verifier, &nonce)
-            .map_err(|err| CliError::AuthError {
+            .map_err(|_err| CliError::AuthError {
                 message: "Failed to verify ID token",
             })?;
 
@@ -217,7 +214,7 @@ pub async fn refresh_tokens(refresh_token: &RefreshToken) -> Result<TokenInfo, C
         .exchange_refresh_token(refresh_token)
         .request_async(async_http_client)
         .await
-        .map_err(|err| CliError::AuthError {
+        .map_err(|_err| CliError::AuthError {
             message: "Failed to contact token endpoint",
         })?;
 

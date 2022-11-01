@@ -41,6 +41,11 @@ pub async fn handle_ci_status(
         }
     };
 
+    println!("{}", "Current directory info");
+    println!("repo url: {}", repo_url);
+    println!("branch: {}", branch);
+    println!();
+
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Fetching ci status ...");
 
@@ -52,7 +57,6 @@ pub async fn handle_ci_status(
         .fetch_ci_status(&repo_url, &branch)
         .await?
         .data
-        // .ok_or(anyhow::anyhow!("Error"))?
         .unwrap()
         .ci_status;
 

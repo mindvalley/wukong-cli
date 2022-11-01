@@ -88,49 +88,47 @@ pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
         .unwrap()
         .cd_pipelines;
 
-    if let Some(cd_pipelines_data) = cd_pipelines_data {
-        let mut prod_pipelines = Vec::new();
-        let mut staging_pipelines = Vec::new();
+    let mut prod_pipelines = Vec::new();
+    let mut staging_pipelines = Vec::new();
 
-        for raw_cd_pipeline in cd_pipelines_data.into_iter().flatten() {
-            let cd_pipeline = CdPipeline {
-                name: raw_cd_pipeline.name,
-                version: raw_cd_pipeline.version,
-                enabled: raw_cd_pipeline.enabled,
-                deployed_ref: raw_cd_pipeline.deployed_ref,
-                last_deployed_at: raw_cd_pipeline.last_deployment,
-                status: raw_cd_pipeline.status,
-            };
-
-            match raw_cd_pipeline.environment.as_str() {
-                "prod" => {
-                    prod_pipelines.push(cd_pipeline);
-                }
-                "staging" => {
-                    staging_pipelines.push(cd_pipeline);
-                }
-                _ => {}
-            };
-        }
-
-        progress_bar.finish_and_clear();
-
-        let prod_pipelines_table = TableOutput {
-            title: None,
-            header: Some("Prod".to_string()),
-            data: prod_pipelines,
-        };
-        let staging_pipelines_table = TableOutput {
-            title: None,
-            header: Some("Staging".to_string()),
-            data: staging_pipelines,
+    for raw_cd_pipeline in cd_pipelines_data {
+        let cd_pipeline = CdPipeline {
+            name: raw_cd_pipeline.name,
+            version: raw_cd_pipeline.version,
+            enabled: raw_cd_pipeline.enabled,
+            deployed_ref: raw_cd_pipeline.deployed_ref,
+            last_deployed_at: raw_cd_pipeline.last_deployment,
+            status: raw_cd_pipeline.status,
         };
 
-        println!("CD pipeline list for application `{}`:", application);
-
-        println!("{prod_pipelines_table}");
-        println!("{staging_pipelines_table}");
+        match raw_cd_pipeline.environment.as_str() {
+            "prod" => {
+                prod_pipelines.push(cd_pipeline);
+            }
+            "staging" => {
+                staging_pipelines.push(cd_pipeline);
+            }
+            _ => {}
+        };
     }
+
+    progress_bar.finish_and_clear();
+
+    let prod_pipelines_table = TableOutput {
+        title: None,
+        header: Some("Prod".to_string()),
+        data: prod_pipelines,
+    };
+    let staging_pipelines_table = TableOutput {
+        title: None,
+        header: Some("Staging".to_string()),
+        data: staging_pipelines,
+    };
+
+    println!("CD pipeline list for application `{}`:", application);
+
+    println!("{prod_pipelines_table}");
+    println!("{staging_pipelines_table}");
 
     Ok(true)
 }

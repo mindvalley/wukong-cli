@@ -1115,30 +1115,6 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
-              "name": "commits",
-              "type": {
-                "kind": "NON_NULL",
-                "name": null,
-                "ofType": {
-                  "kind": "LIST",
-                  "name": null,
-                  "ofType": {
-                    "kind": "NON_NULL",
-                    "name": null,
-                    "ofType": {
-                      "kind": "OBJECT",
-                      "name": "Commit",
-                      "ofType": null
-                    }
-                  }
-                }
-              }
-            },
-            {
-              "args": [],
-              "deprecationReason": null,
-              "description": null,
-              "isDeprecated": false,
               "name": "name",
               "type": {
                 "kind": "NON_NULL",
@@ -1268,12 +1244,20 @@
               "isDeprecated": false,
               "name": "jenkinsBuilds",
               "type": {
-                "kind": "LIST",
+                "kind": "NON_NULL",
                 "name": null,
                 "ofType": {
-                  "kind": "OBJECT",
-                  "name": "Build",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "OBJECT",
+                      "name": "Build",
+                      "ofType": null
+                    }
+                  }
                 }
               }
             },
@@ -1580,12 +1564,20 @@
               "isDeprecated": false,
               "name": "branches",
               "type": {
-                "kind": "LIST",
+                "kind": "NON_NULL",
                 "name": null,
                 "ofType": {
-                  "kind": "OBJECT",
-                  "name": "Job",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "OBJECT",
+                      "name": "Job",
+                      "ofType": null
+                    }
+                  }
                 }
               }
             },
@@ -1648,12 +1640,20 @@
               "isDeprecated": false,
               "name": "pullRequests",
               "type": {
-                "kind": "LIST",
+                "kind": "NON_NULL",
                 "name": null,
                 "ofType": {
-                  "kind": "OBJECT",
-                  "name": "Job",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "OBJECT",
+                      "name": "Job",
+                      "ofType": null
+                    }
+                  }
                 }
               }
             }
@@ -1988,12 +1988,20 @@
               "isDeprecated": false,
               "name": "cdPipelines",
               "type": {
-                "kind": "LIST",
+                "kind": "NON_NULL",
                 "name": null,
                 "ofType": {
-                  "kind": "OBJECT",
-                  "name": "CdPipeline",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "OBJECT",
+                      "name": "CdPipeline",
+                      "ofType": null
+                    }
+                  }
                 }
               }
             },
@@ -2218,12 +2226,20 @@
               "isDeprecated": false,
               "name": "pipelines",
               "type": {
-                "kind": "LIST",
+                "kind": "NON_NULL",
                 "name": null,
                 "ofType": {
-                  "kind": "INTERFACE",
-                  "name": "Pipeline",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INTERFACE",
+                      "name": "Pipeline",
+                      "ofType": null
+                    }
+                  }
                 }
               }
             }

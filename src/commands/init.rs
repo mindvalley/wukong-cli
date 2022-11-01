@@ -47,9 +47,12 @@ pub async fn handle_init(
         println!("You are logged in as: [{}].\n", login_selections[selection]);
     }
 
+    // SAFETY: The auth must not be None here
+    let auth_config = config.auth.as_ref().unwrap();
+
     // Calling API ...
     let client = QueryClientBuilder::new()
-        .with_access_token(config.auth.as_ref().unwrap().id_token.clone())
+        .with_access_token(auth_config.id_token.clone())
         .build()?;
 
     let applications_data: Vec<String> = client
@@ -88,8 +91,7 @@ Some things to try next:
 
 * Run `wukong --help` to see the wukong command groups you can interact with. And run `wukong COMMAND help` to get help on any wukong command.
                      "#,
-        config.auth.as_ref().unwrap().account,
-        config.core.application
+        auth_config.account, config.core.application
     );
 
     if let Some(ref config_file) = *CONFIG_FILE {
