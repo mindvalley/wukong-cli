@@ -69,7 +69,7 @@ async fn main() {
     }
 }
 
-async fn run<'a>() -> Result<bool, CliError<'a>> {
+async fn run() -> Result<bool, CliError> {
     let config_file = CONFIG_FILE
         .as_ref()
         .expect("Unable to identify user's home directory");

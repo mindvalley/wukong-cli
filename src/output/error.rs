@@ -2,9 +2,9 @@ use crate::error::CliError;
 use owo_colors::{colors::CustomColor, OwoColorize};
 use std::{error::Error, fmt::Display};
 
-pub struct ErrorOutput<'a>(pub CliError<'a>);
+pub struct ErrorOutput(pub CliError);
 
-impl<'a> Display for ErrorOutput<'a> {
+impl Display for ErrorOutput {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.0 {
             CliError::Io(ref io_error) if io_error.kind() == ::std::io::ErrorKind::BrokenPipe => {

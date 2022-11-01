@@ -61,7 +61,7 @@ struct CdPipeline {
     status: Option<String>,
 }
 
-pub async fn handle_list<'a>(context: GlobalContext) -> Result<bool, CliError<'a>> {
+pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Fetching cd pipeline list ... ");
 

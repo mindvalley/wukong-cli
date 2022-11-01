@@ -70,12 +70,12 @@ struct Commit {
     message_headline: String,
 }
 
-pub async fn handle_execute<'a>(
+pub async fn handle_execute(
     context: GlobalContext,
     namespace: &Option<DeploymentNamespace>,
     version: &Option<DeploymentVersion>,
     artifact: &Option<i64>,
-) -> Result<bool, CliError<'a>> {
+) -> Result<bool, CliError> {
     if namespace.is_none() && version.is_none() && artifact.is_none() {
         println!("Not detecting any flags, entering deployment terminal......");
     }

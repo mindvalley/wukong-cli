@@ -7,10 +7,10 @@ use crate::{
 };
 use dialoguer::{theme::ColorfulTheme, Select};
 
-pub async fn handle_init<'a>(
+pub async fn handle_init(
     context: GlobalContext,
     existing_config: Option<Config>,
-) -> Result<bool, CliError<'a>> {
+) -> Result<bool, CliError> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
 
     let mut login_selections = vec!["Log in with a new account"];
@@ -58,13 +58,8 @@ pub async fn handle_init<'a>(
         .data
         .unwrap()
         .applications
-        .expect("Application list can't be empty.")
         .iter()
-        .filter(|application| application.is_some())
-        .map(|application| {
-            // unwrap is safe here because we are already filtered out None in previous step
-            application.as_ref().unwrap().name.clone()
-        })
+        .map(|application| application.name.clone())
         .collect();
 
     let application_selection = Select::with_theme(&ColorfulTheme::default())

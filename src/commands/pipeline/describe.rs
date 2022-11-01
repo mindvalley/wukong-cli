@@ -7,7 +7,7 @@ use crate::{
     GlobalContext,
 };
 
-pub async fn handle_describe<'a>(context: GlobalContext, name: &str) -> Result<bool, CliError<'a>> {
+pub async fn handle_describe(context: GlobalContext, name: &str) -> Result<bool, CliError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Fetching pipeline data ...");
 

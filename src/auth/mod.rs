@@ -50,7 +50,7 @@ fn handle_error(fail: &impl Error, msg: &'static str) {
     exit(1);
 }
 
-pub async fn login<'a>() -> Result<AuthInfo, CliError<'a>> {
+pub async fn login() -> Result<AuthInfo, CliError> {
     let okta_client_id = ClientId::new(OKTA_CLIENT_ID.to_string());
 
     let issuer_url =
@@ -241,7 +241,7 @@ pub async fn refresh_tokens(refresh_token: &RefreshToken) -> Result<TokenInfo, C
         .id_token()
         .expect("Server did not return an ID token");
 
-    let refresh_token = token_response
+    let new_refresh_token = token_response
         .refresh_token()
         .expect("Server did not return a refresh token");
 
@@ -261,6 +261,6 @@ pub async fn refresh_tokens(refresh_token: &RefreshToken) -> Result<TokenInfo, C
         id_token: id_token.to_string(),
         access_token: access_token.secret().to_owned(),
         expiry_time: expiry,
-        refresh_token: refresh_token.secret().to_owned(),
+        refresh_token: new_refresh_token.secret().to_owned(),
     })
 }
