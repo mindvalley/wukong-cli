@@ -17,6 +17,8 @@ pub enum CliError {
     UnAuthenticated,
     #[error("You are un-initialised.")]
     UnInitialised,
+    #[error("{message}")]
+    AuthError { message: &'static str },
 }
 
 #[derive(Debug, ThisError)]
