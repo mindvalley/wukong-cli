@@ -41,7 +41,7 @@ pub async fn handle_ci_status(
         }
     };
 
-    println!("{}", "Current directory info");
+    println!("Current directory info");
     println!("repo url: {}", repo_url);
     println!("branch: {}", branch);
     println!();
