@@ -21,6 +21,7 @@ use error::CliError;
 use openidconnect::RefreshToken;
 use output::error::ErrorOutput;
 use std::process;
+use human_panic::setup_panic;
 
 macro_rules! must_init {
     ($config:expr, $function_call:expr) => {{
@@ -55,6 +56,8 @@ pub struct GlobalContext {
 
 #[tokio::main]
 async fn main() {
+    setup_panic!();
+
     match run().await {
         Err(error) => {
             eprintln!("{}", ErrorOutput(error));
