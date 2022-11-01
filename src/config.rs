@@ -115,8 +115,7 @@ impl Config {
     /// This function may return typical file I/O errors.
     pub fn save(&self, path: &str) -> Result<(), CliError> {
         let config_file_path = Path::new(path);
-        let serialized =
-            toml::to_string(self).map_err(|err| ConfigError::SerializeTomlError(err))?;
+        let serialized = toml::to_string(self).map_err(ConfigError::SerializeTomlError)?;
 
         if let Some(outdir) = config_file_path.parent() {
             create_dir_all(outdir)?;

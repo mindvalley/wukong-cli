@@ -110,7 +110,7 @@ async fn run() -> Result<bool, CliError> {
                 context.id_token = Some(new_tokens.id_token);
                 context.access_token = Some(new_tokens.access_token);
 
-                existing_config = Some(updated_config.clone());
+                existing_config = Some(updated_config);
             } else {
                 context.application = Some(config.core.application.clone());
                 context.account = Some(auth_config.account.clone());

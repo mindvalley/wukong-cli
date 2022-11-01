@@ -52,7 +52,7 @@ impl Config {
                 let config = CLIConfig::load(config_file)?;
                 println!(
                     "{}",
-                    toml::to_string(&config).map_err(|err| ConfigError::SerializeTomlError(err))?
+                    toml::to_string(&config).map_err(ConfigError::SerializeTomlError)?
                 );
             }
             ConfigSubcommand::Set {
@@ -66,22 +66,28 @@ impl Config {
                 match CLIConfig::load(config_file) {
                     Ok(mut config) => match config_name {
                         ConfigName::Application => {
-                            config.core.application = config_value.to_string();
+                            config.core.application = config_value.trim().to_string();
                             config.save(config_file)?;
                             println!("Updated property [core/application].");
                         }
                         ConfigName::CollectTelemetry => {
-                            config.core.collect_telemetry = config_value.trim().parse().unwrap();
+                            config.core.collect_telemetry = config_value
+                                .trim()
+                                .parse()
+                                .expect("The value can't be parsed to bool.");
                             config.save(config_file)?;
                             println!("Updated property [core/collect_telemetry].");
                         }
                         ConfigName::EnableLog => {
-                            config.log.enable = config_value.trim().parse().unwrap();
+                            config.log.enable = config_value
+                                .trim()
+                                .parse()
+                                .expect("The value can't be parsed to bool.");
                             config.save(config_file)?;
                             println!("Updated property [log/enable].");
                         }
                         ConfigName::LogDir => {
-                            config.log.log_dir = config_value.to_string();
+                            config.log.log_dir = config_value.trim().to_string();
                             config.save(config_file)?;
                             println!("Updated property [log/log_dir].");
                         }
