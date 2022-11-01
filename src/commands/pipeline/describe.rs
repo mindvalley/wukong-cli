@@ -36,17 +36,11 @@ pub async fn handle_describe(context: GlobalContext, name: &str) -> Result<bool,
                         let build_data = JobBuild {
                             build_number: build.build_number,
                             timestamp: build.timestamp,
-                            // wait_duration: build.wait_duration,
-                            // build_duration: build.build_duration,
-                            // total_duration: build.total_duration,
                             commit_id: build.commits.first().map(|commit| commit.id.clone()),
                             commit_msg: build
                                 .commits
                                 .first()
                                 .map(|commit| commit.message_headline.clone()),
-                            // commit_id: build.commit_id.clone(),
-                            // commit_msg: build.commit_msg.clone(),
-                            // commit_author: build.commit_author.clone(),
                             result: build.result.clone(),
                         };
 
