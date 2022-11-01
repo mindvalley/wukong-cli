@@ -80,7 +80,7 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
 
     match app.config {
         app::ConfigState::InitialisedAndAuthenticated(ref config) => {
-            // SAFETY: the config state is authenticated so the auth should not be None here
+            // SAFETY: the config state is authenticated so the auth must not be None here
             let auth_config = &config.auth.as_ref().unwrap();
 
             // check access token expiry
@@ -91,9 +91,7 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
 
             if local >= expiry {
                 let new_tokens =
-                    refresh_tokens(&RefreshToken::new(auth_config.refresh_token.clone()))
-                        .await
-                        .unwrap();
+                    refresh_tokens(&RefreshToken::new(auth_config.refresh_token.clone())).await?;
 
                 let mut updated_config = config.clone();
                 updated_config.auth = Some(AuthConfig {
@@ -104,7 +102,9 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
                     refresh_token: new_tokens.refresh_token,
                 });
 
-                updated_config.save(config_file).unwrap();
+                updated_config
+                    .save(config_file)
+                    .expect("The token is refreshed but the new config can't be saved.");
                 context.application = Some(updated_config.core.application.clone());
                 context.account = Some(auth_config.account.clone());
                 context.id_token = Some(new_tokens.id_token);
