@@ -18,10 +18,10 @@ use commands::{
 };
 use config::{AuthConfig, Config, CONFIG_FILE};
 use error::CliError;
+use human_panic::setup_panic;
 use openidconnect::RefreshToken;
 use output::error::ErrorOutput;
 use std::process;
-use human_panic::setup_panic;
 
 macro_rules! must_init {
     ($config:expr, $function_call:expr) => {{
