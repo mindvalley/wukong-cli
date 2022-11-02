@@ -80,6 +80,9 @@ pub async fn handle_execute(
         println!("Not detecting any flags, entering deployment terminal......");
     }
 
+    let current_application = context.application.unwrap();
+    println!("Current application: {}", current_application.green());
+
     let selected_namespace: String;
     let selected_version: String;
     let selected_build_number: i64;
@@ -155,7 +158,7 @@ pub async fn handle_execute(
 
         let cd_pipeline_data = client
             .fetch_cd_pipeline(
-                context.application.as_ref().unwrap(),
+                &current_application,
                 &selected_namespace.to_lowercase(),
                 &selected_version.to_lowercase(),
             )
@@ -249,7 +252,7 @@ pub async fn handle_execute(
 
     let changelogs_resp = client
         .fetch_changelogs(
-            context.application.as_ref().unwrap(),
+            &current_application,
             &selected_namespace.to_lowercase(),
             &selected_version.to_lowercase(),
             selected_build_number,
@@ -338,7 +341,7 @@ pub async fn handle_execute(
 
         let resp = client
             .execute_cd_pipeline(
-                &context.application.unwrap(),
+                &current_application,
                 &selected_namespace.to_lowercase(),
                 &selected_version.to_lowercase(),
                 Some(selected_build_number),
