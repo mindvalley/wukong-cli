@@ -6,7 +6,7 @@ use crate::{
 };
 use dialoguer::{theme::ColorfulTheme, Select};
 
-pub async fn handle_login<'a>(context: GlobalContext) -> Result<bool, CliError<'a>> {
+pub async fn handle_login(context: GlobalContext) -> Result<bool, CliError> {
     if let Some(account) = context.account {
         let selections = vec![
             "Use the current logged in account",
@@ -33,7 +33,7 @@ pub async fn handle_login<'a>(context: GlobalContext) -> Result<bool, CliError<'
     Ok(true)
 }
 
-async fn login_and_update_config<'a>() -> Result<bool, CliError<'a>> {
+async fn login_and_update_config() -> Result<bool, CliError> {
     let auth_info = auth::login().await?;
 
     let config_file = CONFIG_FILE

@@ -7,10 +7,10 @@ use crate::{
 };
 use dialoguer::{theme::ColorfulTheme, Select};
 
-pub async fn handle_init<'a>(
+pub async fn handle_init(
     context: GlobalContext,
     existing_config: Option<Config>,
-) -> Result<bool, CliError<'a>> {
+) -> Result<bool, CliError> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
 
     let mut login_selections = vec!["Log in with a new account"];
@@ -47,9 +47,12 @@ pub async fn handle_init<'a>(
         println!("You are logged in as: [{}].\n", login_selections[selection]);
     }
 
+    // SAFETY: The auth must not be None here
+    let auth_config = config.auth.as_ref().unwrap();
+
     // Calling API ...
     let client = QueryClientBuilder::new()
-        .with_access_token(config.auth.as_ref().unwrap().id_token.clone())
+        .with_access_token(auth_config.id_token.clone())
         .build()?;
 
     let applications_data: Vec<String> = client
@@ -58,13 +61,8 @@ pub async fn handle_init<'a>(
         .data
         .unwrap()
         .applications
-        .expect("Application list can't be empty.")
         .iter()
-        .filter(|application| application.is_some())
-        .map(|application| {
-            // unwrap is safe here because we are already filtered out None in previous step
-            application.as_ref().unwrap().name.clone()
-        })
+        .map(|application| application.name.clone())
         .collect();
 
     let application_selection = Select::with_theme(&ColorfulTheme::default())
@@ -93,8 +91,7 @@ Some things to try next:
 
 * Run `wukong --help` to see the wukong command groups you can interact with. And run `wukong COMMAND help` to get help on any wukong command.
                      "#,
-        config.auth.as_ref().unwrap().account,
-        config.core.application
+        auth_config.account, config.core.application
     );
 
     if let Some(ref config_file) = *CONFIG_FILE {

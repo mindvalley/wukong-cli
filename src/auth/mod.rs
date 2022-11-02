@@ -10,11 +10,8 @@ use openidconnect::{
 };
 use serde::{Deserialize, Serialize};
 use std::{
-    error::Error,
-    fmt::Write as _,
     io::{BufRead, BufReader, Write},
     net::TcpListener,
-    process::exit,
 };
 use url::Url;
 
@@ -39,18 +36,7 @@ pub struct TokenInfo {
     pub refresh_token: String,
 }
 
-fn handle_error(fail: &impl Error, msg: &'static str) {
-    let mut err_msg = format!("ERROR: {}", msg);
-    let mut cur_fail: Option<&dyn Error> = Some(fail);
-    while let Some(cause) = cur_fail {
-        write!(err_msg, "\n    caused by: {}", cause).unwrap();
-        cur_fail = cause.source();
-    }
-    println!("{}", err_msg);
-    exit(1);
-}
-
-pub async fn login<'a>() -> Result<AuthInfo, CliError<'a>> {
+pub async fn login() -> Result<AuthInfo, CliError> {
     let okta_client_id = ClientId::new(OKTA_CLIENT_ID.to_string());
 
     let issuer_url =
@@ -145,11 +131,9 @@ pub async fn login<'a>() -> Result<AuthInfo, CliError<'a>> {
         .set_pkce_verifier(pkce_verifier)
         .request_async(async_http_client)
         .await
-        .unwrap_or_else(|err| {
-            println!("{:?}", err);
-            handle_error(&err, "Failed to contact token endpoint");
-            unreachable!();
-        });
+        .map_err(|_err| CliError::AuthError {
+            message: "Failed to contact token endpoint",
+        })?;
 
     let id_token_verifier: CoreIdTokenVerifier = client.id_token_verifier();
     let id_token = token_response
@@ -168,12 +152,12 @@ pub async fn login<'a>() -> Result<AuthInfo, CliError<'a>> {
         .expires_in()
         .expect("Server did not return access token expiration");
 
-    let id_token_claims: &CoreIdTokenClaims = id_token
-        .claims(&id_token_verifier, &nonce)
-        .unwrap_or_else(|err| {
-            handle_error(&err, "Failed to verify ID token");
-            unreachable!();
-        });
+    let id_token_claims: &CoreIdTokenClaims =
+        id_token
+            .claims(&id_token_verifier, &nonce)
+            .map_err(|_err| CliError::AuthError {
+                message: "Failed to verify ID token",
+            })?;
 
     // Verify the access token hash to ensure that the access token hasn't been substituted for
     // another user's.
@@ -230,18 +214,16 @@ pub async fn refresh_tokens(refresh_token: &RefreshToken) -> Result<TokenInfo, C
         .exchange_refresh_token(refresh_token)
         .request_async(async_http_client)
         .await
-        .unwrap_or_else(|err| {
-            println!("{:?}", err);
-            handle_error(&err, "Failed to contact token endpoint");
-            unreachable!();
-        });
+        .map_err(|_err| CliError::AuthError {
+            message: "Failed to contact token endpoint",
+        })?;
 
     let id_token = token_response
         .extra_fields()
         .id_token()
         .expect("Server did not return an ID token");
 
-    let refresh_token = token_response
+    let new_refresh_token = token_response
         .refresh_token()
         .expect("Server did not return a refresh token");
 
@@ -261,6 +243,6 @@ pub async fn refresh_tokens(refresh_token: &RefreshToken) -> Result<TokenInfo, C
         id_token: id_token.to_string(),
         access_token: access_token.secret().to_owned(),
         expiry_time: expiry,
-        refresh_token: refresh_token.secret().to_owned(),
+        refresh_token: new_refresh_token.secret().to_owned(),
     })
 }

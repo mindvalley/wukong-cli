@@ -7,11 +7,11 @@ use crate::{
 };
 use std::process::Command;
 
-pub async fn handle_ci_status<'a>(
+pub async fn handle_ci_status(
     context: GlobalContext,
     repo_url: &Option<String>,
     branch: &Option<String>,
-) -> Result<bool, CliError<'a>> {
+) -> Result<bool, CliError> {
     let repo_url = match repo_url {
         Some(url) => url.clone(),
         None => {
@@ -41,6 +41,11 @@ pub async fn handle_ci_status<'a>(
         }
     };
 
+    println!("Current directory info");
+    println!("repo url: {}", repo_url);
+    println!("branch: {}", branch);
+    println!();
+
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Fetching ci status ...");
 
@@ -52,7 +57,6 @@ pub async fn handle_ci_status<'a>(
         .fetch_ci_status(&repo_url, &branch)
         .await?
         .data
-        // .ok_or(anyhow::anyhow!("Error"))?
         .unwrap()
         .ci_status;
 

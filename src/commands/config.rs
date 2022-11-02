@@ -1,4 +1,8 @@
-use crate::{clap_app::ClapApp, error::CliError, Config as CLIConfig, GlobalContext, CONFIG_FILE};
+use crate::{
+    clap_app::ClapApp,
+    error::{CliError, ConfigError},
+    Config as CLIConfig, GlobalContext, CONFIG_FILE,
+};
 use clap::{error::ErrorKind, Args, CommandFactory, Subcommand, ValueEnum};
 
 #[derive(Debug, Args)]
@@ -36,7 +40,7 @@ pub enum ConfigName {
 }
 
 impl Config {
-    pub fn handle_command<'a>(&self, _context: GlobalContext) -> Result<bool, CliError<'a>> {
+    pub fn handle_command(&self, _context: GlobalContext) -> Result<bool, CliError> {
         let mut cmd = ClapApp::command();
 
         match &self.subcommand {
@@ -46,7 +50,10 @@ impl Config {
                     .expect("Unable to identify user's home directory");
 
                 let config = CLIConfig::load(config_file)?;
-                println!("{}", toml::to_string(&config).unwrap());
+                println!(
+                    "{}",
+                    toml::to_string(&config).map_err(ConfigError::SerializeTomlError)?
+                );
             }
             ConfigSubcommand::Set {
                 config_name,
@@ -59,23 +66,29 @@ impl Config {
                 match CLIConfig::load(config_file) {
                     Ok(mut config) => match config_name {
                         ConfigName::Application => {
-                            config.core.application = config_value.to_string();
-                            config.save(config_file).unwrap();
+                            config.core.application = config_value.trim().to_string();
+                            config.save(config_file)?;
                             println!("Updated property [core/application].");
                         }
                         ConfigName::CollectTelemetry => {
-                            config.core.collect_telemetry = config_value.trim().parse().unwrap();
-                            config.save(config_file).unwrap();
+                            config.core.collect_telemetry = config_value
+                                .trim()
+                                .parse()
+                                .expect("The value can't be parsed to bool.");
+                            config.save(config_file)?;
                             println!("Updated property [core/collect_telemetry].");
                         }
                         ConfigName::EnableLog => {
-                            config.log.enable = config_value.trim().parse().unwrap();
-                            config.save(config_file).unwrap();
+                            config.log.enable = config_value
+                                .trim()
+                                .parse()
+                                .expect("The value can't be parsed to bool.");
+                            config.save(config_file)?;
                             println!("Updated property [log/enable].");
                         }
                         ConfigName::LogDir => {
-                            config.log.log_dir = config_value.to_string();
-                            config.save(config_file).unwrap();
+                            config.log.log_dir = config_value.trim().to_string();
+                            config.save(config_file)?;
                             println!("Updated property [log/log_dir].");
                         }
                     },

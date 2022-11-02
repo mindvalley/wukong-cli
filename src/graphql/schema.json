@@ -1052,9 +1052,9 @@
             },
             {
               "args": [],
-              "deprecationReason": null,
+              "deprecationReason": "use 'commits' instead",
               "description": null,
-              "isDeprecated": false,
+              "isDeprecated": true,
               "name": "commitAuthor",
               "type": {
                 "kind": "SCALAR",
@@ -1064,9 +1064,9 @@
             },
             {
               "args": [],
-              "deprecationReason": null,
+              "deprecationReason": "use 'commits' instead",
               "description": null,
-              "isDeprecated": false,
+              "isDeprecated": true,
               "name": "commitId",
               "type": {
                 "kind": "SCALAR",
@@ -1076,9 +1076,9 @@
             },
             {
               "args": [],
-              "deprecationReason": null,
+              "deprecationReason": "use 'commits' instead",
               "description": null,
-              "isDeprecated": false,
+              "isDeprecated": true,
               "name": "commitMsg",
               "type": {
                 "kind": "SCALAR",
@@ -1244,12 +1244,20 @@
               "isDeprecated": false,
               "name": "jenkinsBuilds",
               "type": {
-                "kind": "LIST",
+                "kind": "NON_NULL",
                 "name": null,
                 "ofType": {
-                  "kind": "OBJECT",
-                  "name": "Build",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "OBJECT",
+                      "name": "Build",
+                      "ofType": null
+                    }
+                  }
                 }
               }
             },
@@ -1556,12 +1564,20 @@
               "isDeprecated": false,
               "name": "branches",
               "type": {
-                "kind": "LIST",
+                "kind": "NON_NULL",
                 "name": null,
                 "ofType": {
-                  "kind": "OBJECT",
-                  "name": "Job",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "OBJECT",
+                      "name": "Job",
+                      "ofType": null
+                    }
+                  }
                 }
               }
             },
@@ -1624,12 +1640,20 @@
               "isDeprecated": false,
               "name": "pullRequests",
               "type": {
-                "kind": "LIST",
+                "kind": "NON_NULL",
                 "name": null,
                 "ofType": {
-                  "kind": "OBJECT",
-                  "name": "Job",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "OBJECT",
+                      "name": "Job",
+                      "ofType": null
+                    }
+                  }
                 }
               }
             }
@@ -1679,6 +1703,16 @@
                 {
                   "defaultValue": null,
                   "description": null,
+                  "name": "changelogs",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
                   "name": "namespace",
                   "type": {
                     "kind": "NON_NULL",
@@ -1688,6 +1722,16 @@
                       "name": "String",
                       "ofType": null
                     }
+                  }
+                },
+                {
+                  "defaultValue": "false",
+                  "description": null,
+                  "name": "sendToSlack",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
                   }
                 },
                 {
@@ -1840,12 +1884,20 @@
               "isDeprecated": false,
               "name": "applications",
               "type": {
-                "kind": "LIST",
+                "kind": "NON_NULL",
                 "name": null,
                 "ofType": {
-                  "kind": "OBJECT",
-                  "name": "Application",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "OBJECT",
+                      "name": "Application",
+                      "ofType": null
+                    }
+                  }
                 }
               }
             },
@@ -1936,12 +1988,20 @@
               "isDeprecated": false,
               "name": "cdPipelines",
               "type": {
-                "kind": "LIST",
+                "kind": "NON_NULL",
                 "name": null,
                 "ofType": {
-                  "kind": "OBJECT",
-                  "name": "CdPipeline",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "OBJECT",
+                      "name": "CdPipeline",
+                      "ofType": null
+                    }
+                  }
                 }
               }
             },
@@ -2166,12 +2226,20 @@
               "isDeprecated": false,
               "name": "pipelines",
               "type": {
-                "kind": "LIST",
+                "kind": "NON_NULL",
                 "name": null,
                 "ofType": {
-                  "kind": "INTERFACE",
-                  "name": "Pipeline",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INTERFACE",
+                      "name": "Pipeline",
+                      "ofType": null
+                    }
+                  }
                 }
               }
             }

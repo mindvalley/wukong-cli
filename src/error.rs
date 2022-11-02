@@ -2,7 +2,7 @@ use owo_colors::OwoColorize;
 use thiserror::Error as ThisError;
 
 #[derive(Debug, ThisError)]
-pub enum CliError<'a> {
+pub enum CliError {
     #[error(transparent)]
     APIError(#[from] APIError),
     #[error(transparent)]
@@ -10,13 +10,15 @@ pub enum CliError<'a> {
     #[error(transparent)]
     Base64(#[from] base64::DecodeError),
     #[error(transparent)]
-    ConfigError(ConfigError<'a>),
+    ConfigError(#[from] ConfigError),
     #[error("Failed to discover OpenID Provider")]
     OpenIDDiscoveryError,
     #[error("You are un-authenticated.")]
     UnAuthenticated,
     #[error("You are un-initialised.")]
     UnInitialised,
+    #[error("{message}")]
+    AuthError { message: &'static str },
 }
 
 #[derive(Debug, ThisError)]
@@ -30,16 +32,16 @@ pub enum APIError {
 }
 
 #[derive(Debug, ThisError)]
-pub enum ConfigError<'a> {
+pub enum ConfigError {
     #[error("Config file not found at \"{path}\".")]
     NotFound {
-        path: &'a str,
+        path: &'static str,
         #[source]
         source: ::std::io::Error,
     },
     #[error("Permission denied: \"{path}\".")]
     PermissionDenied {
-        path: &'a str,
+        path: &'static str,
         #[source]
         source: ::std::io::Error,
     },
@@ -49,7 +51,7 @@ pub enum ConfigError<'a> {
     SerializeTomlError(#[source] toml::ser::Error),
 }
 
-impl<'a> CliError<'a> {
+impl CliError {
     /// Try to second-guess what the user was trying to do, depending on what
     /// went wrong.
     pub fn suggestion(&self) -> Option<String> {

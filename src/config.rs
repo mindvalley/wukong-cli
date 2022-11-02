@@ -81,21 +81,23 @@ impl Config {
     /// # Errors
     ///
     /// This function may return typical file I/O errors.
-    pub fn load(path: &str) -> Result<Self, CliError> {
+    pub fn load(path: &'static str) -> Result<Self, CliError> {
         let config_file_path = Path::new(path);
 
-        let content =
-            std::fs::read_to_string(config_file_path.to_str().unwrap()).map_err(|err| match err
-                .kind()
-            {
-                io::ErrorKind::NotFound => {
-                    CliError::ConfigError(ConfigError::NotFound { path, source: err })
-                }
-                io::ErrorKind::PermissionDenied => {
-                    CliError::ConfigError(ConfigError::PermissionDenied { path, source: err })
-                }
-                _ => CliError::Io(err),
-            })?;
+        let content = std::fs::read_to_string(
+            config_file_path
+                .to_str()
+                .expect("The config file path is not valid."),
+        )
+        .map_err(|err| match err.kind() {
+            io::ErrorKind::NotFound => {
+                CliError::ConfigError(ConfigError::NotFound { path, source: err })
+            }
+            io::ErrorKind::PermissionDenied => {
+                CliError::ConfigError(ConfigError::PermissionDenied { path, source: err })
+            }
+            _ => CliError::Io(err),
+        })?;
 
         let config = toml::from_str(&content)
             .map_err(|err| CliError::ConfigError(ConfigError::BadTomlData(err)))?;
@@ -113,8 +115,7 @@ impl Config {
     /// This function may return typical file I/O errors.
     pub fn save(&self, path: &str) -> Result<(), CliError> {
         let config_file_path = Path::new(path);
-        let serialized = toml::to_string(self)
-            .map_err(|err| CliError::ConfigError(ConfigError::SerializeTomlError(err)))?;
+        let serialized = toml::to_string(self).map_err(ConfigError::SerializeTomlError)?;
 
         if let Some(outdir) = config_file_path.parent() {
             create_dir_all(outdir)?;

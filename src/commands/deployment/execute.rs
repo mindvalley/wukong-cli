@@ -70,12 +70,12 @@ struct Commit {
     message_headline: String,
 }
 
-pub async fn handle_execute<'a>(
+pub async fn handle_execute(
     context: GlobalContext,
     namespace: &Option<DeploymentNamespace>,
     version: &Option<DeploymentVersion>,
     artifact: &Option<i64>,
-) -> Result<bool, CliError<'a>> {
+) -> Result<bool, CliError> {
     if namespace.is_none() && version.is_none() && artifact.is_none() {
         println!("Not detecting any flags, entering deployment terminal......");
     }
@@ -173,36 +173,33 @@ pub async fn handle_execute<'a>(
                     deployed_ref: cd_pipeline_data.deployed_ref,
                     last_deployed_at: cd_pipeline_data.last_deployment,
                     status: cd_pipeline_data.status,
-                    jenkins_builds: match cd_pipeline_data.jenkins_builds {
-                        Some(data) => data
-                            .into_iter()
-                            .flatten()
-                            .map(|build| {
-                                let commits: Vec<Commit> = build
-                                    .commits
-                                    .into_iter()
-                                    .map(|commit| Commit {
-                                        id: commit.id,
-                                        author: commit.author,
-                                        message_headline: commit.message_headline,
-                                    })
-                                    .collect();
+                    jenkins_builds: cd_pipeline_data
+                        .jenkins_builds
+                        .into_iter()
+                        .map(|build| {
+                            let commits: Vec<Commit> = build
+                                .commits
+                                .into_iter()
+                                .map(|commit| Commit {
+                                    id: commit.id,
+                                    author: commit.author,
+                                    message_headline: commit.message_headline,
+                                })
+                                .collect();
 
-                                JenkinsBuild {
-                                    build_duration: build.build_duration,
-                                    build_number: build.build_number,
-                                    build_url: build.build_url,
-                                    commits,
-                                    name: build.name,
-                                    result: build.result,
-                                    timestamp: build.timestamp,
-                                    total_duration: build.total_duration,
-                                    wait_duration: build.wait_duration,
-                                }
-                            })
-                            .collect(),
-                        None => Vec::new(),
-                    },
+                            JenkinsBuild {
+                                build_duration: build.build_duration,
+                                build_number: build.build_number,
+                                build_url: build.build_url,
+                                commits,
+                                name: build.name,
+                                result: build.result,
+                                timestamp: build.timestamp,
+                                total_duration: build.total_duration,
+                                wait_duration: build.wait_duration,
+                            }
+                        })
+                        .collect(),
                 };
 
                 let build_selections: Vec<TwoColumns> = cd_pipeline

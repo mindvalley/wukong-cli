@@ -4,9 +4,11 @@ query CiStatusQuery($repoUrl: String!, $branch: String!) {
     buildUrl
     buildDuration
     buildNumber
-    commitAuthor
-    commitId
-    commitMsg
+    commits {
+      id
+      author
+      messageHeadline
+    }
     result
     timestamp
     totalDuration
