@@ -131,7 +131,7 @@ pub async fn handle_execute(
         selected_version = version_selections[selected_version_index].to_string();
 
         println!(
-            "You selected `{}` as the deployment version.\n",
+            "You've selected `{}` as the deployment version.\n",
             selected_version
         );
     }
@@ -231,7 +231,7 @@ pub async fn handle_execute(
                 let selected_build_number = cd_pipeline.jenkins_builds[selected_build].build_number;
 
                 println!(
-                    "You selected `build-{}` as the build artifact for this deployment. \n",
+                    "You've selected `build-{}` as the build artifact for this deployment. \n",
                     selected_build_number
                 );
 
@@ -247,69 +247,92 @@ pub async fn handle_execute(
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Generating changelog ...");
 
-    let changelogs_data = client
+    let changelogs_resp = client
         .fetch_changelogs(
             context.application.as_ref().unwrap(),
             &selected_namespace.to_lowercase(),
             &selected_version.to_lowercase(),
             selected_build_number,
         )
-        .await?
-        .data
-        .unwrap()
-        .changelogs;
+        .await;
 
     progress_bar.finish_and_clear();
 
-    println!("{}", "Step 4: Review your deployment".bold());
-    println!("Please review your deployment CHANGELOG before execute it.\n");
+    let mut is_same_build = false;
 
-    let term = Term::stderr();
-    let (rows, _columns) = term.size();
+    match changelogs_resp {
+        Ok(response) => {
+            let changelogs_data = response.data.unwrap().changelogs;
 
-    let changelogs: Vec<String> = changelogs_data
-        .into_iter()
-        .map(|changelog| {
-            format!(
-                "{} by {} in {}",
-                changelog.message_headline,
-                changelog.author.cyan(),
-                changelog.short_hash.yellow()
-            )
-        })
-        .collect();
+            println!("{}", "Step 4: Review your deployment".bold());
+            println!("Please review your deployment CHANGELOG before execute it.\n");
 
-    // * 2 because the newline
-    if rows as usize > changelogs.len() * 2 {
-        println!("CHANGELOG:");
-        for changelog in changelogs.into_iter() {
-            eprintln!("{}\n", changelog);
+            let term = Term::stderr();
+            let (rows, _columns) = term.size();
+
+            let changelogs: Vec<String> = changelogs_data
+                .into_iter()
+                .map(|changelog| {
+                    format!(
+                        "{} by {} in {}",
+                        changelog.message_headline,
+                        changelog.author.cyan(),
+                        changelog.short_hash.yellow()
+                    )
+                })
+                .collect();
+
+            // * 2 because the newline
+            if rows as usize > changelogs.len() * 2 {
+                println!("CHANGELOG:");
+                for changelog in changelogs.into_iter() {
+                    eprintln!("{}\n", changelog);
+                }
+            } else {
+                // less needs to be called with the '-R' option in order to display ANSI color
+                let mut pager = Command::new("less");
+                pager.arg("-R");
+
+                let mut child = pager
+                    .stdin(Stdio::piped())
+                    .spawn()
+                    .expect("failed to spawn child process");
+                let mut stdin = child.stdin.take().expect("Failed to open stdin");
+                stdin
+                    .write_all(b"CHANGELOG:\n")
+                    .expect("Failed to write to stdin");
+                for changelog in changelogs.into_iter() {
+                    stdin
+                        .write_all(format!("{}\n\n", changelog).as_bytes())
+                        .expect("Failed to write to stdin");
+                }
+            }
         }
-    } else {
-        // less needs to be called with the '-R' option in order to display ANSI color
-        let mut pager = Command::new("less");
-        pager.arg("-R");
-
-        let mut child = pager
-            .stdin(Stdio::piped())
-            .spawn()
-            .expect("failed to spawn child process");
-        let mut stdin = child.stdin.take().expect("Failed to open stdin");
-        stdin
-            .write_all(b"CHANGELOG:\n")
-            .expect("Failed to write to stdin");
-        for changelog in changelogs.into_iter() {
-            stdin
-                .write_all(format!("{}\n\n", changelog).as_bytes())
-                .expect("Failed to write to stdin");
-        }
+        Err(error) => match error {
+            crate::error::APIError::ChangelogComparingSameBuild => {
+                is_same_build = true;
+                println!("You're selecting the same build artifact as the currently deployed version. Because of that no CHANGELOG will be generated.");
+            }
+            _ => {
+                return Err(error.into());
+            }
+        },
     }
 
-    if Confirm::with_theme(&ColorfulTheme::default())
-        .with_prompt("Do you agree to deploy this build ?")
-        .interact()
-        .unwrap()
-    {
+    let agree_to_deploy = if !is_same_build {
+        Confirm::with_theme(&ColorfulTheme::default())
+            .with_prompt("Do you agree to deploy this build ?")
+            .interact()
+            .unwrap()
+    } else {
+        Confirm::with_theme(&ColorfulTheme::default())
+            .with_prompt("Are you sure to deploy this build artifact anyway?")
+            .default(false)
+            .interact()
+            .unwrap()
+    };
+
+    if agree_to_deploy {
         let progress_bar = new_spinner_progress_bar();
         progress_bar.set_message("Sending deployment ...");
 

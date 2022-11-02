@@ -25,10 +25,12 @@ pub enum CliError {
 pub enum APIError {
     #[error(transparent)]
     ReqwestError(#[from] reqwest::Error),
-    #[error("Response Error: {message}")]
+    #[error("API Response Error: {message}")]
     ResponseError { code: String, message: String },
     #[error("You are un-authenticated.")]
     UnAuthenticated,
+    #[error("The selected build number is the same as the current deployed version. So there is no changelog.")]
+    ChangelogComparingSameBuild,
 }
 
 #[derive(Debug, ThisError)]

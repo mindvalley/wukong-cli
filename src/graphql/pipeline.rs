@@ -247,7 +247,6 @@ mod test {
         assert!(response.is_err());
 
         match response.as_ref().unwrap_err() {
-            APIError::ReqwestError(_) => panic!("it shouldn't returning ReqwestError"),
             APIError::ResponseError { code, message } => {
                 assert_eq!(code, "unable_to_get_pipelines");
                 assert_eq!(
@@ -255,7 +254,7 @@ mod test {
                     "Unable to get pipelines for application `invalid_application`."
                 )
             }
-            APIError::UnAuthenticated => panic!("it shouldn't returning UnAuthenticated"),
+            _ => panic!("it should be returning ResponseError"),
         }
     }
 
@@ -319,9 +318,7 @@ mod test {
 
         let api_resp = r#"
 {
-  "data": {
-    "pipeline": null
-  },
+  "data": null,
   "errors": [
     {
       "locations": [
@@ -351,12 +348,11 @@ mod test {
         assert!(response.is_err());
 
         match response.as_ref().unwrap_err() {
-            APIError::ReqwestError(_) => panic!("it shouldn't returning ReqwestError"),
             APIError::ResponseError { code, message } => {
                 assert_eq!(code, "unable_to_get_pipeline");
                 assert_eq!(message, "Unable to get pipeline `invalid_name`.")
             }
-            APIError::UnAuthenticated => panic!("it shouldn't returning UnAuthenticated"),
+            _ => panic!("it should be returning ResponseError"),
         }
     }
 
@@ -447,9 +443,7 @@ mod test {
 
         let api_resp = r#"
 {
-  "data": {
-    "multiBranchPipeline": null
-  },
+  "data": null,
   "errors": [
     {
       "locations": [
@@ -479,12 +473,11 @@ mod test {
         assert!(response.is_err());
 
         match response.as_ref().unwrap_err() {
-            APIError::ReqwestError(_) => panic!("it shouldn't returning ReqwestError"),
             APIError::ResponseError { code, message } => {
                 assert_eq!(code, "unable_to_get_pipeline");
                 assert_eq!(message, "Unable to get pipeline `invalid_pipeline`.")
             }
-            APIError::UnAuthenticated => panic!("it shouldn't returning UnAuthenticated"),
+            _ => panic!("it should be returning ResponseError"),
         }
     }
 
@@ -555,9 +548,7 @@ mod test {
 
         let api_resp = r#"
 {
-  "data": {
-    "ciStatus": null
-  },
+  "data": null,
   "errors": [
     {
       "locations": [
@@ -588,7 +579,6 @@ mod test {
         assert!(response.is_err());
 
         match response.as_ref().unwrap_err() {
-            APIError::ReqwestError(_) => panic!("it shouldn't returning ReqwestError"),
             APIError::ResponseError { code, message } => {
                 assert_eq!(code, "ci_status_application_not_found");
                 assert_eq!(
@@ -596,7 +586,7 @@ mod test {
                     "Could not find the application associated with this Git repo.\n\t\t\tEither you're not in the correct working folder for your application, or there's a misconfiguration."
                 );
             }
-            APIError::UnAuthenticated => panic!("it shouldn't returning UnAuthenticated"),
+            _ => panic!("it should be returning ResponseError"),
         }
     }
 
@@ -613,7 +603,7 @@ mod test {
         let api_resp = r#"
 {
   "data": {
-    "ciStatus": null
+      "ciStatus": null
   },
   "errors": [
     {
