@@ -6,6 +6,7 @@ use crate::{
     GlobalContext,
 };
 use dialoguer::{theme::ColorfulTheme, Select};
+use owo_colors::OwoColorize;
 
 pub async fn handle_init(
     context: GlobalContext,
@@ -25,27 +26,36 @@ pub async fn handle_init(
                 .interact()
                 .unwrap();
 
-    let mut config = match existing_config {
-        Some(ref config) => config.clone(),
-        None => Config::default(),
-    };
-
     // "Log in with a new account" is selected
-    if selection == login_selections.len() - 1 {
+    let mut config = if selection == login_selections.len() - 1 {
         let auth_info = login().await?;
 
-        config.auth = Some(AuthConfig {
-            account: auth_info.account.clone(),
-            id_token: auth_info.id_token,
-            access_token: auth_info.access_token,
-            expiry_time: auth_info.expiry_time,
-            refresh_token: auth_info.refresh_token,
-        });
+        // we don't really care about the exisiting config (id_token, refresh_token, account)
+        // if the user choose to log in with a new account
+        let config = Config {
+            auth: Some(AuthConfig {
+                account: auth_info.account.clone(),
+                id_token: auth_info.id_token,
+                access_token: auth_info.access_token,
+                expiry_time: auth_info.expiry_time,
+                refresh_token: auth_info.refresh_token,
+            }),
+            ..Default::default()
+        };
 
         println!("You are logged in as: [{}].\n", auth_info.account);
+        config
     } else {
         println!("You are logged in as: [{}].\n", login_selections[selection]);
-    }
+
+        let mut new_config = Config::default();
+
+        if let Some(ref config) = existing_config {
+            new_config.auth = config.auth.clone();
+        }
+
+        new_config
+    };
 
     // SAFETY: The auth must not be None here
     let auth_config = config.auth.as_ref().unwrap();
@@ -91,7 +101,8 @@ Some things to try next:
 
 * Run `wukong --help` to see the wukong command groups you can interact with. And run `wukong COMMAND help` to get help on any wukong command.
                      "#,
-        auth_config.account, config.core.application
+        auth_config.account.green(),
+        config.core.application.green()
     );
 
     if let Some(ref config_file) = *CONFIG_FILE {

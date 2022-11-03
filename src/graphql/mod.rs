@@ -15,7 +15,7 @@ use self::{
         CiStatusQuery, MultiBranchPipelineQuery, PipelineQuery, PipelinesQuery,
     },
 };
-use crate::{error::APIError, API_URL};
+use crate::{app::APP_STATE, error::APIError};
 use graphql_client::{reqwest::post_graphql, GraphQLQuery, Response};
 use reqwest::header;
 
@@ -26,9 +26,20 @@ pub struct QueryClientBuilder {
 
 impl QueryClientBuilder {
     pub fn new() -> Self {
+        let api_url = match APP_STATE.get() {
+            Some(app_state) => app_state.api_url.clone(),
+            None => {
+                if cfg!(feature = "prod") {
+                    "https://wukong-api-proxy.mindvalley.dev/api".to_string()
+                } else {
+                    "http://localhost:4000/api".to_string()
+                }
+            }
+        };
+
         Self {
             access_token: None,
-            api_url: API_URL.to_string(),
+            api_url,
         }
     }
 

@@ -62,7 +62,7 @@ impl CliError {
                 "Your access token is invalid. Run \"wukong login\" to authenticate with your okta account.",
             )),
             CliError::UnInitialised => Some(String::from(
-                "Run \"wukong init\" to initialise Wukong's configuration.",
+                "Run \"wukong init\" to initialise Wukong's configuration before running other commands.",
             )),
             CliError::ConfigError(error) => match error {
                 ConfigError::NotFound { .. } => Some(String::from(
