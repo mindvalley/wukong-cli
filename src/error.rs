@@ -73,7 +73,7 @@ impl CliError {
                     "Run \"chmod +rw {path}\" to provide read and write permissions."
                 )),
                 ConfigError::BadTomlData(_) => Some(format!(
-                    "Check if your config.toml file is in valid TOML format.\n\tThe might happen when you accidentally modified the config file or there is a breaking change to the cli config in new version.\n\tYou may want to remove the config.toml file (\"rm {}\") and run \"wukong init\" to re-initialise configuration again.", CONFIG_FILE.as_ref().unwrap_or(&"/path/to/config.toml".to_string())
+                    "Check if your config.toml file is in valid TOML format.\n\tThis usually happen when the config file is accidentally modified or there is a breaking change to the cli config in the new version.\n\tYou may want to remove the config.toml file (\"rm {}\") and run \"wukong init\" to re-initialise configuration again.", CONFIG_FILE.as_ref().unwrap_or(&"/path/to/config.toml".to_string())
                 )),
                 _ => None,
             },
