@@ -27,14 +27,8 @@ pub struct QueryClientBuilder {
 impl QueryClientBuilder {
     pub fn new() -> Self {
         let api_url = match APP_STATE.get() {
-            Some(app_state) => app_state.api_url.clone(),
-            None => {
-                if cfg!(feature = "prod") {
-                    "https://wukong-api-proxy.mindvalley.dev/api".to_string()
-                } else {
-                    "http://localhost:4000/api".to_string()
-                }
-            }
+            Some(state) => state.api_url.clone(),
+            None => "".to_string(),
         };
 
         Self {
