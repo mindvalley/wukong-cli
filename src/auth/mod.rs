@@ -193,10 +193,7 @@ pub async fn login() -> Result<AuthInfo, CliError> {
 }
 
 pub async fn refresh_tokens(refresh_token: &RefreshToken) -> Result<TokenInfo, CliError> {
-    let okta_client_id = match APP_STATE.get() {
-        Some(app_state) => ClientId::new(app_state.okta_client_id.clone()),
-        None => ClientId::new("0oakfxaegyAV5JDD5357".to_string()),
-    };
+    let okta_client_id = ClientId::new(APP_STATE.get().unwrap().okta_client_id.clone());
 
     let issuer_url =
         IssuerUrl::new("https://mindvalley.okta.com".to_string()).expect("Invalid issuer URL");
