@@ -213,12 +213,11 @@ mod test {
         assert!(response.is_err());
 
         match response.as_ref().unwrap_err() {
-            APIError::ReqwestError(_) => panic!("it shouldn't returning ReqwestError"),
             APIError::ResponseError { code, message } => {
                 assert_eq!(code, "application_not_found");
                 assert_eq!(message, "Application `invalid_application` not found.");
             }
-            APIError::UnAuthenticated => panic!("it shouldn't returning UnAuthenticated"),
+            _ => panic!("it should be returning ResponseError"),
         }
     }
 }
