@@ -1,3 +1,4 @@
+use crate::CONFIG_FILE;
 use owo_colors::OwoColorize;
 use thiserror::Error as ThisError;
 
@@ -71,8 +72,8 @@ impl CliError {
                 ConfigError::PermissionDenied { path, .. } => Some(format!(
                     "Run \"chmod +rw {path}\" to provide read and write permissions."
                 )),
-                ConfigError::BadTomlData(_) => Some(String::from(
-                    "Check if your config.toml file is in valid TOML format. You may want to remove the config.toml file and run \"wukong init\" to re-initialise configuration again.",
+                ConfigError::BadTomlData(_) => Some(format!(
+                    "Check if your config.toml file is in valid TOML format. You may want to remove the config.toml file (\"rm {}\") and run \"wukong init\" to re-initialise configuration again.", CONFIG_FILE.as_ref().unwrap()
                 )),
                 _ => None,
             },
