@@ -120,4 +120,4 @@ jobs:
         with:
           use-cross: ${{ matrix.job.use-cross }}
           command: build
-          args: --locked --release --target=${{ matrix.job.target }}
+          args: --locked --features prod --release --target=${{ matrix.job.target }}
