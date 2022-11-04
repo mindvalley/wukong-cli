@@ -20,7 +20,7 @@ lazy_static! {
     /// [lazy_static]: https://docs.rs/lazy_static
     pub static ref CONFIG_FILE: Option<String> = {
         dirs::home_dir().map(|mut path| {
-            path.extend(&[".config", "wukong", "config.toml"]);
+            path.extend([".config", "wukong", "config.toml"]);
             path.to_str().unwrap().to_string()
         })
     };
@@ -61,7 +61,7 @@ pub struct AuthConfig {
 impl Default for Config {
     fn default() -> Self {
         let mut home_dir = dirs::home_dir().unwrap();
-        home_dir.extend(&[".config", "wukong", "log*"]);
+        home_dir.extend([".config", "wukong", "log*"]);
 
         Self {
             core: CoreConfig {
