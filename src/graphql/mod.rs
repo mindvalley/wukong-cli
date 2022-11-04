@@ -49,10 +49,7 @@ impl QueryClientBuilder {
     }
 
     pub fn build(self) -> Result<QueryClient, APIError> {
-        let auth_value = format!(
-            "Bearer {}",
-            self.access_token.unwrap_or_else(|| "".to_string())
-        );
+        let auth_value = format!("Bearer {}", self.access_token.unwrap_or_default());
 
         let mut headers = header::HeaderMap::new();
         headers.insert(
