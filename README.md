@@ -38,7 +38,8 @@ The Wukong CLI is a set of tools to manages Mindvalley DevOps resources. Its goa
 ## Installation
 
 ```bash
-brew tap mindvalley/wukong https://github.com/mindvalley/wukong-cli
+brew tap mindvalley/wukong
+brew update
 brew install wukong
 ```
 
