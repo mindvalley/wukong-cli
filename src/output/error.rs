@@ -84,7 +84,7 @@ mod test {
             format!("{}", error_output),
             error_output_with_suggestion(
                 "You are un-initialised.",
-                "Run \"wukong init\" to initialise Wukong's configuration."
+                "Run \"wukong init\" to initialise Wukong's configuration before running other commands."
             )
         );
     }

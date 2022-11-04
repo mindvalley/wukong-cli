@@ -1,3 +1,4 @@
+use crate::CONFIG_FILE;
 use owo_colors::OwoColorize;
 use thiserror::Error as ThisError;
 
@@ -62,7 +63,7 @@ impl CliError {
                 "Your access token is invalid. Run \"wukong login\" to authenticate with your okta account.",
             )),
             CliError::UnInitialised => Some(String::from(
-                "Run \"wukong init\" to initialise Wukong's configuration.",
+                "Run \"wukong init\" to initialise Wukong's configuration before running other commands.",
             )),
             CliError::ConfigError(error) => match error {
                 ConfigError::NotFound { .. } => Some(String::from(
@@ -71,8 +72,8 @@ impl CliError {
                 ConfigError::PermissionDenied { path, .. } => Some(format!(
                     "Run \"chmod +rw {path}\" to provide read and write permissions."
                 )),
-                ConfigError::BadTomlData(_) => Some(String::from(
-                    "Check if your config.toml file is in valid TOML format. You may want to remove the config.toml file and run \"wukong init\" to re-initialise configuration again.",
+                ConfigError::BadTomlData(_) => Some(format!(
+                    "Check if your config.toml file is in valid TOML format.\n\tThis usually happen when the config file is accidentally modified or there is a breaking change to the cli config in the new version.\n\tYou may want to remove the config.toml file (\"rm {}\") and run \"wukong init\" to re-initialise configuration again.", CONFIG_FILE.as_ref().unwrap_or(&"/path/to/config.toml".to_string())
                 )),
                 _ => None,
             },

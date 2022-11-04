@@ -39,6 +39,8 @@ pub struct CoreConfig {
     /// The current application name
     pub application: String,
     pub collect_telemetry: bool,
+    pub wukong_api_url: String,
+    pub okta_client_id: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -65,6 +67,16 @@ impl Default for Config {
             core: CoreConfig {
                 application: "".to_string(),
                 collect_telemetry: false,
+
+                #[cfg(not(feature = "prod"))]
+                wukong_api_url: "http://localhost:4000/api".to_string(),
+                #[cfg(not(feature = "prod"))]
+                okta_client_id: "0oakfxaegyAV5JDD5357".to_string(),
+
+                #[cfg(all(feature = "prod"))]
+                wukong_api_url: "https://wukong-api-proxy.mindvalley.dev/api".to_string(),
+                #[cfg(all(feature = "prod"))]
+                okta_client_id: "0oakfxaegyAV5JDD5357".to_string(),
             },
             log: LogConfig {
                 enable: true,

@@ -37,6 +37,8 @@ pub enum ConfigName {
     CollectTelemetry,
     EnableLog,
     LogDir,
+    WukongApiUrl,
+    OktaClientId,
 }
 
 impl Config {
@@ -91,6 +93,16 @@ impl Config {
                             config.save(config_file)?;
                             println!("Updated property [log/log_dir].");
                         }
+                        ConfigName::WukongApiUrl => {
+                            config.core.wukong_api_url = config_value.trim().to_string();
+                            config.save(config_file)?;
+                            println!("Updated property [core/wukong_api_url].");
+                        }
+                        ConfigName::OktaClientId => {
+                            config.core.okta_client_id = config_value.trim().to_string();
+                            config.save(config_file)?;
+                            println!("Updated property [core/okta_client_id].");
+                        }
                     },
                     Err(e) => {
                         cmd.error(ErrorKind::Io, e).exit();
@@ -110,6 +122,8 @@ impl Config {
                         }
                         ConfigName::EnableLog => println!("{}", config.log.enable),
                         ConfigName::LogDir => println!("{}", config.log.log_dir),
+                        ConfigName::WukongApiUrl => println!("{}", config.core.wukong_api_url),
+                        ConfigName::OktaClientId => println!("{}", config.core.okta_client_id),
                     },
                     Err(e) => {
                         cmd.error(ErrorKind::Io, e).exit();

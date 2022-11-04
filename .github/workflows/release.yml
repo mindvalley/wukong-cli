@@ -8,8 +8,6 @@ on:
 env:
   CARGO_TERM_COLOR: always
   CICD_INTERMEDIATES_DIR: "_cicd-intermediates"
-  API_URL: ${{ secrets.WUKONG_API_URL }}
-  OKTA_CLIENT_ID: ${{ secrets.OKTA_CLIENT_ID }}
 
 jobs:
   tag-name:
@@ -103,7 +101,7 @@ jobs:
         with:
           use-cross: ${{ matrix.job.use-cross }}
           command: build
-          args: --locked --release --target=${{ matrix.job.target }}
+          args: --locked --features prod --release --target=${{ matrix.job.target }}
 
       - name: Create tarball
         id: package

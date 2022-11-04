@@ -43,9 +43,6 @@ macro_rules! must_init_and_login {
     }};
 }
 
-static API_URL: &str = env!("API_URL");
-static OKTA_CLIENT_ID: &str = env!("OKTA_CLIENT_ID");
-
 #[derive(Default, Debug)]
 pub struct GlobalContext {
     application: Option<String>,

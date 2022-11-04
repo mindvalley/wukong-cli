@@ -15,7 +15,7 @@ use self::{
         CiStatusQuery, MultiBranchPipelineQuery, PipelineQuery, PipelinesQuery,
     },
 };
-use crate::{error::APIError, API_URL};
+use crate::{app::APP_STATE, error::APIError};
 use graphql_client::{reqwest::post_graphql, GraphQLQuery, Response};
 use reqwest::header;
 
@@ -26,9 +26,14 @@ pub struct QueryClientBuilder {
 
 impl QueryClientBuilder {
     pub fn new() -> Self {
+        let api_url = match APP_STATE.get() {
+            Some(state) => state.api_url.clone(),
+            None => "".to_string(),
+        };
+
         Self {
             access_token: None,
-            api_url: API_URL.to_string(),
+            api_url,
         }
     }
 
