@@ -80,6 +80,7 @@ pub async fn handle_execute(
         println!("Not detecting any flags, entering deployment terminal......");
     }
 
+    // SAFETY: the application must not be None here
     let current_application = context.application.unwrap();
     println!("Current application: {}", current_application.green());
 
