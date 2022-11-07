@@ -96,7 +96,9 @@ pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
             name: raw_cd_pipeline.name,
             version: raw_cd_pipeline.version,
             enabled: raw_cd_pipeline.enabled,
-            deployed_ref: raw_cd_pipeline.deployed_ref,
+            deployed_ref: raw_cd_pipeline
+                .deployed_ref
+                .map(|deployed_ref| deployed_ref[..7].to_string()),
             last_deployed_at: raw_cd_pipeline.last_deployment,
             status: raw_cd_pipeline.status,
         };
