@@ -55,6 +55,14 @@ pub struct GlobalContext {
 async fn main() {
     setup_panic!();
 
+    // make sure that the cursor re-appears when interrupting
+    ctrlc::set_handler(move || {
+        let term = dialoguer::console::Term::stdout();
+        let _ = term.show_cursor();
+        std::process::exit(1);
+    })
+    .expect("Error setting Ctrl-C handler");
+
     match run().await {
         Err(error) => {
             eprintln!("{}", ErrorOutput(error));

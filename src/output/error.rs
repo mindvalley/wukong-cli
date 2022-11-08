@@ -7,8 +7,11 @@ pub struct ErrorOutput(pub CliError);
 impl Display for ErrorOutput {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.0 {
-            CliError::Io(ref io_error) if io_error.kind() == ::std::io::ErrorKind::BrokenPipe => {
-                ::std::process::exit(0);
+            CliError::Io(ref io_error)
+                if io_error.kind() == ::std::io::ErrorKind::BrokenPipe
+                    || io_error.kind() == ::std::io::ErrorKind::Interrupted =>
+            {
+                ::std::process::exit(1);
             }
             error => {
                 writeln!(f, "{}:", "Error".red())?;

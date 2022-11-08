@@ -80,6 +80,7 @@ pub async fn handle_execute(
         println!("Not detecting any flags, entering deployment terminal......");
     }
 
+    // SAFETY: the application must not be None here
     let current_application = context.application.unwrap();
     println!("Current application: {}", current_application.green());
 
@@ -102,8 +103,7 @@ pub async fn handle_execute(
             .with_prompt("Step 1: Please choose the namespace you want to deploy")
             .default(0)
             .items(&namespace_selections[..])
-            .interact()
-            .unwrap();
+            .interact()?;
 
         selected_namespace = namespace_selections[selected_namespace_index].to_string();
 
@@ -128,8 +128,7 @@ pub async fn handle_execute(
             .with_prompt("Step 2: Please choose the version you want to deploy")
             .default(0)
             .items(&version_selections[..])
-            .interact()
-            .unwrap();
+            .interact()?;
 
         selected_version = version_selections[selected_version_index].to_string();
 
@@ -228,8 +227,7 @@ pub async fn handle_execute(
                     .with_prompt("Step 3: Please choose the build artifact you want to deploy")
                     .default(0)
                     .items(&build_selections[..])
-                    .interact()
-                    .unwrap();
+                    .interact()?;
 
                 let selected_build_number = cd_pipeline.jenkins_builds[selected_build].build_number;
 
@@ -325,14 +323,12 @@ pub async fn handle_execute(
     let agree_to_deploy = if !is_same_build {
         Confirm::with_theme(&ColorfulTheme::default())
             .with_prompt("Do you agree to deploy this build ?")
-            .interact()
-            .unwrap()
+            .interact()?
     } else {
         Confirm::with_theme(&ColorfulTheme::default())
             .with_prompt("Are you sure to deploy this build artifact anyway?")
             .default(false)
-            .interact()
-            .unwrap()
+            .interact()?
     };
 
     if agree_to_deploy {

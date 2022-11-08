@@ -19,8 +19,7 @@ pub async fn handle_login(context: GlobalContext) -> Result<bool, CliError> {
             ))
             .default(0)
             .items(&selections[..])
-            .interact()
-            .unwrap();
+            .interact()?;
 
         // selecting "Log in with a new account"
         if selection == 1 {
