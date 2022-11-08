@@ -23,8 +23,7 @@ pub async fn handle_init(
                 .with_prompt("Choose the account you would like to use to perform operations for this configuration:")
                 .default(0)
                 .items(&login_selections[..])
-                .interact()
-                .unwrap();
+                .interact()?;
 
     // "Log in with a new account" is selected
     let mut config = if selection == login_selections.len() - 1 {
@@ -79,8 +78,7 @@ pub async fn handle_init(
         .with_prompt("Please select the application")
         .default(0)
         .items(&applications_data[..])
-        .interact()
-        .unwrap();
+        .interact()?;
 
     println!(
         "Your current application has been set to: [{}].",
