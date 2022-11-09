@@ -20,6 +20,8 @@ pub enum CliError {
     UnInitialised,
     #[error("{message}")]
     AuthError { message: &'static str },
+    #[error(transparent)]
+    DeploymentError(#[from] DeploymentError),
 }
 
 #[derive(Debug, ThisError)]
@@ -52,6 +54,20 @@ pub enum ConfigError {
     BadTomlData(#[source] toml::de::Error),
     #[error("Failed to serialize configuration data into TOML.")]
     SerializeTomlError(#[source] toml::ser::Error),
+}
+
+#[derive(Debug, ThisError)]
+pub enum DeploymentError {
+    #[error("\"{namespace}\" namespace is not available in \"{application}\" application.")]
+    NamespaceNotAvailable {
+        namespace: String,
+        application: String,
+    },
+    #[error("\"{version}\" version is not available in \"{application}\" application.")]
+    VersionNotAvailable {
+        version: String,
+        application: String,
+    },
 }
 
 impl CliError {

@@ -1,6 +1,9 @@
 use super::{DeploymentNamespace, DeploymentVersion};
 use crate::{
-    error::CliError, graphql::QueryClientBuilder, loader::new_spinner_progress_bar, GlobalContext,
+    error::{CliError, DeploymentError},
+    graphql::QueryClientBuilder,
+    loader::new_spinner_progress_bar,
+    GlobalContext,
 };
 use console::Term;
 use dialoguer::{theme::ColorfulTheme, Confirm, Select};
@@ -84,6 +87,9 @@ pub async fn handle_execute(
     let current_application = context.application.unwrap();
     println!("Current application: {}", current_application.green());
 
+    let progress_bar = new_spinner_progress_bar();
+    progress_bar.set_message("Checking available CD pipelines ...");
+
     // Calling API ...
     let client = QueryClientBuilder::new()
         .with_access_token(context.id_token.unwrap())
@@ -113,6 +119,9 @@ pub async fn handle_execute(
         .find_map(|pipeline| pipeline.version.contains("blue").then_some(pipeline))
         .is_some();
 
+    progress_bar.finish_and_clear();
+
+    // if there is no Prod and Staging, return message, end the session
     if !has_prod_namespace && !has_staging_namespace {
         println!("This application is not configured with any CD Pipelines yet, cannot performing any deployment. Please configure at least 1 CD Pipeline before making a deployment");
         return Ok(false);
@@ -124,6 +133,33 @@ pub async fn handle_execute(
 
     // if user provides namespace using --namespace flag
     if let Some(namespace) = namespace {
+        match namespace {
+            // if user set `prod` in --namespace flag but there is no `prod` namespace for the
+            // application
+            DeploymentNamespace::Prod => {
+                if !has_prod_namespace {
+                    return Err(CliError::DeploymentError(
+                        DeploymentError::NamespaceNotAvailable {
+                            namespace: "prod".to_string(),
+                            application: current_application.clone(),
+                        },
+                    ));
+                }
+            }
+            // if user set `staging` in --namespace flag but there is no `staging` namespace for the
+            // application
+            DeploymentNamespace::Staging => {
+                if !has_staging_namespace {
+                    return Err(CliError::DeploymentError(
+                        DeploymentError::NamespaceNotAvailable {
+                            namespace: "staging".to_string(),
+                            application: current_application.clone(),
+                        },
+                    ));
+                }
+            }
+        };
+
         selected_namespace = namespace.to_string();
         println!(
             "{} {} `{}` {}\n",
@@ -156,6 +192,32 @@ pub async fn handle_execute(
 
     // if user provides version using --version flag
     if let Some(version) = version {
+        match version {
+            // if user set `blue` in --version flag but there is no `blue` version for the
+            // application
+            DeploymentVersion::Blue => {
+                if !has_blue_version {
+                    return Err(CliError::DeploymentError(
+                        DeploymentError::VersionNotAvailable {
+                            version: "blue".to_string(),
+                            application: current_application.clone(),
+                        },
+                    ));
+                }
+            }
+            // if user set `green` in --version flag but there is no `green` version for the
+            // application
+            DeploymentVersion::Green => {
+                if !has_green_version {
+                    return Err(CliError::DeploymentError(
+                        DeploymentError::VersionNotAvailable {
+                            version: "green".to_string(),
+                            application: current_application.clone(),
+                        },
+                    ));
+                }
+            }
+        };
         selected_version = version.to_string();
         println!(
             "{} {} `{}` {}\n",
