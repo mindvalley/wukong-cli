@@ -84,10 +84,45 @@ pub async fn handle_execute(
     let current_application = context.application.unwrap();
     println!("Current application: {}", current_application.green());
 
+    // Calling API ...
+    let client = QueryClientBuilder::new()
+        .with_access_token(context.id_token.unwrap())
+        .build()?;
+
+    let cd_pipelines_resp = client
+        .fetch_cd_pipeline_list(&current_application)
+        .await?
+        .data
+        .unwrap()
+        .cd_pipelines;
+
+    let has_prod_namespace = cd_pipelines_resp
+        .iter()
+        .find_map(|pipeline| pipeline.environment.contains("prod").then_some(pipeline))
+        .is_some();
+    let has_staging_namespace = cd_pipelines_resp
+        .iter()
+        .find_map(|pipeline| pipeline.environment.contains("staging").then_some(pipeline))
+        .is_some();
+    let has_green_version = cd_pipelines_resp
+        .iter()
+        .find_map(|pipeline| pipeline.version.contains("green").then_some(pipeline))
+        .is_some();
+    let has_blue_version = cd_pipelines_resp
+        .iter()
+        .find_map(|pipeline| pipeline.version.contains("blue").then_some(pipeline))
+        .is_some();
+
+    // if !has_prod_namespace && !has_staging_namespace {
+    //     println!("This application is not configured with any CD Pipelines yet, cannot performing any deployment. Please configure at least 1 CD Pipeline before making a deployment");
+    //     return Ok(false);
+    // }
+
     let selected_namespace: String;
     let selected_version: String;
     let selected_build_number: i64;
 
+    // if user provides namespace using --namespace flag
     if let Some(namespace) = namespace {
         selected_namespace = namespace.to_string();
         println!(
@@ -98,7 +133,13 @@ pub async fn handle_execute(
             "namespace.".bold()
         );
     } else {
-        let namespace_selections = vec!["Prod", "Staging"];
+        let mut namespace_selections = Vec::new();
+        if has_prod_namespace {
+            namespace_selections.push("Prod");
+        }
+        if has_staging_namespace {
+            namespace_selections.push("Staging");
+        }
         let selected_namespace_index = Select::with_theme(&ColorfulTheme::default())
             .with_prompt("Step 1: Please choose the namespace you want to deploy")
             .default(0)
@@ -113,6 +154,7 @@ pub async fn handle_execute(
         );
     }
 
+    // if user provides version using --version flag
     if let Some(version) = version {
         selected_version = version.to_string();
         println!(
@@ -123,7 +165,13 @@ pub async fn handle_execute(
             "version.".bold()
         );
     } else {
-        let version_selections = vec!["Green", "Blue"];
+        let mut version_selections = Vec::new();
+        if has_green_version {
+            version_selections.push("Green");
+        }
+        if has_blue_version {
+            version_selections.push("Blue");
+        }
         let selected_version_index = Select::with_theme(&ColorfulTheme::default())
             .with_prompt("Step 2: Please choose the version you want to deploy")
             .default(0)
@@ -137,11 +185,6 @@ pub async fn handle_execute(
             selected_version
         );
     }
-
-    // Calling API ...
-    let client = QueryClientBuilder::new()
-        .with_access_token(context.id_token.unwrap())
-        .build()?;
 
     if let Some(artifact) = artifact {
         selected_build_number = *artifact;
