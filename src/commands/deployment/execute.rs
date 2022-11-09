@@ -113,10 +113,10 @@ pub async fn handle_execute(
         .find_map(|pipeline| pipeline.version.contains("blue").then_some(pipeline))
         .is_some();
 
-    // if !has_prod_namespace && !has_staging_namespace {
-    //     println!("This application is not configured with any CD Pipelines yet, cannot performing any deployment. Please configure at least 1 CD Pipeline before making a deployment");
-    //     return Ok(false);
-    // }
+    if !has_prod_namespace && !has_staging_namespace {
+        println!("This application is not configured with any CD Pipelines yet, cannot performing any deployment. Please configure at least 1 CD Pipeline before making a deployment");
+        return Ok(false);
+    }
 
     let selected_namespace: String;
     let selected_version: String;
