@@ -104,11 +104,11 @@ pub async fn handle_execute(
 
     let has_prod_namespace = cd_pipelines_resp
         .iter()
-        .find_map(|pipeline| pipeline.environment.contains("prod").then_some(pipeline))
+        .find(|pipeline| pipeline.environment == "prod")
         .is_some();
     let has_staging_namespace = cd_pipelines_resp
         .iter()
-        .find_map(|pipeline| pipeline.environment.contains("staging").then_some(pipeline))
+        .find(|pipeline| pipeline.environment == "staging")
         .is_some();
 
     progress_bar.finish_and_clear();
@@ -187,12 +187,12 @@ pub async fn handle_execute(
     let has_green_version = cd_pipelines_resp
         .iter()
         .filter(|pipeline| pipeline.environment == selected_namespace.to_lowercase())
-        .find_map(|pipeline| pipeline.version.contains("green").then_some(pipeline))
+        .find(|pipeline| pipeline.version == "green")
         .is_some();
     let has_blue_version = cd_pipelines_resp
         .iter()
         .filter(|pipeline| pipeline.environment == selected_namespace.to_lowercase())
-        .find_map(|pipeline| pipeline.version.contains("blue").then_some(pipeline))
+        .find(|pipeline| pipeline.version == "blue")
         .is_some();
 
     // if user provides version using --version flag
