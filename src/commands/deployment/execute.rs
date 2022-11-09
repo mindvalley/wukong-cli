@@ -110,14 +110,6 @@ pub async fn handle_execute(
         .iter()
         .find_map(|pipeline| pipeline.environment.contains("staging").then_some(pipeline))
         .is_some();
-    let has_green_version = cd_pipelines_resp
-        .iter()
-        .find_map(|pipeline| pipeline.version.contains("green").then_some(pipeline))
-        .is_some();
-    let has_blue_version = cd_pipelines_resp
-        .iter()
-        .find_map(|pipeline| pipeline.version.contains("blue").then_some(pipeline))
-        .is_some();
 
     progress_bar.finish_and_clear();
 
@@ -190,6 +182,19 @@ pub async fn handle_execute(
         );
     }
 
+    // after user selected a namespace, then we only can check what versions are available for this
+    // application and namespace
+    let has_green_version = cd_pipelines_resp
+        .iter()
+        .filter(|pipeline| pipeline.environment == selected_namespace.to_lowercase())
+        .find_map(|pipeline| pipeline.version.contains("green").then_some(pipeline))
+        .is_some();
+    let has_blue_version = cd_pipelines_resp
+        .iter()
+        .filter(|pipeline| pipeline.environment == selected_namespace.to_lowercase())
+        .find_map(|pipeline| pipeline.version.contains("blue").then_some(pipeline))
+        .is_some();
+
     // if user provides version using --version flag
     if let Some(version) = version {
         match version {
@@ -199,6 +204,7 @@ pub async fn handle_execute(
                 if !has_blue_version {
                     return Err(CliError::DeploymentError(
                         DeploymentError::VersionNotAvailable {
+                            namespace: selected_namespace.to_lowercase(),
                             version: "blue".to_string(),
                             application: current_application.clone(),
                         },
@@ -211,6 +217,7 @@ pub async fn handle_execute(
                 if !has_green_version {
                     return Err(CliError::DeploymentError(
                         DeploymentError::VersionNotAvailable {
+                            namespace: selected_namespace.to_lowercase(),
                             version: "green".to_string(),
                             application: current_application.clone(),
                         },

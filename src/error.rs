@@ -63,8 +63,9 @@ pub enum DeploymentError {
         namespace: String,
         application: String,
     },
-    #[error("\"{version}\" version is not available in \"{application}\" application.")]
+    #[error("\"{version}\" version is not available in \"{application}\" application under \"{namespace}\" namespace.")]
     VersionNotAvailable {
+        namespace: String,
         version: String,
         application: String,
     },
