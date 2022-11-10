@@ -12,14 +12,17 @@ String!) {
       buildDuration
       buildNumber
       buildUrl
-      commitAuthor
-      commitId
-      commitMsg
       name
       result
       timestamp
       totalDuration
       waitDuration
+      commits {
+        id
+        author
+        message
+        messageHeadline
+      }
     }
   }
 }

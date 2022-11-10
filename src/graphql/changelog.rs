@@ -34,10 +34,11 @@ impl ChangelogsQuery {
                 "unable_to_determine_changelog" => Err(APIError::ResponseError {
                     code: error.message,
                     message: format!(
-                        "Unable to determine the changelog for build-{}",
+                        "Unable to determine the changelog for build-{}.",
                         build_number
                     ),
                 }),
+                "comparing_same_build" => Err(APIError::ChangelogComparingSameBuild),
                 _ => Err(APIError::ResponseError {
                     code: error.message.clone(),
                     message: format!("{}", error),
@@ -97,7 +98,7 @@ mod test {
         mock.assert();
         assert!(response.is_ok());
 
-        let changelogs = response.unwrap().data.unwrap().changelogs.unwrap();
+        let changelogs = response.unwrap().data.unwrap().changelogs;
         assert_eq!(changelogs.len(), 2);
     }
 
@@ -113,9 +114,7 @@ mod test {
 
         let api_resp = r#"
 {
-  "data": {
-    "changelogs": null
-  },
+  "data": null,
   "errors": [
     {
       "locations": [
@@ -147,12 +146,11 @@ mod test {
         assert!(response.is_err());
 
         match response.as_ref().unwrap_err() {
-            APIError::ReqwestError(_) => panic!("it shouldn't returning ReqwestError"),
             APIError::ResponseError { code, message } => {
                 assert_eq!(code, "application_not_found");
                 assert_eq!(message, "Application `invalid_application` not found.");
             }
-            APIError::UnAuthenticated => panic!("it shouldn't returning UnAuthenticated"),
+            _ => panic!("it should be returning ResponseError"),
         }
     }
 
@@ -168,9 +166,7 @@ mod test {
 
         let api_resp = r#"
 {
-  "data": {
-    "changelogs": null
-  },
+  "data": null,
   "errors": [
     {
       "locations": [
@@ -208,18 +204,72 @@ mod test {
         assert!(response.is_err());
 
         match response.as_ref().unwrap_err() {
-            APIError::ReqwestError(_) => panic!("it shouldn't returning ReqwestError"),
             APIError::ResponseError { code, message } => {
                 assert_eq!(code, "unable_to_determine_changelog");
                 assert_eq!(
                     message,
                     &format!(
-                        "Unable to determine the changelog for build-{}",
+                        "Unable to determine the changelog for build-{}.",
                         invalid_build_number
                     )
                 );
             }
-            APIError::UnAuthenticated => panic!("it shouldn't returning UnAuthenticated"),
+            _ => panic!("it should be returning ResponseError"),
         }
+    }
+
+    #[tokio::test]
+    async fn test_fetch_changelog_list_failed_with_comparing_same_build_error_should_return_changelog_comparing_same_build_error(
+    ) {
+        let server = MockServer::start();
+        let query_client = QueryClientBuilder::new()
+            .with_access_token("test_access_token".to_string())
+            .with_api_url(server.base_url())
+            .build()
+            .unwrap();
+
+        let api_resp = r#"
+{
+  "data": null,
+  "errors": [
+    {
+      "locations": [
+        {
+          "column": 3,
+          "line": 2
+        }
+      ],
+      "message": "comparing_same_build",
+      "path": [
+        "changelogs"
+      ]
+    }
+  ]
+}"#;
+
+        let mock = server.mock(|when, then| {
+            when.method(POST).path("/");
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+
+        let invalid_build_number = 1234;
+        let response = ChangelogsQuery::fetch(
+            &query_client,
+            "valid_application",
+            "prod",
+            "green",
+            invalid_build_number,
+        )
+        .await;
+
+        mock.assert();
+        assert!(response.is_err());
+
+        assert!(matches!(
+            response.as_ref().unwrap_err(),
+            APIError::ChangelogComparingSameBuild
+        ));
     }
 }

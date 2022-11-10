@@ -9,20 +9,18 @@ mod error;
 mod graphql;
 mod loader;
 mod output;
-// mod settings;
-// mod logger;
 
+use crate::auth::refresh_tokens;
+use app::{App, ConfigState};
 use chrono::{DateTime, Local};
 use commands::{
     completion::handle_completion, init::handle_init, login::handle_login, CommandGroup,
 };
-use config::{Config, CONFIG_FILE};
+use config::{AuthConfig, Config, CONFIG_FILE};
 use error::CliError;
-use output::error::ErrorOutput;
-// use logger::Logger;
-use crate::auth::refresh_tokens;
-use app::{App, ConfigState};
+use human_panic::setup_panic;
 use openidconnect::RefreshToken;
+use output::error::ErrorOutput;
 use std::process;
 
 macro_rules! must_init {
@@ -45,9 +43,6 @@ macro_rules! must_init_and_login {
     }};
 }
 
-static API_URL: &str = env!("API_URL");
-static OKTA_CLIENT_ID: &str = env!("OKTA_CLIENT_ID");
-
 #[derive(Default, Debug)]
 pub struct GlobalContext {
     application: Option<String>,
@@ -58,6 +53,16 @@ pub struct GlobalContext {
 
 #[tokio::main]
 async fn main() {
+    setup_panic!();
+
+    // make sure that the cursor re-appears when interrupting
+    ctrlc::set_handler(move || {
+        let term = dialoguer::console::Term::stdout();
+        let _ = term.show_cursor();
+        std::process::exit(1);
+    })
+    .expect("Error setting Ctrl-C handler");
+
     match run().await {
         Err(error) => {
             eprintln!("{}", ErrorOutput(error));
@@ -72,7 +77,7 @@ async fn main() {
     }
 }
 
-async fn run<'a>() -> Result<bool, CliError<'a>> {
+async fn run() -> Result<bool, CliError> {
     let config_file = CONFIG_FILE
         .as_ref()
         .expect("Unable to identify user's home directory");
@@ -83,51 +88,43 @@ async fn run<'a>() -> Result<bool, CliError<'a>> {
 
     match app.config {
         app::ConfigState::InitialisedAndAuthenticated(ref config) => {
+            // SAFETY: the config state is authenticated so the auth must not be None here
+            let auth_config = &config.auth.as_ref().unwrap();
+
             // check access token expiry
             let local: DateTime<Local> = Local::now();
-            let expiry = DateTime::parse_from_rfc3339(&config.auth.as_ref().unwrap().expiry_time)
+            let expiry = DateTime::parse_from_rfc3339(&auth_config.expiry_time)
                 .unwrap()
                 .with_timezone(&Local);
 
             if local >= expiry {
-                let new_tokens = refresh_tokens(&RefreshToken::new(
-                    config.auth.as_ref().unwrap().refresh_token.clone(),
-                ))
-                .await
-                .unwrap();
+                let new_tokens =
+                    refresh_tokens(&RefreshToken::new(auth_config.refresh_token.clone())).await?;
 
-                match Config::load(config_file) {
-                    Ok(mut config) => {
-                        match config.auth.as_mut() {
-                            Some(existing_auth_config) => {
-                                existing_auth_config.refresh_token = new_tokens.refresh_token;
-                                existing_auth_config.id_token = new_tokens.id_token;
-                                existing_auth_config.access_token = new_tokens.access_token;
-                                existing_auth_config.expiry_time = new_tokens.expiry_time;
-                            }
-                            None => {
-                                // this shouldn't happen
-                                panic!("Auth config is not avaliable.")
-                            }
-                        };
-                        config.save(config_file).unwrap();
-                        context.application = Some(config.core.application.clone());
-                        context.account = Some(config.auth.as_ref().unwrap().account.clone());
-                        context.id_token = Some(config.auth.as_ref().unwrap().id_token.clone());
-                        context.access_token =
-                            Some(config.auth.as_ref().unwrap().access_token.clone());
-                        existing_config = Some(config);
-                    }
-                    Err(_) => {
-                        // this shouldn't happen
-                        panic!("Config is not avaliable.")
-                    }
-                };
+                let mut updated_config = config.clone();
+                updated_config.auth = Some(AuthConfig {
+                    account: auth_config.account.clone(),
+                    id_token: new_tokens.id_token.clone(),
+                    access_token: new_tokens.access_token.clone(),
+                    expiry_time: new_tokens.expiry_time,
+                    refresh_token: new_tokens.refresh_token,
+                });
+
+                updated_config
+                    .save(config_file)
+                    .expect("The token is refreshed but the new config can't be saved.");
+                context.application = Some(updated_config.core.application.clone());
+                context.account = Some(auth_config.account.clone());
+                context.id_token = Some(new_tokens.id_token);
+                context.access_token = Some(new_tokens.access_token);
+
+                existing_config = Some(updated_config);
             } else {
                 context.application = Some(config.core.application.clone());
-                context.account = Some(config.auth.as_ref().unwrap().account.clone());
-                context.access_token = Some(config.auth.as_ref().unwrap().access_token.clone());
-                context.id_token = Some(config.auth.as_ref().unwrap().id_token.clone());
+                context.account = Some(auth_config.account.clone());
+                context.access_token = Some(auth_config.access_token.clone());
+                context.id_token = Some(auth_config.id_token.clone());
+
                 existing_config = Some(config.clone());
             }
         }

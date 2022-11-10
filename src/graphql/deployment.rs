@@ -167,7 +167,7 @@ mod test {
         mock.assert();
         assert!(response.is_ok());
 
-        let cd_pipelines = response.unwrap().data.unwrap().cd_pipelines.unwrap();
+        let cd_pipelines = response.unwrap().data.unwrap().cd_pipelines;
         assert_eq!(cd_pipelines.len(), 2);
     }
 
@@ -183,9 +183,7 @@ mod test {
 
         let api_resp = r#"
 {
-  "data": {
-    "cdPipelines": null
-  },
+  "data": null,
   "errors": [
     {
       "locations": [
@@ -215,12 +213,11 @@ mod test {
         assert!(response.is_err());
 
         match response.as_ref().unwrap_err() {
-            APIError::ReqwestError(_) => panic!("it shouldn't returning ReqwestError"),
             APIError::ResponseError { code, message } => {
                 assert_eq!(code, "application_not_found");
                 assert_eq!(message, "Application `invalid_application` not found.");
             }
-            APIError::UnAuthenticated => panic!("it shouldn't returning UnAuthenticated"),
+            _ => panic!("it should be returning ResponseError"),
         }
     }
 }

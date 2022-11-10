@@ -20,7 +20,7 @@ lazy_static! {
     /// [lazy_static]: https://docs.rs/lazy_static
     pub static ref CONFIG_FILE: Option<String> = {
         dirs::home_dir().map(|mut path| {
-            path.extend(&[".config", "wukong", "config.toml"]);
+            path.extend([".config", "wukong", "config.toml"]);
             path.to_str().unwrap().to_string()
         })
     };
@@ -39,6 +39,8 @@ pub struct CoreConfig {
     /// The current application name
     pub application: String,
     pub collect_telemetry: bool,
+    pub wukong_api_url: String,
+    pub okta_client_id: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -59,12 +61,22 @@ pub struct AuthConfig {
 impl Default for Config {
     fn default() -> Self {
         let mut home_dir = dirs::home_dir().unwrap();
-        home_dir.extend(&[".config", "wukong", "log*"]);
+        home_dir.extend([".config", "wukong", "log*"]);
 
         Self {
             core: CoreConfig {
                 application: "".to_string(),
                 collect_telemetry: false,
+
+                #[cfg(not(feature = "prod"))]
+                wukong_api_url: "http://localhost:4000/api".to_string(),
+                #[cfg(not(feature = "prod"))]
+                okta_client_id: "0oakfxaegyAV5JDD5357".to_string(),
+
+                #[cfg(all(feature = "prod"))]
+                wukong_api_url: "https://wukong-api-proxy.mindvalley.dev/api".to_string(),
+                #[cfg(all(feature = "prod"))]
+                okta_client_id: "0oakfxaegyAV5JDD5357".to_string(),
             },
             log: LogConfig {
                 enable: true,
@@ -81,21 +93,23 @@ impl Config {
     /// # Errors
     ///
     /// This function may return typical file I/O errors.
-    pub fn load(path: &str) -> Result<Self, CliError> {
+    pub fn load(path: &'static str) -> Result<Self, CliError> {
         let config_file_path = Path::new(path);
 
-        let content =
-            std::fs::read_to_string(config_file_path.to_str().unwrap()).map_err(|err| match err
-                .kind()
-            {
-                io::ErrorKind::NotFound => {
-                    CliError::ConfigError(ConfigError::NotFound { path, source: err })
-                }
-                io::ErrorKind::PermissionDenied => {
-                    CliError::ConfigError(ConfigError::PermissionDenied { path, source: err })
-                }
-                _ => CliError::Io(err),
-            })?;
+        let content = std::fs::read_to_string(
+            config_file_path
+                .to_str()
+                .expect("The config file path is not valid."),
+        )
+        .map_err(|err| match err.kind() {
+            io::ErrorKind::NotFound => {
+                CliError::ConfigError(ConfigError::NotFound { path, source: err })
+            }
+            io::ErrorKind::PermissionDenied => {
+                CliError::ConfigError(ConfigError::PermissionDenied { path, source: err })
+            }
+            _ => CliError::Io(err),
+        })?;
 
         let config = toml::from_str(&content)
             .map_err(|err| CliError::ConfigError(ConfigError::BadTomlData(err)))?;
@@ -113,8 +127,7 @@ impl Config {
     /// This function may return typical file I/O errors.
     pub fn save(&self, path: &str) -> Result<(), CliError> {
         let config_file_path = Path::new(path);
-        let serialized = toml::to_string(self)
-            .map_err(|err| CliError::ConfigError(ConfigError::SerializeTomlError(err)))?;
+        let serialized = toml::to_string(self).map_err(ConfigError::SerializeTomlError)?;
 
         if let Some(outdir) = config_file_path.parent() {
             create_dir_all(outdir)?;

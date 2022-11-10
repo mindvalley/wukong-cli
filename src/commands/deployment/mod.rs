@@ -63,7 +63,7 @@ impl ToString for DeploymentNamespace {
 }
 
 impl Deployment {
-    pub async fn handle_command<'a>(&self, context: GlobalContext) -> Result<bool, CliError<'a>> {
+    pub async fn handle_command(&self, context: GlobalContext) -> Result<bool, CliError> {
         match &self.subcommand {
             DeploymentSubcommand::List => handle_list(context).await,
             DeploymentSubcommand::Execute {

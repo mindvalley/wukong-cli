@@ -201,7 +201,7 @@ mod test {
         mock.assert();
         assert!(response.is_ok());
 
-        let pipelines = response.unwrap().data.unwrap().pipelines.unwrap();
+        let pipelines = response.unwrap().data.unwrap().pipelines;
         assert_eq!(pipelines.len(), 2);
     }
 
@@ -217,9 +217,7 @@ mod test {
 
         let api_resp = r#"
 {
-  "data": {
-    "pipelines": null
-  },
+  "data": null,
   "errors": [
     {
       "locations": [
@@ -249,7 +247,6 @@ mod test {
         assert!(response.is_err());
 
         match response.as_ref().unwrap_err() {
-            APIError::ReqwestError(_) => panic!("it shouldn't returning ReqwestError"),
             APIError::ResponseError { code, message } => {
                 assert_eq!(code, "unable_to_get_pipelines");
                 assert_eq!(
@@ -257,7 +254,7 @@ mod test {
                     "Unable to get pipelines for application `invalid_application`."
                 )
             }
-            APIError::UnAuthenticated => panic!("it shouldn't returning UnAuthenticated"),
+            _ => panic!("it should be returning ResponseError"),
         }
     }
 
@@ -321,9 +318,7 @@ mod test {
 
         let api_resp = r#"
 {
-  "data": {
-    "pipeline": null
-  },
+  "data": null,
   "errors": [
     {
       "locations": [
@@ -353,12 +348,11 @@ mod test {
         assert!(response.is_err());
 
         match response.as_ref().unwrap_err() {
-            APIError::ReqwestError(_) => panic!("it shouldn't returning ReqwestError"),
             APIError::ResponseError { code, message } => {
                 assert_eq!(code, "unable_to_get_pipeline");
                 assert_eq!(message, "Unable to get pipeline `invalid_name`.")
             }
-            APIError::UnAuthenticated => panic!("it shouldn't returning UnAuthenticated"),
+            _ => panic!("it should be returning ResponseError"),
         }
     }
 
@@ -427,18 +421,10 @@ mod test {
         assert_eq!(pipeline.last_duration, None);
         assert_eq!(pipeline.last_failed_at, Some(1664267048730));
         assert_eq!(pipeline.last_succeeded_at, None);
-        assert_eq!(pipeline.branches.as_ref().unwrap().len(), 1);
-        assert_eq!(pipeline.pull_requests.unwrap().len(), 2);
+        assert_eq!(pipeline.branches.len(), 1);
+        assert_eq!(pipeline.pull_requests.len(), 2);
 
-        let branch = pipeline
-            .branches
-            .as_ref()
-            .unwrap()
-            .first()
-            .as_ref()
-            .unwrap()
-            .as_ref()
-            .unwrap();
+        let branch = pipeline.branches.first().unwrap();
         assert_eq!(branch.name, "main");
         assert_eq!(branch.last_duration, Some(582271));
         assert_eq!(branch.last_failed_at, Some(1664267048730));
@@ -457,9 +443,7 @@ mod test {
 
         let api_resp = r#"
 {
-  "data": {
-    "multiBranchPipeline": null
-  },
+  "data": null,
   "errors": [
     {
       "locations": [
@@ -489,12 +473,11 @@ mod test {
         assert!(response.is_err());
 
         match response.as_ref().unwrap_err() {
-            APIError::ReqwestError(_) => panic!("it shouldn't returning ReqwestError"),
             APIError::ResponseError { code, message } => {
                 assert_eq!(code, "unable_to_get_pipeline");
                 assert_eq!(message, "Unable to get pipeline `invalid_pipeline`.")
             }
-            APIError::UnAuthenticated => panic!("it shouldn't returning UnAuthenticated"),
+            _ => panic!("it should be returning ResponseError"),
         }
     }
 
@@ -514,9 +497,7 @@ mod test {
       "buildDuration": 582271,
       "buildNumber": 101,
       "buildUrl": "https://ci.mv.dev/mv-platform-ci/job/main/101/",
-      "commitAuthor": null,
-      "commitId": null,
-      "commitMsg": null,
+      "commits": [],
       "name": "main",
       "result": "SUCCESS",
       "timestamp": 1664267841689,
@@ -548,8 +529,7 @@ mod test {
             ci_status.build_url,
             "https://ci.mv.dev/mv-platform-ci/job/main/101/"
         );
-        assert_eq!(ci_status.commit_author, None);
-        assert_eq!(ci_status.commit_msg, None);
+        assert_eq!(ci_status.commits.len(), 0);
         assert_eq!(ci_status.result, "SUCCESS");
         assert_eq!(ci_status.timestamp, 1664267841689);
         assert_eq!(ci_status.total_duration, Some(582274));
@@ -568,9 +548,7 @@ mod test {
 
         let api_resp = r#"
 {
-  "data": {
-    "ciStatus": null
-  },
+  "data": null,
   "errors": [
     {
       "locations": [
@@ -601,7 +579,6 @@ mod test {
         assert!(response.is_err());
 
         match response.as_ref().unwrap_err() {
-            APIError::ReqwestError(_) => panic!("it shouldn't returning ReqwestError"),
             APIError::ResponseError { code, message } => {
                 assert_eq!(code, "ci_status_application_not_found");
                 assert_eq!(
@@ -609,7 +586,7 @@ mod test {
                     "Could not find the application associated with this Git repo.\n\t\t\tEither you're not in the correct working folder for your application, or there's a misconfiguration."
                 );
             }
-            APIError::UnAuthenticated => panic!("it shouldn't returning UnAuthenticated"),
+            _ => panic!("it should be returning ResponseError"),
         }
     }
 
@@ -626,7 +603,7 @@ mod test {
         let api_resp = r#"
 {
   "data": {
-    "ciStatus": null
+      "ciStatus": null
   },
   "errors": [
     {

@@ -2,13 +2,16 @@ use crate::error::CliError;
 use owo_colors::{colors::CustomColor, OwoColorize};
 use std::{error::Error, fmt::Display};
 
-pub struct ErrorOutput<'a>(pub CliError<'a>);
+pub struct ErrorOutput(pub CliError);
 
-impl<'a> Display for ErrorOutput<'a> {
+impl Display for ErrorOutput {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.0 {
-            CliError::Io(ref io_error) if io_error.kind() == ::std::io::ErrorKind::BrokenPipe => {
-                ::std::process::exit(0);
+            CliError::Io(ref io_error)
+                if io_error.kind() == ::std::io::ErrorKind::BrokenPipe
+                    || io_error.kind() == ::std::io::ErrorKind::Interrupted =>
+            {
+                ::std::process::exit(1);
             }
             error => {
                 writeln!(f, "{}:", "Error".red())?;
@@ -84,7 +87,7 @@ mod test {
             format!("{}", error_output),
             error_output_with_suggestion(
                 "You are un-initialised.",
-                "Run \"wukong init\" to initialise Wukong's configuration."
+                "Run \"wukong init\" to initialise Wukong's configuration before running other commands."
             )
         );
     }

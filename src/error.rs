@@ -1,43 +1,52 @@
+use crate::CONFIG_FILE;
 use owo_colors::OwoColorize;
 use thiserror::Error as ThisError;
 
 #[derive(Debug, ThisError)]
-pub enum CliError<'a> {
+pub enum CliError {
     #[error(transparent)]
     APIError(#[from] APIError),
     #[error(transparent)]
     Io(#[from] ::std::io::Error),
     #[error(transparent)]
-    ConfigError(ConfigError<'a>),
+    Base64(#[from] base64::DecodeError),
+    #[error(transparent)]
+    ConfigError(#[from] ConfigError),
     #[error("Failed to discover OpenID Provider")]
     OpenIDDiscoveryError,
     #[error("You are un-authenticated.")]
     UnAuthenticated,
     #[error("You are un-initialised.")]
     UnInitialised,
+    #[error("{message}")]
+    AuthError { message: &'static str },
+    #[error(transparent)]
+    DeploymentError(#[from] DeploymentError),
 }
 
 #[derive(Debug, ThisError)]
 pub enum APIError {
     #[error(transparent)]
     ReqwestError(#[from] reqwest::Error),
-    #[error("Response Error: {message}")]
+    #[error("API Response Error: {message}")]
     ResponseError { code: String, message: String },
     #[error("You are un-authenticated.")]
     UnAuthenticated,
+    #[error("The selected build number is the same as the current deployed version. So there is no changelog.")]
+    ChangelogComparingSameBuild,
 }
 
 #[derive(Debug, ThisError)]
-pub enum ConfigError<'a> {
+pub enum ConfigError {
     #[error("Config file not found at \"{path}\".")]
     NotFound {
-        path: &'a str,
+        path: &'static str,
         #[source]
         source: ::std::io::Error,
     },
     #[error("Permission denied: \"{path}\".")]
     PermissionDenied {
-        path: &'a str,
+        path: &'static str,
         #[source]
         source: ::std::io::Error,
     },
@@ -47,7 +56,22 @@ pub enum ConfigError<'a> {
     SerializeTomlError(#[source] toml::ser::Error),
 }
 
-impl<'a> CliError<'a> {
+#[derive(Debug, ThisError)]
+pub enum DeploymentError {
+    #[error("\"{namespace}\" namespace is not available in \"{application}\" application.")]
+    NamespaceNotAvailable {
+        namespace: String,
+        application: String,
+    },
+    #[error("\"{version}\" version is not available in \"{application}\" application under \"{namespace}\" namespace.")]
+    VersionNotAvailable {
+        namespace: String,
+        version: String,
+        application: String,
+    },
+}
+
+impl CliError {
     /// Try to second-guess what the user was trying to do, depending on what
     /// went wrong.
     pub fn suggestion(&self) -> Option<String> {
@@ -56,7 +80,7 @@ impl<'a> CliError<'a> {
                 "Your access token is invalid. Run \"wukong login\" to authenticate with your okta account.",
             )),
             CliError::UnInitialised => Some(String::from(
-                "Run \"wukong init\" to initialise Wukong's configuration.",
+                "Run \"wukong init\" to initialise Wukong's configuration before running other commands.",
             )),
             CliError::ConfigError(error) => match error {
                 ConfigError::NotFound { .. } => Some(String::from(
@@ -65,8 +89,8 @@ impl<'a> CliError<'a> {
                 ConfigError::PermissionDenied { path, .. } => Some(format!(
                     "Run \"chmod +rw {path}\" to provide read and write permissions."
                 )),
-                ConfigError::BadTomlData(_) => Some(String::from(
-                    "Check if your config.toml file is in valid TOML format. You may want to remove the config.toml file and run \"wukong init\" to re-initialise configuration again.",
+                ConfigError::BadTomlData(_) => Some(format!(
+                    "Check if your config.toml file is in valid TOML format.\n\tThis usually happen when the config file is accidentally modified or there is a breaking change to the cli config in the new version.\n\tYou may want to remove the config.toml file (\"rm {}\") and run \"wukong init\" to re-initialise configuration again.", CONFIG_FILE.as_ref().unwrap_or(&"/path/to/config.toml".to_string())
                 )),
                 _ => None,
             },
