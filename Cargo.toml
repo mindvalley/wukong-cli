@@ -41,13 +41,12 @@ chrono = "0.4.19"
 # Auth
 openidconnect = "2.3.2"
 url = "2.2.2"
-webbrowser = "0.7.1"
+webbrowser = "0.8"
 
 openssl = { version = "*", features = ["vendored"] }
 owo-colors = "3.5.0"
 chrono-humanize = "0.2.2"
 base64 = "0.13.0"
-console = "0.15.2"
 human-panic = "1.0.3"
 once_cell = "1.16.0"
 ctrlc = { version = "3.2.3", features = ["termination"] }
