@@ -8,11 +8,7 @@ use crate::{
 use dialoguer::{theme::ColorfulTheme, Confirm, Editor, Select};
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
-use std::{
-    fmt::{self, Display},
-    io::Write,
-    process::{Command, Stdio},
-};
+use std::fmt::{self, Display};
 
 #[derive(Default)]
 struct TwoColumns {
@@ -375,8 +371,6 @@ pub async fn handle_execute(
             println!("{}", "Step 4: Review your deployment".bold());
             println!("Please review your deployment CHANGELOG before execute it.\n");
 
-    match changelogs_data {
-        Some(changelogs_data) => {
             let changelogs = changelogs_data
                 .into_iter()
                 .map(|changelog| {
@@ -390,36 +384,6 @@ pub async fn handle_execute(
 
             if let Some(rv) = Editor::new().edit(&changelogs).unwrap() {
                 println!("{}\n", rv);
-
-                if Confirm::with_theme(&ColorfulTheme::default())
-                    .with_prompt("Do you agree to deploy this build ?")
-                    .interact()
-                    .unwrap()
-                {
-                    let progress_bar = new_spinner_progress_bar();
-                    progress_bar.set_message("Sending deployment ...");
-
-                    let resp = client
-                        .execute_cd_pipeline(
-                            &context.application.unwrap(),
-                            &selected_namespace.to_lowercase(),
-                            &selected_version.to_lowercase(),
-                            Some(selected_build_number),
-                        )
-                        .await?
-                        .data
-                        .unwrap()
-                        .execute_cd_pipeline;
-
-                    progress_bar.finish_and_clear();
-
-                    // SAFRTY: the resp SHOULDN'T be None
-                    let deployment_url = resp.expect("There is no deployment url").url;
-                    println!(
-                        "Deployment is succefully sent! Please open this URL to check the deployment progress"
-                    );
-                    println!("{}", deployment_url);
-                }
             } else {
                 println!("Abort!");
             }
