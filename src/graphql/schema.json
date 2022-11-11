@@ -1762,9 +1762,13 @@
               "isDeprecated": false,
               "name": "executeCdPipeline",
               "type": {
-                "kind": "OBJECT",
-                "name": "CdPipelineExecutionRef",
-                "ofType": null
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "CdPipelineExecutionRef",
+                  "ofType": null
+                }
               }
             }
           ],

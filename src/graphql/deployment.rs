@@ -266,13 +266,7 @@ mod test {
         mock.assert();
         assert!(response.is_ok());
 
-        let deployment_url = response
-            .unwrap()
-            .data
-            .unwrap()
-            .execute_cd_pipeline
-            .unwrap()
-            .url;
+        let deployment_url = response.unwrap().data.unwrap().execute_cd_pipeline.url;
         assert_eq!(deployment_url, "https://cd_pipeline_deployment_url.com");
     }
 }

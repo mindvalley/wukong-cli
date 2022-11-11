@@ -430,11 +430,8 @@ pub async fn handle_execute(
 
             progress_bar.finish_and_clear();
 
-            // SAFRTY: the resp SHOULDN'T be None
-            let deployment_url = resp.expect("There is no deployment url").url;
-            println!(
-            "Deployment is succefully sent! Please open this URL to check the deployment progress"
-        );
+            let deployment_url = resp.url;
+            println!("Deployment is succefully sent! Please open this URL to check the deployment progress");
             println!("{}", deployment_url);
         }
     } else {
