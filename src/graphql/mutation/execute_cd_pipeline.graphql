@@ -1,5 +1,5 @@
-mutation ExecuteCdPipeline($application: String!, $buildNumber: Int, $namespace:
-String!, $version: String!, $changelogs: String, $sendToSlack: Boolean) {
+mutation ExecuteCdPipeline($application: String!, $buildNumber: Int!, $namespace:
+String!, $version: String!, $changelogs: String, $sendToSlack: Boolean!) {
   executeCdPipeline(
     application: $application, 
     buildNumber: $buildNumber,

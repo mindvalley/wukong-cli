@@ -1695,9 +1695,13 @@
                   "description": null,
                   "name": "buildNumber",
                   "type": {
-                    "kind": "SCALAR",
-                    "name": "Int",
-                    "ofType": null
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "Int",
+                      "ofType": null
+                    }
                   }
                 },
                 {
@@ -1725,13 +1729,17 @@
                   }
                 },
                 {
-                  "defaultValue": "false",
+                  "defaultValue": null,
                   "description": null,
                   "name": "sendToSlack",
                   "type": {
-                    "kind": "SCALAR",
-                    "name": "Boolean",
-                    "ofType": null
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "Boolean",
+                      "ofType": null
+                    }
                   }
                 },
                 {
@@ -1750,7 +1758,7 @@
                 }
               ],
               "deprecationReason": null,
-              "description": "Execute a pipeline",
+              "description": "Execute a pipeline.\n\nNewer clients will NEED to send a `changelogs` if `send_to_slack` is `true`.\nIf `send_to_slack` is false or not set, `changelogs` is ignored.\n\n`changelogs` must be sent as a Base64 encoded string to avoid any funny\nunicode issues.",
               "isDeprecated": false,
               "name": "executeCdPipeline",
               "type": {

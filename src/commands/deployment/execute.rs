@@ -417,7 +417,7 @@ pub async fn handle_execute(
                     &current_application,
                     &selected_namespace.to_lowercase(),
                     &selected_version.to_lowercase(),
-                    Some(selected_build_number),
+                    selected_build_number,
                     Some(changelogs),
                     true,
                 )
