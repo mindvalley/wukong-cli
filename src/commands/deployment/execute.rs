@@ -363,6 +363,7 @@ pub async fn handle_execute(
     progress_bar.finish_and_clear();
 
     let mut is_same_build = false;
+    let mut changelogs = "".to_string();
 
     match changelogs_resp {
         Ok(response) => {
@@ -371,7 +372,7 @@ pub async fn handle_execute(
             println!("{}", "Step 4: Review your deployment".bold());
             println!("Please review your deployment CHANGELOG before execute it.\n");
 
-            let changelogs = changelogs_data
+            changelogs = changelogs_data
                 .into_iter()
                 .map(|changelog| {
                     format!(
@@ -381,12 +382,6 @@ pub async fn handle_execute(
                 })
                 .collect::<Vec<String>>()
                 .join("\n\n");
-
-            if let Some(rv) = Editor::new().edit(&changelogs).unwrap() {
-                println!("{}\n", rv);
-            } else {
-                println!("Abort!");
-            }
         }
         Err(error) => match error {
             crate::error::APIError::ChangelogComparingSameBuild => {
@@ -399,41 +394,49 @@ pub async fn handle_execute(
         },
     }
 
-    let agree_to_deploy = if !is_same_build {
-        Confirm::with_theme(&ColorfulTheme::default())
-            .with_prompt("Do you agree to deploy this build ?")
-            .interact()?
-    } else {
-        Confirm::with_theme(&ColorfulTheme::default())
-            .with_prompt("Are you sure to deploy this build artifact anyway?")
-            .default(false)
-            .interact()?
-    };
+    if let Some(rv) = Editor::new().edit(&changelogs).unwrap() {
+        println!("{}\n", rv);
 
-    if agree_to_deploy {
-        let progress_bar = new_spinner_progress_bar();
-        progress_bar.set_message("Sending deployment ...");
+        let agree_to_deploy = if !is_same_build {
+            Confirm::with_theme(&ColorfulTheme::default())
+                .with_prompt("Do you agree to deploy this build ?")
+                .interact()?
+        } else {
+            Confirm::with_theme(&ColorfulTheme::default())
+                .with_prompt("Are you sure to deploy this build artifact anyway?")
+                .default(false)
+                .interact()?
+        };
 
-        let resp = client
-            .execute_cd_pipeline(
-                &current_application,
-                &selected_namespace.to_lowercase(),
-                &selected_version.to_lowercase(),
-                Some(selected_build_number),
-            )
-            .await?
-            .data
-            .unwrap()
-            .execute_cd_pipeline;
+        if agree_to_deploy {
+            let progress_bar = new_spinner_progress_bar();
+            progress_bar.set_message("Sending deployment ...");
 
-        progress_bar.finish_and_clear();
+            let resp = client
+                .execute_cd_pipeline(
+                    &current_application,
+                    &selected_namespace.to_lowercase(),
+                    &selected_version.to_lowercase(),
+                    Some(selected_build_number),
+                    Some(changelogs),
+                    true,
+                )
+                .await?
+                .data
+                .unwrap()
+                .execute_cd_pipeline;
 
-        // SAFRTY: the resp SHOULDN'T be None
-        let deployment_url = resp.expect("There is no deployment url").url;
-        println!(
+            progress_bar.finish_and_clear();
+
+            // SAFRTY: the resp SHOULDN'T be None
+            let deployment_url = resp.expect("There is no deployment url").url;
+            println!(
             "Deployment is succefully sent! Please open this URL to check the deployment progress"
         );
-        println!("{}", deployment_url);
+            println!("{}", deployment_url);
+        }
+    } else {
+        println!("Aborting deployment process!");
     }
 
     Ok(true)

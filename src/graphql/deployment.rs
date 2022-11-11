@@ -89,12 +89,16 @@ impl ExecuteCdPipeline {
         namespace: &str,
         version: &str,
         build_number: Option<i64>,
+        changelogs: Option<String>,
+        send_to_slack: bool,
     ) -> Result<Response<execute_cd_pipeline::ResponseData>, APIError> {
         let variables = execute_cd_pipeline::Variables {
             application: application.to_string(),
+            build_number,
             namespace: namespace.to_string(),
             version: version.to_string(),
-            build_number,
+            changelogs,
+            send_to_slack: Some(send_to_slack),
         };
 
         let response = client

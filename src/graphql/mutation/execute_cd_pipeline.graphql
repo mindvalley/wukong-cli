@@ -1,7 +1,12 @@
 mutation ExecuteCdPipeline($application: String!, $buildNumber: Int, $namespace:
-String!, $version: String!) {
-  executeCdPipeline(application: $application, buildNumber: $buildNumber,
-  namespace: $namespace, version: $version) {
+String!, $version: String!, $changelogs: String, $sendToSlack: Boolean) {
+  executeCdPipeline(
+    application: $application, 
+    buildNumber: $buildNumber,
+    namespace: $namespace, 
+    version: $version
+    changelogs: $changelogs,
+    sendToSlack: $sendToSlack) {
     url
   }
 }
