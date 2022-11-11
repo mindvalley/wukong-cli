@@ -256,7 +256,9 @@ mod test {
             "prod",
             "green",
             100,
-            Some("This is a changelog.\n\nThis is a new changelog.\n".to_string()),
+            Some(base64::encode(
+                "This is a changelog.\n\nThis is a new changelog.\n",
+            )),
             true,
         )
         .await;

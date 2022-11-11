@@ -412,13 +412,15 @@ pub async fn handle_execute(
             let progress_bar = new_spinner_progress_bar();
             progress_bar.set_message("Sending deployment ...");
 
+            let base64_encoded_changelogs = base64::encode(changelogs);
+
             let resp = client
                 .execute_cd_pipeline(
                     &current_application,
                     &selected_namespace.to_lowercase(),
                     &selected_version.to_lowercase(),
                     selected_build_number,
-                    Some(changelogs),
+                    Some(base64_encoded_changelogs),
                     true,
                 )
                 .await?
