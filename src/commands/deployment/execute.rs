@@ -414,14 +414,14 @@ pub async fn handle_execute(
 
     if let Ok(edited) = edit::edit_with_builder(
         &changelogs,
-        &Builder::new()
+        Builder::new()
             .prefix("my-temporary-file")
             .suffix(".md")
             .rand_bytes(5),
     ) {
         // remove all comments
         let cleaned_changelogs = edited
-            .split("\n")
+            .split('\n')
             .into_iter()
             .filter(|each| !each.starts_with("<!--"))
             .collect::<Vec<&str>>()
