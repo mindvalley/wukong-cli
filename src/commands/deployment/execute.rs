@@ -370,9 +370,6 @@ pub async fn handle_execute(
         Ok(response) => {
             let changelogs_data = response.data.unwrap().changelogs;
 
-            println!("{}", "Step 4: Review your deployment".bold());
-            println!("Please review your deployment CHANGELOG before execute it.\n");
-
             changelogs = changelogs_data
                 .into_iter()
                 .map(|changelog| {
@@ -398,8 +395,6 @@ pub async fn handle_execute(
         Err(error) => match error {
             crate::error::APIError::ChangelogComparingSameBuild => {
                 is_same_build = true;
-                println!("You're selecting the same build artifact as the currently deployed version. Because of that no CHANGELOG will be generated.");
-
                 let instructions = r#"
 <!-- You are in the changelogs editor. -->
 
@@ -435,6 +430,8 @@ pub async fn handle_execute(
             .collect::<Vec<&str>>()
             .join("\n");
 
+        println!("{}", "Step 4: Review your deployment".bold());
+        println!("Please review your deployment CHANGELOG before execute it.\n");
         println!("{}", &cleaned_changelogs);
 
         let agree_to_deploy = if !is_same_build {
