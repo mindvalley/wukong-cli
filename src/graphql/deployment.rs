@@ -88,13 +88,17 @@ impl ExecuteCdPipeline {
         application: &str,
         namespace: &str,
         version: &str,
-        build_number: Option<i64>,
+        build_number: i64,
+        changelogs: Option<String>,
+        send_to_slack: bool,
     ) -> Result<Response<execute_cd_pipeline::ResponseData>, APIError> {
         let variables = execute_cd_pipeline::Variables {
             application: application.to_string(),
+            build_number,
             namespace: namespace.to_string(),
             version: version.to_string(),
-            build_number,
+            changelogs,
+            send_to_slack,
         };
 
         let response = client
@@ -219,5 +223,50 @@ mod test {
             }
             _ => panic!("it should be returning ResponseError"),
         }
+    }
+
+    #[tokio::test]
+    async fn test_execute_cd_pipeline_success_should_return_deployment_url() {
+        let server = MockServer::start();
+        let query_client = QueryClientBuilder::new()
+            .with_access_token("test_access_token".to_string())
+            .with_api_url(server.base_url())
+            .build()
+            .unwrap();
+
+        let api_resp = r#"
+{
+  "data": {
+    "executeCdPipeline" : {
+      "url": "https://cd_pipeline_deployment_url.com"
+    }
+  }
+}"#;
+
+        let mock = server.mock(|when, then| {
+            when.method(POST).path("/");
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+
+        let response = ExecuteCdPipeline::mutate(
+            &query_client,
+            "valid_application",
+            "prod",
+            "green",
+            100,
+            Some(base64::encode(
+                "This is a changelog.\n\nThis is a new changelog.\n",
+            )),
+            true,
+        )
+        .await;
+
+        mock.assert();
+        assert!(response.is_ok());
+
+        let deployment_url = response.unwrap().data.unwrap().execute_cd_pipeline.url;
+        assert_eq!(deployment_url, "https://cd_pipeline_deployment_url.com");
     }
 }

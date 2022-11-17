@@ -156,9 +156,20 @@ impl QueryClient {
         application: &str,
         namespace: &str,
         version: &str,
-        build_number: Option<i64>,
+        build_number: i64,
+        changelogs: Option<String>,
+        send_to_slack: bool,
     ) -> Result<Response<execute_cd_pipeline::ResponseData>, APIError> {
-        ExecuteCdPipeline::mutate(self, application, namespace, version, build_number).await
+        ExecuteCdPipeline::mutate(
+            self,
+            application,
+            namespace,
+            version,
+            build_number,
+            changelogs,
+            send_to_slack,
+        )
+        .await
     }
 
     pub async fn fetch_changelogs(
