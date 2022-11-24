@@ -112,7 +112,7 @@ impl ExecuteCdPipeline {
                     message: "Cannot submit this deployment request, since there is another running deployment with the same arguments is running on Spinnaker.\nYou can wait a few minutes and submit the deployment again.".to_string()
                 }),
                 _ => Err(APIError::ResponseError {
-                        code: error.message.clone(),
+                    code: error.message.clone(),
                     message: format!("{}", error),
                 }),
             })
