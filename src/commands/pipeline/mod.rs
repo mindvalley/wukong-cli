@@ -6,6 +6,7 @@ use self::{ci_status::handle_ci_status, describe::handle_describe, list::handle_
 use crate::{
     error::CliError,
     output::table::{fmt_option_milliseconds, fmt_option_timestamp, fmt_timestamp},
+    telemetry::{self, Command, TelemetryData},
     GlobalContext,
 };
 use chrono::{DateTime, NaiveDateTime, Utc};
@@ -128,7 +129,35 @@ pub enum PipelineSubcommand {
 impl Pipeline {
     pub async fn handle_command(&self, context: GlobalContext) -> Result<bool, CliError> {
         match &self.subcommand {
-            PipelineSubcommand::List => handle_list(context).await,
+            PipelineSubcommand::List => {
+                let telemetry_data = TelemetryData::new(
+                    Some(Command {
+                        name: "pipeline_list".to_string(),
+                        run_mode: telemetry::CommandRunMode::NonInteractive,
+                    }),
+                    None,
+                    "command".to_string(),
+                );
+
+                println!("{:?}", telemetry_data);
+
+                telemetry_data.record_event().await;
+
+                // let handle = tokio::spawn(async move {
+                //     // send telemetry event on command
+                //     let start = Utc::now().time();
+                //     telemetry_data.send_event().await;
+
+                //     let end = Utc::now().time();
+                //     println!("command call event sent finished");
+                //     println!("duration: {}", (end - start).num_milliseconds());
+                // });
+
+                let a = handle_list(context).await;
+                // handle.await;
+
+                a
+            }
             PipelineSubcommand::Describe { name } => handle_describe(context, name).await,
             PipelineSubcommand::CiStatus { repo_url, branch } => {
                 handle_ci_status(context, repo_url, branch).await

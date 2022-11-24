@@ -67,14 +67,6 @@ async fn main() {
     })
     .expect("Error setting Ctrl-C handler");
 
-    let telemetry_data = TelemetryData::new(Command {
-        name: "name".to_string(),
-        run_mode: telemetry::CommandRunMode::NonInteractive,
-    });
-
-    println!("{:?}", telemetry_data);
-    telemetry_data.send_event().await;
-
     match run().await {
         Err(error) => {
             eprintln!("{}", ErrorOutput(error));

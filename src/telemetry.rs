@@ -1,145 +1,140 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, path::Path};
 
-use chrono::offset::Utc;
+use chrono::{offset::Utc, SecondsFormat};
+use lazy_static::lazy_static;
 use libhoney::{json, FieldHolder, Value};
+use reqwest::header;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug)]
-pub struct TelemetryData {
-    timestamp: i64,
-    actor: String,
-    application: Option<String>,
-    command: Option<Command>,
-    api_call: Option<ApiCall>,
-}
-
-#[derive(Debug)]
-pub struct Command {
-    pub name: String,
-    pub run_mode: CommandRunMode,
-}
-
-#[derive(Debug)]
-pub struct ApiCall {
-    duration: i64,
-    response: APIResponse,
-}
-
-macro_rules! enum_str {
-    (pub enum $name:ident {
-        $($variant:ident = $val:expr),*,
-    }) => {
-        #[derive(Debug)]
-        pub enum $name {
-            $($variant),*
-        }
-
-        impl $name {
-            fn name(&self) -> &'static str {
-                match self {
-                    $($name::$variant => $val),*
-                }
-            }
-        }
+lazy_static! {
+    /// The default path to the wukong telemetry file.
+    ///
+    /// This is a [lazy_static] of `Option<String>`, the value of which is
+    ///
+    /// > `~/.config/wukong/telemetry.json`
+    ///
+    /// It will only be `None` if it is unable to identify the user's home
+    /// directory, which should not happen under typical OS environments.
+    ///
+    /// [lazy_static]: https://docs.rs/lazy_static
+    pub static ref TELEMETRY_FILE: Option<String> = {
+        dirs::home_dir().map(|mut path| {
+            path.extend([".config", "wukong", "telemetry.json"]);
+            path.to_str().unwrap().to_string()
+        })
     };
 }
 
-enum_str! {
-    pub enum CommandRunMode {
-        Interactive = "interactive",
-        NonInteractive = "non-interactive",
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TelemetryData {
+    timestamp: String,
+    actor: String,
+    application: Option<String>,
+    #[serde(flatten)]
+    command: Option<Command>,
+    #[serde(flatten)]
+    api_call: Option<ApiCall>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Command {
+    #[serde(rename = "cmd_name")]
+    pub name: String,
+    #[serde(rename = "cmd_run_mode")]
+    pub run_mode: CommandRunMode,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ApiCall {
+    #[serde(rename = "cmd_api_mode")]
+    duration: i64,
+    #[serde(rename = "cmd_api_response")]
+    response: APIResponse,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct EventData {
+    time: String,
+    data: TelemetryData,
+}
+
+impl From<TelemetryData> for EventData {
+    fn from(telemetry_data: TelemetryData) -> Self {
+        Self {
+            time: telemetry_data.timestamp.clone(),
+            data: telemetry_data,
+        }
     }
 }
 
-enum_str! {
-    pub enum APIResponse {
-        Success = "Success",
-        Error = "Error",
-    }
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "kebab-case")]
+pub enum CommandRunMode {
+    Interactive,
+    NonInteractive,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum APIResponse {
+    Success,
+    Error,
 }
 
 impl TelemetryData {
-    pub fn new(command: Command) -> Self {
+    pub fn new(command: Option<Command>, application: Option<String>, actor: String) -> Self {
         Self {
-            timestamp: Utc::now().timestamp(),
-            actor: "Sjklsdfhkfhj".to_string(),
-            application: None,
-            command: Some(command),
+            timestamp: Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true),
+            actor,
+            application,
+            command,
             api_call: None,
         }
     }
 
-    pub async fn send_event(&self) {
-        let mut client = libhoney::init(libhoney::Config {
-            options: libhoney::client::Options {
-                dataset: "wukong_telemetry_dev".to_string(),
-                ..libhoney::client::Options::default()
-            },
-            transmission_options: libhoney::transmission::Options::default(),
-        });
+    pub async fn record_event(&self) {
+        let telemetry_file = TELEMETRY_FILE
+            .as_ref()
+            .expect("Unable to identify user's home directory");
 
-        // let mut data: HoneycombData = *self.into();
-        // data.insert("timestamp".to_string(), json!(153.12));
-        // data.insert("duration_ms".to_string(), json!(153.12));
-        // data.insert("method".to_string(), Value::String("get".to_string()));
-        // data.insert(
-        //     "hostname".to_string(),
-        //     Value::String("appserver15".to_string()),
-        // );
-        // data.insert("payload_length".to_string(), json!(27));
-        let mut data = HashMap::new();
-        data.insert("timestamp".to_string(), json!(self.timestamp));
-        data.insert("actor".to_string(), Value::String(self.actor.clone()));
-        data.insert(
-            "application".to_string(),
-            match &self.application {
-                Some(application) => Value::String(application.to_string()),
-                None => Value::Null,
-            },
-        );
-        match &self.command {
-            Some(command) => {
-                data.insert("cmd_name".to_string(), Value::String(command.name.clone()));
-                data.insert(
-                    "cmd_run_mode".to_string(),
-                    Value::String(command.run_mode.name().to_string()),
-                );
+        let mut telemetry_data = {
+            let read_result = std::fs::read_to_string(&telemetry_file);
+            if let Ok(data) = read_result {
+                serde_json::from_str::<Vec<TelemetryData>>(&data).unwrap()
+            } else {
+                Vec::new()
             }
-            None => {
-                data.insert("cmd_name".to_string(), Value::Null);
-                data.insert("cmd_run_mode".to_string(), Value::Null);
-            }
-        }
+        };
 
-        let mut ev = client.new_event();
-        ev.add(data);
+        let event_data: Vec<EventData> =
+            telemetry_data.into_iter().map(|each| each.into()).collect();
 
-        match ev.send(&mut client) {
-            Ok(()) => {
-                let response = client.responses().iter().next().unwrap();
-                assert_eq!(response.error, None);
-            }
-            Err(e) => {
-                log::error!("Could not send event: {}", e);
-            }
-        }
+        send_event(event_data).await;
 
-        client.close().unwrap();
+        // telemetry_data.push(self.clone());
+
+        // println!("{:#?}", telemetry_data);
+
+        // std::fs::write(
+        //     telemetry_file,
+        //     serde_json::to_string_pretty(&telemetry_data).unwrap(),
+        // )
+        // .unwrap();
     }
 }
 
-// impl Into<HoneycombData> for TelemetryData {
-//     fn into(self) -> HoneycombData {
-//         let mut hash_map = HashMap::new();
-//         hash_map.insert("timestamp".to_string(), json!(self.timestamp));
-//         hash_map.insert("actor".to_string(), Value::String(self.actor));
-//         hash_map.insert(
-//             "application".to_string(),
-//             match self.application {
-//                 Some(application) => Value::String(application),
-//                 None => Value::Null,
-//             },
-//         );
+async fn send_event(event_data: Vec<EventData>) {
+    let client = reqwest::Client::builder().build().unwrap();
 
-//         hash_map
-//     }
-// }
+    // println!("event data: {:?}", &event_data);
+    println!("event data: {:#?}", serde_json::to_string(&event_data));
+
+    let resp = client
+        .post("https://api.honeycomb.io/1/batch/wukong_telemetry_dev")
+        .header(header::CONTENT_TYPE, "application/json")
+        .json(&event_data)
+        .send()
+        .await
+        .unwrap();
+
+    println!("resp: {:?}", resp);
+}
