@@ -1,5 +1,6 @@
 query CdPipelinesQuery($application: String!) {
   cdPipelines(application: $application) {
+    deployedBy
     deployedRef
     environment
     enabled
