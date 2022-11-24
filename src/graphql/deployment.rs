@@ -273,4 +273,65 @@ mod test {
         let deployment_url = response.unwrap().data.unwrap().execute_cd_pipeline.url;
         assert_eq!(deployment_url, "https://cd_pipeline_deployment_url.com");
     }
+
+    #[tokio::test]
+    async fn test_execute_cd_pipeline_list_failed_with_deploy_for_this_build_is_currently_running_error_should_return_response_error(
+    ) {
+        let server = MockServer::start();
+        let query_client = QueryClientBuilder::new()
+            .with_access_token("test_access_token".to_string())
+            .with_api_url(server.base_url())
+            .build()
+            .unwrap();
+
+        let api_resp = r#"
+{
+  "data": null,
+  "errors": [
+    {
+      "locations": [
+        {
+          "column": 3,
+          "line": 2
+        }
+      ],
+      "message": "deploy_for_this_build_is_currently_running",
+      "path": [
+        "executeCdPipeline"
+      ]
+    }
+  ]
+}"#;
+
+        let mock = server.mock(|when, then| {
+            when.method(POST).path("/");
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+
+        let response = ExecuteCdPipeline::mutate(
+            &query_client,
+            "valid_application",
+            "prod",
+            "green",
+            100,
+            Some(base64::encode(
+                "This is a changelog.\n\nThis is a new changelog.\n",
+            )),
+            true,
+        )
+        .await;
+
+        mock.assert();
+        assert!(response.is_err());
+
+        match response.as_ref().unwrap_err() {
+            APIError::ResponseError { code, message } => {
+                assert_eq!(code, "deploy_for_this_build_is_currently_running");
+                assert_eq!(message, "Cannot submit this deployment request, since there is another running deployment with the same arguments is running on Spinnaker.\nYou can wait a few minutes and submit the deployment again.");
+            }
+            _ => panic!("it should be returning ResponseError"),
+        }
+    }
 }
