@@ -5,12 +5,16 @@ use crate::{
     graphql::{pipeline::pipelines_query::PipelinesQueryPipelines, QueryClientBuilder},
     loader::new_spinner_progress_bar,
     output::table::TableOutput,
+    telemetry::{self, Command, TelemetryData},
     Config as CLIConfig, GlobalContext,
 };
+use tokio::time::{sleep, Duration};
 
 pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Fetching pipelines list ...");
+
+    // sleep(Duration::from_millis(2000)).await;
 
     let config_file = CONFIG_FILE
         .as_ref()
@@ -34,6 +38,24 @@ pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
         .pipelines;
 
     progress_bar.finish_and_clear();
+
+    // let telemetry_data = TelemetryData::new(
+    //     // Some(Command {
+    //     //     name: "pipeline list".to_string(),
+    //     //     run_mode: telemetry::CommandRunMode::NonInteractive,
+    //     // }),
+    //     None,
+    //     None,
+    //     "api call".to_string(),
+    // );
+
+    // println!("{:?}", telemetry_data);
+    // let handle = tokio::spawn(async move {
+    //     // send telemetry event on command
+
+    //     telemetry_data.send_event().await;
+    //     println!("api call event sent finished");
+    // });
 
     let mut pipelines = Vec::new();
 
@@ -62,6 +84,7 @@ pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
         data: pipelines,
     };
     println!("{output}");
+    // handle.await;
 
     Ok(true)
 }

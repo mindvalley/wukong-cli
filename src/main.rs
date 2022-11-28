@@ -9,8 +9,12 @@ mod error;
 mod graphql;
 mod loader;
 mod output;
+mod telemetry;
 
-use crate::auth::refresh_tokens;
+use crate::{
+    auth::refresh_tokens,
+    telemetry::{Command, TelemetryData},
+};
 use app::{App, ConfigState};
 use chrono::{DateTime, Local};
 use commands::{
