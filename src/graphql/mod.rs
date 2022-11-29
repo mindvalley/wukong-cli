@@ -100,6 +100,7 @@ impl QueryClient {
         Ok(response)
     }
 
+    // #[telemetry(api_event = "fetch_pipeline_list")]
     pub async fn fetch_pipeline_list(
         &self,
         application: &str,

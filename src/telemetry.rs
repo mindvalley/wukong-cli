@@ -6,6 +6,8 @@ use libhoney::{json, FieldHolder, Value};
 use reqwest::header;
 use serde::{Deserialize, Serialize};
 
+const EVENT_THRESHOLD: usize = 20;
+
 lazy_static! {
     /// The default path to the wukong telemetry file.
     ///
@@ -105,20 +107,23 @@ impl TelemetryData {
             }
         };
 
-        let event_data: Vec<EventData> =
-            telemetry_data.into_iter().map(|each| each.into()).collect();
+        telemetry_data.push(self.clone());
 
-        send_event(event_data).await;
+        // if telemetry_data is more than the EVENT_THRESHOLD, then send the events in batch to honeycomb
+        if telemetry_data.len() >= EVENT_THRESHOLD {
+            let event_data: Vec<EventData> =
+                telemetry_data.into_iter().map(|each| each.into()).collect();
 
-        // telemetry_data.push(self.clone());
+            send_event(event_data).await;
 
-        // println!("{:#?}", telemetry_data);
-
-        // std::fs::write(
-        //     telemetry_file,
-        //     serde_json::to_string_pretty(&telemetry_data).unwrap(),
-        // )
-        // .unwrap();
+            std::fs::write(telemetry_file, "[]").unwrap();
+        } else {
+            std::fs::write(
+                telemetry_file,
+                serde_json::to_string_pretty(&telemetry_data).unwrap(),
+            )
+            .unwrap();
+        }
     }
 }
 

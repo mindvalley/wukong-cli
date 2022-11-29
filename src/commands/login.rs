@@ -42,6 +42,7 @@ async fn login_and_update_config() -> Result<bool, CliError> {
     CLIConfig::load(config_file).map(|mut config| {
         config.auth = Some(AuthConfig {
             account: auth_info.account.clone(),
+            subject: auth_info.subject.clone(),
             id_token: auth_info.id_token,
             access_token: auth_info.access_token,
             expiry_time: auth_info.expiry_time,

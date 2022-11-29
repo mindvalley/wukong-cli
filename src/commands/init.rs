@@ -34,6 +34,7 @@ pub async fn handle_init(
         let config = Config {
             auth: Some(AuthConfig {
                 account: auth_info.account.clone(),
+                subject: auth_info.subject.clone(),
                 id_token: auth_info.id_token,
                 access_token: auth_info.access_token,
                 expiry_time: auth_info.expiry_time,

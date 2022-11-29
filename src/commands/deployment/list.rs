@@ -63,6 +63,7 @@ struct CdPipeline {
     status: Option<String>,
 }
 
+// #[telemetry(cmd_event = "deployment_list")]
 pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Fetching cd pipeline list ... ");

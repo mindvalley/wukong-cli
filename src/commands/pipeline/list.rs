@@ -10,11 +10,10 @@ use crate::{
 };
 use tokio::time::{sleep, Duration};
 
+// #[telemetry(name = "pipeline_list")]
 pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Fetching pipelines list ...");
-
-    // sleep(Duration::from_millis(2000)).await;
 
     let config_file = CONFIG_FILE
         .as_ref()
