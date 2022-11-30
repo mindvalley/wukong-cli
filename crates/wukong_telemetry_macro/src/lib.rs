@@ -3,10 +3,7 @@ mod utils;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, AttributeArgs, ItemFn};
-use utils::{
-    attribute_args_ext::AttributeArgsExt, ident_ext::IdentExt, meta_ext::MetaExt,
-    nested_meta_ext::NestedMeta,
-};
+use utils::attribute_args_ext::AttributeArgsExt;
 
 #[proc_macro_attribute]
 pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
@@ -24,8 +21,6 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
     let visibility = item.vis;
 
     let generated_func;
-
-    dbg!(&fn_inputs);
 
     if let Some(command_event) = command_event_value {
         generated_func = quote! {
@@ -67,31 +62,11 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
             })
             .is_some();
 
-        let telemetry_data;
+        let current_application;
         if has_application {
-            telemetry_data = quote! {
-                TelemetryData::new(
-                    TelemetryEvent::Api {
-                        name: #api_event.to_string(),
-                        duration: now.elapsed().as_millis() as u64,
-                        response: telemetry::APIResponse::Success,
-                    },
-                    Some(application.to_string()),
-                    current_sub,
-                )
-            }
+            current_application = quote! { Some(application.to_string()) }
         } else {
-            telemetry_data = quote! {
-                TelemetryData::new(
-                    TelemetryEvent::Api {
-                        name: #api_event.to_string(),
-                        duration: now.elapsed().as_millis() as u64,
-                        response: telemetry::APIResponse::Success,
-                    },
-                    None,
-                    current_sub,
-                )
-            }
+            current_application = quote! { None }
         }
 
         generated_func = quote! {
@@ -102,9 +77,34 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
                 };
 
                 let now = std::time::Instant::now();
-                let fn_result = #fn_block;
 
-                #telemetry_data
+                let fn_result = #fn_block;
+                let telemetry_data = match fn_result {
+                    Ok(_) => {
+                        TelemetryData::new(
+                            TelemetryEvent::Api {
+                                name: #api_event.to_string(),
+                                duration: now.elapsed().as_millis() as u64,
+                                response: telemetry::APIResponse::Success,
+                            },
+                            #current_application,
+                            current_sub,
+                        )
+                    },
+                    Err(_) => {
+                        TelemetryData::new(
+                            TelemetryEvent::Api {
+                                name: #api_event.to_string(),
+                                duration: now.elapsed().as_millis() as u64,
+                                response: telemetry::APIResponse::Error,
+                            },
+                            #current_application,
+                            current_sub,
+                        )
+                    }
+                };
+
+                telemetry_data
                 .record_event()
                 .await;
 
