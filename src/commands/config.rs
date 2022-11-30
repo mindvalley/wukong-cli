@@ -34,7 +34,6 @@ pub enum ConfigSubcommand {
 #[derive(Debug, ValueEnum, Clone)]
 pub enum ConfigName {
     Application,
-    CollectTelemetry,
     EnableLog,
     LogDir,
     WukongApiUrl,
@@ -71,14 +70,6 @@ impl Config {
                             config.core.application = config_value.trim().to_string();
                             config.save(config_file)?;
                             println!("Updated property [core/application].");
-                        }
-                        ConfigName::CollectTelemetry => {
-                            config.core.collect_telemetry = config_value
-                                .trim()
-                                .parse()
-                                .expect("The value can't be parsed to bool.");
-                            config.save(config_file)?;
-                            println!("Updated property [core/collect_telemetry].");
                         }
                         ConfigName::EnableLog => {
                             config.log.enable = config_value
@@ -117,9 +108,6 @@ impl Config {
                 match CLIConfig::load(config_file) {
                     Ok(config) => match config_name {
                         ConfigName::Application => println!("{}", config.core.application),
-                        ConfigName::CollectTelemetry => {
-                            println!("{}", config.core.collect_telemetry);
-                        }
                         ConfigName::EnableLog => println!("{}", config.log.enable),
                         ConfigName::LogDir => println!("{}", config.log.log_dir),
                         ConfigName::WukongApiUrl => println!("{}", config.core.wukong_api_url),

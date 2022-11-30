@@ -38,7 +38,6 @@ pub struct Config {
 pub struct CoreConfig {
     /// The current application name
     pub application: String,
-    pub collect_telemetry: bool,
     pub wukong_api_url: String,
     pub okta_client_id: String,
 }
@@ -67,7 +66,6 @@ impl Default for Config {
         Self {
             core: CoreConfig {
                 application: "".to_string(),
-                collect_telemetry: false,
 
                 #[cfg(not(feature = "prod"))]
                 wukong_api_url: "http://localhost:4000/api".to_string(),
@@ -156,10 +154,7 @@ mod test {
         let saved_config = Config::load(path).unwrap();
 
         assert_eq!(saved_config.core.application, config.core.application);
-        assert_eq!(
-            saved_config.core.collect_telemetry,
-            config.core.collect_telemetry
-        );
+        assert_eq!(config.core.collect_telemetry);
         assert_eq!(saved_config.log.enable, config.log.enable);
         assert_eq!(saved_config.log.log_dir, config.log.log_dir);
 

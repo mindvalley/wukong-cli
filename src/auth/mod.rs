@@ -160,8 +160,6 @@ pub async fn login() -> Result<AuthInfo, CliError> {
                 message: "Failed to verify ID token",
             })?;
 
-    println!("subject: {:?}", id_token_claims.subject().to_string());
-
     // Verify the access token hash to ensure that the access token hasn't been substituted for
     // another user's.
     if let Some(expected_access_token_hash) = id_token_claims.access_token_hash() {
