@@ -6,7 +6,6 @@ use self::{ci_status::handle_ci_status, describe::handle_describe, list::handle_
 use crate::{
     error::CliError,
     output::table::{fmt_option_milliseconds, fmt_option_timestamp, fmt_timestamp},
-    telemetry::{self, Command, TelemetryData},
     GlobalContext,
 };
 use chrono::{DateTime, NaiveDateTime, Utc};
@@ -128,52 +127,10 @@ pub enum PipelineSubcommand {
 
 impl Pipeline {
     pub async fn handle_command(&self, context: GlobalContext) -> Result<bool, CliError> {
-        // SAFETY: the application can't be None since it is checked in the caller
-        let current_application = context.application.as_ref().unwrap().clone();
-        // SAFETY: the sub can't be None since it is checked in the caller
-        let current_sub = context.sub.as_ref().unwrap().clone();
-
         match &self.subcommand {
-            PipelineSubcommand::List => {
-                TelemetryData::new(
-                    Some(Command {
-                        name: "pipeline_list".to_string(),
-                        run_mode: telemetry::CommandRunMode::NonInteractive,
-                    }),
-                    Some(current_application),
-                    current_sub,
-                )
-                .record_event()
-                .await;
-
-                handle_list(context).await
-            }
-            PipelineSubcommand::Describe { name } => {
-                TelemetryData::new(
-                    Some(Command {
-                        name: "pipeline_describe".to_string(),
-                        run_mode: telemetry::CommandRunMode::NonInteractive,
-                    }),
-                    Some(current_application),
-                    current_sub,
-                )
-                .record_event()
-                .await;
-
-                handle_describe(context, name).await
-            }
+            PipelineSubcommand::List => handle_list(context).await,
+            PipelineSubcommand::Describe { name } => handle_describe(context, name).await,
             PipelineSubcommand::CiStatus { repo_url, branch } => {
-                TelemetryData::new(
-                    Some(Command {
-                        name: "pipeline_ci_status".to_string(),
-                        run_mode: telemetry::CommandRunMode::NonInteractive,
-                    }),
-                    Some(current_application),
-                    current_sub,
-                )
-                .record_event()
-                .await;
-
                 handle_ci_status(context, repo_url, branch).await
             }
         }

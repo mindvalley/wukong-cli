@@ -4,10 +4,7 @@ pub mod list;
 use execute::handle_execute;
 use list::handle_list;
 
-use crate::{
-    telemetry::{self, Command, TelemetryData},
-    CliError, GlobalContext,
-};
+use crate::{CliError, GlobalContext};
 use clap::{Args, Subcommand, ValueEnum};
 
 #[derive(Debug, Args)]
@@ -67,44 +64,13 @@ impl ToString for DeploymentNamespace {
 
 impl Deployment {
     pub async fn handle_command(&self, context: GlobalContext) -> Result<bool, CliError> {
-        // SAFETY: the application can't be None since it is checked in the caller
-        let current_application = context.application.as_ref().unwrap().clone();
-        // SAFETY: the sub can't be None since it is checked in the caller
-        let current_sub = context.sub.as_ref().unwrap().clone();
-
         match &self.subcommand {
-            DeploymentSubcommand::List => {
-                TelemetryData::new(
-                    Some(Command {
-                        name: "deployment_list".to_string(),
-                        run_mode: telemetry::CommandRunMode::NonInteractive,
-                    }),
-                    Some(current_application),
-                    current_sub,
-                )
-                .record_event()
-                .await;
-
-                handle_list(context).await
-            }
+            DeploymentSubcommand::List => handle_list(context).await,
             DeploymentSubcommand::Execute {
                 namespace,
                 version,
                 artifact,
-            } => {
-                TelemetryData::new(
-                    Some(Command {
-                        name: "deployment_execute".to_string(),
-                        run_mode: telemetry::CommandRunMode::Interactive,
-                    }),
-                    Some(current_application),
-                    current_sub,
-                )
-                .record_event()
-                .await;
-
-                handle_execute(context, namespace, version, artifact).await
-            }
+            } => handle_execute(context, namespace, version, artifact).await,
         }
     }
 }

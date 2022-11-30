@@ -15,9 +15,14 @@ use self::{
         CiStatusQuery, MultiBranchPipelineQuery, PipelineQuery, PipelinesQuery,
     },
 };
-use crate::{app::APP_STATE, error::APIError};
+use crate::{
+    app::APP_STATE,
+    error::APIError,
+    telemetry::{self, TelemetryData, TelemetryEvent},
+};
 use graphql_client::{reqwest::post_graphql, GraphQLQuery, Response};
 use reqwest::header;
+use wukong_telemetry_macro::wukong_telemetry;
 
 pub struct QueryClientBuilder {
     access_token: Option<String>,
@@ -100,7 +105,7 @@ impl QueryClient {
         Ok(response)
     }
 
-    // #[telemetry(api_event = "fetch_pipeline_list")]
+    #[wukong_telemetry(api_event = "fetch_pipeline_list")]
     pub async fn fetch_pipeline_list(
         &self,
         application: &str,
@@ -108,6 +113,7 @@ impl QueryClient {
         PipelinesQuery::fetch(self, application).await
     }
 
+    #[wukong_telemetry(api_event = "fetch_pipeline")]
     pub async fn fetch_pipeline(
         &self,
         name: &str,
@@ -115,6 +121,7 @@ impl QueryClient {
         PipelineQuery::fetch(self, name).await
     }
 
+    #[wukong_telemetry(api_event = "fetch_multi_branch_pipeline")]
     pub async fn fetch_multi_branch_pipeline(
         &self,
         name: &str,
@@ -122,6 +129,7 @@ impl QueryClient {
         MultiBranchPipelineQuery::fetch(self, name).await
     }
 
+    #[wukong_telemetry(api_event = "fetch_ci_status")]
     pub async fn fetch_ci_status(
         &self,
         repo_url: &str,
@@ -130,12 +138,14 @@ impl QueryClient {
         CiStatusQuery::fetch(self, repo_url, branch).await
     }
 
+    #[wukong_telemetry(api_event = "fetch_application_list")]
     pub async fn fetch_application_list(
         &self,
     ) -> Result<Response<applications_query::ResponseData>, APIError> {
         ApplicationsQuery::fetch(self).await
     }
 
+    #[wukong_telemetry(api_event = "fetch_cd_pipeline_list")]
     pub async fn fetch_cd_pipeline_list(
         &self,
         application: &str,
@@ -143,6 +153,7 @@ impl QueryClient {
         CdPipelinesQuery::fetch(self, application).await
     }
 
+    #[wukong_telemetry(api_event = "fetch_cd_pipeline")]
     pub async fn fetch_cd_pipeline(
         &self,
         application: &str,
@@ -152,6 +163,7 @@ impl QueryClient {
         CdPipelineQuery::fetch(self, application, namespace, version).await
     }
 
+    #[wukong_telemetry(api_event = "execute_cd_pipeline")]
     pub async fn execute_cd_pipeline(
         &self,
         application: &str,
@@ -173,6 +185,7 @@ impl QueryClient {
         .await
     }
 
+    #[wukong_telemetry(api_event = "fetch_changelogs")]
     pub async fn fetch_changelogs(
         &self,
         application: &str,

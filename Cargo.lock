@@ -2545,9 +2545,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.87"
+version = "1.0.89"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ce777b7b150d76b9cf60d28b55f5847135a003f7d7350c6be7a773508ce7d45"
+checksum = "020ff22c755c2ed3f8cf162dbb41a7268d934702f3ed3631656ea597e08fc3db"
 dependencies = [
  "itoa 1.0.4",
  "ryu",
@@ -3580,6 +3580,22 @@ dependencies = [
  "toml",
  "url",
  "webbrowser",
+ "wukong_telemetry_macro",
+]
+
+[[package]]
+name = "wukong_telemetry_macro"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "dirs",
+ "lazy_static",
+ "proc-macro2",
+ "quote",
+ "reqwest 0.11.13",
+ "serde",
+ "serde_json",
+ "syn",
 ]
 
 [[package]]

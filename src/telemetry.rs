@@ -1,8 +1,5 @@
-use std::{collections::HashMap, path::Path};
-
 use chrono::{offset::Utc, SecondsFormat};
 use lazy_static::lazy_static;
-use libhoney::{json, FieldHolder, Value};
 use reqwest::header;
 use serde::{Deserialize, Serialize};
 
@@ -33,34 +30,35 @@ pub struct TelemetryData {
     actor: String,
     application: Option<String>,
     #[serde(flatten)]
-    command: Option<Command>,
-    #[serde(flatten)]
-    api_call: Option<ApiCall>,
+    event: TelemetryEvent,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Command {
-    #[serde(rename = "cmd_name")]
-    pub name: String,
-    #[serde(rename = "cmd_run_mode")]
-    pub run_mode: CommandRunMode,
+#[serde(tag = "event", rename_all = "kebab-case")]
+pub enum TelemetryEvent {
+    Command {
+        #[serde(rename = "cmd_name")]
+        name: String,
+        #[serde(rename = "cmd_run_mode")]
+        run_mode: CommandRunMode,
+    },
+    Api {
+        #[serde(rename = "api_name")]
+        name: String,
+        #[serde(rename = "api_duration")]
+        duration: u64,
+        #[serde(rename = "api_response")]
+        response: APIResponse,
+    },
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ApiCall {
-    #[serde(rename = "cmd_api_mode")]
-    duration: i64,
-    #[serde(rename = "cmd_api_response")]
-    response: APIResponse,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct EventData {
+pub struct HoneycombEventData {
     time: String,
     data: TelemetryData,
 }
 
-impl From<TelemetryData> for EventData {
+impl From<TelemetryData> for HoneycombEventData {
     fn from(telemetry_data: TelemetryData) -> Self {
         Self {
             time: telemetry_data.timestamp.clone(),
@@ -83,13 +81,12 @@ pub enum APIResponse {
 }
 
 impl TelemetryData {
-    pub fn new(command: Option<Command>, application: Option<String>, actor: String) -> Self {
+    pub fn new(event: TelemetryEvent, application: Option<String>, actor: String) -> Self {
         Self {
             timestamp: Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true),
             actor,
             application,
-            command,
-            api_call: None,
+            event,
         }
     }
 
@@ -111,7 +108,7 @@ impl TelemetryData {
 
         // if telemetry_data is more than the EVENT_THRESHOLD, then send the events in batch to honeycomb
         if telemetry_data.len() >= EVENT_THRESHOLD {
-            let event_data: Vec<EventData> =
+            let event_data: Vec<HoneycombEventData> =
                 telemetry_data.into_iter().map(|each| each.into()).collect();
 
             send_event(event_data).await;
@@ -127,7 +124,7 @@ impl TelemetryData {
     }
 }
 
-async fn send_event(event_data: Vec<EventData>) {
+async fn send_event(event_data: Vec<HoneycombEventData>) {
     let client = reqwest::Client::builder().build().unwrap();
 
     // println!("event data: {:?}", &event_data);

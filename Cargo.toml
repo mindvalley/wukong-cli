@@ -53,5 +53,8 @@ ctrlc = { version = "3.2.3", features = ["termination"] }
 edit = "0.1.4"
 libhoney-rust = "0.1.6"
 
+# Telemetry
+wukong_telemetry_macro = { path = "crates/wukong_telemetry_macro" }
+
 [dev-dependencies]
 httpmock = "0.6.6"

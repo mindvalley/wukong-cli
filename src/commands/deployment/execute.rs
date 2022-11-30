@@ -3,6 +3,7 @@ use crate::{
     error::{CliError, DeploymentError},
     graphql::QueryClientBuilder,
     loader::new_spinner_progress_bar,
+    telemetry::{self, TelemetryData, TelemetryEvent},
     GlobalContext,
 };
 use dialoguer::{theme::ColorfulTheme, Confirm, Select};
@@ -10,6 +11,7 @@ use edit::Builder;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display};
+use wukong_telemetry_macro::wukong_telemetry;
 
 #[derive(Default)]
 struct TwoColumns {
@@ -69,6 +71,7 @@ struct Commit {
     message_headline: String,
 }
 
+#[wukong_telemetry(command_event = "deployment_execute")]
 pub async fn handle_execute(
     context: GlobalContext,
     namespace: &Option<DeploymentNamespace>,
