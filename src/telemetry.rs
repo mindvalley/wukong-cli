@@ -1,9 +1,14 @@
 use chrono::{offset::Utc, SecondsFormat};
 use lazy_static::lazy_static;
+#[cfg(all(feature = "prod"))]
 use reqwest::header;
 use serde::{Deserialize, Serialize};
 
+#[cfg(all(feature = "prod"))]
 const EVENT_THRESHOLD: usize = 20;
+
+#[cfg(all(feature = "prod"))]
+const HONEYCOMB_API_KEY: &'static str = env!("WUKONG_HONEYCOMB_API_KEY");
 
 lazy_static! {
     /// The default path to the wukong telemetry file.
@@ -91,52 +96,51 @@ impl TelemetryData {
     }
 
     pub async fn record_event(&self) {
-        let telemetry_file = TELEMETRY_FILE
-            .as_ref()
-            .expect("Unable to identify user's home directory");
+        #[cfg(all(feature = "prod"))]
+        {
+            let telemetry_file = TELEMETRY_FILE
+                .as_ref()
+                .expect("Unable to identify user's home directory");
 
-        let mut telemetry_data = {
-            let read_result = std::fs::read_to_string(&telemetry_file);
-            if let Ok(data) = read_result {
-                serde_json::from_str::<Vec<TelemetryData>>(&data).unwrap()
+            let mut telemetry_data = {
+                let read_result = std::fs::read_to_string(telemetry_file);
+                if let Ok(data) = read_result {
+                    serde_json::from_str::<Vec<TelemetryData>>(&data).unwrap()
+                } else {
+                    Vec::new()
+                }
+            };
+
+            telemetry_data.push(self.clone());
+
+            // if telemetry_data is more than the EVENT_THRESHOLD, then send the events in batch to honeycomb
+            if telemetry_data.len() >= EVENT_THRESHOLD {
+                let event_data: Vec<HoneycombEventData> =
+                    telemetry_data.into_iter().map(|each| each.into()).collect();
+
+                send_event(event_data).await;
+
+                std::fs::write(telemetry_file, "[]").unwrap();
             } else {
-                Vec::new()
+                std::fs::write(
+                    telemetry_file,
+                    serde_json::to_string_pretty(&telemetry_data).unwrap(),
+                )
+                .unwrap();
             }
-        };
-
-        telemetry_data.push(self.clone());
-
-        // if telemetry_data is more than the EVENT_THRESHOLD, then send the events in batch to honeycomb
-        if telemetry_data.len() >= EVENT_THRESHOLD {
-            let event_data: Vec<HoneycombEventData> =
-                telemetry_data.into_iter().map(|each| each.into()).collect();
-
-            send_event(event_data).await;
-
-            std::fs::write(telemetry_file, "[]").unwrap();
-        } else {
-            std::fs::write(
-                telemetry_file,
-                serde_json::to_string_pretty(&telemetry_data).unwrap(),
-            )
-            .unwrap();
         }
     }
 }
 
+#[cfg(all(feature = "prod"))]
 async fn send_event(event_data: Vec<HoneycombEventData>) {
     let client = reqwest::Client::builder().build().unwrap();
 
-    // println!("event data: {:?}", &event_data);
-    println!("event data: {:#?}", serde_json::to_string(&event_data));
-
-    let resp = client
+    let _ = client
         .post("https://api.honeycomb.io/1/batch/wukong_telemetry_dev")
+        .header("X-Honeycomb-Team", HONEYCOMB_API_KEY)
         .header(header::CONTENT_TYPE, "application/json")
         .json(&event_data)
         .send()
-        .await
-        .unwrap();
-
-    println!("resp: {:?}", resp);
+        .await;
 }

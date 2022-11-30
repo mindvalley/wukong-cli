@@ -79,6 +79,7 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
                 let now = std::time::Instant::now();
 
                 let fn_result = #fn_block;
+
                 let telemetry_data = match fn_result {
                     Ok(_) => {
                         TelemetryData::new(
