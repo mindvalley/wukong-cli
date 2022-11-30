@@ -92,6 +92,7 @@ pub async fn handle_execute(
     // Calling API ...
     let client = QueryClientBuilder::new()
         .with_access_token(context.id_token.unwrap())
+        .with_sub(context.sub) // for telemetry
         .build()?;
 
     let cd_pipelines_resp = client

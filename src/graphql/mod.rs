@@ -26,6 +26,7 @@ use wukong_telemetry_macro::wukong_telemetry;
 
 pub struct QueryClientBuilder {
     access_token: Option<String>,
+    sub: Option<String>,
     api_url: String,
 }
 
@@ -39,11 +40,18 @@ impl QueryClientBuilder {
         Self {
             access_token: None,
             api_url,
+            sub: None,
         }
     }
 
     pub fn with_access_token(mut self, access_token: String) -> Self {
         self.access_token = Some(access_token);
+        self
+    }
+
+    // for telemetry usage
+    pub fn with_sub(mut self, sub: Option<String>) -> Self {
+        self.sub = sub;
         self
     }
 
@@ -69,12 +77,15 @@ impl QueryClientBuilder {
         Ok(QueryClient {
             reqwest_client: client,
             api_url: self.api_url,
+            sub: self.sub,
         })
     }
 }
 
 pub struct QueryClient {
     reqwest_client: reqwest::Client,
+    // for telemetry usage
+    sub: Option<String>,
     pub api_url: String,
 }
 

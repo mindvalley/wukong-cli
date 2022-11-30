@@ -27,6 +27,7 @@ pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
     // Calling API ...
     let client = QueryClientBuilder::new()
         .with_access_token(context.id_token.unwrap())
+        .with_sub(context.sub) // for telemetry
         .build()?;
 
     let pipelines_data = client

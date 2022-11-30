@@ -77,7 +77,7 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
                         response: telemetry::APIResponse::Success,
                     },
                     Some(application.to_string()),
-                    "sub".to_string(),
+                    current_sub,
                 )
             }
         } else {
@@ -89,13 +89,18 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
                         response: telemetry::APIResponse::Success,
                     },
                     None,
-                    "sub".to_string(),
+                    current_sub,
                 )
             }
         }
 
         generated_func = quote! {
             #visibility #asyncness fn #fn_ident(#fn_inputs) #fn_output {
+                let current_sub = match self.sub.clone() {
+                    Some(sub) => sub,
+                    None => "unknown".to_string(),
+                };
+
                 let now = std::time::Instant::now();
                 let fn_result = #fn_block;
 

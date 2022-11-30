@@ -57,6 +57,7 @@ pub async fn handle_ci_status(
 
     let client = QueryClientBuilder::new()
         .with_access_token(context.id_token.unwrap())
+        .with_sub(context.sub) // for telemetry
         .build()?;
 
     let ci_status_resp = client

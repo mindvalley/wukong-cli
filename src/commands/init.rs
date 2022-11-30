@@ -63,6 +63,7 @@ pub async fn handle_init(
     // Calling API ...
     let client = QueryClientBuilder::new()
         .with_access_token(auth_config.id_token.clone())
+        .with_sub(context.sub) // for telemetry
         .build()?;
 
     let applications_data: Vec<String> = client
