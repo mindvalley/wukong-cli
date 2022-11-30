@@ -25,18 +25,9 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
 
     let generated_func;
 
-    if let Some(command_event) = command_event_value {
-        let telemetry_data = quote! {
-            TelemetryData::new(
-                TelemetryEvent::Command {
-                    name: #command_event.to_string(),
-                    run_mode: telemetry::CommandRunMode::NonInteractive,
-                },
-                Some(current_application),
-                current_sub,
-            )
-        };
+    dbg!(&fn_inputs);
 
+    if let Some(command_event) = command_event_value {
         generated_func = quote! {
             #visibility #asyncness fn #fn_ident(#fn_inputs) #fn_output {
                 // SAFETY: the application can't be None since it is checked in the caller
@@ -44,19 +35,53 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
                 // SAFETY: the sub can't be None since it is checked in the caller
                 let current_sub = context.sub.as_ref().unwrap().clone();
 
-                #telemetry_data
-                    .record_event()
-                    .await;
+                TelemetryData::new(
+                    TelemetryEvent::Command {
+                        name: #command_event.to_string(),
+                        run_mode: telemetry::CommandRunMode::NonInteractive,
+                    },
+                    Some(current_application),
+                    current_sub,
+                )
+                .record_event()
+                .await;
 
                 #fn_block
             }
         };
     } else if let Some(api_event) = api_event_value {
-        generated_func = quote! {
-            #visibility #asyncness fn #fn_ident(#fn_inputs) #fn_output {
-                let now = std::time::Instant::now();
-                let fn_result = #fn_block;
+        let has_application = fn_inputs
+            .iter()
+            .find_map(|input| match input {
+                syn::FnArg::Typed(typed) => match &*typed.pat {
+                    syn::Pat::Ident(pat_ident) => {
+                        if pat_ident.ident.to_string() == "application" {
+                            Some(())
+                        } else {
+                            None
+                        }
+                    }
+                    _ => None,
+                },
+                _ => None,
+            })
+            .is_some();
 
+        let telemetry_data;
+        if has_application {
+            telemetry_data = quote! {
+                TelemetryData::new(
+                    TelemetryEvent::Api {
+                        name: #api_event.to_string(),
+                        duration: now.elapsed().as_millis() as u64,
+                        response: telemetry::APIResponse::Success,
+                    },
+                    Some(application.to_string()),
+                    "sub".to_string(),
+                )
+            }
+        } else {
+            telemetry_data = quote! {
                 TelemetryData::new(
                     TelemetryEvent::Api {
                         name: #api_event.to_string(),
@@ -64,8 +89,17 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
                         response: telemetry::APIResponse::Success,
                     },
                     None,
-                    "api".to_string(),
+                    "sub".to_string(),
                 )
+            }
+        }
+
+        generated_func = quote! {
+            #visibility #asyncness fn #fn_ident(#fn_inputs) #fn_output {
+                let now = std::time::Instant::now();
+                let fn_result = #fn_block;
+
+                #telemetry_data
                 .record_event()
                 .await;
 

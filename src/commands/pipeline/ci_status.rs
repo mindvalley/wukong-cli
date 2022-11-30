@@ -7,7 +7,7 @@ use crate::{
     graphql::QueryClientBuilder,
     loader::new_spinner_progress_bar,
     output::table::TableOutput,
-    telemetry::{self, TelemetryEvent, TelemetryData},
+    telemetry::{self, TelemetryData, TelemetryEvent},
     GlobalContext,
 };
 use std::process::Command as ProcessCommand;
