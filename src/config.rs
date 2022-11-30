@@ -154,7 +154,6 @@ mod test {
         let saved_config = Config::load(path).unwrap();
 
         assert_eq!(saved_config.core.application, config.core.application);
-        assert_eq!(config.core.collect_telemetry);
         assert_eq!(saved_config.log.enable, config.log.enable);
         assert_eq!(saved_config.log.log_dir, config.log.log_dir);
 
