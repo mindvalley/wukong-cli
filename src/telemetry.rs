@@ -10,6 +10,9 @@ const EVENT_THRESHOLD: usize = 20;
 #[cfg(all(feature = "prod"))]
 const HONEYCOMB_API_KEY: &'static str = env!("WUKONG_HONEYCOMB_API_KEY");
 
+#[cfg(all(feature = "prod"))]
+const HONEYCOMB_DATASET: &'static str = "wukong_telemetry_prod";
+
 lazy_static! {
     /// The default path to the wukong telemetry file.
     ///
@@ -135,9 +138,10 @@ impl TelemetryData {
 #[cfg(all(feature = "prod"))]
 async fn send_event(event_data: Vec<HoneycombEventData>) {
     let client = reqwest::Client::builder().build().unwrap();
+    let url = format!("https://api.honeycomb.io/1/batch/{}", HONEYCOMB_DATASET);
 
     let _ = client
-        .post("https://api.honeycomb.io/1/batch/wukong_telemetry_dev")
+        .post(url)
         .header("X-Honeycomb-Team", HONEYCOMB_API_KEY)
         .header(header::CONTENT_TYPE, "application/json")
         .json(&event_data)
