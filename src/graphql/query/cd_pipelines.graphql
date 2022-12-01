@@ -2,6 +2,7 @@ query CdPipelinesQuery($application: String!) {
   cdPipelines(application: $application) {
     deployedBy
     deployedRef
+    buildArtifact
     environment
     enabled
     lastDeployment

@@ -52,6 +52,8 @@ struct CdPipeline {
     enabled: bool,
     #[tabled(rename = "Deployed Ref", display_with = "fmt_option_string")]
     deployed_ref: Option<String>,
+    #[tabled(rename = "Build Artifact", display_with = "fmt_option_string")]
+    build_artifact: Option<String>,
     #[tabled(rename = "Triggered By", display_with = "fmt_option_string")]
     deployed_by: Option<String>,
     #[tabled(
@@ -101,6 +103,7 @@ pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
             deployed_ref: raw_cd_pipeline
                 .deployed_ref
                 .map(|deployed_ref| deployed_ref[..7].to_string()),
+            build_artifact: raw_cd_pipeline.build_artifact,
             deployed_by: raw_cd_pipeline.deployed_by,
             last_deployed_at: raw_cd_pipeline.last_deployment,
             status: raw_cd_pipeline.status,
