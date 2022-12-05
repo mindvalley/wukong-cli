@@ -1,7 +1,7 @@
 use chrono::{DateTime, Duration, Local, NaiveDateTime, Utc};
-use chrono_humanize::HumanTime;
 use std::fmt::Display;
 use tabled::{style::Style, Panel, Table, Tabled};
+use time_humanize::HumanTime;
 
 #[derive(Clone)]
 pub struct TableOutput<T>
@@ -76,7 +76,11 @@ pub fn fmt_option_human_timestamp(o: &Option<i64>) -> String {
 pub fn fmt_human_timestamp(o: &i64) -> String {
     let naive = NaiveDateTime::from_timestamp_opt(o / 1000, (o % 1000) as u32 * 1_000_000).unwrap();
     let dt = DateTime::<Utc>::from_utc(naive, Utc).with_timezone(&Local);
-    format!("{}", HumanTime::from(dt))
+    // convert to std::time::SystemTime as the HumanTime expecting this
+    format!(
+        "{}",
+        HumanTime::from(Into::<std::time::SystemTime>::into(dt))
+    )
 }
 
 #[cfg(test)]
