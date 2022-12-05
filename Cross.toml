@@ -1,0 +1,9 @@
+[target.x86_64-unknown-linux-gnu.env]
+passthrough = [
+    "WUKONG_HONEYCOMB_API_KEY",
+]
+
+[target.x86_64-unknown-linux-musl.env]
+passthrough = [
+    "WUKONG_HONEYCOMB_API_KEY",
+]

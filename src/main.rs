@@ -9,6 +9,7 @@ mod error;
 mod graphql;
 mod loader;
 mod output;
+mod telemetry;
 
 use crate::auth::refresh_tokens;
 use app::{App, ConfigState};
@@ -49,6 +50,7 @@ pub struct GlobalContext {
     account: Option<String>,
     access_token: Option<String>,
     id_token: Option<String>,
+    sub: Option<String>,
 }
 
 #[tokio::main]
@@ -104,6 +106,7 @@ async fn run() -> Result<bool, CliError> {
                 let mut updated_config = config.clone();
                 updated_config.auth = Some(AuthConfig {
                     account: auth_config.account.clone(),
+                    subject: auth_config.subject.clone(),
                     id_token: new_tokens.id_token.clone(),
                     access_token: new_tokens.access_token.clone(),
                     expiry_time: new_tokens.expiry_time,
@@ -114,6 +117,7 @@ async fn run() -> Result<bool, CliError> {
                     .save(config_file)
                     .expect("The token is refreshed but the new config can't be saved.");
                 context.application = Some(updated_config.core.application.clone());
+                context.sub = Some(auth_config.subject.clone());
                 context.account = Some(auth_config.account.clone());
                 context.id_token = Some(new_tokens.id_token);
                 context.access_token = Some(new_tokens.access_token);
@@ -122,6 +126,7 @@ async fn run() -> Result<bool, CliError> {
             } else {
                 context.application = Some(config.core.application.clone());
                 context.account = Some(auth_config.account.clone());
+                context.sub = Some(auth_config.subject.clone());
                 context.access_token = Some(auth_config.access_token.clone());
                 context.id_token = Some(auth_config.id_token.clone());
 

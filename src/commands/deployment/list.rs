@@ -5,11 +5,13 @@ use crate::{
     loader::new_spinner_progress_bar,
     output::table::TableOutput,
     output::table::{fmt_option_human_timestamp, fmt_option_string},
+    telemetry::{self, TelemetryData, TelemetryEvent},
     Config as CLIConfig, GlobalContext,
 };
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 use tabled::Tabled;
+use wukong_telemetry_macro::wukong_telemetry;
 
 fn fmt_version(o: &str) -> String {
     fn capitalize_first_letter(o: &str) -> String {
@@ -63,6 +65,7 @@ struct CdPipeline {
     status: Option<String>,
 }
 
+#[wukong_telemetry(command_event = "deployment_list")]
 pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Fetching cd pipeline list ... ");
@@ -81,6 +84,7 @@ pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
     // Calling API ...
     let client = QueryClientBuilder::new()
         .with_access_token(context.id_token.unwrap())
+        .with_sub(context.sub) // for telemetry
         .build()?;
 
     let cd_pipelines_data = client

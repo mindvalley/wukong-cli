@@ -5,9 +5,12 @@ use crate::{
     graphql::{pipeline::pipelines_query::PipelinesQueryPipelines, QueryClientBuilder},
     loader::new_spinner_progress_bar,
     output::table::TableOutput,
+    telemetry::{self, TelemetryData, TelemetryEvent},
     Config as CLIConfig, GlobalContext,
 };
+use wukong_telemetry_macro::wukong_telemetry;
 
+#[wukong_telemetry(command_event = "pipeline_list")]
 pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Fetching pipelines list ...");
@@ -24,6 +27,7 @@ pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
     // Calling API ...
     let client = QueryClientBuilder::new()
         .with_access_token(context.id_token.unwrap())
+        .with_sub(context.sub) // for telemetry
         .build()?;
 
     let pipelines_data = client

@@ -1,12 +1,18 @@
 use tabled::Tabled;
+use wukong_telemetry_macro::wukong_telemetry;
 
 use super::PipelineCiStatus;
 use crate::{
-    error::CliError, graphql::QueryClientBuilder, loader::new_spinner_progress_bar,
-    output::table::TableOutput, GlobalContext,
+    error::CliError,
+    graphql::QueryClientBuilder,
+    loader::new_spinner_progress_bar,
+    output::table::TableOutput,
+    telemetry::{self, TelemetryData, TelemetryEvent},
+    GlobalContext,
 };
-use std::process::Command;
+use std::process::Command as ProcessCommand;
 
+#[wukong_telemetry(command_event = "pipeline_ci_status")]
 pub async fn handle_ci_status(
     context: GlobalContext,
     repo_url: &Option<String>,
@@ -15,7 +21,7 @@ pub async fn handle_ci_status(
     let repo_url = match repo_url {
         Some(url) => url.clone(),
         None => {
-            let output = Command::new("git")
+            let output = ProcessCommand::new("git")
                 .arg("config")
                 .args(["--get", "remote.origin.url"])
                 .output()
@@ -30,7 +36,7 @@ pub async fn handle_ci_status(
     let branch = match branch {
         Some(branch) => branch.clone(),
         None => {
-            let output = Command::new("git")
+            let output = ProcessCommand::new("git")
                 .args(["branch", "--show-current"])
                 .output()
                 .expect("failed to execute `git branch --show-current` command");
@@ -51,6 +57,7 @@ pub async fn handle_ci_status(
 
     let client = QueryClientBuilder::new()
         .with_access_token(context.id_token.unwrap())
+        .with_sub(context.sub) // for telemetry
         .build()?;
 
     let ci_status_resp = client

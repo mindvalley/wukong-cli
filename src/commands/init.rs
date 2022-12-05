@@ -34,6 +34,7 @@ pub async fn handle_init(
         let config = Config {
             auth: Some(AuthConfig {
                 account: auth_info.account.clone(),
+                subject: auth_info.subject.clone(),
                 id_token: auth_info.id_token,
                 access_token: auth_info.access_token,
                 expiry_time: auth_info.expiry_time,
@@ -62,6 +63,7 @@ pub async fn handle_init(
     // Calling API ...
     let client = QueryClientBuilder::new()
         .with_access_token(auth_config.id_token.clone())
+        .with_sub(context.sub) // for telemetry
         .build()?;
 
     let applications_data: Vec<String> = client

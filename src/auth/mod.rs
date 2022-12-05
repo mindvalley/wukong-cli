@@ -22,6 +22,7 @@ impl AdditionalClaims for OktaClaims {}
 #[derive(Debug)]
 pub struct AuthInfo {
     pub account: String,
+    pub subject: String,
     pub id_token: String,
     pub access_token: String,
     pub expiry_time: String,
@@ -185,6 +186,7 @@ pub async fn login() -> Result<AuthInfo, CliError> {
 
     Ok(AuthInfo {
         account: current_user_email.to_string(),
+        subject: id_token_claims.subject().to_string(),
         id_token: id_token.to_string(),
         access_token: access_token.secret().to_owned(),
         expiry_time: expiry,

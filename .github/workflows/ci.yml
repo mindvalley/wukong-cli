@@ -9,6 +9,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   CICD_INTERMEDIATES_DIR: "_cicd-intermediates"
+  WUKONG_HONEYCOMB_API_KEY: ${{ secrets.WUKONG_HONEYCOMB_API_KEY }}
 
 jobs:
   check-formatting-clippy:
