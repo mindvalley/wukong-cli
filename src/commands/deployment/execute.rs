@@ -13,6 +13,11 @@ use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display};
 use wukong_telemetry_macro::wukong_telemetry;
 
+enum BuildSelectionLayout {
+    TwoColumns { data: Vec<TwoColumns> },
+    ThreeColumns { data: Vec<ThreeColumns> },
+}
+
 #[derive(Default)]
 struct TwoColumns {
     left: String,
@@ -40,12 +45,41 @@ impl Display for TwoColumns {
     }
 }
 
+#[derive(Default)]
+struct ThreeColumns {
+    left: String,
+    middle: String,
+    right: Vec<String>,
+}
+
+impl Display for ThreeColumns {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.right.is_empty() {
+            write!(f, "{0: <12} {1: <10}", self.left, self.middle)?;
+        } else {
+            for (i, value) in self.right.iter().enumerate() {
+                if i == 0 {
+                    write!(f, "{0: <12} {1: <10} {2}", self.left, self.middle, value)?;
+                } else {
+                    write!(f, "  {0: <12} {1: <10} {2}", "", "", value)?;
+                }
+                if i != (self.right.len() - 1) {
+                    writeln!(f)?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 struct CdPipelineWithBuilds {
     name: String,
     version: String,
     enabled: bool,
     deployed_ref: Option<String>,
+    build_artifact: Option<String>,
     last_deployed_at: Option<i64>,
     status: Option<String>,
     jenkins_builds: Vec<JenkinsBuild>,
@@ -55,6 +89,7 @@ struct CdPipelineWithBuilds {
 struct JenkinsBuild {
     build_duration: Option<i64>,
     build_number: i64,
+    build_branch: String,
     build_url: String,
     name: String,
     result: String,
@@ -281,6 +316,7 @@ pub async fn handle_execute(
                     version: cd_pipeline_data.version,
                     enabled: cd_pipeline_data.enabled,
                     deployed_ref: cd_pipeline_data.deployed_ref,
+                    build_artifact: cd_pipeline_data.build_artifact,
                     last_deployed_at: cd_pipeline_data.last_deployment,
                     status: cd_pipeline_data.status,
                     jenkins_builds: cd_pipeline_data
@@ -300,6 +336,7 @@ pub async fn handle_execute(
                             JenkinsBuild {
                                 build_duration: build.build_duration,
                                 build_number: build.build_number,
+                                build_branch: build.build_branch,
                                 build_url: build.build_url,
                                 commits,
                                 name: build.name,
@@ -312,30 +349,75 @@ pub async fn handle_execute(
                         .collect(),
                 };
 
-                let build_selections: Vec<TwoColumns> = cd_pipeline
-                    .jenkins_builds
-                    .iter()
-                    .map(|build| {
-                        let commits: Vec<String> = build
-                            .commits
+                let build_selections = if let Some(build_artifact) = &cd_pipeline.build_artifact {
+                    if build_artifact.contains("-build-") {
+                        let build_selection: Vec<ThreeColumns> = cd_pipeline
+                            .jenkins_builds
                             .iter()
-                            .map(|commit| commit.message_headline.clone())
+                            .map(|build| {
+                                let commits: Vec<String> = build
+                                    .commits
+                                    .iter()
+                                    .map(|commit| commit.message_headline.clone())
+                                    .collect();
+
+                                if build_artifact
+                                    == &format!(
+                                        "{}-build-{}",
+                                        build.build_branch, build.build_number
+                                    )
+                                {
+                                    ThreeColumns {
+                                        left: format!("build-{}", build.build_number),
+                                        middle: "(current)".to_string(),
+                                        right: commits,
+                                    }
+                                } else {
+                                    ThreeColumns {
+                                        left: format!("build-{}", build.build_number),
+                                        middle: "".to_string(),
+                                        right: commits,
+                                    }
+                                }
+                            })
                             .collect();
 
-                        TwoColumns {
-                            left: format!("build-{}", build.build_number),
-                            right: commits,
+                        BuildSelectionLayout::ThreeColumns {
+                            data: build_selection,
                         }
-                    })
-                    .collect();
+                    } else {
+                        BuildSelectionLayout::TwoColumns {
+                            data: generate_two_columns_build_selection(&cd_pipeline),
+                        }
+                    }
+                } else {
+                    BuildSelectionLayout::TwoColumns {
+                        data: generate_two_columns_build_selection(&cd_pipeline),
+                    }
+                };
 
                 progress_bar.finish_and_clear();
 
-                let selected_build = Select::with_theme(&ColorfulTheme::default())
-                    .with_prompt("Step 3: Please choose the build artifact you want to deploy")
-                    .default(0)
-                    .items(&build_selections[..])
-                    .interact()?;
+                let selected_build = match build_selections {
+                    BuildSelectionLayout::TwoColumns { data } => {
+                        Select::with_theme(&ColorfulTheme::default())
+                            .with_prompt(
+                                "Step 3: Please choose the build artifact you want to deploy",
+                            )
+                            .default(0)
+                            .items(&data[..])
+                            .interact()?
+                    }
+                    BuildSelectionLayout::ThreeColumns { data } => {
+                        Select::with_theme(&ColorfulTheme::default())
+                            .with_prompt(
+                                "Step 3: Please choose the build artifact you want to deploy",
+                            )
+                            .default(0)
+                            .items(&data[..])
+                            .interact()?
+                    }
+                };
 
                 let selected_build_number = cd_pipeline.jenkins_builds[selected_build].build_number;
 
@@ -478,4 +560,23 @@ pub async fn handle_execute(
     }
 
     Ok(true)
+}
+
+fn generate_two_columns_build_selection(cd_pipeline: &CdPipelineWithBuilds) -> Vec<TwoColumns> {
+    cd_pipeline
+        .jenkins_builds
+        .iter()
+        .map(|build| {
+            let commits: Vec<String> = build
+                .commits
+                .iter()
+                .map(|commit| commit.message_headline.clone())
+                .collect();
+
+            TwoColumns {
+                left: format!("build-{}", build.build_number),
+                right: commits,
+            }
+        })
+        .collect()
 }
