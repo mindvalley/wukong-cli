@@ -16,7 +16,7 @@
 </div>
 
 <div align="center">
-  <img alt="Wukong CLI" src="./.github/img/wukong_logo.png" >
+  <img alt="Wukong CLI" src="./.github/img/wukong_logo.png" width="200" height="200" >
 </div>
 
 <p align="center">This is a <strong>Work In Progress 🚧</strong>.</p>
