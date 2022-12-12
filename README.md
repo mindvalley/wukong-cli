@@ -4,6 +4,10 @@
   </h1>
 </p>
 
+<div align="center">
+  <img alt="Wukong CLI" src="./.github/img/wukong_logo.png" width="200" height="200">
+</div>
+
 <p align="center">A Swiss-army Knife CLI For Mindvalley Developers</p>
 
 <div align="center">
@@ -16,7 +20,7 @@
 </div>
 
 <div align="center">
-  <img alt="Wukong CLI" src="./.github/img/wukong_logo.png" width="200" height="200" >
+  <img alt="Wukong CLI" src="./.github/img/wukong_help.png">
 </div>
 
 <p align="center">This is a <strong>Work In Progress 🚧</strong>.</p>
