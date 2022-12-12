@@ -52,7 +52,7 @@ $ brew update
 $ brew upgrade wukong  
 
 # Confirm that you're on version >= 0.0.4-beta1.  
-$ wukong --version
+$ brew list --versions wukong
 wukong 0.0.4-beta1
 
 # Delete the current config.  
