@@ -2,6 +2,7 @@ query CdPipelineQuery($application: String!, $namespace: String!, $version:
 String!) {
   cdPipeline(application: $application, namespace: $namespace, version: $version) {
     deployedRef
+    buildArtifact
     environment
     enabled
     lastDeployment
@@ -11,6 +12,7 @@ String!) {
     jenkinsBuilds {
       buildDuration
       buildNumber
+      buildBranch
       buildUrl
       name
       result
