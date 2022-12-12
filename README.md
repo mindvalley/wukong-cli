@@ -1,12 +1,12 @@
+<div align="center">
+  <img alt="Wukong CLI" src="./.github/img/wukong_logo.png" width="200" height="200">
+</div>
+
 <p align="center">
   <h1 align="center">
     Wukong CLI
   </h1>
 </p>
-
-<div align="center">
-  <img alt="Wukong CLI" src="./.github/img/wukong_logo.png" width="200" height="200">
-</div>
 
 <p align="center">A Swiss-army Knife CLI For Mindvalley Developers</p>
 
