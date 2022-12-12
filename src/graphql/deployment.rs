@@ -148,7 +148,8 @@ mod test {
         "lastDeployment": 1663161661001,
         "name": "pipeline-blue",
         "status": "TERMINAL",
-        "version": "blue"
+        "version": "blue",
+        "buildArtifact": "master-build-250"
       },
       {
         "deployedRef": null,
@@ -157,7 +158,8 @@ mod test {
         "lastDeployment": null,
         "name": "pipeline-green",
         "status": null,
-        "version": "green"
+        "version": "green",
+        "buildArtifact": "master-build-1235"
       }
     ]
   }
