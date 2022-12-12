@@ -16,7 +16,7 @@
 </div>
 
 <div align="center">
-  <img alt="Wukong CLI" src="./.github/img/wukong-help.png" >
+  <img alt="Wukong CLI" src="./.github/img/wukong_logo.png" >
 </div>
 
 <p align="center">This is a <strong>Work In Progress 🚧</strong>.</p>
@@ -38,6 +38,25 @@ The Wukong CLI is a set of tools to manages Mindvalley DevOps resources. Its goa
 ## IMPORTANT !!
 
 The latest release of Wukong CLI contains several breaking changes. Users must upgrade to the latest version, which is at least `0.0.4-beta1` in order to continue using the Wukong CLI. If you are using Wukong version < `0.0.4-beta1`, please follow the below instructions:
+
+```
+# Check the current version of Wukong CLI.  
+$ wukong --version
+
+# If your version is < 0.0.4-beta1.  
+$ brew update  
+$ brew upgrade wukong  
+
+# Confirm that you're on version >= 0.0.4-beta1.  
+$ wukong --version
+wukong 0.0.4-beta1
+
+# Delete the current config.  
+$ rm ~/.config/wukong/config.toml
+
+# Re-init the Wukong CLI.  
+$ wukong init
+```
 
 ## Installation
 
