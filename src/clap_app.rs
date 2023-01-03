@@ -1,5 +1,6 @@
 use crate::commands::CommandGroup;
 use clap::Parser;
+use clap_verbosity_flag::Verbosity;
 
 /// A Swiss-army Knife CLI For Mindvalley Developers
 #[derive(Debug, Parser)]
@@ -12,6 +13,9 @@ pub struct ClapApp {
     /// If the flag is not used, then the CLI will use the default application name from the config.
     #[arg(long, short, global = true)]
     pub application: Option<String>,
+
+    #[clap(flatten)]
+    pub verbose: Verbosity,
 }
 
 #[cfg(test)]

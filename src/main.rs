@@ -8,6 +8,7 @@ mod config;
 mod error;
 mod graphql;
 mod loader;
+mod logger;
 mod output;
 mod telemetry;
 
@@ -20,6 +21,7 @@ use commands::{
 use config::{AuthConfig, Config, CONFIG_FILE};
 use error::CliError;
 use human_panic::setup_panic;
+use log::{debug, error, info, trace, warn};
 use openidconnect::RefreshToken;
 use output::error::ErrorOutput;
 use std::process;
@@ -71,9 +73,11 @@ async fn main() {
             process::exit(1);
         }
         Ok(false) => {
+            info!("wukong cli session ended.");
             process::exit(1);
         }
         Ok(true) => {
+            info!("wukong cli session ended.");
             process::exit(0);
         }
     }
@@ -87,6 +91,16 @@ async fn run() -> Result<bool, CliError> {
 
     let mut context = GlobalContext::default();
     let mut existing_config = None;
+
+    logger::Builder::new()
+        .with_max_level(app.cli.verbose.log_level_filter())
+        .init();
+
+    error!("Testing error");
+    info!("Testing info");
+    warn!("Testing warn");
+    debug!("Testing debug");
+    trace!("Testing trace");
 
     match app.config {
         app::ConfigState::InitialisedAndAuthenticated(ref config) => {
