@@ -1,5 +1,6 @@
 use chrono::{offset::Utc, SecondsFormat};
-use lazy_static::lazy_static;
+#[cfg(all(feature = "prod"))]
+use once_cell::sync::Lazy;
 #[cfg(all(feature = "prod"))]
 use reqwest::header;
 use serde::{Deserialize, Serialize};
@@ -13,24 +14,23 @@ const HONEYCOMB_API_KEY: &'static str = env!("WUKONG_HONEYCOMB_API_KEY");
 #[cfg(all(feature = "prod"))]
 const HONEYCOMB_DATASET: &'static str = "wukong_telemetry_prod";
 
-lazy_static! {
-    /// The default path to the wukong telemetry file.
-    ///
-    /// This is a [lazy_static] of `Option<String>`, the value of which is
-    ///
-    /// > `~/.config/wukong/telemetry.json`
-    ///
-    /// It will only be `None` if it is unable to identify the user's home
-    /// directory, which should not happen under typical OS environments.
-    ///
-    /// [lazy_static]: https://docs.rs/lazy_static
-    pub static ref TELEMETRY_FILE: Option<String> = {
-        dirs::home_dir().map(|mut path| {
-            path.extend([".config", "wukong", "telemetry.json"]);
-            path.to_str().unwrap().to_string()
-        })
-    };
-}
+/// The default path to the wukong telemetry file.
+///
+/// This is a [Lazy] of `Option<String>`, the value of which is
+///
+/// > `~/.config/wukong/telemetry.yml`
+///
+/// It will only be `None` if it is unable to identify the user's home
+/// directory, which should not happen under typical OS environments.
+///
+/// [Lazy]: https://docs.rs/once_cell/latest/once_cell/sync/struct.Lazy.html
+#[cfg(all(feature = "prod"))]
+pub static TELEMETRY_FILE: Lazy<Option<String>> = Lazy::new(|| {
+    dirs::home_dir().map(|mut path| {
+        path.extend([".config", "wukong", "telemetry.json"]);
+        path.to_str().unwrap().to_string()
+    })
+});
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TelemetryData {
