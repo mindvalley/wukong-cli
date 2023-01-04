@@ -15,6 +15,7 @@ mod telemetry;
 use crate::auth::refresh_tokens;
 use app::{App, ConfigState};
 use chrono::{DateTime, Local};
+use clap::crate_version;
 use commands::{
     completion::handle_completion, init::handle_init, login::handle_login, CommandGroup,
 };
@@ -153,6 +154,18 @@ async fn run() -> Result<bool, CliError> {
     if let Some(ref application) = app.cli.application {
         context.application = Some(application.clone());
     }
+
+    debug!("current version: {}", crate_version!());
+    debug!("current application: {:?}", &context.application);
+    debug!(
+        "current API URL: {:?}",
+        match &app.config {
+            ConfigState::InitialisedButUnAuthenticated(config)
+            | ConfigState::InitialisedAndAuthenticated(config) => Some(&config.core.wukong_api_url),
+            ConfigState::Uninitialised => None,
+        }
+    );
+    debug!("current calling user: {:?}", &context.account);
 
     match app.cli.command_group {
         CommandGroup::Pipeline(pipeline) => {
