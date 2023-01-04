@@ -1,5 +1,5 @@
 use log::{LevelFilter, Metadata, Record};
-use owo_colors::{colors::css::Gray, OwoColorize};
+use owo_colors::{colors::xterm::Gray, OwoColorize};
 
 pub struct Builder {
     max_log_level: log::LevelFilter,
@@ -19,14 +19,14 @@ impl log::Log for Logger {
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
             let level = match record.level() {
-                log::Level::Error => "[ERROR]".on_red().to_string(),
-                log::Level::Warn => "[WARN]".on_yellow().to_string(),
-                log::Level::Info => "[INFO]".on_cyan().to_string(),
-                log::Level::Debug => "[DEBUG]".on_blue().to_string(),
-                log::Level::Trace => "[TRACE]".bg::<Gray>().to_string(),
+                log::Level::Error => "Error".red().to_string(),
+                log::Level::Warn => "Warn".yellow().to_string(),
+                log::Level::Info => "Info".cyan().to_string(),
+                log::Level::Debug => "Debug".blue().to_string(),
+                log::Level::Trace => "Trace".fg::<Gray>().to_string(),
             };
 
-            eprintln!("{} - {}", level, record.args(),);
+            eprintln!("{} {} {}", level, "-".fg::<Gray>(), record.args(),);
         }
     }
 

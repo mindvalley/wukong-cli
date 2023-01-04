@@ -69,7 +69,8 @@ async fn main() {
 
     match run().await {
         Err(error) => {
-            eprintln!("{}", ErrorOutput(error));
+            // eprintln!("{}", ErrorOutput(error));
+            error!("{}", ErrorOutput(error));
             process::exit(1);
         }
         Ok(false) => {
@@ -95,12 +96,6 @@ async fn run() -> Result<bool, CliError> {
     logger::Builder::new()
         .with_max_level(app.cli.verbose.log_level_filter())
         .init();
-
-    error!("Testing error");
-    info!("Testing info");
-    warn!("Testing warn");
-    debug!("Testing debug");
-    trace!("Testing trace");
 
     match app.config {
         app::ConfigState::InitialisedAndAuthenticated(ref config) => {

@@ -1,5 +1,8 @@
 use crate::error::CliError;
-use owo_colors::{colors::CustomColor, OwoColorize};
+use owo_colors::{
+    colors::{xterm::Gray, CustomColor},
+    OwoColorize,
+};
 use std::{error::Error, fmt::Display};
 
 pub struct ErrorOutput(pub CliError);
@@ -14,18 +17,31 @@ impl Display for ErrorOutput {
                 ::std::process::exit(1);
             }
             error => {
-                writeln!(f, "{}:", "Error".red())?;
-                writeln!(f, "\t{}", error)?;
+                writeln!(f, "{}", error)?;
 
                 //TODO: for --verbose only
                 if let Some(source) = error.source() {
-                    writeln!(f, "\n{}:", "Caused by".fg::<CustomColor<245, 245, 245>>())?;
-                    writeln!(f, "\t{}", source)?;
+                    writeln!(
+                        f,
+                        "{} {} {}",
+                        "Caused by".fg::<CustomColor<245, 245, 245>>(),
+                        "-".fg::<Gray>(),
+                        source
+                    )?;
                 }
 
                 if let Some(suggestion) = error.suggestion() {
-                    writeln!(f, "\n{}:", "Suggestion".cyan())?;
-                    writeln!(f, "\t{}", suggestion)?;
+                    write!(f, "{} {} ", "Suggestion".cyan(), "-".fg::<Gray>())?;
+
+                    if suggestion.lines().count() > 1 {
+                        writeln!(f)?;
+
+                        for line in suggestion.lines() {
+                            writeln!(f, "\t{}", line)?;
+                        }
+                    } else {
+                        writeln!(f, "{}", suggestion)?;
+                    }
                 }
             }
         };
