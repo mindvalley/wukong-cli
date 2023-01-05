@@ -20,7 +20,8 @@ use crate::{
     error::APIError,
     telemetry::{self, TelemetryData, TelemetryEvent},
 };
-use graphql_client::{reqwest::post_graphql, GraphQLQuery, Response};
+use graphql_client::{GraphQLQuery, Response};
+use log::debug;
 use reqwest::header;
 use wukong_telemetry_macro::wukong_telemetry;
 
@@ -102,7 +103,13 @@ impl QueryClient {
             graphql_client::Error,
         ) -> Result<Response<Q::ResponseData>, APIError>,
     ) -> Result<Response<Q::ResponseData>, APIError> {
-        let response = post_graphql::<Q, _>(self.inner(), &self.api_url, variables).await?;
+        let body = Q::build_query(variables);
+        let request = self.inner().post(&self.api_url).json(&body);
+
+        debug!("request: {:?}", request);
+        debug!("graphQL query: \n{}", body.query);
+
+        let response: Response<Q::ResponseData> = request.send().await?.json().await?;
 
         if let Some(errors) = response.errors.clone() {
             let first_error = errors[0].clone();
