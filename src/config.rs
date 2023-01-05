@@ -1,5 +1,5 @@
 use crate::error::{CliError, ConfigError};
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::{
     fs::{create_dir_all, File},
@@ -7,24 +7,29 @@ use std::{
     path::Path,
 };
 
-lazy_static! {
-    /// The default path to the CLI configuration file.
-    ///
-    /// This is a [lazy_static] of `Option<String>`, the value of which is
-    ///
-    /// > `~/.config/wukong/config.yml`
-    ///
-    /// It will only be `None` if it is unable to identify the user's home
-    /// directory, which should not happen under typical OS environments.
-    ///
-    /// [lazy_static]: https://docs.rs/lazy_static
-    pub static ref CONFIG_FILE: Option<String> = {
-        dirs::home_dir().map(|mut path| {
-            path.extend([".config", "wukong", "config.toml"]);
-            path.to_str().unwrap().to_string()
-        })
-    };
-}
+/// The default path to the CLI configuration file.
+///
+/// This is a [Lazy] of `Option<String>`, the value of which is
+///
+/// > `~/.config/wukong/config.yml`
+///
+/// It will only be `None` if it is unable to identify the user's home
+/// directory, which should not happen under typical OS environments.
+///
+/// [Lazy]: https://docs.rs/once_cell/latest/once_cell/sync/struct.Lazy.html
+pub static CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
+    #[cfg(all(feature = "prod"))]
+    return dirs::home_dir().map(|mut path| {
+        path.extend([".config", "wukong", "config.toml"]);
+        path.to_str().unwrap().to_string()
+    });
+
+    #[cfg(not(feature = "prod"))]
+    return dirs::home_dir().map(|mut path| {
+        path.extend([".config", "wukong", "dev", "config.toml"]);
+        path.to_str().unwrap().to_string()
+    });
+});
 
 /// The Wukong CLI configuration.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
