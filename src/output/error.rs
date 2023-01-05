@@ -31,16 +31,10 @@ impl Display for ErrorOutput {
                 }
 
                 if let Some(suggestion) = error.suggestion() {
-                    write!(f, "{} {} ", "Suggestion".cyan(), "-".fg::<Gray>())?;
+                    writeln!(f, "{} {} ", "Suggestion".cyan(), "-".fg::<Gray>())?;
 
-                    if suggestion.lines().count() > 1 {
-                        writeln!(f)?;
-
-                        for line in suggestion.lines() {
-                            writeln!(f, "\t{}", line)?;
-                        }
-                    } else {
-                        writeln!(f, "{}", suggestion)?;
+                    for line in suggestion.lines() {
+                        writeln!(f, "\t{}", line)?;
                     }
                 }
             }
@@ -56,16 +50,16 @@ mod test {
 
     use super::*;
 
-    fn error_title_in_red() -> &'static str {
-        "\u{1b}[31mError\u{1b}[39m:"
-    }
-
     fn caused_by_title_in_rgb_245_245_245() -> &'static str {
-        "\u{1b}[38;2;245;245;245mCaused by\u{1b}[39m:"
+        "\u{1b}[38;2;245;245;245mCaused by\u{1b}[39m"
     }
 
     fn suggestion_title_in_cyan() -> &'static str {
-        "\u{1b}[36mSuggestion\u{1b}[39m:"
+        "\u{1b}[36mSuggestion\u{1b}[39m"
+    }
+
+    fn dash_in_gray() -> &'static str {
+        "\u{1b}[38;5;244m-\u{1b}[39m"
     }
 
     fn error_output_with_caused_by_and_suggestion(
@@ -74,22 +68,23 @@ mod test {
         suggestion: &str,
     ) -> String {
         format!(
-            "{}\n\t{}\n\n{}\n\t{}\n\n{}\n\t{}\n",
-            error_title_in_red(),
+            "{}\n{} {} {}\n{} {} \n\t{}\n",
             error,
             caused_by_title_in_rgb_245_245_245(),
+            dash_in_gray(),
             caused_by,
             suggestion_title_in_cyan(),
+            dash_in_gray(),
             suggestion
         )
     }
 
     fn error_output_with_suggestion(error: &str, suggestion: &str) -> String {
         format!(
-            "{}\n\t{}\n\n{}\n\t{}\n",
-            error_title_in_red(),
+            "{}\n{} {} \n\t{}\n",
             error,
             suggestion_title_in_cyan(),
+            dash_in_gray(),
             suggestion
         )
     }
