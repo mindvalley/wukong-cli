@@ -69,7 +69,6 @@ async fn main() {
 
     match run().await {
         Err(error) => {
-            // eprintln!("{}", ErrorOutput(error));
             error!("{}", ErrorOutput(error));
             process::exit(1);
         }
