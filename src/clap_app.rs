@@ -31,7 +31,7 @@ impl LogLevel for ErrorLevel {
     }
 
     fn verbose_long_help() -> Option<&'static str> {
-        Some("Use verbos output. More output per occurrence.\n\nBy default, it'll only report errors.\n`-v` show warnings\n`-vv` show info\n`-vvv` show debug\n`-vvvv` show trace.")
+        Some("Use verbos output. More output per occurrence.\n\nBy default, it'll only report errors.\n`-v` show warnings\n`-vv` show info\n`-vvv` show debug\n`-vvvv` show trace")
     }
 
     fn quiet_help() -> Option<&'static str> {
