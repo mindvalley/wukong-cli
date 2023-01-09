@@ -1,5 +1,6 @@
 use crate::commands::CommandGroup;
 use clap::Parser;
+use clap_verbosity_flag::{LogLevel, Verbosity};
 
 /// A Swiss-army Knife CLI For Mindvalley Developers
 #[derive(Debug, Parser)]
@@ -12,6 +13,34 @@ pub struct ClapApp {
     /// If the flag is not used, then the CLI will use the default application name from the config.
     #[arg(long, short, global = true)]
     pub application: Option<String>,
+
+    #[clap(flatten)]
+    pub verbose: Verbosity<ErrorLevel>,
+}
+
+#[derive(Debug)]
+pub struct ErrorLevel;
+
+impl LogLevel for ErrorLevel {
+    fn default() -> Option<log::Level> {
+        Some(log::Level::Error)
+    }
+
+    fn verbose_help() -> Option<&'static str> {
+        Some("Use verbos output. More output per occurrence.\n\nBy default, it'll only report errors.\n`-v` show warnings\n`-vv` show info\n`-vvv` show debug\n`-vvvv` show trace")
+    }
+
+    fn verbose_long_help() -> Option<&'static str> {
+        None
+    }
+
+    fn quiet_help() -> Option<&'static str> {
+        Some("Do not print log message")
+    }
+
+    fn quiet_long_help() -> Option<&'static str> {
+        None
+    }
 }
 
 #[cfg(test)]

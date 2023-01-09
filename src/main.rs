@@ -8,18 +8,21 @@ mod config;
 mod error;
 mod graphql;
 mod loader;
+mod logger;
 mod output;
 mod telemetry;
 
 use crate::auth::refresh_tokens;
 use app::{App, ConfigState};
 use chrono::{DateTime, Local};
+use clap::crate_version;
 use commands::{
     completion::handle_completion, init::handle_init, login::handle_login, CommandGroup,
 };
 use config::{AuthConfig, Config, CONFIG_FILE};
 use error::CliError;
 use human_panic::setup_panic;
+use log::{debug, error, info};
 use openidconnect::RefreshToken;
 use output::error::ErrorOutput;
 use std::process;
@@ -67,13 +70,15 @@ async fn main() {
 
     match run().await {
         Err(error) => {
-            eprintln!("{}", ErrorOutput(error));
+            error!("{}", ErrorOutput(error));
             process::exit(1);
         }
         Ok(false) => {
+            info!("wukong cli session ended.");
             process::exit(1);
         }
         Ok(true) => {
+            info!("wukong cli session ended.");
             process::exit(0);
         }
     }
@@ -87,6 +92,10 @@ async fn run() -> Result<bool, CliError> {
 
     let mut context = GlobalContext::default();
     let mut existing_config = None;
+
+    logger::Builder::new()
+        .with_max_level(app.cli.verbose.log_level_filter())
+        .init();
 
     match app.config {
         app::ConfigState::InitialisedAndAuthenticated(ref config) => {
@@ -144,6 +153,18 @@ async fn run() -> Result<bool, CliError> {
     if let Some(ref application) = app.cli.application {
         context.application = Some(application.clone());
     }
+
+    debug!("current cli version: {}", crate_version!());
+    debug!("current application: {:?}", &context.application);
+    debug!(
+        "current API URL: {:?}",
+        match &app.config {
+            ConfigState::InitialisedButUnAuthenticated(config)
+            | ConfigState::InitialisedAndAuthenticated(config) => Some(&config.core.wukong_api_url),
+            ConfigState::Uninitialised => None,
+        }
+    );
+    debug!("current calling user: {:?}", &context.account);
 
     match app.cli.command_group {
         CommandGroup::Pipeline(pipeline) => {
