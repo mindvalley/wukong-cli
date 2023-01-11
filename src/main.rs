@@ -68,6 +68,26 @@ async fn main() {
     })
     .expect("Error setting Ctrl-C handler");
 
+    // output::get_short_commit_hash();
+    // output::get_long_commit_hash();
+    // output::get_email();
+    // output::get_github_username();
+    // output::get_pr();
+    // output::get_jira_ticket();
+    // output::get_build_artifact_name();
+
+    let output = "The last build is build-213. This is built from PR #31 by junkai.gan@mindvalley.com (@jk-gan). The commit hash is a9a97d98635e7a5218c554ee9a41132e3603cc97.";
+    let tokens = output::tokenizer::OutputTokenizer::tokenize(output.to_string());
+        // println!("{:?}\n", output);
+        println!("{:#?}\n", tokens);
+        // println!("{}", tokens);
+
+        for token in tokens {
+            print!("{}", token);
+        }
+
+        println!("\nhere");
+
     match run().await {
         Err(error) => {
             error!("{}", ErrorOutput(error));
