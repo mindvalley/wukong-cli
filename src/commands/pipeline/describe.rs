@@ -5,7 +5,7 @@ use crate::{
     error::CliError,
     graphql::{pipeline::pipeline_query::PipelineQueryPipeline, QueryClientBuilder},
     loader::new_spinner_progress_bar,
-    output::table::TableOutput,
+    output::{colored_println, table::TableOutput},
     telemetry::{self, TelemetryData, TelemetryEvent},
     GlobalContext,
 };
@@ -49,7 +49,7 @@ pub async fn handle_describe(context: GlobalContext, name: &str) -> Result<bool,
                             result: build.result.clone(),
                         };
 
-                        println!("{build_data}");
+                        colored_println!("{}", build_data);
                     }
                 }
             }
@@ -77,7 +77,7 @@ pub async fn handle_describe(context: GlobalContext, name: &str) -> Result<bool,
                         header: None,
                         data: branches,
                     };
-                    println!("{output}");
+                    colored_println!("{}", output);
 
                     let mut pull_requests = Vec::new();
                     for pull_request in multi_branch_pipeline.pull_requests {
@@ -94,7 +94,7 @@ pub async fn handle_describe(context: GlobalContext, name: &str) -> Result<bool,
                         header: None,
                         data: pull_requests,
                     };
-                    println!("{output}");
+                    colored_println!("{}", output);
                 }
             }
         }

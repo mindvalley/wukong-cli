@@ -20,7 +20,7 @@ macro_rules! colored_println {
         println!();
     };
     ($($arg:tt)+) => {
-        colored_print!($($arg)+);
+        $crate::output::colored_print!($($arg)+);
         println!();
     };
 }

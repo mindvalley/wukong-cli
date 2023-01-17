@@ -1,7 +1,7 @@
 use once_cell::sync::Lazy;
-use owo_colors::{colors::xterm::Gray, OwoColorize};
+use owo_colors::OwoColorize;
 use regex::Regex;
-use std::{char, fmt::Display};
+use std::fmt::Display;
 
 pub struct OutputTokenizer;
 
@@ -73,6 +73,7 @@ impl Display for Status {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Token {
+    Application(String),
     ShortCommitHash(String),
     LongCommitHash(String),
     Email(String),
@@ -81,16 +82,19 @@ pub enum Token {
     JiraTicket(String),
     BuildArtifact(String),
     Punctuation(Punctuation),
-    Word(String),
+    Parentheses(String),
     Version(Version),
     Status(Status),
+    Word(String),
     Whitespace,
+    Newline,
     Unknown(String),
 }
 
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Token::Application(value) => write!(f, "{}", value.bright_green()),
             Token::ShortCommitHash(value) => write!(f, "{}", value.bright_yellow()),
             Token::LongCommitHash(value) => write!(f, "{}", value.bright_yellow()),
             Token::Email(value) => write!(f, "{}", value.bright_blue()),
@@ -103,18 +107,116 @@ impl Display for Token {
             Token::Version(value) => write!(f, "{}", value),
             Token::Status(value) => write!(f, "{}", value),
             Token::Whitespace => write!(f, " "),
+            Token::Newline => writeln!(f),
             Token::Unknown(value) => write!(f, "{}", value),
+            Token::Parentheses(value) => write!(f, "{}", value),
         }
     }
 }
 
 impl OutputTokenizer {
     pub fn tokenize(source: String) -> Vec<Token> {
-        let mut words = source.split(" ").peekable();
+        static NEWLINE_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\n+").unwrap());
+
+        let mut words = source.split(' ').peekable();
         let mut tokens = Vec::new();
 
         while let Some(word) = words.next() {
-            tokens.push(Token::Unknown(word.to_string()));
+            // split with newline
+            if NEWLINE_REGEX.is_match(word) {
+                let mut word_without_newline = word.split('\n').peekable();
+
+                while let Some(word) = word_without_newline.next() {
+                    if word.contains('(') {
+                        let open_index = word.find('(').unwrap();
+                        tokens.push(Token::Parentheses("(".to_string()));
+
+                        if word.contains(')') {
+                            let close_index = word.find(')').unwrap();
+                            if close_index != word.len() - 1 {
+                                let before_value =
+                                    word.get((open_index + 1)..(close_index)).unwrap_or("");
+                                let after_value = word.get((close_index + 1)..).unwrap_or("");
+                                tokens.push(Token::Unknown(before_value.to_string()));
+                                tokens.push(Token::Parentheses(")".to_string()));
+                                tokens.push(Token::Unknown(after_value.to_string()));
+                            } else {
+                                let value = word.get((open_index + 1)..(close_index)).unwrap_or("");
+                                tokens.push(Token::Unknown(value.to_string()));
+                                tokens.push(Token::Parentheses(")".to_string()));
+                            }
+                        } else {
+                            let value = word.get((open_index + 1)..).unwrap_or("");
+                            tokens.push(Token::Unknown(value.to_string()));
+                        }
+                    } else if word.contains(')') {
+                        let close_index = word.find(')').unwrap();
+                        if close_index != word.len() - 1 {
+                            let before_value = word.get(..(close_index)).unwrap_or("");
+                            let after_value = word.get((close_index + 1)..).unwrap_or("");
+                            tokens.push(Token::Unknown(before_value.to_string()));
+                            tokens.push(Token::Parentheses(")".to_string()));
+                            tokens.push(Token::Unknown(after_value.to_string()));
+                        } else {
+                            let value = word.get(..(close_index)).unwrap_or("");
+                            tokens.push(Token::Unknown(value.to_string()));
+                            tokens.push(Token::Parentheses(")".to_string()));
+                        }
+                    } else {
+                        tokens.push(Token::Unknown(word.to_string()));
+                    }
+
+                    // since we split with newline, here we need to add back Token::Newline so we
+                    // will know where to print the newline later
+                    if word_without_newline.peek().is_some() {
+                        tokens.push(Token::Newline);
+                    }
+                }
+            } else {
+                // this is more readable
+                #[allow(clippy::collapsible-else-if)]
+                if word.contains('(') {
+                    let open_index = word.find('(').unwrap();
+                    tokens.push(Token::Parentheses("(".to_string()));
+
+                    if word.contains(')') {
+                        let close_index = word.find(')').unwrap();
+                        if close_index != word.len() - 1 {
+                            let before_value =
+                                word.get((open_index + 1)..(close_index)).unwrap_or("");
+                            let after_value = word.get((close_index + 1)..).unwrap_or("");
+                            tokens.push(Token::Unknown(before_value.to_string()));
+                            tokens.push(Token::Parentheses(")".to_string()));
+                            tokens.push(Token::Unknown(after_value.to_string()));
+                        } else {
+                            let value = word.get((open_index + 1)..(close_index)).unwrap_or("");
+                            tokens.push(Token::Unknown(value.to_string()));
+                            tokens.push(Token::Parentheses(")".to_string()));
+                        }
+                    } else {
+                        let value = word.get((open_index + 1)..).unwrap_or("");
+                        tokens.push(Token::Unknown(value.to_string()));
+                    }
+                } else if word.contains(')') {
+                    let close_index = word.find(')').unwrap();
+                    if close_index != word.len() - 1 {
+                        let before_value = word.get(..(close_index)).unwrap_or("");
+                        let after_value = word.get((close_index + 1)..).unwrap_or("");
+                        tokens.push(Token::Unknown(before_value.to_string()));
+                        tokens.push(Token::Parentheses(")".to_string()));
+                        tokens.push(Token::Unknown(after_value.to_string()));
+                    } else {
+                        let value = word.get(..(close_index)).unwrap_or("");
+                        tokens.push(Token::Unknown(value.to_string()));
+                        tokens.push(Token::Parentheses(")".to_string()));
+                    }
+                } else {
+                    tokens.push(Token::Unknown(word.to_string()));
+                }
+            }
+
+            // since we split with whitespace, here we need to add back Token::Whitespace so we
+            // will know where to print the whitespace later
             if words.peek().is_some() {
                 tokens.push(Token::Whitespace);
             }
@@ -158,12 +260,12 @@ impl OutputTokenizer {
 
                     let before = token
                         .get(0..regex_match.start())
-                        .filter(|s| s.len() > 0)
+                        .filter(|s| !s.is_empty())
                         .map(|s| s.to_string());
 
                     let after = token
                         .get(regex_match.end()..token.len())
-                        .filter(|s| s.len() > 0)
+                        .filter(|s| !s.is_empty())
                         .map(|s| s.to_string());
 
                     (before, punctuation, after)
@@ -185,10 +287,8 @@ impl OutputTokenizer {
             // Punctuation
             if insert {
                 tokens.insert(i, Token::Punctuation(punctuation));
-            } else {
-                if let Some(elem) = tokens.get_mut(i) {
-                    *elem = Token::Punctuation(punctuation);
-                }
+            } else if let Some(elem) = tokens.get_mut(i) {
+                *elem = Token::Punctuation(punctuation);
             }
 
             i += 1;
@@ -201,11 +301,14 @@ impl OutputTokenizer {
         }
     }
 
-    fn parse_word(tokens: &mut Vec<Token>) {
+    fn parse_word(tokens: &mut [Token]) {
+        static APPLICATION_REGEX: Lazy<Regex> =
+            Lazy::new(|| Regex::new(r"^mv-[a-zA-z-]+$").unwrap());
         static SHORT_COMMIT_HASH_REGEX: Lazy<Regex> =
-            Lazy::new(|| Regex::new(r"(commit:[ ]{0,}([a-f0-9]{7}))|(([a-f0-9]{7}))").unwrap());
-        static LONG_COMMIT_HASH_REGEX: Lazy<Regex> =
-            Lazy::new(|| Regex::new(r"(commit:[ ]{0,}([a-f0-9]{40}))|(([a-f0-9]{40}))").unwrap());
+            Lazy::new(|| Regex::new(r"^(commit:[ ]{0,}([a-f0-9]{7}))$|^(([a-f0-9]{7}))$").unwrap());
+        static LONG_COMMIT_HASH_REGEX: Lazy<Regex> = Lazy::new(|| {
+            Regex::new(r"^(commit:[ ]{0,}([a-f0-9]{40}))$|^(([a-f0-9]{40}))$").unwrap()
+        });
         static EMAIL_REGEX: Lazy<Regex> =
             Lazy::new(|| Regex::new(r"([\w_\.\-\+])+@([\w\-]+\.)+([\w]{2,10})+").unwrap());
         static GITHUB_USERNAME_REGEX: Lazy<Regex> =
@@ -219,19 +322,21 @@ impl OutputTokenizer {
         for token in tokens.iter_mut() {
             match token {
                 Token::Unknown(value) => {
-                    if LONG_COMMIT_HASH_REGEX.is_match(&value) {
+                    if APPLICATION_REGEX.is_match(value) {
+                        *token = Token::Application(value.clone());
+                    } else if LONG_COMMIT_HASH_REGEX.is_match(value) {
                         *token = Token::LongCommitHash(value.clone());
-                    } else if SHORT_COMMIT_HASH_REGEX.is_match(&value) {
+                    } else if SHORT_COMMIT_HASH_REGEX.is_match(value) {
                         *token = Token::ShortCommitHash(value.clone());
-                    } else if EMAIL_REGEX.is_match(&value) {
+                    } else if EMAIL_REGEX.is_match(value) {
                         *token = Token::Email(value.clone());
-                    } else if GITHUB_USERNAME_REGEX.is_match(&value) {
+                    } else if GITHUB_USERNAME_REGEX.is_match(value) {
                         *token = Token::GithubUsername(value.clone());
-                    } else if PR_REGEX.is_match(&value) {
+                    } else if PR_REGEX.is_match(value) {
                         *token = Token::PR(value.clone());
-                    } else if JIRA_TICKET_REGEX.is_match(&value) {
+                    } else if JIRA_TICKET_REGEX.is_match(value) {
                         *token = Token::JiraTicket(value.clone());
-                    } else if BUILD_ARTIFACT_REGEX.is_match(&value) {
+                    } else if BUILD_ARTIFACT_REGEX.is_match(value) {
                         *token = Token::BuildArtifact(value.clone());
                     } else if &value.to_lowercase() == "blue" || &value.to_lowercase() == "green" {
                         match value.to_lowercase().as_str() {
@@ -256,7 +361,7 @@ impl OutputTokenizer {
                                 *token = Token::Status(Status::Running(value.clone()));
                             }
                             _ => {
-                                if WORD_REGEX.is_match(&value) {
+                                if WORD_REGEX.is_match(value) {
                                     *token = Token::Word(value.clone());
                                 }
                             }
@@ -293,7 +398,7 @@ mod test {
 
     #[test]
     fn test_sentence_with_different_tokens() {
-        let sentence = "The last build is build-213. This is built from PR #31 by abc@gmail.com (@jk-gan). The commit hash is a9a97d98635e7a5218c554ee9a41132e3603cc97.";
+        let sentence = "The last build for mv-ci-mock is build-213. This is built from PR #31 by abc@gmail.com (@jk-gan). The commit hash is a9a97d98635e7a5218c554ee9a41132e3603cc97.";
         assert_eq!(
             OutputTokenizer::tokenize(sentence.to_string()),
             vec![
@@ -302,6 +407,10 @@ mod test {
                 Token::Word("last".into()),
                 Token::Whitespace,
                 Token::Word("build".into()),
+                Token::Whitespace,
+                Token::Word("for".into()),
+                Token::Whitespace,
+                Token::Application("mv-ci-mock".into()),
                 Token::Whitespace,
                 Token::Word("is".into()),
                 Token::Whitespace,
@@ -324,7 +433,9 @@ mod test {
                 Token::Whitespace,
                 Token::Email("abc@gmail.com".into()),
                 Token::Whitespace,
-                Token::GithubUsername("(@jk-gan)".into()),
+                Token::Parentheses("(".into()),
+                Token::GithubUsername("@jk-gan".into()),
+                Token::Parentheses(")".into()),
                 Token::Punctuation(Punctuation::Period),
                 Token::Whitespace,
                 Token::Word("The".into()),

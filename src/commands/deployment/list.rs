@@ -5,7 +5,7 @@ use crate::{
     loader::new_spinner_progress_bar,
     output::table::TableOutput,
     output::{
-        colored_print, colored_println,
+        colored_println,
         table::{fmt_option_human_timestamp, fmt_option_string},
     },
     telemetry::{self, TelemetryData, TelemetryEvent},
@@ -130,7 +130,7 @@ pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
         data: staging_pipelines,
     };
 
-    colored_println!("CD pipeline list for application `{}`:", application);
+    colored_println!("CD pipeline list for application {}:", application);
     colored_println!("{}", prod_pipelines_table);
     colored_println!("{}", staging_pipelines_table);
 

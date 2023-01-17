@@ -3,6 +3,7 @@ use crate::{
     error::{CliError, DeploymentError},
     graphql::QueryClientBuilder,
     loader::new_spinner_progress_bar,
+    output::colored_println,
     telemetry::{self, TelemetryData, TelemetryEvent},
     GlobalContext,
 };
@@ -119,7 +120,7 @@ pub async fn handle_execute(
 
     // SAFETY: the application must not be None here
     let current_application = context.application.unwrap();
-    println!("Current application: {}", current_application.green());
+    colored_println!("Current application: {}", current_application);
 
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Checking available CD pipelines ...");
