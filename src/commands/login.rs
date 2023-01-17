@@ -2,7 +2,8 @@ use crate::{
     auth,
     config::{AuthConfig, CONFIG_FILE},
     error::CliError,
-    Config as CLIConfig, GlobalContext, output::colored_println,
+    output::colored_println,
+    Config as CLIConfig, GlobalContext,
 };
 use dialoguer::{theme::ColorfulTheme, Select};
 

@@ -4,7 +4,7 @@ use crate::{
     error::CliError,
     graphql::{pipeline::pipelines_query::PipelinesQueryPipelines, QueryClientBuilder},
     loader::new_spinner_progress_bar,
-    output::{table::TableOutput, colored_println},
+    output::{colored_println, table::TableOutput},
     telemetry::{self, TelemetryData, TelemetryEvent},
     Config as CLIConfig, GlobalContext,
 };

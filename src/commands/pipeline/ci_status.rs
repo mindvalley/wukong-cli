@@ -6,7 +6,7 @@ use crate::{
     error::CliError,
     graphql::QueryClientBuilder,
     loader::new_spinner_progress_bar,
-    output::{table::TableOutput, colored_println},
+    output::{colored_println, table::TableOutput},
     telemetry::{self, TelemetryData, TelemetryEvent},
     GlobalContext,
 };
