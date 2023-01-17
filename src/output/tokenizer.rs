@@ -38,6 +38,40 @@ impl Display for Punctuation {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub enum Version {
+    Blue,
+    Green,
+}
+
+impl Display for Version {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Version::Blue => write!(f, "{}", "Blue".blue()),
+            Version::Green => write!(f, "{}", "Green".green()),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum Status {
+    Ok(String),
+    Fail(String),
+    Abort(String),
+    Running(String),
+}
+
+impl Display for Status {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Status::Ok(status) => write!(f, "{}", status.green().bold()),
+            Status::Fail(status) => write!(f, "{}", status.red().bold()),
+            Status::Abort(status) => write!(f, "{}", status.black().bold()),
+            Status::Running(status) => write!(f, "{}", status.yellow().bold()),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum Token {
     ShortCommitHash(String),
     LongCommitHash(String),
@@ -48,6 +82,8 @@ pub enum Token {
     BuildArtifact(String),
     Punctuation(Punctuation),
     Word(String),
+    Version(Version),
+    Status(Status),
     Whitespace,
     Unknown(String),
 }
@@ -64,6 +100,8 @@ impl Display for Token {
             Token::BuildArtifact(value) => write!(f, "{}", value.bold().default_color()),
             Token::Punctuation(value) => write!(f, "{}", value),
             Token::Word(value) => write!(f, "{}", value),
+            Token::Version(value) => write!(f, "{}", value),
+            Token::Status(value) => write!(f, "{}", value),
             Token::Whitespace => write!(f, " "),
             Token::Unknown(value) => write!(f, "{}", value),
         }
@@ -72,7 +110,7 @@ impl Display for Token {
 
 impl OutputTokenizer {
     pub fn tokenize(source: String) -> Vec<Token> {
-        let mut words = source.split(char::is_whitespace).peekable();
+        let mut words = source.split(" ").peekable();
         let mut tokens = Vec::new();
 
         while let Some(word) = words.next() {
@@ -195,8 +233,34 @@ impl OutputTokenizer {
                         *token = Token::JiraTicket(value.clone());
                     } else if BUILD_ARTIFACT_REGEX.is_match(&value) {
                         *token = Token::BuildArtifact(value.clone());
-                    } else if WORD_REGEX.is_match(&value) {
-                        *token = Token::Word(value.clone());
+                    } else if &value.to_lowercase() == "blue" || &value.to_lowercase() == "green" {
+                        match value.to_lowercase().as_str() {
+                            "blue" => {
+                                *token = Token::Version(Version::Blue);
+                            }
+                            "green" => *token = Token::Version(Version::Green),
+                            _ => unreachable!(),
+                        }
+                    } else {
+                        match value.as_str() {
+                            "SUCCESS" | "[SUCCESS]" | "SUCCEEDED" | "[SUCCEEDED]" => {
+                                *token = Token::Status(Status::Ok(value.clone()));
+                            }
+                            "TERMINAL" | "FAILURE" | "[TERMINAL]" | "[FAILURE]" => {
+                                *token = Token::Status(Status::Fail(value.clone()));
+                            }
+                            "ABORT" | "CANCELED" | "CANCELLED" => {
+                                *token = Token::Status(Status::Abort(value.clone()));
+                            }
+                            "RUNNING" | "BUILDING" | "[RUNNING]" | "[BUILDING]" => {
+                                *token = Token::Status(Status::Running(value.clone()));
+                            }
+                            _ => {
+                                if WORD_REGEX.is_match(&value) {
+                                    *token = Token::Word(value.clone());
+                                }
+                            }
+                        }
                     }
                 }
                 _ => continue,
@@ -216,8 +280,11 @@ mod test {
             OutputTokenizer::tokenize(sentence.to_string()),
             vec![
                 Token::Word("This".into()),
+                Token::Whitespace,
                 Token::Word("is".into()),
+                Token::Whitespace,
                 Token::Word("from".into()),
+                Token::Whitespace,
                 Token::Email("abc@gmail.com".into()),
                 Token::Punctuation(Punctuation::Period)
             ]
@@ -231,25 +298,43 @@ mod test {
             OutputTokenizer::tokenize(sentence.to_string()),
             vec![
                 Token::Word("The".into()),
+                Token::Whitespace,
                 Token::Word("last".into()),
+                Token::Whitespace,
                 Token::Word("build".into()),
+                Token::Whitespace,
                 Token::Word("is".into()),
+                Token::Whitespace,
                 Token::BuildArtifact("build-213".into()),
                 Token::Punctuation(Punctuation::Period),
+                Token::Whitespace,
                 Token::Word("This".into()),
+                Token::Whitespace,
                 Token::Word("is".into()),
+                Token::Whitespace,
                 Token::Word("built".into()),
+                Token::Whitespace,
                 Token::Word("from".into()),
+                Token::Whitespace,
                 Token::Word("PR".into()),
+                Token::Whitespace,
                 Token::PR("#31".into()),
+                Token::Whitespace,
                 Token::Word("by".into()),
+                Token::Whitespace,
                 Token::Email("abc@gmail.com".into()),
+                Token::Whitespace,
                 Token::GithubUsername("(@jk-gan)".into()),
                 Token::Punctuation(Punctuation::Period),
+                Token::Whitespace,
                 Token::Word("The".into()),
+                Token::Whitespace,
                 Token::Word("commit".into()),
+                Token::Whitespace,
                 Token::Word("hash".into()),
+                Token::Whitespace,
                 Token::Word("is".into()),
+                Token::Whitespace,
                 Token::LongCommitHash("a9a97d98635e7a5218c554ee9a41132e3603cc97".into()),
                 Token::Punctuation(Punctuation::Period),
             ]
