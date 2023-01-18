@@ -1,0 +1,13 @@
+query ApplicationQuery($name: String!) {
+  application(name: $name) {
+    name
+    basicInfo {
+      deploymentTarget
+      deploymentStrategy
+      links {
+          title
+          url
+      }
+    }
+  }
+}

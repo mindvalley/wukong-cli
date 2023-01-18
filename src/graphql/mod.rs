@@ -4,7 +4,7 @@ pub mod deployment;
 pub mod pipeline;
 
 use self::{
-    application::{applications_query, ApplicationsQuery},
+    application::{application_query, applications_query, ApplicationQuery, ApplicationsQuery},
     changelog::{changelogs_query, ChangelogsQuery},
     deployment::{
         cd_pipeline_query, cd_pipelines_query, execute_cd_pipeline, CdPipelineQuery,
@@ -161,6 +161,14 @@ impl QueryClient {
         &self,
     ) -> Result<Response<applications_query::ResponseData>, APIError> {
         ApplicationsQuery::fetch(self).await
+    }
+
+    #[wukong_telemetry(api_event = "fetch_application")]
+    pub async fn fetch_application(
+        &self,
+        name: &str,
+    ) -> Result<Response<application_query::ResponseData>, APIError> {
+        ApplicationQuery::fetch(self, name).await
     }
 
     #[wukong_telemetry(api_event = "fetch_cd_pipeline_list")]
