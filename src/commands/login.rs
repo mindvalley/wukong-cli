@@ -2,6 +2,7 @@ use crate::{
     auth,
     config::{AuthConfig, CONFIG_FILE},
     error::CliError,
+    output::colored_println,
     Config as CLIConfig, GlobalContext,
 };
 use dialoguer::{theme::ColorfulTheme, Select};
@@ -49,7 +50,7 @@ async fn login_and_update_config() -> Result<bool, CliError> {
             refresh_token: auth_info.refresh_token,
         });
         config.save(config_file).unwrap();
-        println!("You are now logged in as [{}].", auth_info.account);
+        colored_println!("You are now logged in as {}.", auth_info.account);
     })?;
 
     Ok(true)

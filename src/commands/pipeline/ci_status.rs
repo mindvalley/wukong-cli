@@ -6,7 +6,7 @@ use crate::{
     error::CliError,
     graphql::QueryClientBuilder,
     loader::new_spinner_progress_bar,
-    output::table::TableOutput,
+    output::{colored_println, table::TableOutput},
     telemetry::{self, TelemetryData, TelemetryEvent},
     GlobalContext,
 };
@@ -85,7 +85,7 @@ pub async fn handle_ci_status(
                 data: vec![pipeline_ci_status],
             };
 
-            println!("{table}");
+            colored_println!("{}", table);
         }
         None => {
             #[derive(Tabled)]
@@ -111,7 +111,7 @@ pub async fn handle_ci_status(
                 data: vec![pipeline_ci_status],
             };
 
-            println!("{table}");
+            colored_println!("{}", table);
         }
     }
 

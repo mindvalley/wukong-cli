@@ -4,7 +4,7 @@ use crate::{
     error::CliError,
     graphql::{pipeline::pipelines_query::PipelinesQueryPipelines, QueryClientBuilder},
     loader::new_spinner_progress_bar,
-    output::table::TableOutput,
+    output::{colored_println, table::TableOutput},
     telemetry::{self, TelemetryData, TelemetryEvent},
     Config as CLIConfig, GlobalContext,
 };
@@ -61,11 +61,13 @@ pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
     }
 
     let output = TableOutput {
-        title: Some(format!("Pipeline list for application: `{}`:", application)),
+        title: Some(format!("Pipeline list for application {}:", application)),
         header: None,
         data: pipelines,
     };
-    println!("{output}");
+    // let token = crate::output::tokenizer::OutputTokenizer::tokenize(output.to_string());
+    // dbg!(token);
+    colored_println!("{}", output);
 
     Ok(true)
 }

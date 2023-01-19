@@ -4,11 +4,13 @@ use crate::{
     graphql::QueryClientBuilder,
     loader::new_spinner_progress_bar,
     output::table::TableOutput,
-    output::table::{fmt_option_human_timestamp, fmt_option_string},
+    output::{
+        colored_println,
+        table::{fmt_option_human_timestamp, fmt_option_string},
+    },
     telemetry::{self, TelemetryData, TelemetryEvent},
     Config as CLIConfig, GlobalContext,
 };
-use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 use tabled::Tabled;
 use wukong_telemetry_macro::wukong_telemetry;
@@ -17,12 +19,8 @@ fn fmt_version(o: &str) -> String {
     fn capitalize_first_letter(o: &str) -> String {
         o[0..1].to_uppercase() + &o[1..]
     }
-    // capitalize the first letter
-    match capitalize_first_letter(o).as_str() {
-        "Green" => "Green".green().bold().to_string(),
-        "Blue" => "Blue".blue().bold().to_string(),
-        version => version.bold().to_string(),
-    }
+
+    capitalize_first_letter(o)
 }
 
 fn fmt_enabled(o: &bool) -> String {
@@ -34,13 +32,8 @@ fn fmt_enabled(o: &bool) -> String {
 
 fn fmt_status(o: &Option<String>) -> String {
     match o {
-        Some(status) => match status.as_str() {
-            "SUCCEEDED" => "SUCCEEDED".green().to_string(),
-            "FAILURE" => "FAILURE".red().to_string(),
-            "TERMINAL" => "TERMINAL".yellow().to_string(),
-            status => status.to_owned(),
-        },
-        None => "N/A".black().to_string(),
+        Some(status) => status.to_string(),
+        None => "N/A".to_string(),
     }
 }
 
@@ -137,10 +130,9 @@ pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
         data: staging_pipelines,
     };
 
-    println!("CD pipeline list for application `{}`:", application);
-
-    println!("{prod_pipelines_table}");
-    println!("{staging_pipelines_table}");
+    colored_println!("CD pipeline list for application {}:", application);
+    colored_println!("{}", prod_pipelines_table);
+    colored_println!("{}", staging_pipelines_table);
 
     Ok(true)
 }

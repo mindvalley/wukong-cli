@@ -3,10 +3,10 @@ use crate::{
     config::{AuthConfig, Config, CONFIG_FILE},
     error::CliError,
     graphql::QueryClientBuilder,
+    output::colored_println,
     GlobalContext,
 };
 use dialoguer::{theme::ColorfulTheme, Select};
-use owo_colors::OwoColorize;
 
 pub async fn handle_init(
     context: GlobalContext,
@@ -43,10 +43,10 @@ pub async fn handle_init(
             ..Default::default()
         };
 
-        println!("You are logged in as: [{}].\n", auth_info.account);
+        colored_println!("You are logged in as: {}.\n", auth_info.account);
         config
     } else {
-        println!("You are logged in as: [{}].\n", login_selections[selection]);
+        colored_println!("You are logged in as: {}.\n", login_selections[selection]);
 
         let mut new_config = Config::default();
 
@@ -82,27 +82,27 @@ pub async fn handle_init(
         .items(&applications_data[..])
         .interact()?;
 
-    println!(
-        "Your current application has been set to: [{}].",
+    colored_println!(
+        "Your current application has been set to: {}.",
         &applications_data[application_selection]
     );
 
     config.core.application = applications_data[application_selection].clone();
 
-    println!(
+    colored_println!(
         r#"
 Your Wukong CLI is configured and ready to use!
 
-* Commands that require authentication will use `{}` by default
-* Commands will reference application `{}` by default
+* Commands that require authentication will use {} by default
+* Commands will reference application {} by default
 Run `wukong config help` to learn how to change individual settings
 
 Some things to try next:
 
 * Run `wukong --help` to see the wukong command groups you can interact with. And run `wukong COMMAND help` to get help on any wukong command.
                      "#,
-        auth_config.account.green(),
-        config.core.application.green()
+        auth_config.account,
+        config.core.application
     );
 
     if let Some(ref config_file) = *CONFIG_FILE {

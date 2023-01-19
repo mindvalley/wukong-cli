@@ -3151,6 +3151,7 @@ dependencies = [
  "openidconnect",
  "openssl",
  "owo-colors",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",
