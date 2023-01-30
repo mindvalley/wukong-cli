@@ -30,19 +30,16 @@ impl ChangelogsQuery {
             .call_api::<Self>(variables, |_, error| match error.message.as_str() {
                 "application_not_found" => Err(APIError::ResponseError {
                     code: error.message,
-                    message: format!("Application `{}` not found.", application),
+                    message: format!("Application `{application}` not found."),
                 }),
                 "unable_to_determine_changelog" => Err(APIError::ResponseError {
                     code: error.message,
-                    message: format!(
-                        "Unable to determine the changelog for build-{}.",
-                        build_number
-                    ),
+                    message: format!("Unable to determine the changelog for build-{build_number}."),
                 }),
                 "comparing_same_build" => Err(APIError::ChangelogComparingSameBuild),
                 _ => Err(APIError::ResponseError {
                     code: error.message.clone(),
-                    message: format!("{}", error),
+                    message: format!("{error}"),
                 }),
             })
             .await?;

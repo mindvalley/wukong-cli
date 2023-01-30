@@ -48,8 +48,8 @@ pub async fn handle_ci_status(
     };
 
     println!("Current directory info");
-    println!("repo url: {}", repo_url);
-    println!("branch: {}", branch);
+    println!("repo url: {repo_url}");
+    println!("branch: {branch}");
     println!();
 
     let progress_bar = new_spinner_progress_bar();
@@ -85,7 +85,7 @@ pub async fn handle_ci_status(
                 data: vec![pipeline_ci_status],
             };
 
-            colored_println!("{}", table);
+            colored_println!("{table}");
         }
         None => {
             #[derive(Tabled)]
@@ -111,7 +111,7 @@ pub async fn handle_ci_status(
                 data: vec![pipeline_ci_status],
             };
 
-            colored_println!("{}", table);
+            colored_println!("{table}");
         }
     }
 

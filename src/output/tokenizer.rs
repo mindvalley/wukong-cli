@@ -118,14 +118,14 @@ impl Display for Token {
             Token::PR(value) => write!(f, "{}", value.cyan()),
             Token::JiraTicket(value) => write!(f, "{}", value.cyan()),
             Token::BuildArtifact(value) => write!(f, "{}", value.bold().default_color()),
-            Token::Punctuation(value) => write!(f, "{}", value),
-            Token::Word(value) => write!(f, "{}", value),
-            Token::Version(value) => write!(f, "{}", value),
-            Token::Status(value) => write!(f, "{}", value),
+            Token::Punctuation(value) => write!(f, "{value}"),
+            Token::Word(value) => write!(f, "{value}"),
+            Token::Version(value) => write!(f, "{value}"),
+            Token::Status(value) => write!(f, "{value}"),
             Token::Whitespace => write!(f, " "),
             Token::Newline => writeln!(f),
-            Token::Unknown(value) => write!(f, "{}", value),
-            Token::Parentheses(value) => write!(f, "{}", value),
+            Token::Unknown(value) => write!(f, "{value}"),
+            Token::Parentheses(value) => write!(f, "{value}"),
         }
     }
 }
@@ -137,7 +137,7 @@ impl OutputTokenizer {
 
         while let Some(word) = words.next() {
             // split with newline
-            if word.contains("\n") {
+            if word.contains('\n') {
                 let mut word_without_newline = word.split('\n').peekable();
 
                 while let Some(word) = word_without_newline.next() {

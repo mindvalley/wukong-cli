@@ -26,15 +26,14 @@ impl PipelinesQuery {
                     return Err(APIError::ResponseError {
                         code: error.message,
                         message: format!(
-                            "Unable to get pipelines for application `{}`.",
-                            application
+                            "Unable to get pipelines for application `{application}`."
                         ),
                     });
                 }
 
                 Err(APIError::ResponseError {
                     code: error.message.clone(),
-                    message: format!("{}", error),
+                    message: format!("{error}"),
                 })
             })
             .await?;
@@ -67,13 +66,13 @@ impl PipelineQuery {
                 if error.message == "unable_to_get_pipeline" {
                     return Err(APIError::ResponseError {
                         code: error.message,
-                        message: format!("Unable to get pipeline `{}`.", name),
+                        message: format!("Unable to get pipeline `{name}`."),
                     });
                 }
 
                 Err(APIError::ResponseError {
                     code: error.message.clone(),
-                    message: format!("{}", error),
+                    message: format!("{error}"),
                 })
             })
             .await?;
@@ -106,13 +105,13 @@ impl MultiBranchPipelineQuery {
                 if error.message == "unable_to_get_pipeline" {
                     return Err(APIError::ResponseError {
                         code: error.message,
-                        message: format!("Unable to get pipeline `{}`.", name),
+                        message: format!("Unable to get pipeline `{name}`."),
                     });
                 }
 
                 Err(APIError::ResponseError {
                     code: error.message.clone(),
-                    message: format!("{}", error),
+                    message: format!("{error}"),
                 })
             })
             .await?;
@@ -150,7 +149,7 @@ impl CiStatusQuery {
                 "no_builds_associated_with_this_branch" => Ok(resp),
                 _ => Err(APIError::ResponseError {
                     code: error.message.clone(),
-                    message: format!("{}", error),
+                    message: format!("{error}"),
                 }),
             })
             .await?;

@@ -40,7 +40,7 @@ pub fn fmt_option_milliseconds(o: &Option<i64>) -> String {
             let duration = Duration::milliseconds(*s);
             let seconds = duration.num_seconds() % 60;
             let minutes = (duration.num_seconds() / 60) % 60;
-            format!("{} mins {} secs", minutes, seconds)
+            format!("{minutes} mins {seconds} secs")
         }
         None => "N/A".to_string(),
     }
