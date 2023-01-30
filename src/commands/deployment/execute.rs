@@ -210,9 +210,7 @@ pub async fn handle_execute(
 
         selected_namespace = namespace_selections[selected_namespace_index].to_string();
 
-        println!(
-            "You've selected `{selected_namespace}` as the deployment namespace.\n"
-        );
+        println!("You've selected `{selected_namespace}` as the deployment namespace.\n");
     }
 
     // after user selected a namespace, then we only can check what versions are available for this
@@ -280,9 +278,7 @@ pub async fn handle_execute(
 
         selected_version = version_selections[selected_version_index].to_string();
 
-        println!(
-            "You've selected `{selected_version}` as the deployment version.\n"
-        );
+        println!("You've selected `{selected_version}` as the deployment version.\n");
     }
 
     if let Some(artifact) = artifact {
