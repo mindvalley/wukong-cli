@@ -177,5 +177,6 @@ async fn run() -> Result<bool, CliError> {
         CommandGroup::Deployment(deployment) => {
             must_init_and_login!(app.config, deployment.handle_command(context).await)
         }
+        CommandGroup::Application(application) => application.handle_command(context).await,
     }
 }
