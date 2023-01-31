@@ -17,7 +17,7 @@ impl Display for ErrorOutput {
                 ::std::process::exit(1);
             }
             error => {
-                writeln!(f, "{}", error)?;
+                writeln!(f, "{error}")?;
 
                 //TODO: for --verbose only
                 if let Some(source) = error.source() {
@@ -34,7 +34,7 @@ impl Display for ErrorOutput {
                     writeln!(f, "{} {} ", "Suggestion".cyan(), "-".fg::<Gray>())?;
 
                     for line in suggestion.lines() {
-                        writeln!(f, "\t{}", line)?;
+                        writeln!(f, "\t{line}")?;
                     }
                 }
             }

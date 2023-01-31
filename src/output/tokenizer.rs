@@ -5,6 +5,22 @@ use std::fmt::Display;
 
 pub struct OutputTokenizer;
 
+static END_PUNCTUATION_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"([\.\?\-:!,;]+)$").unwrap());
+static APPLICATION_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^mv-[a-zA-z-]+$").unwrap());
+static SHORT_COMMIT_HASH_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^(commit:[ ]{0,}([a-f0-9]{7}))$|^(([a-f0-9]{7}))$").unwrap());
+static LONG_COMMIT_HASH_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^(commit:[ ]{0,}([a-f0-9]{40}))$|^(([a-f0-9]{40}))$").unwrap());
+static EMAIL_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^([\w_\.\-\+])+@([\w\-]+\.)+([\w]{2,10})+$").unwrap());
+static GITHUB_USERNAME_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^@([a-z\d]+-)*[a-z\d]+$").unwrap());
+static PR_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^#([\d]+$)").unwrap());
+static JIRA_TICKET_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[A-Z]+-[\d]+$").unwrap());
+static BUILD_ARTIFACT_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^[a-zA-z]+-build-\d+$|^build-\d+$").unwrap());
+static WORD_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\w+$").unwrap());
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Punctuation {
     /// Colon: ':'
@@ -102,28 +118,26 @@ impl Display for Token {
             Token::PR(value) => write!(f, "{}", value.cyan()),
             Token::JiraTicket(value) => write!(f, "{}", value.cyan()),
             Token::BuildArtifact(value) => write!(f, "{}", value.bold().default_color()),
-            Token::Punctuation(value) => write!(f, "{}", value),
-            Token::Word(value) => write!(f, "{}", value),
-            Token::Version(value) => write!(f, "{}", value),
-            Token::Status(value) => write!(f, "{}", value),
+            Token::Punctuation(value) => write!(f, "{value}"),
+            Token::Word(value) => write!(f, "{value}"),
+            Token::Version(value) => write!(f, "{value}"),
+            Token::Status(value) => write!(f, "{value}"),
             Token::Whitespace => write!(f, " "),
             Token::Newline => writeln!(f),
-            Token::Unknown(value) => write!(f, "{}", value),
-            Token::Parentheses(value) => write!(f, "{}", value),
+            Token::Unknown(value) => write!(f, "{value}"),
+            Token::Parentheses(value) => write!(f, "{value}"),
         }
     }
 }
 
 impl OutputTokenizer {
     pub fn tokenize(source: String) -> Vec<Token> {
-        static NEWLINE_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\n+").unwrap());
-
         let mut words = source.split(' ').peekable();
         let mut tokens = Vec::new();
 
         while let Some(word) = words.next() {
             // split with newline
-            if NEWLINE_REGEX.is_match(word) {
+            if word.contains('\n') {
                 let mut word_without_newline = word.split('\n').peekable();
 
                 while let Some(word) = word_without_newline.next() {
@@ -229,9 +243,6 @@ impl OutputTokenizer {
     }
 
     fn separate_end_punctuation(tokens: &mut Vec<Token>) {
-        static PUNCTUATION_REGEX: Lazy<Regex> =
-            Lazy::new(|| Regex::new(r"([\.\?\-:!,;]+)$").unwrap());
-
         let mut i = 0;
         while i < tokens.len() {
             let token = match tokens.get(i) {
@@ -243,7 +254,7 @@ impl OutputTokenizer {
             };
 
             let (before, punctuation, after) =
-                if let Some(regex_match) = PUNCTUATION_REGEX.find(token) {
+                if let Some(regex_match) = END_PUNCTUATION_REGEX.find(token) {
                     let punctuation = match regex_match.as_str() {
                         "!" => Punctuation::Exclamation,
                         "," => Punctuation::Comma,
@@ -302,23 +313,6 @@ impl OutputTokenizer {
     }
 
     fn parse_word(tokens: &mut [Token]) {
-        static APPLICATION_REGEX: Lazy<Regex> =
-            Lazy::new(|| Regex::new(r"^mv-[a-zA-z-]+$").unwrap());
-        static SHORT_COMMIT_HASH_REGEX: Lazy<Regex> =
-            Lazy::new(|| Regex::new(r"^(commit:[ ]{0,}([a-f0-9]{7}))$|^(([a-f0-9]{7}))$").unwrap());
-        static LONG_COMMIT_HASH_REGEX: Lazy<Regex> = Lazy::new(|| {
-            Regex::new(r"^(commit:[ ]{0,}([a-f0-9]{40}))$|^(([a-f0-9]{40}))$").unwrap()
-        });
-        static EMAIL_REGEX: Lazy<Regex> =
-            Lazy::new(|| Regex::new(r"([\w_\.\-\+])+@([\w\-]+\.)+([\w]{2,10})+").unwrap());
-        static GITHUB_USERNAME_REGEX: Lazy<Regex> =
-            Lazy::new(|| Regex::new(r"@([a-z\d]+-)*[a-z\d]+").unwrap());
-        static PR_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"#([\d]+)").unwrap());
-        static JIRA_TICKET_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"[A-Z]+-[\d]+").unwrap());
-        static BUILD_ARTIFACT_REGEX: Lazy<Regex> =
-            Lazy::new(|| Regex::new(r"[a-zA-z]+-build-\d+|build-\d+").unwrap());
-        static WORD_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\w+$").unwrap());
-
         for token in tokens.iter_mut() {
             match token {
                 Token::Unknown(value) => {
@@ -379,6 +373,220 @@ mod test {
     use super::*;
 
     #[test]
+    fn test_end_punctuation_regex() {
+        let test_group = [
+            ("a,", Some(",")),
+            ("a.", Some(".")),
+            ("a?", Some("?")),
+            ("a, ", None),
+            ("a: b, c: d", None),
+        ];
+
+        for test in test_group {
+            assert_eq!(
+                END_PUNCTUATION_REGEX.find(test.0).map(|x| x.as_str()),
+                test.1
+            );
+        }
+    }
+
+    #[test]
+    fn test_application_regex() {
+        let test_group = [
+            ("mv-platform", Some("mv-platform")),
+            ("mv-wukong-ci-mock", Some("mv-wukong-ci-mock")),
+            ("mv-base", Some("mv-base")),
+            ("mv-base ", None),
+            (" mv-base", None),
+            (" mv-base ", None),
+            ("platform", None),
+        ];
+
+        for test in test_group {
+            assert_eq!(APPLICATION_REGEX.find(test.0).map(|x| x.as_str()), test.1);
+        }
+    }
+
+    #[test]
+    fn test_short_commit_hash_regex() {
+        let test_group = [
+            ("97dd2ae", Some("97dd2ae")),
+            ("abcd123", Some("abcd123")),
+            ("97dd2ae ", None),
+            (" 97dd2ae", None),
+            (" 97dd2ae ", None),
+            ("97dd2aeb", None), // short commit hash regex only match 7 characters
+            ("(97dd2ae)", None),
+            ("97dd2ae065771908ee9ae0fa08ccdb58b5a6b18f", None),
+        ];
+
+        for test in test_group {
+            assert_eq!(
+                SHORT_COMMIT_HASH_REGEX.find(test.0).map(|x| x.as_str()),
+                test.1
+            );
+        }
+    }
+
+    #[test]
+    fn test_long_commit_hash_regex() {
+        let test_group = [
+            ("97dd2ae", None),
+            ("abcd123", None),
+            ("97dd2ae065771908ee9ae0fa08ccdb58b5a6b18f ", None),
+            (" 97dd2ae065771908ee9ae0fa08ccdb58b5a6b18f", None),
+            (" 97dd2ae065771908ee9ae0fa08ccdb58b5a6b18f ", None),
+            ("(97dd2ae065771908ee9ae0fa08ccdb58b5a6b18f)", None),
+            (
+                "97dd2ae065771908ee9ae0fa08ccdb58b5a6b18f",
+                Some("97dd2ae065771908ee9ae0fa08ccdb58b5a6b18f"),
+            ),
+        ];
+
+        for test in test_group {
+            assert_eq!(
+                LONG_COMMIT_HASH_REGEX.find(test.0).map(|x| x.as_str()),
+                test.1
+            );
+        }
+    }
+
+    #[test]
+    fn test_email_regex() {
+        let test_group = [
+            ("test@example.com", Some("test@example.com")),
+            ("admin@example.com", Some("admin@example.com")),
+            (
+                "this.is.a.test.email@example.com",
+                Some("this.is.a.test.email@example.com"),
+            ),
+            ("test", None),
+            ("test@example", None),
+            ("@example", None),
+            ("test@example.com ", None),
+            (" test@example.com", None),
+            (" test@example.com ", None),
+            ("(test@example.com)", None),
+        ];
+
+        for test in test_group {
+            assert_eq!(EMAIL_REGEX.find(test.0).map(|x| x.as_str()), test.1);
+        }
+    }
+
+    #[test]
+    fn test_github_username_regex() {
+        let test_group = [
+            ("@jk-gan", Some("@jk-gan")),
+            ("@josevalim", Some("@josevalim")),
+            ("@example", Some("@example")),
+            ("@jk-gan ", None),
+            (" @jk-gan", None),
+            (" @jk-gan ", None),
+            ("(@jk-gan)", None),
+            ("jk-gan", None),
+            ("test", None),
+            ("test@example.com", None),
+            ("this.is.a.test.email@example.com", None),
+        ];
+
+        for test in test_group {
+            assert_eq!(
+                GITHUB_USERNAME_REGEX.find(test.0).map(|x| x.as_str()),
+                test.1
+            );
+        }
+    }
+
+    #[test]
+    fn test_pr_regex() {
+        let test_group = [
+            ("#1", Some("#1")),
+            ("#10", Some("#10")),
+            ("#100", Some("#100")),
+            ("#1000", Some("#1000")),
+            ("#100 ", None),
+            (" #100", None),
+            (" #100 ", None),
+            ("(#100)", None),
+            ("100", None),
+            ("#abc", None),
+        ];
+
+        for test in test_group {
+            assert_eq!(PR_REGEX.find(test.0).map(|x| x.as_str()), test.1);
+        }
+    }
+
+    #[test]
+    fn test_jira_ticket_regex() {
+        let test_group = [
+            ("MVBASE-9999", Some("MVBASE-9999")),
+            ("PXP-9999", Some("PXP-9999")),
+            ("UP-9999", Some("UP-9999")),
+            ("OPS-9999", Some("OPS-9999")),
+            ("ABC-9999", Some("ABC-9999")),
+            ("PXP_9999", None),
+            ("PXP-9999 ", None),
+            (" PXP-9999", None),
+            (" PXP-9999 ", None),
+            ("(PXP-9999)", None),
+            ("9999", None),
+            ("PXP-abc", None),
+        ];
+
+        for test in test_group {
+            assert_eq!(JIRA_TICKET_REGEX.find(test.0).map(|x| x.as_str()), test.1);
+        }
+    }
+
+    #[test]
+    fn test_build_artifact_regex() {
+        let test_group = [
+            ("main-build-100", Some("main-build-100")),
+            ("dev-build-100", Some("dev-build-100")),
+            ("staging-build-100", Some("staging-build-100")),
+            ("build-100", Some("build-100")),
+            ("build_100", None),
+            ("BUILD-100", None),
+            ("build-100 ", None),
+            (" build-100", None),
+            (" build-100 ", None),
+            ("(build-100)", None),
+            ("9999", None),
+            ("mainbuild-100", None),
+        ];
+
+        for test in test_group {
+            assert_eq!(
+                BUILD_ARTIFACT_REGEX.find(test.0).map(|x| x.as_str()),
+                test.1
+            );
+        }
+    }
+
+    #[test]
+    fn test_word_regex() {
+        let test_group = [
+            ("this", Some("this")),
+            ("is", Some("is")),
+            ("testing", Some("testing")),
+            ("testing123", Some("testing123")),
+            ("9999", Some("9999")),
+            ("testing.", None),
+            ("testing-1", None),
+            (" testing", None),
+            ("testing ", None),
+            (" testing ", None),
+            ("(testing)", None),
+        ];
+
+        for test in test_group {
+            assert_eq!(WORD_REGEX.find(test.0).map(|x| x.as_str()), test.1);
+        }
+    }
+
+    #[test]
     fn test_sentence_with_email() {
         let sentence = "This is from abc@gmail.com.";
         assert_eq!(
@@ -398,7 +606,7 @@ mod test {
 
     #[test]
     fn test_sentence_with_different_tokens() {
-        let sentence = "The last build for mv-ci-mock is build-213. This is built from PR #31 by abc@gmail.com (@jk-gan). The commit hash is a9a97d98635e7a5218c554ee9a41132e3603cc97.";
+        let sentence = "The last build for mv-ci-mock is build-213. This is built from PR #31 by abc@gmail.com (@jk-gan).\nThe commit hash is a9a97d98635e7a5218c554ee9a41132e3603cc97.";
         assert_eq!(
             OutputTokenizer::tokenize(sentence.to_string()),
             vec![
@@ -437,7 +645,7 @@ mod test {
                 Token::GithubUsername("@jk-gan".into()),
                 Token::Parentheses(")".into()),
                 Token::Punctuation(Punctuation::Period),
-                Token::Whitespace,
+                Token::Newline,
                 Token::Word("The".into()),
                 Token::Whitespace,
                 Token::Word("commit".into()),

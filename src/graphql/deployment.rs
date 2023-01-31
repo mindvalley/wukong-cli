@@ -24,11 +24,11 @@ impl CdPipelinesQuery {
             .call_api::<Self>(variables, |_, error| match error.message.as_str() {
                 "application_not_found" => Err(APIError::ResponseError {
                     code: error.message,
-                    message: format!("Application `{}` not found.", application),
+                    message: format!("Application `{application}` not found."),
                 }),
                 _ => Err(APIError::ResponseError {
                     code: error.message.clone(),
-                    message: format!("{}", error),
+                    message: format!("{error}"),
                 }),
             })
             .await?;
@@ -64,11 +64,11 @@ impl CdPipelineQuery {
             .call_api::<Self>(variables, |_, error| match error.message.as_str() {
                 "application_not_found" => Err(APIError::ResponseError {
                     code: error.message,
-                    message: format!("Application `{}` not found.", application),
+                    message: format!("Application `{application}` not found."),
                 }),
                 _ => Err(APIError::ResponseError {
                     code: error.message.clone(),
-                    message: format!("{}", error),
+                    message: format!("{error}"),
                 }),
             })
             .await?;
@@ -110,7 +110,7 @@ impl ExecuteCdPipeline {
             .call_api::<Self>(variables, |_, error| match error.message.as_str() {
                 "application_not_found" => Err(APIError::ResponseError {
                     code: error.message,
-                    message: format!("Application `{}` not found.", application),
+                    message: format!("Application `{application}` not found."),
                 }),
                 "deploy_for_this_build_is_currently_running" => Err(APIError::ResponseError {
                     code: error.message,
@@ -118,7 +118,7 @@ impl ExecuteCdPipeline {
                 }),
                 _ => Err(APIError::ResponseError {
                     code: error.message.clone(),
-                    message: format!("{}", error),
+                    message: format!("{error}"),
                 }),
             })
             .await?;

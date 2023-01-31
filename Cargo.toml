@@ -10,6 +10,10 @@ prod = []
 strip = true
 lto = true
 
+[[bench]]
+name = "output_tokenizer_benchmark"
+harness = false
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
@@ -60,3 +64,4 @@ regex = "1.7.0"
 
 [dev-dependencies]
 httpmock = "0.6.6"
+criterion = "0.4"

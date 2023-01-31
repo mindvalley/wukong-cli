@@ -15,8 +15,7 @@ pub async fn handle_login(context: GlobalContext) -> Result<bool, CliError> {
         ];
         let selection = Select::with_theme(&ColorfulTheme::default())
             .with_prompt(format!(
-                "You are already logged in as \"{}\", do you want to log in with a new account?",
-                account
+                "You are already logged in as \"{account}\", do you want to log in with a new account?"
             ))
             .default(0)
             .items(&selections[..])

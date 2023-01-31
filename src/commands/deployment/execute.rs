@@ -120,7 +120,7 @@ pub async fn handle_execute(
 
     // SAFETY: the application must not be None here
     let current_application = context.application.unwrap();
-    colored_println!("Current application: {}", current_application);
+    colored_println!("Current application: {current_application}");
 
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Checking available CD pipelines ...");
@@ -210,10 +210,7 @@ pub async fn handle_execute(
 
         selected_namespace = namespace_selections[selected_namespace_index].to_string();
 
-        println!(
-            "You've selected `{}` as the deployment namespace.\n",
-            selected_namespace
-        );
+        println!("You've selected `{selected_namespace}` as the deployment namespace.\n");
     }
 
     // after user selected a namespace, then we only can check what versions are available for this
@@ -281,10 +278,7 @@ pub async fn handle_execute(
 
         selected_version = version_selections[selected_version_index].to_string();
 
-        println!(
-            "You've selected `{}` as the deployment version.\n",
-            selected_version
-        );
+        println!("You've selected `{selected_version}` as the deployment version.\n");
     }
 
     if let Some(artifact) = artifact {
@@ -423,8 +417,7 @@ pub async fn handle_execute(
                 let selected_build_number = cd_pipeline.jenkins_builds[selected_build].build_number;
 
                 println!(
-                    "You've selected `build-{}` as the build artifact for this deployment. \n",
-                    selected_build_number
+                    "You've selected `build-{selected_build_number}` as the build artifact for this deployment. \n"
                 );
 
                 selected_build_number
@@ -476,7 +469,7 @@ pub async fn handle_execute(
 <!-- Save the CHANGELOG (:wq if you are using vim) to go to the next deployment step. -->
 <!-- -->
 <!-- Lines in between '<!--' and '-->' will be ignored in the final CHANGELOG. -->"#;
-            changelog = format!("{}\n{}", changelog, instructions);
+            changelog = format!("{changelog}\n{instructions}");
         }
         Err(error) => match error {
             crate::error::APIError::ChangelogComparingSameBuild => {
@@ -492,7 +485,7 @@ pub async fn handle_execute(
 <!-- Save the CHANGELOG (:wq if you are using vim) to go to the next deployment step. -->
 <!-- -->
 <!-- Lines in between '<!--' and '-->' will be ignored in the final CHANGELOG. -->"#;
-                changelog = format!("{}\n{}", "", instructions);
+                changelog = format!("{}\n{instructions}", "");
             }
             _ => {
                 return Err(error.into());
@@ -517,7 +510,7 @@ pub async fn handle_execute(
 
         println!("{}", "Step 4: Review your deployment".bold());
         println!("Please review your deployment CHANGELOG before execute it.\n");
-        println!("{}", &cleaned_changelog);
+        println!("{cleaned_changelog}");
 
         let agree_to_deploy = if !is_same_build {
             Confirm::with_theme(&ColorfulTheme::default())
@@ -554,7 +547,7 @@ pub async fn handle_execute(
 
             let deployment_url = resp.url;
             println!("Deployment is succefully sent! Please open this URL to check the deployment progress");
-            println!("{}", deployment_url);
+            println!("{deployment_url}");
         }
     } else {
         println!("Aborting deployment process!");

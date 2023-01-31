@@ -61,7 +61,7 @@ pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
     }
 
     let output = TableOutput {
-        title: Some(format!("Pipeline list for application {}:", application)),
+        title: Some(format!("Pipeline list for application {application}:")),
         header: None,
         data: pipelines,
     };

@@ -24,7 +24,7 @@ impl ApplicationQuery {
             .call_api::<ApplicationQuery>(variables, |_, error| {
                 Err(APIError::ResponseError {
                     code: error.message.clone(),
-                    message: format!("{}", error),
+                    message: format!("{error}"),
                 })
             })
             .await?;
@@ -53,7 +53,7 @@ impl ApplicationsQuery {
             .call_api::<ApplicationsQuery>(variables, |_, error| {
                 Err(APIError::ResponseError {
                     code: error.message.clone(),
-                    message: format!("{}", error),
+                    message: format!("{error}"),
                 })
             })
             .await?;

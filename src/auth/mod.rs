@@ -73,10 +73,7 @@ pub async fn login() -> Result<AuthInfo, CliError> {
         .set_pkce_challenge(pkce_challenge)
         .url();
 
-    println!(
-        "Your browser has been opened to visit:\n\n\t{}\n",
-        authorize_url
-    );
+    println!("Your browser has been opened to visit:\n\n\t{authorize_url}\n");
 
     webbrowser::open(authorize_url.as_str()).unwrap();
 
@@ -98,7 +95,7 @@ pub async fn login() -> Result<AuthInfo, CliError> {
         let code_pair = url
             .query_pairs()
             .find(|pair| {
-                let &(ref key, _) = pair;
+                let (key, _) = pair;
                 key == "code"
             })
             .unwrap();
@@ -109,7 +106,7 @@ pub async fn login() -> Result<AuthInfo, CliError> {
         let state_pair = url
             .query_pairs()
             .find(|pair| {
-                let &(ref key, _) = pair;
+                let (key, _) = pair;
                 key == "state"
             })
             .unwrap();
