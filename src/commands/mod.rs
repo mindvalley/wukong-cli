@@ -1,3 +1,4 @@
+pub mod application;
 pub mod completion;
 pub mod config;
 pub mod deployment;
@@ -12,12 +13,14 @@ use clap_complete::Shell;
 pub enum CommandGroup {
     /// Initialize Wukong's configurations
     Init,
-    /// This contains the commands to view & interact with an application’s pipeline
+    /// This command group contains the commands to interact with an application’s configurations
+    Application(application::Application),
+    /// This command group contains the commands to view & interact with an application’s pipeline
     Pipeline(pipeline::Pipeline),
     /// This command group contains the commands to view and interact with the
     /// Continuous Delivery pipeline of an application.
     Deployment(deployment::Deployment),
-    /// This contains the commands to view & interact with Wukong's configurations
+    /// This command group contains the commands to view & interact with Wukong's configurations
     Config(config::Config),
     /// Login to start using wukong command
     Login,
