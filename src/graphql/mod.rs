@@ -8,7 +8,7 @@ use self::{
     changelog::{changelogs_query, ChangelogsQuery},
     deployment::{
         cd_pipeline_query, cd_pipelines_query, execute_cd_pipeline, CdPipelineQuery,
-        CdPipelinesQuery, ExecuteCdPipeline,
+        CdPipelinesQuery, ExecuteCdPipeline, CdPipelineForRollbackQuery, cd_pipeline_for_rollback_query
     },
     pipeline::{
         ci_status_query, multi_branch_pipeline_query, pipeline_query, pipelines_query,
@@ -189,6 +189,16 @@ impl QueryClient {
         CdPipelineQuery::fetch(self, application, namespace, version).await
     }
 
+    #[wukong_telemetry(api_event = "fetch_cd_pipeline_for_rollback")]
+    pub async fn fetch_cd_pipeline_for_rollback(
+        &self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<Response<cd_pipeline_for_rollback_query::ResponseData>, APIError> {
+        CdPipelineForRollbackQuery::fetch(self, application, namespace, version).await
+    }
+
     #[wukong_telemetry(api_event = "execute_cd_pipeline")]
     pub async fn execute_cd_pipeline(
         &self,
@@ -196,6 +206,7 @@ impl QueryClient {
         namespace: &str,
         version: &str,
         build_number: i64,
+        build_artifact_name: Option<String>,
         changelogs: Option<String>,
         send_to_slack: bool,
     ) -> Result<Response<execute_cd_pipeline::ResponseData>, APIError> {
@@ -205,6 +216,7 @@ impl QueryClient {
             namespace,
             version,
             build_number,
+            build_artifact_name,
             changelogs,
             send_to_slack,
         )

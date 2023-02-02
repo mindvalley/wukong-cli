@@ -82,6 +82,46 @@ impl CdPipelineQuery {
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "src/graphql/schema.json",
+    query_path = "src/graphql/query/cd_pipeline_for_rollback.graphql",
+    response_derives = "Debug, Serialize, Deserialize"
+)]
+pub struct CdPipelineForRollbackQuery;
+
+impl CdPipelineForRollbackQuery {
+    pub(crate) async fn fetch(
+        client: &QueryClient,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<Response<cd_pipeline_for_rollback_query::ResponseData>, APIError> {
+        let variables = cd_pipeline_for_rollback_query::Variables {
+            application: application.to_string(),
+            namespace: namespace.to_string(),
+            version: version.to_string(),
+        };
+
+        let response = client
+            .call_api::<Self>(variables, |_, error| match error.message.as_str() {
+                "application_not_found" => Err(APIError::ResponseError {
+                    code: error.message,
+                    message: format!("Application `{application}` not found."),
+                }),
+                _ => Err(APIError::ResponseError {
+                    code: error.message.clone(),
+                    message: format!("{error}"),
+                }),
+            })
+            .await?;
+
+        debug!("response: {:?}", &response);
+
+        Ok(response)
+    }
+}
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/graphql/schema.json",
     query_path = "src/graphql/mutation/execute_cd_pipeline.graphql",
     response_derives = "Debug, Serialize, Deserialize"
 )]
@@ -94,12 +134,14 @@ impl ExecuteCdPipeline {
         namespace: &str,
         version: &str,
         build_number: i64,
+        build_artifact_name: Option<String>,
         changelogs: Option<String>,
         send_to_slack: bool,
     ) -> Result<Response<execute_cd_pipeline::ResponseData>, APIError> {
         let variables = execute_cd_pipeline::Variables {
             application: application.to_string(),
             build_number,
+            build_artifact_name,
             namespace: namespace.to_string(),
             version: version.to_string(),
             changelogs,

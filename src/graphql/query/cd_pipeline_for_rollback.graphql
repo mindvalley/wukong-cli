@@ -1,0 +1,14 @@
+query CdPipelineForRollbackQuery($application: String!, $namespace: String!, $version:
+String!) {
+  cdPipeline(application: $application, namespace: $namespace, version: $version) {
+    deployedRef
+    buildArtifact
+    environment
+    enabled
+    lastDeployment
+    previousDeployedArtifacts
+    name
+    status
+    version
+  }
+}
