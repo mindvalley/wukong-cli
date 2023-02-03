@@ -281,6 +281,62 @@ mod test {
     }
 
     #[tokio::test]
+    async fn test_fetch_cd_pipeline_for_rollback_success_should_return_cd_pipeline() {
+        let server = MockServer::start();
+        let query_client = QueryClientBuilder::new()
+            .with_access_token("test_access_token".to_string())
+            .with_api_url(server.base_url())
+            .build()
+            .unwrap();
+
+        let api_resp = r#"
+{
+  "data": {
+    "cdPipeline": {
+      "buildArtifact": "main-build-10",
+      "deployedRef": "d70dddc743d428f8de97610f27b75723992cbec4",
+      "enabled": true,
+      "environment": "prod",
+      "lastDeployment": 1675324454720,
+      "name": "valid-application-deployment-green",
+      "previousDeployedArtifacts": [
+        "main-build-10"
+      ],
+      "status": "SUCCEEDED",
+      "version": "green"
+    }
+  }
+}"#;
+
+        let mock = server.mock(|when, then| {
+            when.method(POST).path("/");
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+
+        let response =
+            CdPipelineForRollbackQuery::fetch(&query_client, "valid_application", "prod", "green")
+                .await;
+
+        mock.assert();
+        assert!(response.is_ok());
+
+        let cd_pipeline = response.unwrap().data.unwrap().cd_pipeline.unwrap();
+        let previous_deployed_artifacts = cd_pipeline.previous_deployed_artifacts.unwrap();
+        assert_eq!(previous_deployed_artifacts.len(), 1);
+        assert_eq!(
+            previous_deployed_artifacts
+                .first()
+                .as_ref()
+                .unwrap()
+                .as_ref()
+                .unwrap(),
+            "main-build-10"
+        );
+    }
+
+    #[tokio::test]
     async fn test_execute_cd_pipeline_success_should_return_deployment_url() {
         let server = MockServer::start();
         let query_client = QueryClientBuilder::new()
@@ -311,6 +367,7 @@ mod test {
             "prod",
             "green",
             100,
+            None,
             Some(base64::encode(
                 "This is a changelog.\n\nThis is a new changelog.\n",
             )),
@@ -367,6 +424,7 @@ mod test {
             "prod",
             "green",
             100,
+            None,
             Some(base64::encode(
                 "This is a changelog.\n\nThis is a new changelog.\n",
             )),
