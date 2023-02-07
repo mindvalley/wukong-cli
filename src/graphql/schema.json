@@ -1082,6 +1082,22 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
+              "name": "buildArtifactName",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
               "name": "buildBranch",
               "type": {
                 "kind": "NON_NULL",
@@ -2224,13 +2240,13 @@
                 {
                   "defaultValue": null,
                   "description": null,
-                  "name": "buildNumber",
+                  "name": "buildArtifactName",
                   "type": {
                     "kind": "NON_NULL",
                     "name": null,
                     "ofType": {
                       "kind": "SCALAR",
-                      "name": "Int",
+                      "name": "String",
                       "ofType": null
                     }
                   }

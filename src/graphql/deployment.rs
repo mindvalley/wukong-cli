@@ -133,15 +133,14 @@ impl ExecuteCdPipeline {
         application: &str,
         namespace: &str,
         version: &str,
-        build_number: i64,
-        build_artifact_name: Option<String>,
+        build_artifact_name: &str,
         changelogs: Option<String>,
         send_to_slack: bool,
     ) -> Result<Response<execute_cd_pipeline::ResponseData>, APIError> {
         let variables = execute_cd_pipeline::Variables {
             application: application.to_string(),
-            build_number,
-            build_artifact_name,
+            build_number: 0,
+            build_artifact_name: Some(build_artifact_name.to_string()),
             namespace: namespace.to_string(),
             version: version.to_string(),
             changelogs,
@@ -361,8 +360,7 @@ mod test {
             "valid_application",
             "prod",
             "green",
-            100,
-            None,
+            "main-build-100",
             Some(base64::encode(
                 "This is a changelog.\n\nThis is a new changelog.\n",
             )),
@@ -418,8 +416,7 @@ mod test {
             "valid_application",
             "prod",
             "green",
-            100,
-            None,
+            "main-build-100",
             Some(base64::encode(
                 "This is a changelog.\n\nThis is a new changelog.\n",
             )),

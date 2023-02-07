@@ -205,8 +205,7 @@ impl QueryClient {
         application: &str,
         namespace: &str,
         version: &str,
-        build_number: i64,
-        build_artifact_name: Option<String>,
+        build_artifact_name: &str,
         changelogs: Option<String>,
         send_to_slack: bool,
     ) -> Result<Response<execute_cd_pipeline::ResponseData>, APIError> {
@@ -215,7 +214,6 @@ impl QueryClient {
             application,
             namespace,
             version,
-            build_number,
             build_artifact_name,
             changelogs,
             send_to_slack,
@@ -229,9 +227,9 @@ impl QueryClient {
         application: &str,
         namespace: &str,
         version: &str,
-        build_number: i64,
+        build_artifact_name: &str,
     ) -> Result<Response<changelogs_query::ResponseData>, APIError> {
-        ChangelogsQuery::fetch(self, application, namespace, version, build_number).await
+        ChangelogsQuery::fetch(self, application, namespace, version, build_artifact_name).await
     }
 }
 

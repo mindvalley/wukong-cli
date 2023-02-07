@@ -125,10 +125,7 @@ pub async fn handle_rollback(
 
         selected_namespace = namespace_selections[selected_namespace_index].to_string();
 
-        println!(
-            "You've selected `{}` as the deployment namespace.\n",
-            selected_namespace
-        );
+        println!("You've selected `{selected_namespace}` as the deployment namespace.\n");
     }
 
     // after user selected a namespace, then we only can check what versions are available for this
@@ -196,10 +193,7 @@ pub async fn handle_rollback(
 
         selected_version = version_selections[selected_version_index].to_string();
 
-        println!(
-            "You've selected `{}` as the deployment version.\n",
-            selected_version
-        );
+        println!("You've selected `{selected_version}` as the deployment version.\n");
     }
 
     let progress_bar = new_spinner_progress_bar();
@@ -237,10 +231,7 @@ pub async fn handle_rollback(
                         "{}",
                         "Step 3: Please confirm the build artifact to rollback to".bold()
                     );
-                    println!(
-                        "> Your latest deployment is using build artifact {}.",
-                        build_artifact
-                    );
+                    println!("> Your latest deployment is using build artifact {build_artifact}.");
                     println!(
                         "> The prior build artifact of you latest deployment is {}.",
                         cd_pipeline.previous_deployed_artifacts[0]
@@ -260,8 +251,7 @@ pub async fn handle_rollback(
                                 &current_application,
                                 &selected_namespace.to_lowercase(),
                                 &selected_version.to_lowercase(),
-                                0,
-                                Some(cd_pipeline.previous_deployed_artifacts[0].to_string()),
+                                &cd_pipeline.previous_deployed_artifacts[0],
                                 None,
                                 true,
                             )
@@ -274,7 +264,7 @@ pub async fn handle_rollback(
 
                         let deployment_url = resp.url;
                         println!("Deployment is succefully sent! Please open this URL to check the deployment progress");
-                        println!("{}", deployment_url);
+                        println!("{deployment_url}");
                     }
                 }
             } else {

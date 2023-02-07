@@ -30,7 +30,7 @@ pub enum DeploymentSubcommand {
         version: Option<DeploymentVersion>,
         /// The build artifact that the deployment will use.
         #[arg(long)]
-        artifact: Option<i64>,
+        artifact: Option<String>,
     },
     /// Rollback the deployment pipeline
     Rollback {

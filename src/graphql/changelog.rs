@@ -17,13 +17,13 @@ impl ChangelogsQuery {
         application: &str,
         namespace: &str,
         version: &str,
-        build_number: i64,
+        build_artifact_name: &str,
     ) -> Result<Response<changelogs_query::ResponseData>, APIError> {
         let variables = changelogs_query::Variables {
             application: application.to_string(),
             namespace: namespace.to_string(),
             version: version.to_string(),
-            build_number,
+            build_artifact_name: build_artifact_name.to_string(),
         };
 
         let response = client
@@ -34,7 +34,7 @@ impl ChangelogsQuery {
                 }),
                 "unable_to_determine_changelog" => Err(APIError::ResponseError {
                     code: error.message,
-                    message: format!("Unable to determine the changelog for build-{build_number}."),
+                    message: format!("Unable to determine the changelog for {build_artifact_name}."),
                 }),
                 "comparing_same_build" => Err(APIError::ChangelogComparingSameBuild),
                 _ => Err(APIError::ResponseError {
@@ -93,7 +93,7 @@ mod test {
         });
 
         let response =
-            ChangelogsQuery::fetch(&query_client, "valid_application", "prod", "green", 1234).await;
+            ChangelogsQuery::fetch(&query_client, "valid_application", "prod", "green", "main-build-1234").await;
 
         mock.assert();
         assert!(response.is_ok());
@@ -139,7 +139,7 @@ mod test {
         });
 
         let response =
-            ChangelogsQuery::fetch(&query_client, "invalid_application", "prod", "green", 1234)
+            ChangelogsQuery::fetch(&query_client, "invalid_application", "prod", "green", "main-build-1234")
                 .await;
 
         mock.assert();
@@ -190,7 +190,7 @@ mod test {
                 .body(api_resp);
         });
 
-        let invalid_build_number = 1234;
+        let invalid_build_number = "invalid-build-1234";
         let response = ChangelogsQuery::fetch(
             &query_client,
             "valid_application",
@@ -254,7 +254,7 @@ mod test {
                 .body(api_resp);
         });
 
-        let invalid_build_number = 1234;
+        let invalid_build_number = "invalid-build-1234";
         let response = ChangelogsQuery::fetch(
             &query_client,
             "valid_application",

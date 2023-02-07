@@ -90,6 +90,7 @@ struct CdPipelineWithBuilds {
 struct JenkinsBuild {
     build_duration: Option<i64>,
     build_number: i64,
+    build_artifact_name: String,
     build_branch: String,
     build_url: String,
     name: String,
@@ -112,7 +113,7 @@ pub async fn handle_execute(
     context: GlobalContext,
     namespace: &Option<DeploymentNamespace>,
     version: &Option<DeploymentVersion>,
-    artifact: &Option<i64>,
+    artifact: &Option<String>,
 ) -> Result<bool, CliError> {
     if namespace.is_none() && version.is_none() && artifact.is_none() {
         println!("Not detecting any flags, entering deployment terminal......");
@@ -155,7 +156,7 @@ pub async fn handle_execute(
 
     let selected_namespace: String;
     let selected_version: String;
-    let selected_build_number: i64;
+    let selected_build: String;
 
     // if user provides namespace using --namespace flag
     if let Some(namespace) = namespace {
@@ -282,16 +283,16 @@ pub async fn handle_execute(
     }
 
     if let Some(artifact) = artifact {
-        selected_build_number = *artifact;
+        selected_build = artifact.to_string();
         println!(
             "{} {} `{}`.\n",
             "✔".green(),
             "Step 3: You've selected build artifact".bold(),
-            selected_build_number.green()
+            selected_build.green()
         );
     } else {
         let progress_bar = new_spinner_progress_bar();
-        progress_bar.set_message("Fetch available build artifacts ...");
+        progress_bar.set_message("Fetching available build artifacts ...");
 
         let cd_pipeline_data = client
             .fetch_cd_pipeline(
@@ -304,7 +305,7 @@ pub async fn handle_execute(
             .unwrap()
             .cd_pipeline;
 
-        selected_build_number = match cd_pipeline_data {
+        selected_build = match cd_pipeline_data {
             Some(cd_pipeline_data) => {
                 let cd_pipeline = CdPipelineWithBuilds {
                     name: cd_pipeline_data.name,
@@ -333,12 +334,13 @@ pub async fn handle_execute(
                                 build_number: build.build_number,
                                 build_branch: build.build_branch,
                                 build_url: build.build_url,
-                                commits,
+                                build_artifact_name: build.build_artifact_name,
                                 name: build.name,
                                 result: build.result,
                                 timestamp: build.timestamp,
                                 total_duration: build.total_duration,
                                 wait_duration: build.wait_duration,
+                                commits,
                             }
                         })
                         .collect(),
@@ -356,20 +358,15 @@ pub async fn handle_execute(
                                     .map(|commit| commit.message_headline.clone())
                                     .collect();
 
-                                if build_artifact
-                                    == &format!(
-                                        "{}-build-{}",
-                                        build.build_branch, build.build_number
-                                    )
-                                {
+                                if *build_artifact == build.build_artifact_name {
                                     ThreeColumns {
-                                        left: format!("build-{}", build.build_number),
+                                        left: build.build_artifact_name.clone(),
                                         middle: "(current)".to_string(),
                                         right: commits,
                                     }
                                 } else {
                                     ThreeColumns {
-                                        left: format!("build-{}", build.build_number),
+                                        left: build.build_artifact_name.clone(),
                                         middle: "".to_string(),
                                         right: commits,
                                     }
@@ -393,7 +390,7 @@ pub async fn handle_execute(
 
                 progress_bar.finish_and_clear();
 
-                let selected_build = match build_selections {
+                let selected_build_index = match build_selections {
                     BuildSelectionLayout::TwoColumns { data } => {
                         Select::with_theme(&ColorfulTheme::default())
                             .with_prompt(
@@ -414,13 +411,14 @@ pub async fn handle_execute(
                     }
                 };
 
-                let selected_build_number = cd_pipeline.jenkins_builds[selected_build].build_number;
+                let selected_build =
+                    &cd_pipeline.jenkins_builds[selected_build_index].build_artifact_name;
 
                 println!(
-                    "You've selected `build-{selected_build_number}` as the build artifact for this deployment. \n"
+                    "You've selected `{selected_build}` as the build artifact for this deployment. \n"
                 );
 
-                selected_build_number
+                selected_build.to_string()
             }
             None => {
                 println!("There is no build for this.");
@@ -437,7 +435,7 @@ pub async fn handle_execute(
             &current_application,
             &selected_namespace.to_lowercase(),
             &selected_version.to_lowercase(),
-            selected_build_number,
+            &selected_build,
         )
         .await;
 
@@ -534,8 +532,7 @@ pub async fn handle_execute(
                     &current_application,
                     &selected_namespace.to_lowercase(),
                     &selected_version.to_lowercase(),
-                    selected_build_number,
-                    None,
+                    &selected_build,
                     Some(base64_encoded_changelog),
                     true,
                 )
