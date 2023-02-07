@@ -20,7 +20,7 @@ struct CdPipelineWithPreviousBuilds {
     deployed_ref: Option<String>,
     build_artifact: Option<String>,
     last_deployed_at: Option<i64>,
-    previous_deployed_artifacts: Option<Vec<Option<String>>>,
+    previous_deployed_artifacts: Vec<String>,
     status: Option<String>,
 }
 
@@ -232,56 +232,49 @@ pub async fn handle_rollback(
             progress_bar.finish_and_clear();
 
             if let Some(build_artifact) = cd_pipeline.build_artifact {
-                if let Some(previous_deployed_artifacts) = cd_pipeline.previous_deployed_artifacts {
-                    if !previous_deployed_artifacts.is_empty() {
-                        println!(
-                            "{}",
-                            "Step 3: Please confirm the build artifact to rollback to".bold()
-                        );
-                        println!(
-                            "> Your latest deployment is using build artifact {}.",
-                            build_artifact
-                        );
-                        println!(
-                            "> The prior build artifact of you latest deployment is {}.",
-                            previous_deployed_artifacts[0].as_ref().unwrap()
-                        );
-                        if Confirm::with_theme(&ColorfulTheme::default())
-                            .with_prompt(format!(
-                                "Please confirm that you will rollback to the build artifact {}",
-                                previous_deployed_artifacts[0].as_ref().unwrap().green()
-                            ))
-                            .interact()?
-                        {
-                            let progress_bar = new_spinner_progress_bar();
-                            progress_bar.set_message("Sending deployment ...");
+                if !cd_pipeline.previous_deployed_artifacts.is_empty() {
+                    println!(
+                        "{}",
+                        "Step 3: Please confirm the build artifact to rollback to".bold()
+                    );
+                    println!(
+                        "> Your latest deployment is using build artifact {}.",
+                        build_artifact
+                    );
+                    println!(
+                        "> The prior build artifact of you latest deployment is {}.",
+                        cd_pipeline.previous_deployed_artifacts[0]
+                    );
+                    if Confirm::with_theme(&ColorfulTheme::default())
+                        .with_prompt(format!(
+                            "Please confirm that you will rollback to the build artifact {}",
+                            cd_pipeline.previous_deployed_artifacts[0].green()
+                        ))
+                        .interact()?
+                    {
+                        let progress_bar = new_spinner_progress_bar();
+                        progress_bar.set_message("Sending deployment ...");
 
-                            let resp = client
-                                .execute_cd_pipeline(
-                                    &current_application,
-                                    &selected_namespace.to_lowercase(),
-                                    &selected_version.to_lowercase(),
-                                    0,
-                                    Some(
-                                        previous_deployed_artifacts[0]
-                                            .as_ref()
-                                            .unwrap()
-                                            .to_string(),
-                                    ),
-                                    None,
-                                    true,
-                                )
-                                .await?
-                                .data
-                                .unwrap()
-                                .execute_cd_pipeline;
+                        let resp = client
+                            .execute_cd_pipeline(
+                                &current_application,
+                                &selected_namespace.to_lowercase(),
+                                &selected_version.to_lowercase(),
+                                0,
+                                Some(cd_pipeline.previous_deployed_artifacts[0].to_string()),
+                                None,
+                                true,
+                            )
+                            .await?
+                            .data
+                            .unwrap()
+                            .execute_cd_pipeline;
 
-                            progress_bar.finish_and_clear();
+                        progress_bar.finish_and_clear();
 
-                            let deployment_url = resp.url;
-                            println!("Deployment is succefully sent! Please open this URL to check the deployment progress");
-                            println!("{}", deployment_url);
-                        }
+                        let deployment_url = resp.url;
+                        println!("Deployment is succefully sent! Please open this URL to check the deployment progress");
+                        println!("{}", deployment_url);
                     }
                 }
             } else {

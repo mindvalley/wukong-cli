@@ -7,8 +7,8 @@ use self::{
     application::{application_query, applications_query, ApplicationQuery, ApplicationsQuery},
     changelog::{changelogs_query, ChangelogsQuery},
     deployment::{
-        cd_pipeline_query, cd_pipelines_query, execute_cd_pipeline, CdPipelineQuery,
-        CdPipelinesQuery, ExecuteCdPipeline, CdPipelineForRollbackQuery, cd_pipeline_for_rollback_query
+        cd_pipeline_for_rollback_query, cd_pipeline_query, cd_pipelines_query, execute_cd_pipeline,
+        CdPipelineForRollbackQuery, CdPipelineQuery, CdPipelinesQuery, ExecuteCdPipeline,
     },
     pipeline::{
         ci_status_query, multi_branch_pipeline_query, pipeline_query, pipelines_query,

@@ -323,14 +323,11 @@ mod test {
         assert!(response.is_ok());
 
         let cd_pipeline = response.unwrap().data.unwrap().cd_pipeline.unwrap();
-        let previous_deployed_artifacts = cd_pipeline.previous_deployed_artifacts.unwrap();
+        let previous_deployed_artifacts = cd_pipeline.previous_deployed_artifacts;
         assert_eq!(previous_deployed_artifacts.len(), 1);
         assert_eq!(
             previous_deployed_artifacts
                 .first()
-                .as_ref()
-                .unwrap()
-                .as_ref()
                 .unwrap(),
             "main-build-10"
         );
