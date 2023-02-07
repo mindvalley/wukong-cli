@@ -34,7 +34,9 @@ impl ChangelogsQuery {
                 }),
                 "unable_to_determine_changelog" => Err(APIError::ResponseError {
                     code: error.message,
-                    message: format!("Unable to determine the changelog for {build_artifact_name}."),
+                    message: format!(
+                        "Unable to determine the changelog for {build_artifact_name}."
+                    ),
                 }),
                 "comparing_same_build" => Err(APIError::ChangelogComparingSameBuild),
                 _ => Err(APIError::ResponseError {
@@ -92,8 +94,14 @@ mod test {
                 .body(api_resp);
         });
 
-        let response =
-            ChangelogsQuery::fetch(&query_client, "valid_application", "prod", "green", "main-build-1234").await;
+        let response = ChangelogsQuery::fetch(
+            &query_client,
+            "valid_application",
+            "prod",
+            "green",
+            "main-build-1234",
+        )
+        .await;
 
         mock.assert();
         assert!(response.is_ok());
@@ -138,9 +146,14 @@ mod test {
                 .body(api_resp);
         });
 
-        let response =
-            ChangelogsQuery::fetch(&query_client, "invalid_application", "prod", "green", "main-build-1234")
-                .await;
+        let response = ChangelogsQuery::fetch(
+            &query_client,
+            "invalid_application",
+            "prod",
+            "green",
+            "main-build-1234",
+        )
+        .await;
 
         mock.assert();
         assert!(response.is_err());
