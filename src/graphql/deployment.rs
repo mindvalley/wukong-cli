@@ -326,9 +326,7 @@ mod test {
         let previous_deployed_artifacts = cd_pipeline.previous_deployed_artifacts;
         assert_eq!(previous_deployed_artifacts.len(), 1);
         assert_eq!(
-            previous_deployed_artifacts
-                .first()
-                .unwrap(),
+            previous_deployed_artifacts.first().unwrap(),
             "main-build-10"
         );
     }
