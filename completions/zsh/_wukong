@@ -380,6 +380,32 @@ By default, it'\''ll only report errors.
 '--help[Print help information]' \
 && ret=0
 ;;
+(rollback)
+_arguments "${_arguments_options[@]}" \
+'--namespace=[The namespace to deploy to]:NAMESPACE:(prod staging)' \
+'--version=[The version that the deployment will perform against]:VERSION:(blue green)' \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+&& ret=0
+;;
 (help)
 _arguments "${_arguments_options[@]}" \
 ":: :_wukong__deployment__help_commands" \
@@ -397,6 +423,10 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (execute)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(rollback)
 _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
@@ -688,6 +718,10 @@ _arguments "${_arguments_options[@]}" \
 _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
+(rollback)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
         esac
     ;;
 esac
@@ -819,6 +853,7 @@ _wukong__deployment_commands() {
     local commands; commands=(
 'list:List the current available deployment pipelines of an application' \
 'execute:Start the deployment pipeline' \
+'rollback:Rollback the deployment pipeline' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'wukong deployment commands' commands "$@"
@@ -828,6 +863,7 @@ _wukong__help__deployment_commands() {
     local commands; commands=(
 'list:List the current available deployment pipelines of an application' \
 'execute:Start the deployment pipeline' \
+'rollback:Rollback the deployment pipeline' \
     )
     _describe -t commands 'wukong help deployment commands' commands "$@"
 }
@@ -909,6 +945,7 @@ _wukong__deployment__help_commands() {
     local commands; commands=(
 'list:List the current available deployment pipelines of an application' \
 'execute:Start the deployment pipeline' \
+'rollback:Rollback the deployment pipeline' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'wukong deployment help commands' commands "$@"
@@ -1050,6 +1087,21 @@ _wukong__pipeline_commands() {
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'wukong pipeline commands' commands "$@"
+}
+(( $+functions[_wukong__deployment__help__rollback_commands] )) ||
+_wukong__deployment__help__rollback_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong deployment help rollback commands' commands "$@"
+}
+(( $+functions[_wukong__deployment__rollback_commands] )) ||
+_wukong__deployment__rollback_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong deployment rollback commands' commands "$@"
+}
+(( $+functions[_wukong__help__deployment__rollback_commands] )) ||
+_wukong__help__deployment__rollback_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help deployment rollback commands' commands "$@"
 }
 (( $+functions[_wukong__config__help__set_commands] )) ||
 _wukong__config__help__set_commands() {
