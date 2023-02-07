@@ -222,7 +222,7 @@ mod test {
                 assert_eq!(
                     message,
                     &format!(
-                        "Unable to determine the changelog for build-{}.",
+                        "Unable to determine the changelog for {}.",
                         invalid_build_number
                     )
                 );
