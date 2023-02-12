@@ -87,7 +87,7 @@ impl ClapApp {
             CommandGroup::Init => handle_init().await,
             CommandGroup::Completion { shell } => handle_completion(context, *shell),
             CommandGroup::Login => handle_login().await,
-            CommandGroup::Application(application) => todo!(),
+            CommandGroup::Application(application) => application.handle_command(context).await,
             CommandGroup::Pipeline(pipeline) => pipeline.handle_command(context).await,
             CommandGroup::Deployment(_) => todo!(),
             CommandGroup::Config(_) => todo!(),
