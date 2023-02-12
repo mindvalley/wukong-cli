@@ -1,6 +1,6 @@
 use super::PipelineData;
 use crate::{
-    config::CONFIG_FILE,
+    app::APP_CONFIG,
     error::CliError,
     graphql::{pipeline::pipelines_query::PipelinesQueryPipelines, QueryClientBuilder},
     loader::new_spinner_progress_bar,
@@ -15,20 +15,19 @@ pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Fetching pipelines list ...");
 
-    let config_file = CONFIG_FILE
-        .as_ref()
-        .expect("Unable to identify user's home directory");
+    // let config_file = CONFIG_FILE
+    //     .as_ref()
+    //     .expect("Unable to identify user's home directory");
 
-    let application = match context.application {
-        Some(application) => application,
-        None => CLIConfig::load(config_file).unwrap().core.application,
-    };
+    // let application = match context.application {
+    //     Some(application) => application,
+    //     None => CLIConfig::load(config_file).unwrap().core.application,
+    // };
+
+    let application = context.application.unwrap();
 
     // Calling API ...
-    let client = QueryClientBuilder::new()
-        .with_access_token(context.id_token.unwrap())
-        .with_sub(context.sub) // for telemetry
-        .build()?;
+    let client = QueryClientBuilder::new().build()?;
 
     let pipelines_data = client
         .fetch_pipeline_list(&application)

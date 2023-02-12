@@ -1,4 +1,4 @@
-use crate::{app::APP_STATE, error::CliError};
+use crate::{app::APP_CONFIG, error::CliError};
 use chrono::{Duration, Utc};
 use openidconnect::{
     core::{
@@ -38,7 +38,7 @@ pub struct TokenInfo {
 }
 
 pub async fn login() -> Result<AuthInfo, CliError> {
-    let okta_client_id = ClientId::new(APP_STATE.get().unwrap().okta_client_id.clone());
+    let okta_client_id = ClientId::new(APP_CONFIG.get().unwrap().core.okta_client_id.clone());
 
     let issuer_url =
         IssuerUrl::new("https://mindvalley.okta.com".to_string()).expect("Invalid issuer URL");
@@ -192,7 +192,7 @@ pub async fn login() -> Result<AuthInfo, CliError> {
 }
 
 pub async fn refresh_tokens(refresh_token: &RefreshToken) -> Result<TokenInfo, CliError> {
-    let okta_client_id = ClientId::new(APP_STATE.get().unwrap().okta_client_id.clone());
+    let okta_client_id = ClientId::new(APP_CONFIG.get().unwrap().core.okta_client_id.clone());
 
     let issuer_url =
         IssuerUrl::new("https://mindvalley.okta.com".to_string()).expect("Invalid issuer URL");

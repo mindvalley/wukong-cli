@@ -1,4 +1,4 @@
-use crate::{clap_app::ClapApp, error::CliError, loader::new_spinner_progress_bar, GlobalContext};
+use crate::{commands::ClapApp, error::CliError, loader::new_spinner_progress_bar, GlobalContext};
 use clap::CommandFactory;
 use clap_complete::{generate, Shell};
 

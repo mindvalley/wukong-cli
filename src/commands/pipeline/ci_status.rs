@@ -55,10 +55,7 @@ pub async fn handle_ci_status(
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Fetching ci status ...");
 
-    let client = QueryClientBuilder::new()
-        .with_access_token(context.id_token.unwrap())
-        .with_sub(context.sub) // for telemetry
-        .build()?;
+    let client = QueryClientBuilder::new().build()?;
 
     let ci_status_resp = client
         .fetch_ci_status(&repo_url, &branch)

@@ -16,7 +16,7 @@ use self::{
     },
 };
 use crate::{
-    app::APP_STATE,
+    app::APP_CONFIG,
     error::APIError,
     telemetry::{self, TelemetryData, TelemetryEvent},
 };
@@ -33,15 +33,20 @@ pub struct QueryClientBuilder {
 
 impl QueryClientBuilder {
     pub fn new() -> Self {
-        let api_url = match APP_STATE.get() {
-            Some(state) => state.api_url.clone(),
-            None => "".to_string(),
+        let (api_url, token, sub) = {
+            let config = APP_CONFIG.get().unwrap();
+            let auth_config = config.auth.as_ref().unwrap();
+            (
+                config.core.wukong_api_url.clone(),
+                auth_config.id_token.clone(),
+                auth_config.subject.clone(),
+            )
         };
 
         Self {
-            access_token: None,
+            access_token: Some(token),
             api_url,
-            sub: None,
+            sub: Some(sub),
         }
     }
 

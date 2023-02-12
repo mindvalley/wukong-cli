@@ -1,5 +1,5 @@
 use crate::{
-    clap_app::ClapApp,
+    commands::ClapApp,
     error::{CliError, ConfigError},
     Config as CLIConfig, GlobalContext, CONFIG_FILE,
 };

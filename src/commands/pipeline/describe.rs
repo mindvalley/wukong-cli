@@ -16,10 +16,7 @@ pub async fn handle_describe(context: GlobalContext, name: &str) -> Result<bool,
     progress_bar.set_message("Fetching pipeline data ...");
 
     // Calling API ...
-    let client = QueryClientBuilder::new()
-        .with_access_token(context.id_token.unwrap())
-        .with_sub(context.sub) // for telemetry
-        .build()?;
+    let client = QueryClientBuilder::new().build()?;
 
     let pipeline_resp = client
         .fetch_pipeline(name)

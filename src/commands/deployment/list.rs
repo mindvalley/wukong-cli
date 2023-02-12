@@ -77,10 +77,7 @@ pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
     };
 
     // Calling API ...
-    let client = QueryClientBuilder::new()
-        .with_access_token(context.id_token.unwrap())
-        .with_sub(context.sub) // for telemetry
-        .build()?;
+    let client = QueryClientBuilder::new().build()?;
 
     let cd_pipelines_data = client
         .fetch_cd_pipeline_list(&application)

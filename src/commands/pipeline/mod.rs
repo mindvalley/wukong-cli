@@ -4,6 +4,8 @@ pub mod list;
 
 use self::{ci_status::handle_ci_status, describe::handle_describe, list::handle_list};
 use crate::{
+    app::APP_CONFIG,
+    config::{Config, CONFIG_FILE},
     error::CliError,
     output::table::{fmt_option_milliseconds, fmt_option_timestamp, fmt_timestamp},
     GlobalContext,
@@ -126,7 +128,25 @@ pub enum PipelineSubcommand {
 }
 
 impl Pipeline {
-    pub async fn handle_command(&self, context: GlobalContext) -> Result<bool, CliError> {
+    pub async fn handle_command(&self, mut context: GlobalContext) -> Result<bool, CliError> {
+        let config_file = CONFIG_FILE
+            .as_ref()
+            .expect("Unable to identify user's home directory");
+
+        let config = Config::load(config_file)?;
+
+        if config.auth.is_none() {
+            return Err(CliError::UnAuthenticated);
+        }
+
+        if context.application.is_none() {
+            context.application = Some(config.core.application.clone());
+        }
+
+        context.sub = Some(config.auth.as_ref().unwrap().subject.clone());
+
+        APP_CONFIG.set(config).unwrap();
+
         match &self.subcommand {
             PipelineSubcommand::List => handle_list(context).await,
             PipelineSubcommand::Describe { name } => handle_describe(context, name).await,

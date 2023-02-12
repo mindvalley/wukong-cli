@@ -1,22 +1,36 @@
 use crate::{
+    app::APP_CONFIG,
     auth::login,
     config::{AuthConfig, Config, CONFIG_FILE},
-    error::CliError,
+    error::{CliError, ConfigError},
     graphql::QueryClientBuilder,
     output::colored_println,
-    GlobalContext,
 };
 use dialoguer::{theme::ColorfulTheme, Select};
 
-pub async fn handle_init(
-    context: GlobalContext,
-    existing_config: Option<Config>,
-) -> Result<bool, CliError> {
+pub async fn handle_init() -> Result<bool, CliError> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
 
+    let config_file = CONFIG_FILE
+        .as_ref()
+        .expect("Unable to identify user's home directory");
+
+    let config = match Config::load(config_file) {
+        Ok(config) => config,
+        Err(error) => match error {
+            CliError::ConfigError(ConfigError::NotFound { .. })
+            | CliError::ConfigError(ConfigError::BadTomlData(_)) => Config::default(),
+            error => return Err(error),
+        },
+    };
+
+    let current_config = config.clone();
+
+    APP_CONFIG.set(config).unwrap();
+
     let mut login_selections = vec!["Log in with a new account"];
-    if let Some(ref account) = context.account {
-        login_selections.splice(..0, vec![account.as_str()]);
+    if let Some(ref auth_config) = current_config.auth {
+        login_selections.splice(..0, vec![auth_config.account.as_str()]);
     };
 
     let selection = Select::with_theme(&ColorfulTheme::default())
@@ -48,23 +62,14 @@ pub async fn handle_init(
     } else {
         colored_println!("You are logged in as: {}.\n", login_selections[selection]);
 
-        let mut new_config = Config::default();
-
-        if let Some(ref config) = existing_config {
-            new_config.auth = config.auth.clone();
-        }
-
-        new_config
+        current_config
     };
 
     // SAFETY: The auth must not be None here
     let auth_config = config.auth.as_ref().unwrap();
 
     // Calling API ...
-    let client = QueryClientBuilder::new()
-        .with_access_token(auth_config.id_token.clone())
-        .with_sub(context.sub) // for telemetry
-        .build()?;
+    let client = QueryClientBuilder::new().build()?;
 
     let applications_data: Vec<String> = client
         .fetch_application_list()
