@@ -2,7 +2,6 @@ use crate::{commands::ClapApp, error::CliError, logger};
 use clap::Parser;
 
 pub struct App {
-    // pub config: ConfigState,
     pub cli: ClapApp,
 }
 

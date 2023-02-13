@@ -88,9 +88,9 @@ impl CliError {
                 ConfigError::PermissionDenied { path, .. } => Some(format!(
                     "Run \"chmod +rw {path}\" to provide read and write permissions."
                 )),
-                ConfigError::BadTomlData(_) => Some(format!(
-                    "Check if your config.toml file is in valid TOML format.\nThis usually happen when the config file is accidentally modified or there is a breaking change to the cli config in the new version.\nYou may want to run \"wukong init\" to re-initialise configuration again."
-                )),
+                ConfigError::BadTomlData(_) => Some(
+                    "Check if your config.toml file is in valid TOML format.\nThis usually happen when the config file is accidentally modified or there is a breaking change to the cli config in the new version.\nYou may want to run \"wukong init\" to re-initialise configuration again.".to_string()
+                ),
                 _ => None,
             },
             CliError::APIError(error) => match error {
