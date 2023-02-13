@@ -1,5 +1,4 @@
 use crate::{
-    app::APP_CONFIG,
     auth::Auth,
     config::{AuthConfig, Config, CONFIG_FILE},
     error::{CliError, ConfigError},
@@ -24,7 +23,7 @@ pub async fn handle_init() -> Result<bool, CliError> {
         },
     };
 
-    let mut current_config = config.clone();
+    let current_config = config.clone();
 
     let mut login_selections = vec!["Log in with a new account"];
     if let Some(ref auth_config) = current_config.auth {
@@ -62,15 +61,15 @@ pub async fn handle_init() -> Result<bool, CliError> {
         current_config
     };
 
-    current_config = config.clone();
-    println!("{:?}", &current_config);
-
     // SAFETY: The auth must not be None here
-    // let auth_config = config.auth.as_ref().unwrap();
-    APP_CONFIG.set(current_config).unwrap();
+    let auth_config = config.auth.as_ref().unwrap();
 
     // Calling API ...
-    let client = QueryClientBuilder::new().build()?;
+    let client = QueryClientBuilder::default()
+        .with_access_token(auth_config.id_token.clone())
+        .with_sub(Some(auth_config.subject.clone()))
+        .with_api_url(config.core.wukong_api_url.clone())
+        .build()?;
 
     let applications_data: Vec<String> = client
         .fetch_application_list()

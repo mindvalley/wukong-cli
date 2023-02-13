@@ -1,5 +1,4 @@
 use crate::{
-    app::APP_CONFIG,
     auth::Auth,
     config::{AuthConfig, CONFIG_FILE},
     error::CliError,
@@ -15,11 +14,7 @@ pub async fn handle_login() -> Result<bool, CliError> {
 
     let config = CLIConfig::load(config_file)?;
 
-    let current_config = config.clone();
-
-    APP_CONFIG.set(config).unwrap();
-
-    if let Some(auth_config) = current_config.auth {
+    if let Some(auth_config) = &config.auth {
         let selections = vec![
             "Use the current logged in account",
             "Log in with a new account",
@@ -35,21 +30,20 @@ pub async fn handle_login() -> Result<bool, CliError> {
 
         // selecting "Log in with a new account"
         if selection == 1 {
-            login_and_update_config().await?;
+            login_and_update_config(config).await?;
         }
     } else {
-        login_and_update_config().await?;
+        login_and_update_config(config).await?;
     }
 
     Ok(true)
 }
 
-async fn login_and_update_config() -> Result<bool, CliError> {
-    let auth_info = Auth::new(&APP_CONFIG.get().unwrap().core.okta_client_id)
+async fn login_and_update_config(mut current_config: CLIConfig) -> Result<bool, CliError> {
+    let auth_info = Auth::new(&current_config.core.okta_client_id)
         .login()
         .await?;
 
-    let mut current_config = APP_CONFIG.get().unwrap().clone();
     current_config.auth = Some(AuthConfig {
         account: auth_info.account.clone(),
         subject: auth_info.subject.clone(),

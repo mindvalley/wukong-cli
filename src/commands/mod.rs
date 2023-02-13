@@ -6,17 +6,26 @@ pub mod init;
 pub mod login;
 pub mod pipeline;
 
-use clap::{command, Parser, Subcommand};
+use clap::{command, crate_version, Parser, Subcommand};
 use clap_complete::Shell;
 use clap_verbosity_flag::{LogLevel, Verbosity};
+use log::debug;
 
-use crate::{
-    app::APP_CONFIG,
-    config::{Config, CONFIG_FILE},
-    error::CliError,
-};
+use crate::{config::Config, error::CliError};
 
 use self::{completion::handle_completion, init::handle_init, login::handle_login};
+
+#[derive(Default, Debug)]
+pub struct State {
+    application: Option<String>,
+    sub: Option<String>,
+}
+
+#[derive(Default, Debug)]
+pub struct Context {
+    state: State,
+    config: Config,
+}
 
 /// A Swiss-army Knife CLI For Mindvalley Developers
 #[derive(Debug, Parser)]
@@ -82,30 +91,35 @@ pub enum CommandGroup {
 }
 
 impl ClapApp {
-    pub async fn run(&self, context: crate::GlobalContext) -> Result<bool, CliError> {
+    pub async fn execute(&self) -> Result<bool, CliError> {
+        let state = State::default();
+
+        // overwritten by --application flag
+        // if let Some(ref application) = self.application {
+        //     context.application = Some(application.clone());
+        // }
+
+        debug!("current cli version: {}", crate_version!());
+        // debug!("current application: {:?}", &context.application);
+        // debug!(
+        //     "current API URL: {:?}",
+        //     match &app.config {
+        //         ConfigState::InitialisedButUnAuthenticated(config)
+        //         | ConfigState::InitialisedAndAuthenticated(config) => Some(&config.core.wukong_api_url),
+        //         ConfigState::Uninitialised => None,
+        //     }
+        // );
+        // debug!("current calling user: {:?}", &context.account);
+
         match &self.command_group {
             CommandGroup::Init => handle_init().await,
-            CommandGroup::Completion { shell } => handle_completion(context, *shell),
+            CommandGroup::Completion { shell } => handle_completion(*shell),
             CommandGroup::Login => handle_login().await,
-            CommandGroup::Application(application) => application.handle_command(context).await,
-            CommandGroup::Pipeline(pipeline) => pipeline.handle_command(context).await,
-            CommandGroup::Deployment(deployment) => deployment.handle_command(context).await,
+            CommandGroup::Application(application) => application.handle_command(state).await,
+            CommandGroup::Pipeline(pipeline) => pipeline.handle_command(state).await,
+            CommandGroup::Deployment(deployment) => deployment.handle_command(state).await,
             CommandGroup::Config(config) => config.handle_command(),
         }
-
-        // match self.command_group {
-        //     CommandGroup::Pipeline(pipeline) => {
-        //         must_init_and_login!(app.config, pipeline.handle_command(context).await)
-        //     }
-        //     CommandGroup::Config(config) => must_init!(app.config, config.handle_command(context)),
-        //     CommandGroup::Login => must_init!(app.config, handle_login(context).await),
-        //     CommandGroup::Init => handle_init(context, existing_config).await,
-        //     CommandGroup::Completion { shell } => handle_completion(context, shell),
-        //     CommandGroup::Deployment(deployment) => {
-        //         must_init_and_login!(app.config, deployment.handle_command(context).await)
-        //     }
-        //     CommandGroup::Application(application) => application.handle_command(context).await,
-        // }
     }
 }
 

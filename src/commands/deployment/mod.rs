@@ -7,11 +7,12 @@ use list::handle_list;
 use rollback::handle_rollback;
 
 use crate::{
-    app::APP_CONFIG,
     config::{Config, CONFIG_FILE},
-    CliError, GlobalContext,
+    CliError,
 };
 use clap::{Args, Subcommand, ValueEnum};
+
+use super::{Context, State};
 
 #[derive(Debug, Args)]
 pub struct Deployment {
@@ -79,24 +80,26 @@ impl ToString for DeploymentNamespace {
 }
 
 impl Deployment {
-    pub async fn handle_command(&self, mut context: GlobalContext) -> Result<bool, CliError> {
+    pub async fn handle_command(&self, mut state: State) -> Result<bool, CliError> {
         let config_file = CONFIG_FILE
             .as_ref()
             .expect("Unable to identify user's home directory");
 
         let config = Config::load(config_file)?;
 
-        if config.auth.is_none() {
-            return Err(CliError::UnAuthenticated);
+        if state.application.is_none() {
+            state.application = Some(config.core.application.clone());
         }
+        state.sub = Some(
+            config
+                .auth
+                .as_ref()
+                .ok_or(CliError::UnAuthenticated)?
+                .subject
+                .clone(),
+        );
 
-        if context.application.is_none() {
-            context.application = Some(config.core.application.clone());
-        }
-
-        context.sub = Some(config.auth.as_ref().unwrap().subject.clone());
-
-        APP_CONFIG.set(config).unwrap();
+        let context = Context { state, config };
 
         match &self.subcommand {
             DeploymentSubcommand::List => handle_list(context).await,

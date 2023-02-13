@@ -1,33 +1,34 @@
 use super::PipelineData;
 use crate::{
-    app::APP_CONFIG,
+    commands::Context,
     error::CliError,
     graphql::{pipeline::pipelines_query::PipelinesQueryPipelines, QueryClientBuilder},
     loader::new_spinner_progress_bar,
     output::{colored_println, table::TableOutput},
     telemetry::{self, TelemetryData, TelemetryEvent},
-    Config as CLIConfig, GlobalContext,
 };
 use wukong_telemetry_macro::wukong_telemetry;
 
 #[wukong_telemetry(command_event = "pipeline_list")]
-pub async fn handle_list(context: GlobalContext) -> Result<bool, CliError> {
+pub async fn handle_list(context: Context) -> Result<bool, CliError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Fetching pipelines list ...");
 
-    // let config_file = CONFIG_FILE
-    //     .as_ref()
-    //     .expect("Unable to identify user's home directory");
-
-    // let application = match context.application {
-    //     Some(application) => application,
-    //     None => CLIConfig::load(config_file).unwrap().core.application,
-    // };
-
-    let application = context.application.unwrap();
+    // SAFETY: This is safe to unwrap because we know that `application` is not None.
+    let application = context.state.application.unwrap();
 
     // Calling API ...
-    let client = QueryClientBuilder::new().build()?;
+    let client = QueryClientBuilder::default()
+        .with_access_token(
+            context
+                .config
+                .auth
+                .ok_or(CliError::UnAuthenticated)?
+                .id_token,
+        )
+        .with_sub(context.state.sub)
+        .with_api_url(context.config.core.wukong_api_url)
+        .build()?;
 
     let pipelines_data = client
         .fetch_pipeline_list(&application)

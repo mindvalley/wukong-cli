@@ -26,9 +26,9 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
         generated_func = quote! {
             #visibility #asyncness fn #fn_ident(#fn_inputs) #fn_output {
                 // SAFETY: the application can't be None since it is checked in the caller
-                let current_application = context.application.as_ref().expect("Current application must not be None.").clone();
+                let current_application = context.state.application.as_ref().expect("Current application must not be None.").clone();
                 // SAFETY: the sub can't be None since it is checked in the caller
-                let current_sub = context.sub.as_ref().expect("Current sub must not be None.").clone();
+                let current_sub = context.state.sub.as_ref().expect("Current sub must not be None.").clone();
 
                 TelemetryData::new(
                     TelemetryEvent::Command {

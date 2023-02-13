@@ -1,4 +1,3 @@
-use crate::CONFIG_FILE;
 use owo_colors::OwoColorize;
 use thiserror::Error as ThisError;
 
@@ -90,7 +89,7 @@ impl CliError {
                     "Run \"chmod +rw {path}\" to provide read and write permissions."
                 )),
                 ConfigError::BadTomlData(_) => Some(format!(
-                    "Check if your config.toml file is in valid TOML format.\nThis usually happen when the config file is accidentally modified or there is a breaking change to the cli config in the new version.\nYou may want to remove the config.toml file (\"rm {}\") and run \"wukong init\" to re-initialise configuration again.", CONFIG_FILE.as_ref().unwrap_or(&"/path/to/config.toml".to_string())
+                    "Check if your config.toml file is in valid TOML format.\nThis usually happen when the config file is accidentally modified or there is a breaking change to the cli config in the new version.\nYou may want to run \"wukong init\" to re-initialise configuration again."
                 )),
                 _ => None,
             },

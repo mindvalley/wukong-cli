@@ -16,7 +16,6 @@ use self::{
     },
 };
 use crate::{
-    app::APP_CONFIG,
     error::APIError,
     telemetry::{self, TelemetryData, TelemetryEvent},
 };
@@ -25,6 +24,7 @@ use log::debug;
 use reqwest::header;
 use wukong_telemetry_macro::wukong_telemetry;
 
+#[derive(Debug, Default)]
 pub struct QueryClientBuilder {
     access_token: Option<String>,
     sub: Option<String>,
@@ -32,27 +32,6 @@ pub struct QueryClientBuilder {
 }
 
 impl QueryClientBuilder {
-    pub fn new() -> Self {
-        let (api_url, token, sub) = {
-            let config = APP_CONFIG.get().unwrap();
-
-            match &config.auth {
-                Some(auth_config) => (
-                    config.core.wukong_api_url.clone(),
-                    Some(auth_config.id_token.clone()),
-                    Some(auth_config.subject.clone()),
-                ),
-                None => (config.core.wukong_api_url.clone(), None, None),
-            }
-        };
-
-        Self {
-            access_token: token,
-            api_url,
-            sub,
-        }
-    }
-
     pub fn with_access_token(mut self, access_token: String) -> Self {
         self.access_token = Some(access_token);
         self
@@ -64,20 +43,21 @@ impl QueryClientBuilder {
         self
     }
 
-    #[allow(dead_code)]
     pub fn with_api_url(mut self, api_url: String) -> Self {
         self.api_url = api_url;
         self
     }
 
     pub fn build(self) -> Result<QueryClient, APIError> {
-        let auth_value = format!("Bearer {}", self.access_token.unwrap_or_default());
-
         let mut headers = header::HeaderMap::new();
-        headers.insert(
-            header::AUTHORIZATION,
-            header::HeaderValue::from_str(&auth_value).unwrap(),
-        );
+
+        if let Some(token) = self.access_token {
+            let auth_value = format!("Bearer {}", token);
+            headers.insert(
+                header::AUTHORIZATION,
+                header::HeaderValue::from_str(&auth_value).unwrap(),
+            );
+        }
 
         let client = reqwest::Client::builder()
             .default_headers(headers)

@@ -4,12 +4,10 @@ pub mod list;
 
 use self::{ci_status::handle_ci_status, describe::handle_describe, list::handle_list};
 use crate::{
-    app::APP_CONFIG,
     auth::Auth,
     config::{AuthConfig, Config, CONFIG_FILE},
     error::CliError,
     output::table::{fmt_option_milliseconds, fmt_option_timestamp, fmt_timestamp},
-    GlobalContext,
 };
 use chrono::{DateTime, Local, NaiveDateTime, Utc};
 use clap::{Args, Subcommand};
@@ -17,6 +15,8 @@ use openidconnect::RefreshToken;
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, str};
 use tabled::Tabled;
+
+use super::{Context, State};
 
 #[derive(Tabled, Serialize, Deserialize, Debug)]
 struct PipelineData {
@@ -130,7 +130,7 @@ pub enum PipelineSubcommand {
 }
 
 impl Pipeline {
-    pub async fn handle_command(&self, mut context: GlobalContext) -> Result<bool, CliError> {
+    pub async fn handle_command(&self, mut state: State) -> Result<bool, CliError> {
         let config_file = CONFIG_FILE
             .as_ref()
             .expect("Unable to identify user's home directory");
@@ -171,13 +171,19 @@ impl Pipeline {
             return Err(CliError::UnAuthenticated);
         };
 
-        if context.application.is_none() {
-            context.application = Some(config.core.application.clone());
+        if state.application.is_none() {
+            state.application = Some(config.core.application.clone());
         }
+        state.sub = Some(
+            config
+                .auth
+                .as_ref()
+                .ok_or(CliError::UnAuthenticated)?
+                .subject
+                .clone(),
+        );
 
-        context.sub = Some(config.auth.as_ref().unwrap().subject.clone());
-
-        APP_CONFIG.set(config).unwrap();
+        let context = Context { state, config };
 
         match &self.subcommand {
             PipelineSubcommand::List => handle_list(context).await,

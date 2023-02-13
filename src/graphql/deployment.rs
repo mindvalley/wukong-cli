@@ -179,7 +179,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_cd_pipeline_list_success_should_return_cd_pipeline_list() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::new()
+        let query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -233,7 +233,7 @@ mod test {
     async fn test_fetch_cd_pipeline_list_failed_with_application_not_found_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::new()
+        let query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -333,7 +333,7 @@ mod test {
     #[tokio::test]
     async fn test_execute_cd_pipeline_success_should_return_deployment_url() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::new()
+        let query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -379,7 +379,7 @@ mod test {
     async fn test_execute_cd_pipeline_list_failed_with_deploy_for_this_build_is_currently_running_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::new()
+        let query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
