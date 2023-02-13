@@ -1,6 +1,6 @@
 use crate::{
     app::APP_CONFIG,
-    auth,
+    auth::Auth,
     config::{AuthConfig, CONFIG_FILE},
     error::CliError,
     output::colored_println,
@@ -45,7 +45,9 @@ pub async fn handle_login() -> Result<bool, CliError> {
 }
 
 async fn login_and_update_config() -> Result<bool, CliError> {
-    let auth_info = auth::login().await?;
+    let auth_info = Auth::new(&APP_CONFIG.get().unwrap().core.okta_client_id)
+        .login()
+        .await?;
 
     let mut current_config = APP_CONFIG.get().unwrap().clone();
     current_config.auth = Some(AuthConfig {

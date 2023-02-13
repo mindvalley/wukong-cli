@@ -7,6 +7,16 @@ use std::{
     path::Path,
 };
 
+#[cfg(not(feature = "prod"))]
+static WUKONG_API_URL: &str = "http://localhost:4000/api";
+#[cfg(not(feature = "prod"))]
+static OKTA_CLIENT_ID: &str = "0oakfxaegyAV5JDD5357";
+
+#[cfg(all(feature = "prod"))]
+static WUKONG_API_URL: &str = "https://wukong-api-proxy.mindvalley.dev/api";
+#[cfg(all(feature = "prod"))]
+static OKTA_CLIENT_ID: &str = "0oakfxaegyAV5JDD5357";
+
 /// The default path to the CLI configuration file.
 ///
 /// This is a [Lazy] of `Option<String>`, the value of which is
@@ -71,16 +81,8 @@ impl Default for Config {
         Self {
             core: CoreConfig {
                 application: "".to_string(),
-
-                #[cfg(not(feature = "prod"))]
-                wukong_api_url: "http://localhost:4000/api".to_string(),
-                #[cfg(not(feature = "prod"))]
-                okta_client_id: "0oakfxaegyAV5JDD5357".to_string(),
-
-                #[cfg(all(feature = "prod"))]
-                wukong_api_url: "https://wukong-api-proxy.mindvalley.dev/api".to_string(),
-                #[cfg(all(feature = "prod"))]
-                okta_client_id: "0oakfxaegyAV5JDD5357".to_string(),
+                wukong_api_url: WUKONG_API_URL.to_string(),
+                okta_client_id: OKTA_CLIENT_ID.to_string(),
             },
             log: LogConfig {
                 enable: true,

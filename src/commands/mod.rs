@@ -90,7 +90,7 @@ impl ClapApp {
             CommandGroup::Application(application) => application.handle_command(context).await,
             CommandGroup::Pipeline(pipeline) => pipeline.handle_command(context).await,
             CommandGroup::Deployment(deployment) => deployment.handle_command(context).await,
-            CommandGroup::Config(_) => todo!(),
+            CommandGroup::Config(config) => config.handle_command(),
         }
 
         // match self.command_group {

@@ -35,18 +35,21 @@ impl QueryClientBuilder {
     pub fn new() -> Self {
         let (api_url, token, sub) = {
             let config = APP_CONFIG.get().unwrap();
-            let auth_config = config.auth.as_ref().unwrap();
-            (
-                config.core.wukong_api_url.clone(),
-                auth_config.id_token.clone(),
-                auth_config.subject.clone(),
-            )
+
+            match &config.auth {
+                Some(auth_config) => (
+                    config.core.wukong_api_url.clone(),
+                    Some(auth_config.id_token.clone()),
+                    Some(auth_config.subject.clone()),
+                ),
+                None => (config.core.wukong_api_url.clone(), None, None),
+            }
         };
 
         Self {
-            access_token: Some(token),
+            access_token: token,
             api_url,
-            sub: Some(sub),
+            sub,
         }
     }
 

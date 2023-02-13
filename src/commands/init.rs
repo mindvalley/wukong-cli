@@ -1,6 +1,6 @@
 use crate::{
     app::APP_CONFIG,
-    auth::login,
+    auth::Auth,
     config::{AuthConfig, Config, CONFIG_FILE},
     error::{CliError, ConfigError},
     graphql::QueryClientBuilder,
@@ -24,9 +24,7 @@ pub async fn handle_init() -> Result<bool, CliError> {
         },
     };
 
-    let current_config = config.clone();
-
-    APP_CONFIG.set(config).unwrap();
+    let mut current_config = config.clone();
 
     let mut login_selections = vec!["Log in with a new account"];
     if let Some(ref auth_config) = current_config.auth {
@@ -41,21 +39,20 @@ pub async fn handle_init() -> Result<bool, CliError> {
 
     // "Log in with a new account" is selected
     let mut config = if selection == login_selections.len() - 1 {
-        let auth_info = login().await?;
+        let mut config = Config::default();
+
+        let auth_info = Auth::new(&config.core.okta_client_id).login().await?;
 
         // we don't really care about the exisiting config (id_token, refresh_token, account)
         // if the user choose to log in with a new account
-        let config = Config {
-            auth: Some(AuthConfig {
-                account: auth_info.account.clone(),
-                subject: auth_info.subject.clone(),
-                id_token: auth_info.id_token,
-                access_token: auth_info.access_token,
-                expiry_time: auth_info.expiry_time,
-                refresh_token: auth_info.refresh_token,
-            }),
-            ..Default::default()
-        };
+        config.auth = Some(AuthConfig {
+            account: auth_info.account.clone(),
+            subject: auth_info.subject.clone(),
+            id_token: auth_info.id_token,
+            access_token: auth_info.access_token,
+            expiry_time: auth_info.expiry_time,
+            refresh_token: auth_info.refresh_token,
+        });
 
         colored_println!("You are logged in as: {}.\n", auth_info.account);
         config
@@ -65,8 +62,12 @@ pub async fn handle_init() -> Result<bool, CliError> {
         current_config
     };
 
+    current_config = config.clone();
+    println!("{:?}", &current_config);
+
     // SAFETY: The auth must not be None here
-    let auth_config = config.auth.as_ref().unwrap();
+    // let auth_config = config.auth.as_ref().unwrap();
+    APP_CONFIG.set(current_config).unwrap();
 
     // Calling API ...
     let client = QueryClientBuilder::new().build()?;
@@ -106,7 +107,7 @@ Some things to try next:
 
 * Run `wukong --help` to see the wukong command groups you can interact with. And run `wukong COMMAND help` to get help on any wukong command.
                      "#,
-        auth_config.account,
+        config.auth.as_ref().unwrap().account,
         config.core.application
     );
 

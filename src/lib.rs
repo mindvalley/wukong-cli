@@ -9,17 +9,12 @@ mod logger;
 pub mod output;
 mod telemetry;
 
-use crate::auth::refresh_tokens;
-use app::{App, ConfigState};
+use app::App;
 use chrono::{DateTime, Local};
 use clap::crate_version;
-// use commands::{
-//     completion::handle_completion, init::handle_init, login::handle_login, CommandGroup,
-// };
-use config::{AuthConfig, Config, CONFIG_FILE};
+use config::{Config, CONFIG_FILE};
 use error::CliError;
 use log::debug;
-use openidconnect::RefreshToken;
 
 #[derive(Default, Debug)]
 pub struct GlobalContext {
