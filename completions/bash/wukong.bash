@@ -333,7 +333,7 @@ _wukong() {
             return 0
             ;;
         wukong__config__get)
-            opts="-a -v -q -h --application --verbose --quiet --help application enable-log log-dir wukong-api-url okta-client-id"
+            opts="-a -v -q -h --application --verbose --quiet --help application wukong-api-url okta-client-id"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -447,7 +447,7 @@ _wukong() {
             return 0
             ;;
         wukong__config__set)
-            opts="-a -v -q -h --application --verbose --quiet --help application enable-log log-dir wukong-api-url okta-client-id <CONFIG_VALUE>"
+            opts="-a -v -q -h --application --verbose --quiet --help application wukong-api-url okta-client-id <CONFIG_VALUE>"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
