@@ -7,6 +7,7 @@ use crate::{
     output::colored_println,
     telemetry::{self, TelemetryData, TelemetryEvent},
 };
+use base64::Engine;
 use dialoguer::{theme::ColorfulTheme, Confirm, Select};
 use edit::Builder;
 use owo_colors::OwoColorize;
@@ -532,7 +533,8 @@ pub async fn handle_execute(
             let progress_bar = new_spinner_progress_bar();
             progress_bar.set_message("Sending deployment ...");
 
-            let base64_encoded_changelog = base64::encode(cleaned_changelog);
+            let base64_encoded_changelog =
+                base64::engine::general_purpose::STANDARD.encode(cleaned_changelog);
 
             let resp = client
                 .execute_cd_pipeline(

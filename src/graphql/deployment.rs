@@ -167,6 +167,7 @@ impl ExecuteCdPipeline {
 mod test {
     use super::*;
     use crate::graphql::QueryClientBuilder;
+    use base64::Engine;
     use httpmock::prelude::*;
 
     #[tokio::test]
@@ -354,9 +355,10 @@ mod test {
             "prod",
             "green",
             "main-build-100",
-            Some(base64::encode(
-                "This is a changelog.\n\nThis is a new changelog.\n",
-            )),
+            Some(
+                base64::engine::general_purpose::STANDARD
+                    .encode("This is a changelog.\n\nThis is a new changelog.\n"),
+            ),
             true,
         )
         .await;
@@ -410,9 +412,10 @@ mod test {
             "prod",
             "green",
             "main-build-100",
-            Some(base64::encode(
-                "This is a changelog.\n\nThis is a new changelog.\n",
-            )),
+            Some(
+                base64::engine::general_purpose::STANDARD
+                    .encode("This is a changelog.\n\nThis is a new changelog.\n"),
+            ),
             true,
         )
         .await;
