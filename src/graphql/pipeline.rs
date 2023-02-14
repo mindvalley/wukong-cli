@@ -1,7 +1,6 @@
 use super::QueryClient;
 use crate::error::APIError;
 use graphql_client::{GraphQLQuery, Response};
-use log::debug;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -37,8 +36,6 @@ impl PipelinesQuery {
                 })
             })
             .await?;
-
-        debug!("response: {:?}", &response);
 
         Ok(response)
     }
@@ -77,8 +74,6 @@ impl PipelineQuery {
             })
             .await?;
 
-        debug!("response: {:?}", &response);
-
         Ok(response)
     }
 }
@@ -116,8 +111,6 @@ impl MultiBranchPipelineQuery {
             })
             .await?;
 
-        debug!("response: {:?}", &response);
-
         Ok(response)
     }
 }
@@ -153,8 +146,6 @@ impl CiStatusQuery {
                 }),
             })
             .await?;
-
-        debug!("response: {:?}", &response);
 
         Ok(response)
     }

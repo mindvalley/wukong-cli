@@ -22,6 +22,7 @@ use crate::{
 use graphql_client::{GraphQLQuery, Response};
 use log::debug;
 use reqwest::header;
+use std::fmt::Debug;
 use wukong_telemetry_macro::wukong_telemetry;
 
 #[derive(Debug, Default)]
@@ -73,9 +74,9 @@ impl QueryClientBuilder {
 
 pub struct QueryClient {
     reqwest_client: reqwest::Client,
+    api_url: String,
     // for telemetry usage
     sub: Option<String>,
-    pub api_url: String,
 }
 
 impl QueryClient {
@@ -83,21 +84,27 @@ impl QueryClient {
         &self.reqwest_client
     }
 
-    pub async fn call_api<Q: GraphQLQuery>(
+    pub async fn call_api<Q>(
         &self,
         variables: Q::Variables,
         handler: impl Fn(
             Response<Q::ResponseData>,
             graphql_client::Error,
         ) -> Result<Response<Q::ResponseData>, APIError>,
-    ) -> Result<Response<Q::ResponseData>, APIError> {
+    ) -> Result<Response<Q::ResponseData>, APIError>
+    where
+        Q: GraphQLQuery,
+        Q::ResponseData: Debug,
+    {
         let body = Q::build_query(variables);
         let request = self.inner().post(&self.api_url).json(&body);
 
-        debug!("request: {:?}", request);
-        debug!("graphQL query: \n{}", body.query);
+        debug!("url: {:?}", &self.api_url);
+        debug!("request: {:#?}", request);
+        debug!("GraphQL query: \n{}", body.query);
 
         let response: Response<Q::ResponseData> = request.send().await?.json().await?;
+        debug!("GraphQL response: {:#?}", response);
 
         if let Some(errors) = response.errors.clone() {
             let first_error = errors[0].clone();

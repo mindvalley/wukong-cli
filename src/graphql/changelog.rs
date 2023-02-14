@@ -1,7 +1,6 @@
 use super::QueryClient;
 use crate::error::APIError;
 use graphql_client::{GraphQLQuery, Response};
-use log::debug;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -45,8 +44,6 @@ impl ChangelogsQuery {
                 }),
             })
             .await?;
-
-        debug!("response: {:?}", &response);
 
         Ok(response)
     }
