@@ -83,7 +83,7 @@ impl CliError {
             )),
             CliError::ConfigError(error) => match error {
                 ConfigError::NotFound { .. } => Some(String::from(
-                    "Run \"wukong init\" to initialise configuration.",
+                    "Run \"wukong init\" to initialise Wukong's configuration.",
                 )),
                 ConfigError::PermissionDenied { path, .. } => Some(format!(
                     "Run \"chmod +rw {path}\" to provide read and write permissions."

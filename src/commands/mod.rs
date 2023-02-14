@@ -6,12 +6,18 @@ pub mod init;
 pub mod login;
 pub mod pipeline;
 
+use chrono::{DateTime, Local};
 use clap::{command, crate_version, Parser, Subcommand};
 use clap_complete::Shell;
 use clap_verbosity_flag::{LogLevel, Verbosity};
 use log::debug;
+use openidconnect::RefreshToken;
 
-use crate::{config::Config, error::CliError};
+use crate::{
+    auth::Auth,
+    config::{AuthConfig, Config, CONFIG_FILE},
+    error::CliError,
+};
 
 use self::{completion::handle_completion, init::handle_init, login::handle_login};
 
@@ -25,6 +31,65 @@ pub struct State {
 pub struct Context {
     state: State,
     config: Config,
+}
+
+impl Context {
+    pub async fn from_state(mut state: State) -> Result<Self, CliError> {
+        let config_file = CONFIG_FILE
+            .as_ref()
+            .expect("Unable to identify user's home directory");
+
+        let mut config = Config::load(config_file)?;
+
+        let auth_config = config.auth.as_ref().ok_or(CliError::UnAuthenticated)?;
+
+        // check access token expiry
+        let local: DateTime<Local> = Local::now();
+        let expiry = DateTime::parse_from_rfc3339(&auth_config.expiry_time)
+            .unwrap()
+            .with_timezone(&Local);
+
+        if local >= expiry {
+            let new_tokens = Auth::new(&config.core.okta_client_id)
+                .refresh_tokens(&RefreshToken::new(auth_config.refresh_token.clone()))
+                .await?;
+
+            config.auth = Some(AuthConfig {
+                account: auth_config.account.clone(),
+                subject: auth_config.subject.clone(),
+                id_token: new_tokens.id_token.clone(),
+                access_token: new_tokens.access_token.clone(),
+                expiry_time: new_tokens.expiry_time,
+                refresh_token: new_tokens.refresh_token,
+            });
+
+            config
+                .save(config_file)
+                .expect("The token is refreshed but the new config can't be saved.");
+        }
+
+        if state.application.is_none() {
+            state.application = Some(config.core.application.clone());
+        }
+
+        state.sub = Some(
+            config
+                .auth
+                .as_ref()
+                .ok_or(CliError::UnAuthenticated)?
+                .subject
+                .clone(),
+        );
+
+        debug!("current application: {:?}", &state.application);
+        debug!("current API URL: {:?}", &config.core.wukong_api_url);
+        debug!(
+            "current calling user: {:?}",
+            &config.auth.as_ref().unwrap().account
+        );
+
+        Ok(Context { state, config })
+    }
 }
 
 /// A Swiss-army Knife CLI For Mindvalley Developers
@@ -100,16 +165,6 @@ impl ClapApp {
         }
 
         debug!("current cli version: {}", crate_version!());
-        // debug!("current application: {:?}", &context.application);
-        // debug!(
-        //     "current API URL: {:?}",
-        //     match &app.config {
-        //         ConfigState::InitialisedButUnAuthenticated(config)
-        //         | ConfigState::InitialisedAndAuthenticated(config) => Some(&config.core.wukong_api_url),
-        //         ConfigState::Uninitialised => None,
-        //     }
-        // );
-        // debug!("current calling user: {:?}", &context.account);
 
         match &self.command_group {
             CommandGroup::Init => handle_init().await,

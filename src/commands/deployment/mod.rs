@@ -6,10 +6,7 @@ use execute::handle_execute;
 use list::handle_list;
 use rollback::handle_rollback;
 
-use crate::{
-    config::{Config, CONFIG_FILE},
-    CliError,
-};
+use crate::CliError;
 use clap::{Args, Subcommand, ValueEnum};
 
 use super::{Context, State};
@@ -80,26 +77,8 @@ impl ToString for DeploymentNamespace {
 }
 
 impl Deployment {
-    pub async fn handle_command(&self, mut state: State) -> Result<bool, CliError> {
-        let config_file = CONFIG_FILE
-            .as_ref()
-            .expect("Unable to identify user's home directory");
-
-        let config = Config::load(config_file)?;
-
-        if state.application.is_none() {
-            state.application = Some(config.core.application.clone());
-        }
-        state.sub = Some(
-            config
-                .auth
-                .as_ref()
-                .ok_or(CliError::UnAuthenticated)?
-                .subject
-                .clone(),
-        );
-
-        let context = Context { state, config };
+    pub async fn handle_command(&self, state: State) -> Result<bool, CliError> {
+        let context = Context::from_state(state).await?;
 
         match &self.subcommand {
             DeploymentSubcommand::List => handle_list(context).await,
