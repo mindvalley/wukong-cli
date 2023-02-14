@@ -92,12 +92,12 @@ pub enum CommandGroup {
 
 impl ClapApp {
     pub async fn execute(&self) -> Result<bool, CliError> {
-        let state = State::default();
+        let mut state = State::default();
 
         // overwritten by --application flag
-        // if let Some(ref application) = self.application {
-        //     context.application = Some(application.clone());
-        // }
+        if let Some(ref application) = self.application {
+            state.application = Some(application.clone());
+        }
 
         debug!("current cli version: {}", crate_version!());
         // debug!("current application: {:?}", &context.application);
