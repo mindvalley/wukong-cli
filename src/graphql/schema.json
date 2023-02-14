@@ -1082,6 +1082,22 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
+              "name": "buildArtifactName",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
               "name": "buildBranch",
               "type": {
                 "kind": "NON_NULL",
@@ -1407,12 +1423,20 @@
               "isDeprecated": false,
               "name": "previousDeployedArtifacts",
               "type": {
-                "kind": "LIST",
+                "kind": "NON_NULL",
                 "name": null,
                 "ofType": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
                 }
               }
             },
@@ -1863,6 +1887,16 @@
                 {
                   "defaultValue": null,
                   "description": null,
+                  "name": "buildArtifactName",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
                   "name": "buildNumber",
                   "type": {
                     "kind": "NON_NULL",
@@ -1928,7 +1962,7 @@
                 }
               ],
               "deprecationReason": null,
-              "description": "Execute a pipeline.\n\nNewer clients will NEED to send a `changelogs` if `send_to_slack` is `true`.\nIf `send_to_slack` is false or not set, `changelogs` is ignored.\n\n`changelogs` must be sent as a Base64 encoded string to avoid any funny\nunicode issues.",
+              "description": "Execute a pipeline.\n\nNewer clients will NEED to send a `changelogs` if `send_to_slack` is `true`.\nIf `send_to_slack` is false or not set, `changelogs` is ignored.\n\nUpdate 20230120: Now clients can send `build_number` (required) and\n`build_artifact_name` (can be nil). To preserve backward compatilibility,\n`build_number` should be set to '0' when sending `build_artifact_name`.\n\n`changelogs` must be sent as a Base64 encoded string to avoid any funny\nunicode issues.",
               "isDeprecated": false,
               "name": "executeCdPipeline",
               "type": {
@@ -2206,13 +2240,13 @@
                 {
                   "defaultValue": null,
                   "description": null,
-                  "name": "buildNumber",
+                  "name": "buildArtifactName",
                   "type": {
                     "kind": "NON_NULL",
                     "name": null,
                     "ofType": {
                       "kind": "SCALAR",
-                      "name": "Int",
+                      "name": "String",
                       "ofType": null
                     }
                   }

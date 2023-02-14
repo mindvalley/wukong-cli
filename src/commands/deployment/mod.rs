@@ -1,8 +1,10 @@
 pub mod execute;
 pub mod list;
+pub mod rollback;
 
 use execute::handle_execute;
 use list::handle_list;
+use rollback::handle_rollback;
 
 use crate::{CliError, GlobalContext};
 use clap::{Args, Subcommand, ValueEnum};
@@ -28,7 +30,17 @@ pub enum DeploymentSubcommand {
         version: Option<DeploymentVersion>,
         /// The build artifact that the deployment will use.
         #[arg(long)]
-        artifact: Option<i64>,
+        artifact: Option<String>,
+    },
+    /// Rollback the deployment pipeline
+    Rollback {
+        /// The namespace to deploy to.
+        #[arg(long, value_enum)]
+        namespace: Option<DeploymentNamespace>,
+        /// The version that the deployment will perform
+        /// against.
+        #[arg(long, value_enum)]
+        version: Option<DeploymentVersion>,
     },
 }
 
@@ -71,6 +83,9 @@ impl Deployment {
                 version,
                 artifact,
             } => handle_execute(context, namespace, version, artifact).await,
+            DeploymentSubcommand::Rollback { namespace, version } => {
+                handle_rollback(context, namespace, version).await
+            }
         }
     }
 }
