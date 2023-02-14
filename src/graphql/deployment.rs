@@ -108,8 +108,6 @@ impl CdPipelineForRollbackQuery {
             })
             .await?;
 
-        debug!("response: {:?}", &response);
-
         Ok(response)
     }
 }
@@ -276,7 +274,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_cd_pipeline_for_rollback_success_should_return_cd_pipeline() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::new()
+        let query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
