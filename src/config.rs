@@ -45,7 +45,6 @@ pub static CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct Config {
     pub core: CoreConfig,
-    pub log: LogConfig,
     pub auth: Option<AuthConfig>,
 }
 
@@ -55,12 +54,6 @@ pub struct CoreConfig {
     pub application: String,
     pub wukong_api_url: String,
     pub okta_client_id: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-pub struct LogConfig {
-    pub enable: bool,
-    pub log_dir: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -83,10 +76,6 @@ impl Default for Config {
                 application: "".to_string(),
                 wukong_api_url: WUKONG_API_URL.to_string(),
                 okta_client_id: OKTA_CLIENT_ID.to_string(),
-            },
-            log: LogConfig {
-                enable: true,
-                log_dir: home_dir.to_str().unwrap().to_string(),
             },
             auth: None,
         }
@@ -161,8 +150,6 @@ mod test {
         let saved_config = Config::load(path).unwrap();
 
         assert_eq!(saved_config.core.application, config.core.application);
-        assert_eq!(saved_config.log.enable, config.log.enable);
-        assert_eq!(saved_config.log.log_dir, config.log.log_dir);
 
         // remove the config file
         std::fs::remove_file(path).unwrap();
