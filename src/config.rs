@@ -35,10 +35,18 @@ pub static CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
     });
 
     #[cfg(not(feature = "prod"))]
-    return dirs::home_dir().map(|mut path| {
-        path.extend([".config", "wukong", "dev", "config.toml"]);
-        path.to_str().unwrap().to_string()
-    });
+    {
+        match std::env::var("WUKONG_DEV_CONFIG_FILE") {
+            Ok(config) => {
+                // TODO: we should check wether the config file valid
+                Some(config)
+            }
+            Err(_) => dirs::home_dir().map(|mut path| {
+                path.extend([".config", "wukong", "dev", "config.toml"]);
+                path.to_str().unwrap().to_string()
+            }),
+        }
+    }
 });
 
 /// The Wukong CLI configuration.
