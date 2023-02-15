@@ -24,11 +24,11 @@ async fn main() {
         }
         Ok(false) => {
             info!("wukong cli session ended.");
-            // process::exit(1);
+            process::exit(1);
         }
         Ok(true) => {
             info!("wukong cli session ended.");
-            // process::exit(0);
+            process::exit(0);
         }
     }
 }

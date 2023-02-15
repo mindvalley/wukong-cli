@@ -38,7 +38,7 @@ pub static CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
     {
         match std::env::var("WUKONG_DEV_CONFIG_FILE") {
             Ok(config) => {
-                // TODO: we should check wether the config file valid
+                // TODO: we should check whether the config file valid
                 Some(config)
             }
             Err(_) => dirs::home_dir().map(|mut path| {
