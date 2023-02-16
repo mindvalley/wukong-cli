@@ -65,7 +65,14 @@ regex = "1.7.0"
 [dev-dependencies]
 httpmock = "0.6.6"
 criterion = "0.4"
-snapbox = "0.4.4"
 rexpect = "0.5.0"
 assert_fs = "1.0.10"
 aion = "0.2.0"
+insta = { version = "1.26.0", features = ["yaml"] }
+assert_cmd = "2.0.8"
+
+[profile.dev.package.insta]
+opt-level = 3
+
+[profile.dev.package.similar]
+opt-level = 3

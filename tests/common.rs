@@ -1,5 +1,5 @@
-use snapbox::cmd::Command;
+use assert_cmd::Command;
 
 pub fn wukong_raw_command() -> Command {
-    snapbox::cmd::Command::new(snapbox::cmd::cargo_bin!("wukong"))
+    Command::cargo_bin("wukong").unwrap()
 }
