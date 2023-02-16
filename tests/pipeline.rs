@@ -325,6 +325,12 @@ fn test_wukong_pipeline_ci_status_success() {
             .body(api_resp);
     });
 
+    let root = assert_fs::TempDir::new().unwrap();
+    let repo = root.child("new_repo");
+    repo.create_dir_all().unwrap();
+
+    git2::Repository::init(repo.path().to_str().unwrap()).unwrap();
+
     let temp = assert_fs::TempDir::new().unwrap();
     let config_file = temp.child("config.toml");
     config_file.touch().unwrap();
@@ -357,6 +363,7 @@ fn test_wukong_pipeline_ci_status_success() {
         .arg("pipeline")
         .arg("ci-status")
         .env("WUKONG_DEV_CONFIG_FILE", config_file.path())
+        .current_dir(&repo)
         .assert()
         .success();
 
@@ -365,6 +372,7 @@ fn test_wukong_pipeline_ci_status_success() {
     insta::assert_snapshot!(std::str::from_utf8(&output.stdout).unwrap());
 
     mock.assert();
+    root.close().unwrap();
     temp.close().unwrap();
 }
 
