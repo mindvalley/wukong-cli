@@ -8,7 +8,7 @@ use time_humanize::HumanTime;
 pub static CUSTOM_TIMEZONE: Lazy<Option<Tz>> =
     // example value for WUKONG_DEV_TIMEZONE: "Asia/Kuala_Lumpur"
     Lazy::new(|| match std::env::var("WUKONG_DEV_TIMEZONE") {
-            Ok(tz) => Some(tz.parse::<Tz>().unwrap()),
+            Ok(tz) => Some(tz.parse::<Tz>().expect("invalid timezone")),
             Err(_) => None,
         });
 
@@ -115,7 +115,6 @@ pub fn fmt_human_timestamp(o: &i64) -> String {
                 HumanTime::from(Into::<std::time::SystemTime>::into(dt))
             )
         } else {
-            // prod will also use Local timezone
             let dt = DateTime::<Utc>::from_utc(naive, Utc).with_timezone(&Local);
             // convert to std::time::SystemTime as the HumanTime expecting this
             format!(
@@ -127,6 +126,7 @@ pub fn fmt_human_timestamp(o: &i64) -> String {
 
     #[cfg(all(feature = "prod"))]
     {
+        // prod will also use Local timezone
         let dt = DateTime::<Utc>::from_utc(naive, Utc).with_timezone(&Local);
         // convert to std::time::SystemTime as the HumanTime expecting this
         format!(
