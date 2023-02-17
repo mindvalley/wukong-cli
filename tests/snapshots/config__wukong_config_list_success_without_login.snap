@@ -1,0 +1,10 @@
+---
+source: tests/config.rs
+expression: "std::str::from_utf8(&output.stdout).unwrap()"
+---
+[core]
+application = "valid-application"
+wukong_api_url = "https://wukong-api.com"
+okta_client_id = "valid-okta-client-id"
+
+
