@@ -95,6 +95,7 @@ fn test_wukong_application_info_success() {
     insta::assert_snapshot!(std::str::from_utf8(&output.stdout).unwrap());
 
     mock.assert();
+
     temp.close().unwrap();
 }
 

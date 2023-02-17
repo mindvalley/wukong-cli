@@ -82,6 +82,7 @@ fn test_wukong_pipeline_list_success() {
         .arg("pipeline")
         .arg("list")
         .env("WUKONG_DEV_CONFIG_FILE", config_file.path())
+        .env("WUKONG_DEV_TIMEZONE", "Asia/Kuala_Lumpur")
         .assert()
         .success();
 
@@ -363,6 +364,7 @@ fn test_wukong_pipeline_ci_status_success() {
         .arg("pipeline")
         .arg("ci-status")
         .env("WUKONG_DEV_CONFIG_FILE", config_file.path())
+        .env("WUKONG_DEV_TIMEZONE", "Asia/Kuala_Lumpur")
         .current_dir(&repo)
         .assert()
         .success();
