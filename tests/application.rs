@@ -63,19 +63,19 @@ fn test_wukong_application_info_success() {
         .write_str(
             format!(
                 r#"
-    [core]
-    application = "valid-application"
-    wukong_api_url = "{}"
-    okta_client_id = "valid-okta-client-id"
+[core]
+application = "valid-application"
+wukong_api_url = "{}"
+okta_client_id = "valid-okta-client-id"
 
-    [auth]
-    account = "test@email.com"
-    subject = "subject"
-    id_token = "id_token"
-    access_token = "access_token"
-    expiry_time = "{}"
-    refresh_token = "refresh_token"
-    "#,
+[auth]
+account = "test@email.com"
+subject = "subject"
+id_token = "id_token"
+access_token = "access_token"
+expiry_time = "{}"
+refresh_token = "refresh_token"
+"#,
                 server.base_url(),
                 2.days().from_now().to_rfc3339()
             )
@@ -100,22 +100,19 @@ fn test_wukong_application_info_success() {
 }
 
 #[test]
-fn test_wukong_application_info_failed_when_unauthenticated() {
+fn test_wukong_application_info_should_failed_when_unauthenticated() {
     let temp = assert_fs::TempDir::new().unwrap();
     let config_file = temp.child("config.toml");
     config_file.touch().unwrap();
 
     config_file
         .write_str(
-            format!(
-                r#"
-    [core]
-    application = "valid-application"
-    wukong_api_url = "https://wukong-api.com"
-    okta_client_id = "valid-okta-client-id"
-    "#,
-            )
-            .as_str(),
+            r#"
+[core]
+application = "valid-application"
+wukong_api_url = "https://wukong-api.com"
+okta_client_id = "valid-okta-client-id"
+"#,
         )
         .unwrap();
 

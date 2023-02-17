@@ -58,18 +58,18 @@ fn test_wukong_pipeline_list_success() {
         .write_str(
             format!(
                 r#"
-    [core]
-    application = "valid-application"
-    wukong_api_url = "{}"
-    okta_client_id = "valid-okta-client-id"
+  [core]
+  application = "valid-application"
+  wukong_api_url = "{}"
+  okta_client_id = "valid-okta-client-id"
 
-    [auth]
-    account = "test@email.com"
-    subject = "subject"
-    id_token = "id_token"
-    access_token = "access_token"
-    expiry_time = "{}"
-    refresh_token = "refresh_token"
+  [auth]
+  account = "test@email.com"
+  subject = "subject"
+  id_token = "id_token"
+  access_token = "access_token"
+  expiry_time = "{}"
+  refresh_token = "refresh_token"
     "#,
                 server.base_url(),
                 2.days().from_now().to_rfc3339()
@@ -95,7 +95,7 @@ fn test_wukong_pipeline_list_success() {
 }
 
 #[test]
-fn test_wukong_pipeline_list_failed_when_unauthenticated() {
+fn test_wukong_pipeline_list_should_failed_when_unauthenticated() {
     let temp = assert_fs::TempDir::new().unwrap();
     let config_file = temp.child("config.toml");
     config_file.touch().unwrap();
@@ -104,11 +104,11 @@ fn test_wukong_pipeline_list_failed_when_unauthenticated() {
         .write_str(
             format!(
                 r#"
-    [core]
-    application = "valid-application"
-    wukong_api_url = "https://wukong-api.com"
-    okta_client_id = "valid-okta-client-id"
-    "#,
+[core]
+application = "valid-application"
+wukong_api_url = "https://wukong-api.com"
+okta_client_id = "valid-okta-client-id"
+"#,
             )
             .as_str(),
         )
@@ -129,7 +129,7 @@ fn test_wukong_pipeline_list_failed_when_unauthenticated() {
 }
 
 #[test]
-fn test_wukong_pipeline_describe_failed_when_unauthenticated() {
+fn test_wukong_pipeline_describe_should_failed_when_unauthenticated() {
     let server = MockServer::start();
 
     let temp = assert_fs::TempDir::new().unwrap();
@@ -140,11 +140,11 @@ fn test_wukong_pipeline_describe_failed_when_unauthenticated() {
         .write_str(
             format!(
                 r#"
-    [core]
-    application = "valid-application"
-    wukong_api_url = "{}"
-    okta_client_id = "valid-okta-client-id"
-    "#,
+[core]
+application = "valid-application"
+wukong_api_url = "{}"
+okta_client_id = "valid-okta-client-id"
+"#,
                 server.base_url(),
             )
             .as_str(),
@@ -261,19 +261,19 @@ fn test_wukong_pipeline_describe_success() {
         .write_str(
             format!(
                 r#"
-    [core]
-    application = "valid-application"
-    wukong_api_url = "{}"
-    okta_client_id = "valid-okta-client-id"
+[core]
+application = "valid-application"
+wukong_api_url = "{}"
+okta_client_id = "valid-okta-client-id"
 
-    [auth]
-    account = "test@email.com"
-    subject = "subject"
-    id_token = "id_token"
-    access_token = "access_token"
-    expiry_time = "{}"
-    refresh_token = "refresh_token"
-    "#,
+[auth]
+account = "test@email.com"
+subject = "subject"
+id_token = "id_token"
+access_token = "access_token"
+expiry_time = "{}"
+refresh_token = "refresh_token"
+"#,
                 server.base_url(),
                 2.days().from_now().to_rfc3339()
             )
@@ -340,19 +340,19 @@ fn test_wukong_pipeline_ci_status_success() {
         .write_str(
             format!(
                 r#"
-    [core]
-    application = "valid-application"
-    wukong_api_url = "{}"
-    okta_client_id = "valid-okta-client-id"
+[core]
+application = "valid-application"
+wukong_api_url = "{}"
+okta_client_id = "valid-okta-client-id"
 
-    [auth]
-    account = "test@email.com"
-    subject = "subject"
-    id_token = "id_token"
-    access_token = "access_token"
-    expiry_time = "{}"
-    refresh_token = "refresh_token"
-    "#,
+[auth]
+account = "test@email.com"
+subject = "subject"
+id_token = "id_token"
+access_token = "access_token"
+expiry_time = "{}"
+refresh_token = "refresh_token"
+"#,
                 server.base_url(),
                 2.days().from_now().to_rfc3339()
             )
@@ -379,7 +379,7 @@ fn test_wukong_pipeline_ci_status_success() {
 }
 
 #[test]
-fn test_wukong_pipeline_ci_status_failed_when_unauthenticated() {
+fn test_wukong_pipeline_ci_status_should_failed_when_unauthenticated() {
     let server = MockServer::start();
 
     let temp = assert_fs::TempDir::new().unwrap();
@@ -390,11 +390,11 @@ fn test_wukong_pipeline_ci_status_failed_when_unauthenticated() {
         .write_str(
             format!(
                 r#"
-    [core]
-    application = "valid-application"
-    wukong_api_url = "{}"
-    okta_client_id = "valid-okta-client-id"
-    "#,
+[core]
+application = "valid-application"
+wukong_api_url = "{}"
+okta_client_id = "valid-okta-client-id"
+"#,
                 server.base_url(),
             )
             .as_str(),

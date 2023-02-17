@@ -86,7 +86,7 @@ okta_client_id = "valid-okta-client-id"
 }
 
 #[test]
-fn test_wukong_config_list_failed_without_config_file() {
+fn test_wukong_config_list_should_failed_without_config_file() {
     let cmd = common::wukong_raw_command()
         .arg("config")
         .arg("list")
@@ -140,7 +140,7 @@ refresh_token = "refresh_token"
 }
 
 #[test]
-fn test_wukong_config_get_failed_with_non_supported_field() {
+fn test_wukong_config_get_should_failed_with_non_supported_field() {
     let temp = assert_fs::TempDir::new().unwrap();
     let config_file = temp.child("config.toml");
     config_file.touch().unwrap();
@@ -237,7 +237,7 @@ refresh_token = "refresh_token"
 }
 
 #[test]
-fn test_wukong_config_set_failed_with_non_supported_field() {
+fn test_wukong_config_set_should_failed_with_non_supported_field() {
     let temp = assert_fs::TempDir::new().unwrap();
     let config_file = temp.child("config.toml");
     config_file.touch().unwrap();

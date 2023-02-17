@@ -64,18 +64,18 @@ fn test_wukong_deployment_list_success() {
         .write_str(
             format!(
                 r#"
-    [core]
-    application = "valid-application"
-    wukong_api_url = "{}"
-    okta_client_id = "valid-okta-client-id"
+[core]
+application = "valid-application"
+wukong_api_url = "{}"
+okta_client_id = "valid-okta-client-id"
 
-    [auth]
-    account = "test@email.com"
-    subject = "subject"
-    id_token = "id_token"
-    access_token = "access_token"
-    expiry_time = "{}"
-    refresh_token = "refresh_token"
+[auth]
+account = "test@email.com"
+subject = "subject"
+id_token = "id_token"
+access_token = "access_token"
+expiry_time = "{}"
+refresh_token = "refresh_token"
     "#,
                 server.base_url(),
                 2.days().from_now().to_rfc3339()
@@ -100,7 +100,7 @@ fn test_wukong_deployment_list_success() {
 }
 
 #[test]
-fn test_wukong_deployment_list_failed_when_unauthenticated() {
+fn test_wukong_deployment_list_should_failed_when_unauthenticated() {
     let temp = assert_fs::TempDir::new().unwrap();
     let config_file = temp.child("config.toml");
     config_file.touch().unwrap();
@@ -109,10 +109,10 @@ fn test_wukong_deployment_list_failed_when_unauthenticated() {
         .write_str(
             format!(
                 r#"
-    [core]
-    application = "valid-application"
-    wukong_api_url = "https://wukong-api.com"
-    okta_client_id = "valid-okta-client-id"
+[core]
+application = "valid-application"
+wukong_api_url = "https://wukong-api.com"
+okta_client_id = "valid-okta-client-id"
     "#,
             )
             .as_str(),
@@ -131,4 +131,18 @@ fn test_wukong_deployment_list_failed_when_unauthenticated() {
     insta::assert_snapshot!(std::str::from_utf8(&output.stderr).unwrap());
 
     temp.close().unwrap();
+}
+
+#[test]
+fn test_wukong_deployment_list_should_failed_when_config_file_not_exist() {
+    let cmd = common::wukong_raw_command()
+        .arg("deployment")
+        .arg("list")
+        .env("WUKONG_DEV_CONFIG_FILE", "/path/to/non/exist/config.toml")
+        .assert()
+        .failure();
+
+    let output = cmd.get_output();
+
+    insta::assert_snapshot!(std::str::from_utf8(&output.stderr).unwrap());
 }
