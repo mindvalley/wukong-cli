@@ -1,0 +1,1127 @@
+---
+source: tests/completion.rs
+expression: "std::str::from_utf8(&output.stdout).unwrap()"
+---
+#compdef wukong
+
+autoload -U is-at-least
+
+_wukong() {
+    typeset -A opt_args
+    typeset -a _arguments_options
+    local ret=1
+
+    if is-at-least 5.2; then
+        _arguments_options=(-s -S -C)
+    else
+        _arguments_options=(-s -C)
+    fi
+
+    local context curcontext="$curcontext" state line
+    _arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+'-V[Print version information]' \
+'--version[Print version information]' \
+":: :_wukong_commands" \
+"*::: :->wukong" \
+&& ret=0
+    case $state in
+    (wukong)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-command-$line[1]:"
+        case $line[1] in
+            (init)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+&& ret=0
+;;
+(application)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+":: :_wukong__application_commands" \
+"*::: :->application" \
+&& ret=0
+
+    case $state in
+    (application)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-application-command-$line[1]:"
+        case $line[1] in
+            (info)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+":: :_wukong__application__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-application-help-command-$line[1]:"
+        case $line[1] in
+            (info)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+;;
+(pipeline)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+":: :_wukong__pipeline_commands" \
+"*::: :->pipeline" \
+&& ret=0
+
+    case $state in
+    (pipeline)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-pipeline-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+&& ret=0
+;;
+(describe)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+':name -- The pipeline name:' \
+&& ret=0
+;;
+(ci-status)
+_arguments "${_arguments_options[@]}" \
+'--repo-url=[Repository url]:REPO_URL: ' \
+'--branch=[Branch name]:BRANCH: ' \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+":: :_wukong__pipeline__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-pipeline-help-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(describe)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(ci-status)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+;;
+(deployment)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+":: :_wukong__deployment_commands" \
+"*::: :->deployment" \
+&& ret=0
+
+    case $state in
+    (deployment)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-deployment-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+&& ret=0
+;;
+(execute)
+_arguments "${_arguments_options[@]}" \
+'--namespace=[The namespace to deploy to]:NAMESPACE:(prod staging)' \
+'--version=[The version that the deployment will perform against]:VERSION:(blue green)' \
+'--artifact=[The build artifact that the deployment will use]:ARTIFACT: ' \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+&& ret=0
+;;
+(rollback)
+_arguments "${_arguments_options[@]}" \
+'--namespace=[The namespace to deploy to]:NAMESPACE:(prod staging)' \
+'--version=[The version that the deployment will perform against]:VERSION:(blue green)' \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+":: :_wukong__deployment__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-deployment-help-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(execute)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(rollback)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+;;
+(config)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+":: :_wukong__config_commands" \
+"*::: :->config" \
+&& ret=0
+
+    case $state in
+    (config)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-config-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+&& ret=0
+;;
+(set)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+':config_name -- The config name:(application wukong-api-url okta-client-id)' \
+':config_value -- The config value:' \
+&& ret=0
+;;
+(get)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+':config_name -- The config name:(application wukong-api-url okta-client-id)' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+":: :_wukong__config__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-config-help-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(set)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(get)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+;;
+(login)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+&& ret=0
+;;
+(completion)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help information]' \
+'--help[Print help information]' \
+':shell:(bash elvish fish powershell zsh)' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+":: :_wukong__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-help-command-$line[1]:"
+        case $line[1] in
+            (init)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(application)
+_arguments "${_arguments_options[@]}" \
+":: :_wukong__help__application_commands" \
+"*::: :->application" \
+&& ret=0
+
+    case $state in
+    (application)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-help-application-command-$line[1]:"
+        case $line[1] in
+            (info)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(pipeline)
+_arguments "${_arguments_options[@]}" \
+":: :_wukong__help__pipeline_commands" \
+"*::: :->pipeline" \
+&& ret=0
+
+    case $state in
+    (pipeline)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-help-pipeline-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(describe)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(ci-status)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(deployment)
+_arguments "${_arguments_options[@]}" \
+":: :_wukong__help__deployment_commands" \
+"*::: :->deployment" \
+&& ret=0
+
+    case $state in
+    (deployment)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-help-deployment-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(execute)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(rollback)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(config)
+_arguments "${_arguments_options[@]}" \
+":: :_wukong__help__config_commands" \
+"*::: :->config" \
+&& ret=0
+
+    case $state in
+    (config)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-help-config-command-$line[1]:"
+        case $line[1] in
+            (list)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(set)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(get)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(login)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(completion)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+}
+
+(( $+functions[_wukong_commands] )) ||
+_wukong_commands() {
+    local commands; commands=(
+'init:Initialize Wukong'\''s configurations' \
+'application:This command group contains the commands to interact with an application’s configurations' \
+'pipeline:This command group contains the commands to view & interact with an application’s pipeline' \
+'deployment:This command group contains the commands to view and interact with the Continuous Delivery pipeline of an application' \
+'config:This command group contains the commands to view & interact with Wukong'\''s configurations' \
+'login:Login to start using wukong command' \
+'completion:Generate wukong cli completions for your shell to stdout' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong commands' commands "$@"
+}
+(( $+functions[_wukong__application_commands] )) ||
+_wukong__application_commands() {
+    local commands; commands=(
+'info:Show the application’s relevant informations' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong application commands' commands "$@"
+}
+(( $+functions[_wukong__help__application_commands] )) ||
+_wukong__help__application_commands() {
+    local commands; commands=(
+'info:Show the application’s relevant informations' \
+    )
+    _describe -t commands 'wukong help application commands' commands "$@"
+}
+(( $+functions[_wukong__help__pipeline__ci-status_commands] )) ||
+_wukong__help__pipeline__ci-status_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help pipeline ci-status commands' commands "$@"
+}
+(( $+functions[_wukong__pipeline__ci-status_commands] )) ||
+_wukong__pipeline__ci-status_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong pipeline ci-status commands' commands "$@"
+}
+(( $+functions[_wukong__pipeline__help__ci-status_commands] )) ||
+_wukong__pipeline__help__ci-status_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong pipeline help ci-status commands' commands "$@"
+}
+(( $+functions[_wukong__completion_commands] )) ||
+_wukong__completion_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong completion commands' commands "$@"
+}
+(( $+functions[_wukong__help__completion_commands] )) ||
+_wukong__help__completion_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help completion commands' commands "$@"
+}
+(( $+functions[_wukong__config_commands] )) ||
+_wukong__config_commands() {
+    local commands; commands=(
+'list:List the configurations' \
+'set:Set the value of a configuration' \
+'get:Print the value of a configuration' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong config commands' commands "$@"
+}
+(( $+functions[_wukong__help__config_commands] )) ||
+_wukong__help__config_commands() {
+    local commands; commands=(
+'list:List the configurations' \
+'set:Set the value of a configuration' \
+'get:Print the value of a configuration' \
+    )
+    _describe -t commands 'wukong help config commands' commands "$@"
+}
+(( $+functions[_wukong__deployment_commands] )) ||
+_wukong__deployment_commands() {
+    local commands; commands=(
+'list:List the current available deployment pipelines of an application' \
+'execute:Start the deployment pipeline' \
+'rollback:Rollback the deployment pipeline' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong deployment commands' commands "$@"
+}
+(( $+functions[_wukong__help__deployment_commands] )) ||
+_wukong__help__deployment_commands() {
+    local commands; commands=(
+'list:List the current available deployment pipelines of an application' \
+'execute:Start the deployment pipeline' \
+'rollback:Rollback the deployment pipeline' \
+    )
+    _describe -t commands 'wukong help deployment commands' commands "$@"
+}
+(( $+functions[_wukong__help__pipeline__describe_commands] )) ||
+_wukong__help__pipeline__describe_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help pipeline describe commands' commands "$@"
+}
+(( $+functions[_wukong__pipeline__describe_commands] )) ||
+_wukong__pipeline__describe_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong pipeline describe commands' commands "$@"
+}
+(( $+functions[_wukong__pipeline__help__describe_commands] )) ||
+_wukong__pipeline__help__describe_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong pipeline help describe commands' commands "$@"
+}
+(( $+functions[_wukong__deployment__execute_commands] )) ||
+_wukong__deployment__execute_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong deployment execute commands' commands "$@"
+}
+(( $+functions[_wukong__deployment__help__execute_commands] )) ||
+_wukong__deployment__help__execute_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong deployment help execute commands' commands "$@"
+}
+(( $+functions[_wukong__help__deployment__execute_commands] )) ||
+_wukong__help__deployment__execute_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help deployment execute commands' commands "$@"
+}
+(( $+functions[_wukong__config__get_commands] )) ||
+_wukong__config__get_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config get commands' commands "$@"
+}
+(( $+functions[_wukong__config__help__get_commands] )) ||
+_wukong__config__help__get_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config help get commands' commands "$@"
+}
+(( $+functions[_wukong__help__config__get_commands] )) ||
+_wukong__help__config__get_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help config get commands' commands "$@"
+}
+(( $+functions[_wukong__application__help_commands] )) ||
+_wukong__application__help_commands() {
+    local commands; commands=(
+'info:Show the application’s relevant informations' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong application help commands' commands "$@"
+}
+(( $+functions[_wukong__application__help__help_commands] )) ||
+_wukong__application__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong application help help commands' commands "$@"
+}
+(( $+functions[_wukong__config__help_commands] )) ||
+_wukong__config__help_commands() {
+    local commands; commands=(
+'list:List the configurations' \
+'set:Set the value of a configuration' \
+'get:Print the value of a configuration' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong config help commands' commands "$@"
+}
+(( $+functions[_wukong__config__help__help_commands] )) ||
+_wukong__config__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config help help commands' commands "$@"
+}
+(( $+functions[_wukong__deployment__help_commands] )) ||
+_wukong__deployment__help_commands() {
+    local commands; commands=(
+'list:List the current available deployment pipelines of an application' \
+'execute:Start the deployment pipeline' \
+'rollback:Rollback the deployment pipeline' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong deployment help commands' commands "$@"
+}
+(( $+functions[_wukong__deployment__help__help_commands] )) ||
+_wukong__deployment__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong deployment help help commands' commands "$@"
+}
+(( $+functions[_wukong__help_commands] )) ||
+_wukong__help_commands() {
+    local commands; commands=(
+'init:Initialize Wukong'\''s configurations' \
+'application:This command group contains the commands to interact with an application’s configurations' \
+'pipeline:This command group contains the commands to view & interact with an application’s pipeline' \
+'deployment:This command group contains the commands to view and interact with the Continuous Delivery pipeline of an application' \
+'config:This command group contains the commands to view & interact with Wukong'\''s configurations' \
+'login:Login to start using wukong command' \
+'completion:Generate wukong cli completions for your shell to stdout' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong help commands' commands "$@"
+}
+(( $+functions[_wukong__help__help_commands] )) ||
+_wukong__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help help commands' commands "$@"
+}
+(( $+functions[_wukong__pipeline__help_commands] )) ||
+_wukong__pipeline__help_commands() {
+    local commands; commands=(
+'list:List the current pipelines of the application' \
+'describe:Show the details of a pipeline' \
+'ci-status:Show the build status and (possible) errors on branch ci pipeline' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong pipeline help commands' commands "$@"
+}
+(( $+functions[_wukong__pipeline__help__help_commands] )) ||
+_wukong__pipeline__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong pipeline help help commands' commands "$@"
+}
+(( $+functions[_wukong__application__help__info_commands] )) ||
+_wukong__application__help__info_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong application help info commands' commands "$@"
+}
+(( $+functions[_wukong__application__info_commands] )) ||
+_wukong__application__info_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong application info commands' commands "$@"
+}
+(( $+functions[_wukong__help__application__info_commands] )) ||
+_wukong__help__application__info_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help application info commands' commands "$@"
+}
+(( $+functions[_wukong__help__init_commands] )) ||
+_wukong__help__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help init commands' commands "$@"
+}
+(( $+functions[_wukong__init_commands] )) ||
+_wukong__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong init commands' commands "$@"
+}
+(( $+functions[_wukong__config__help__list_commands] )) ||
+_wukong__config__help__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config help list commands' commands "$@"
+}
+(( $+functions[_wukong__config__list_commands] )) ||
+_wukong__config__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config list commands' commands "$@"
+}
+(( $+functions[_wukong__deployment__help__list_commands] )) ||
+_wukong__deployment__help__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong deployment help list commands' commands "$@"
+}
+(( $+functions[_wukong__deployment__list_commands] )) ||
+_wukong__deployment__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong deployment list commands' commands "$@"
+}
+(( $+functions[_wukong__help__config__list_commands] )) ||
+_wukong__help__config__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help config list commands' commands "$@"
+}
+(( $+functions[_wukong__help__deployment__list_commands] )) ||
+_wukong__help__deployment__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help deployment list commands' commands "$@"
+}
+(( $+functions[_wukong__help__pipeline__list_commands] )) ||
+_wukong__help__pipeline__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help pipeline list commands' commands "$@"
+}
+(( $+functions[_wukong__pipeline__help__list_commands] )) ||
+_wukong__pipeline__help__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong pipeline help list commands' commands "$@"
+}
+(( $+functions[_wukong__pipeline__list_commands] )) ||
+_wukong__pipeline__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong pipeline list commands' commands "$@"
+}
+(( $+functions[_wukong__help__login_commands] )) ||
+_wukong__help__login_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help login commands' commands "$@"
+}
+(( $+functions[_wukong__login_commands] )) ||
+_wukong__login_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong login commands' commands "$@"
+}
+(( $+functions[_wukong__help__pipeline_commands] )) ||
+_wukong__help__pipeline_commands() {
+    local commands; commands=(
+'list:List the current pipelines of the application' \
+'describe:Show the details of a pipeline' \
+'ci-status:Show the build status and (possible) errors on branch ci pipeline' \
+    )
+    _describe -t commands 'wukong help pipeline commands' commands "$@"
+}
+(( $+functions[_wukong__pipeline_commands] )) ||
+_wukong__pipeline_commands() {
+    local commands; commands=(
+'list:List the current pipelines of the application' \
+'describe:Show the details of a pipeline' \
+'ci-status:Show the build status and (possible) errors on branch ci pipeline' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong pipeline commands' commands "$@"
+}
+(( $+functions[_wukong__deployment__help__rollback_commands] )) ||
+_wukong__deployment__help__rollback_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong deployment help rollback commands' commands "$@"
+}
+(( $+functions[_wukong__deployment__rollback_commands] )) ||
+_wukong__deployment__rollback_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong deployment rollback commands' commands "$@"
+}
+(( $+functions[_wukong__help__deployment__rollback_commands] )) ||
+_wukong__help__deployment__rollback_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help deployment rollback commands' commands "$@"
+}
+(( $+functions[_wukong__config__help__set_commands] )) ||
+_wukong__config__help__set_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config help set commands' commands "$@"
+}
+(( $+functions[_wukong__config__set_commands] )) ||
+_wukong__config__set_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config set commands' commands "$@"
+}
+(( $+functions[_wukong__help__config__set_commands] )) ||
+_wukong__help__config__set_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help config set commands' commands "$@"
+}
+
+_wukong "$@"
+
