@@ -520,7 +520,7 @@ By default, it'\''ll only report errors.
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help information]' \
 '--help[Print help information]' \
-':config_name -- The config name:(application enable-log log-dir wukong-api-url okta-client-id)' \
+':config_name -- The config name:(application wukong-api-url okta-client-id)' \
 ':config_value -- The config value:' \
 && ret=0
 ;;
@@ -546,7 +546,7 @@ By default, it'\''ll only report errors.
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help information]' \
 '--help[Print help information]' \
-':config_name -- The config name:(application enable-log log-dir wukong-api-url okta-client-id)' \
+':config_name -- The config name:(application wukong-api-url okta-client-id)' \
 && ret=0
 ;;
 (help)

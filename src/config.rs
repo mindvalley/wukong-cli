@@ -7,6 +7,16 @@ use std::{
     path::Path,
 };
 
+#[cfg(not(feature = "prod"))]
+static WUKONG_API_URL: &str = "http://localhost:4000/api";
+#[cfg(not(feature = "prod"))]
+static OKTA_CLIENT_ID: &str = "0oakfxaegyAV5JDD5357";
+
+#[cfg(all(feature = "prod"))]
+static WUKONG_API_URL: &str = "https://wukong-api-proxy.mindvalley.dev/api";
+#[cfg(all(feature = "prod"))]
+static OKTA_CLIENT_ID: &str = "0oakfxaegyAV5JDD5357";
+
 /// The default path to the CLI configuration file.
 ///
 /// This is a [Lazy] of `Option<String>`, the value of which is
@@ -25,17 +35,24 @@ pub static CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
     });
 
     #[cfg(not(feature = "prod"))]
-    return dirs::home_dir().map(|mut path| {
-        path.extend([".config", "wukong", "dev", "config.toml"]);
-        path.to_str().unwrap().to_string()
-    });
+    {
+        match std::env::var("WUKONG_DEV_CONFIG_FILE") {
+            Ok(config) => {
+                // TODO: we should check whether the config file valid
+                Some(config)
+            }
+            Err(_) => dirs::home_dir().map(|mut path| {
+                path.extend([".config", "wukong", "dev", "config.toml"]);
+                path.to_str().unwrap().to_string()
+            }),
+        }
+    }
 });
 
 /// The Wukong CLI configuration.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct Config {
     pub core: CoreConfig,
-    pub log: LogConfig,
     pub auth: Option<AuthConfig>,
 }
 
@@ -45,12 +62,6 @@ pub struct CoreConfig {
     pub application: String,
     pub wukong_api_url: String,
     pub okta_client_id: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-pub struct LogConfig {
-    pub enable: bool,
-    pub log_dir: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -71,20 +82,8 @@ impl Default for Config {
         Self {
             core: CoreConfig {
                 application: "".to_string(),
-
-                #[cfg(not(feature = "prod"))]
-                wukong_api_url: "http://localhost:4000/api".to_string(),
-                #[cfg(not(feature = "prod"))]
-                okta_client_id: "0oakfxaegyAV5JDD5357".to_string(),
-
-                #[cfg(all(feature = "prod"))]
-                wukong_api_url: "https://wukong-api-proxy.mindvalley.dev/api".to_string(),
-                #[cfg(all(feature = "prod"))]
-                okta_client_id: "0oakfxaegyAV5JDD5357".to_string(),
-            },
-            log: LogConfig {
-                enable: true,
-                log_dir: home_dir.to_str().unwrap().to_string(),
+                wukong_api_url: WUKONG_API_URL.to_string(),
+                okta_client_id: OKTA_CLIENT_ID.to_string(),
             },
             auth: None,
         }
@@ -159,8 +158,6 @@ mod test {
         let saved_config = Config::load(path).unwrap();
 
         assert_eq!(saved_config.core.application, config.core.application);
-        assert_eq!(saved_config.log.enable, config.log.enable);
-        assert_eq!(saved_config.log.log_dir, config.log.log_dir);
 
         // remove the config file
         std::fs::remove_file(path).unwrap();

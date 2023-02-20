@@ -3,18 +3,18 @@ use wukong_telemetry_macro::wukong_telemetry;
 
 use super::PipelineCiStatus;
 use crate::{
+    commands::Context,
     error::CliError,
     graphql::QueryClientBuilder,
     loader::new_spinner_progress_bar,
     output::{colored_println, table::TableOutput},
     telemetry::{self, TelemetryData, TelemetryEvent},
-    GlobalContext,
 };
 use std::process::Command as ProcessCommand;
 
 #[wukong_telemetry(command_event = "pipeline_ci_status")]
 pub async fn handle_ci_status(
-    context: GlobalContext,
+    context: Context,
     repo_url: &Option<String>,
     branch: &Option<String>,
 ) -> Result<bool, CliError> {
@@ -55,9 +55,16 @@ pub async fn handle_ci_status(
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Fetching ci status ...");
 
-    let client = QueryClientBuilder::new()
-        .with_access_token(context.id_token.unwrap())
-        .with_sub(context.sub) // for telemetry
+    let client = QueryClientBuilder::default()
+        .with_access_token(
+            context
+                .config
+                .auth
+                .ok_or(CliError::UnAuthenticated)?
+                .id_token,
+        )
+        .with_sub(context.state.sub)
+        .with_api_url(context.config.core.wukong_api_url)
         .build()?;
 
     let ci_status_resp = client

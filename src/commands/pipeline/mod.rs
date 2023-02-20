@@ -6,13 +6,14 @@ use self::{ci_status::handle_ci_status, describe::handle_describe, list::handle_
 use crate::{
     error::CliError,
     output::table::{fmt_option_milliseconds, fmt_option_timestamp, fmt_timestamp},
-    GlobalContext,
 };
 use chrono::{DateTime, NaiveDateTime, Utc};
 use clap::{Args, Subcommand};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, str};
 use tabled::Tabled;
+
+use super::{Context, State};
 
 #[derive(Tabled, Serialize, Deserialize, Debug)]
 struct PipelineData {
@@ -126,7 +127,9 @@ pub enum PipelineSubcommand {
 }
 
 impl Pipeline {
-    pub async fn handle_command(&self, context: GlobalContext) -> Result<bool, CliError> {
+    pub async fn handle_command(&self, state: State) -> Result<bool, CliError> {
+        let context = Context::from_state(state).await?;
+
         match &self.subcommand {
             PipelineSubcommand::List => handle_list(context).await,
             PipelineSubcommand::Describe { name } => handle_describe(context, name).await,

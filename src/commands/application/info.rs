@@ -1,22 +1,29 @@
 use crate::{
+    commands::Context,
     error::CliError,
     graphql::QueryClientBuilder,
     telemetry::{self, TelemetryData, TelemetryEvent},
-    GlobalContext,
 };
 use owo_colors::OwoColorize;
 use wukong_telemetry_macro::wukong_telemetry;
 
 #[wukong_telemetry(command_event = "application_info")]
-pub async fn handle_info(context: GlobalContext) -> Result<bool, CliError> {
+pub async fn handle_info(context: Context) -> Result<bool, CliError> {
     // Calling API ...
-    let client = QueryClientBuilder::new()
-        .with_access_token(context.id_token.unwrap())
-        .with_sub(context.sub) // for telemetry
+    let client = QueryClientBuilder::default()
+        .with_access_token(
+            context
+                .config
+                .auth
+                .ok_or(CliError::UnAuthenticated)?
+                .id_token,
+        )
+        .with_sub(context.state.sub)
+        .with_api_url(context.config.core.wukong_api_url)
         .build()?;
 
     let application_resp = client
-        .fetch_application(&context.application.unwrap()) // SAFERY: the application is checked on the caller so it will always be Some(x) here
+        .fetch_application(&context.state.application.unwrap()) // SAFERY: the application is checked on the caller so it will always be Some(x) here
         .await?
         .data
         .unwrap()

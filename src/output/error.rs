@@ -118,7 +118,7 @@ mod test {
             error_output_with_caused_by_and_suggestion(
                 "Config file not found at \"not/path/to/file\".",
                 "File not exist",
-                "Run \"wukong init\" to initialise configuration."
+                "Run \"wukong init\" to initialise Wukong's configuration."
             )
         );
     }

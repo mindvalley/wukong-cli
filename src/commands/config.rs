@@ -1,7 +1,7 @@
 use crate::{
-    clap_app::ClapApp,
+    commands::ClapApp,
     error::{CliError, ConfigError},
-    Config as CLIConfig, GlobalContext, CONFIG_FILE,
+    Config as CLIConfig, CONFIG_FILE,
 };
 use clap::{error::ErrorKind, Args, CommandFactory, Subcommand, ValueEnum};
 
@@ -34,14 +34,12 @@ pub enum ConfigSubcommand {
 #[derive(Debug, ValueEnum, Clone)]
 pub enum ConfigName {
     Application,
-    EnableLog,
-    LogDir,
     WukongApiUrl,
     OktaClientId,
 }
 
 impl Config {
-    pub fn handle_command(&self, _context: GlobalContext) -> Result<bool, CliError> {
+    pub fn handle_command(&self) -> Result<bool, CliError> {
         let mut cmd = ClapApp::command();
 
         match &self.subcommand {
@@ -71,19 +69,6 @@ impl Config {
                             config.save(config_file)?;
                             println!("Updated property [core/application].");
                         }
-                        ConfigName::EnableLog => {
-                            config.log.enable = config_value
-                                .trim()
-                                .parse()
-                                .expect("The value can't be parsed to bool.");
-                            config.save(config_file)?;
-                            println!("Updated property [log/enable].");
-                        }
-                        ConfigName::LogDir => {
-                            config.log.log_dir = config_value.trim().to_string();
-                            config.save(config_file)?;
-                            println!("Updated property [log/log_dir].");
-                        }
                         ConfigName::WukongApiUrl => {
                             config.core.wukong_api_url = config_value.trim().to_string();
                             config.save(config_file)?;
@@ -108,8 +93,6 @@ impl Config {
                 match CLIConfig::load(config_file) {
                     Ok(config) => match config_name {
                         ConfigName::Application => println!("{}", config.core.application),
-                        ConfigName::EnableLog => println!("{}", config.log.enable),
-                        ConfigName::LogDir => println!("{}", config.log.log_dir),
                         ConfigName::WukongApiUrl => println!("{}", config.core.wukong_api_url),
                         ConfigName::OktaClientId => println!("{}", config.core.okta_client_id),
                     },

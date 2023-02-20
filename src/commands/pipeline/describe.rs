@@ -2,23 +2,30 @@ use wukong_telemetry_macro::wukong_telemetry;
 
 use super::{JobBuild, PipelineBranch, PipelinePullRequest};
 use crate::{
+    commands::Context,
     error::CliError,
     graphql::{pipeline::pipeline_query::PipelineQueryPipeline, QueryClientBuilder},
     loader::new_spinner_progress_bar,
     output::{colored_println, table::TableOutput},
     telemetry::{self, TelemetryData, TelemetryEvent},
-    GlobalContext,
 };
 
 #[wukong_telemetry(command_event = "pipeline_describe")]
-pub async fn handle_describe(context: GlobalContext, name: &str) -> Result<bool, CliError> {
+pub async fn handle_describe(context: Context, name: &str) -> Result<bool, CliError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Fetching pipeline data ...");
 
     // Calling API ...
-    let client = QueryClientBuilder::new()
-        .with_access_token(context.id_token.unwrap())
-        .with_sub(context.sub) // for telemetry
+    let client = QueryClientBuilder::default()
+        .with_access_token(
+            context
+                .config
+                .auth
+                .ok_or(CliError::UnAuthenticated)?
+                .id_token,
+        )
+        .with_sub(context.state.sub)
+        .with_api_url(context.config.core.wukong_api_url)
         .build()?;
 
     let pipeline_resp = client

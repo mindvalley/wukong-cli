@@ -1,6 +1,8 @@
-use crate::{error::CliError, GlobalContext};
+use crate::error::CliError;
 use clap::{command, Args, Subcommand};
 use info::handle_info;
+
+use super::{Context, State};
 
 pub mod info;
 
@@ -17,7 +19,9 @@ pub enum ApplicationSubcommand {
 }
 
 impl Application {
-    pub async fn handle_command(&self, context: GlobalContext) -> Result<bool, CliError> {
+    pub async fn handle_command(&self, state: State) -> Result<bool, CliError> {
+        let context = Context::from_state(state).await?;
+
         match &self.subcommand {
             ApplicationSubcommand::Info => handle_info(context).await,
         }

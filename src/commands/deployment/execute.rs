@@ -1,12 +1,13 @@
 use super::{DeploymentNamespace, DeploymentVersion};
 use crate::{
+    commands::Context,
     error::{CliError, DeploymentError},
     graphql::QueryClientBuilder,
     loader::new_spinner_progress_bar,
     output::colored_println,
     telemetry::{self, TelemetryData, TelemetryEvent},
-    GlobalContext,
 };
+use base64::Engine;
 use dialoguer::{theme::ColorfulTheme, Confirm, Select};
 use edit::Builder;
 use owo_colors::OwoColorize;
@@ -110,7 +111,7 @@ struct Commit {
 
 #[wukong_telemetry(command_event = "deployment_execute")]
 pub async fn handle_execute(
-    context: GlobalContext,
+    context: Context,
     namespace: &Option<DeploymentNamespace>,
     version: &Option<DeploymentVersion>,
     artifact: &Option<String>,
@@ -119,17 +120,24 @@ pub async fn handle_execute(
         println!("Not detecting any flags, entering deployment terminal......");
     }
 
-    // SAFETY: the application must not be None here
-    let current_application = context.application.unwrap();
+    // SAFETY: This is safe to unwrap because we know that `application` is not None.
+    let current_application = context.state.application.unwrap();
     colored_println!("Current application: {current_application}");
 
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Checking available CD pipelines ...");
 
     // Calling API ...
-    let client = QueryClientBuilder::new()
-        .with_access_token(context.id_token.unwrap())
-        .with_sub(context.sub) // for telemetry
+    let client = QueryClientBuilder::default()
+        .with_access_token(
+            context
+                .config
+                .auth
+                .ok_or(CliError::UnAuthenticated)?
+                .id_token,
+        )
+        .with_sub(context.state.sub)
+        .with_api_url(context.config.core.wukong_api_url)
         .build()?;
 
     let cd_pipelines_resp = client
@@ -525,7 +533,8 @@ pub async fn handle_execute(
             let progress_bar = new_spinner_progress_bar();
             progress_bar.set_message("Sending deployment ...");
 
-            let base64_encoded_changelog = base64::encode(cleaned_changelog);
+            let base64_encoded_changelog =
+                base64::engine::general_purpose::STANDARD.encode(cleaned_changelog);
 
             let resp = client
                 .execute_cd_pipeline(

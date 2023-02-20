@@ -16,15 +16,16 @@ use self::{
     },
 };
 use crate::{
-    app::APP_STATE,
     error::APIError,
     telemetry::{self, TelemetryData, TelemetryEvent},
 };
 use graphql_client::{GraphQLQuery, Response};
 use log::debug;
 use reqwest::header;
+use std::fmt::Debug;
 use wukong_telemetry_macro::wukong_telemetry;
 
+#[derive(Debug, Default)]
 pub struct QueryClientBuilder {
     access_token: Option<String>,
     sub: Option<String>,
@@ -32,19 +33,6 @@ pub struct QueryClientBuilder {
 }
 
 impl QueryClientBuilder {
-    pub fn new() -> Self {
-        let api_url = match APP_STATE.get() {
-            Some(state) => state.api_url.clone(),
-            None => "".to_string(),
-        };
-
-        Self {
-            access_token: None,
-            api_url,
-            sub: None,
-        }
-    }
-
     pub fn with_access_token(mut self, access_token: String) -> Self {
         self.access_token = Some(access_token);
         self
@@ -56,20 +44,21 @@ impl QueryClientBuilder {
         self
     }
 
-    #[allow(dead_code)]
     pub fn with_api_url(mut self, api_url: String) -> Self {
         self.api_url = api_url;
         self
     }
 
     pub fn build(self) -> Result<QueryClient, APIError> {
-        let auth_value = format!("Bearer {}", self.access_token.unwrap_or_default());
-
         let mut headers = header::HeaderMap::new();
-        headers.insert(
-            header::AUTHORIZATION,
-            header::HeaderValue::from_str(&auth_value).unwrap(),
-        );
+
+        if let Some(token) = self.access_token {
+            let auth_value = format!("Bearer {}", token);
+            headers.insert(
+                header::AUTHORIZATION,
+                header::HeaderValue::from_str(&auth_value).unwrap(),
+            );
+        }
 
         let client = reqwest::Client::builder()
             .default_headers(headers)
@@ -85,9 +74,9 @@ impl QueryClientBuilder {
 
 pub struct QueryClient {
     reqwest_client: reqwest::Client,
+    api_url: String,
     // for telemetry usage
     sub: Option<String>,
-    pub api_url: String,
 }
 
 impl QueryClient {
@@ -95,21 +84,27 @@ impl QueryClient {
         &self.reqwest_client
     }
 
-    pub async fn call_api<Q: GraphQLQuery>(
+    pub async fn call_api<Q>(
         &self,
         variables: Q::Variables,
         handler: impl Fn(
             Response<Q::ResponseData>,
             graphql_client::Error,
         ) -> Result<Response<Q::ResponseData>, APIError>,
-    ) -> Result<Response<Q::ResponseData>, APIError> {
+    ) -> Result<Response<Q::ResponseData>, APIError>
+    where
+        Q: GraphQLQuery,
+        Q::ResponseData: Debug,
+    {
         let body = Q::build_query(variables);
         let request = self.inner().post(&self.api_url).json(&body);
 
-        debug!("request: {:?}", request);
-        debug!("graphQL query: \n{}", body.query);
+        debug!("url: {:?}", &self.api_url);
+        debug!("request: {:#?}", request);
+        debug!("GraphQL query: \n{}", body.query);
 
         let response: Response<Q::ResponseData> = request.send().await?.json().await?;
+        debug!("GraphQL response: {:#?}", response);
 
         if let Some(errors) = response.errors.clone() {
             let first_error = errors[0].clone();

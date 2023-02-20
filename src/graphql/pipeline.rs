@@ -1,7 +1,6 @@
 use super::QueryClient;
 use crate::error::APIError;
 use graphql_client::{GraphQLQuery, Response};
-use log::debug;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -37,8 +36,6 @@ impl PipelinesQuery {
                 })
             })
             .await?;
-
-        debug!("response: {:?}", &response);
 
         Ok(response)
     }
@@ -77,8 +74,6 @@ impl PipelineQuery {
             })
             .await?;
 
-        debug!("response: {:?}", &response);
-
         Ok(response)
     }
 }
@@ -116,8 +111,6 @@ impl MultiBranchPipelineQuery {
             })
             .await?;
 
-        debug!("response: {:?}", &response);
-
         Ok(response)
     }
 }
@@ -154,8 +147,6 @@ impl CiStatusQuery {
             })
             .await?;
 
-        debug!("response: {:?}", &response);
-
         Ok(response)
     }
 }
@@ -169,7 +160,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_pipeline_list_success_should_return_pipeline_list() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::new()
+        let query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -217,7 +208,7 @@ mod test {
     async fn test_fetch_pipeline_list_failed_with_unable_to_get_pipelines_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::new()
+        let query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -269,7 +260,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_pipeline_success_should_return_pipeline() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::new()
+        let query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -318,7 +309,7 @@ mod test {
     async fn test_fetch_pipeline_failed_with_unable_to_get_pipeline_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::new()
+        let query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -367,7 +358,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_multi_branch_pipeline_success_should_return_that_pipeline() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::new()
+        let query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -443,7 +434,7 @@ mod test {
     async fn test_fetch_multi_branch_pipeline_with_unable_to_get_pipeline_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::new()
+        let query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -492,7 +483,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_ci_status_success_should_return_ci_status() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::new()
+        let query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -548,7 +539,7 @@ mod test {
     async fn test_fetch_ci_status_failed_with_application_not_found_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::new()
+        let query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -602,7 +593,7 @@ mod test {
     async fn test_fetch_ci_status_failed_with_no_builds_associated_with_this_branch_error_should_return_ok_response(
     ) {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::new()
+        let query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()

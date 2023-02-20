@@ -6,8 +6,10 @@ use execute::handle_execute;
 use list::handle_list;
 use rollback::handle_rollback;
 
-use crate::{CliError, GlobalContext};
+use crate::CliError;
 use clap::{Args, Subcommand, ValueEnum};
+
+use super::{Context, State};
 
 #[derive(Debug, Args)]
 pub struct Deployment {
@@ -75,7 +77,9 @@ impl ToString for DeploymentNamespace {
 }
 
 impl Deployment {
-    pub async fn handle_command(&self, context: GlobalContext) -> Result<bool, CliError> {
+    pub async fn handle_command(&self, state: State) -> Result<bool, CliError> {
+        let context = Context::from_state(state).await?;
+
         match &self.subcommand {
             DeploymentSubcommand::List => handle_list(context).await,
             DeploymentSubcommand::Execute {

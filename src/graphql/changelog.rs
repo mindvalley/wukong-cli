@@ -1,7 +1,6 @@
 use super::QueryClient;
 use crate::error::APIError;
 use graphql_client::{GraphQLQuery, Response};
-use log::debug;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -46,8 +45,6 @@ impl ChangelogsQuery {
             })
             .await?;
 
-        debug!("response: {:?}", &response);
-
         Ok(response)
     }
 }
@@ -61,7 +58,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_changelog_list_success_should_return_changelog_list() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::new()
+        let query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -114,7 +111,7 @@ mod test {
     async fn test_fetch_changelog_list_failed_with_application_not_found_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::new()
+        let query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -171,7 +168,7 @@ mod test {
     async fn test_fetch_changelog_list_failed_with_unable_to_determine_changelog_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::new()
+        let query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -235,7 +232,7 @@ mod test {
     async fn test_fetch_changelog_list_failed_with_comparing_same_build_error_should_return_changelog_comparing_same_build_error(
     ) {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::new()
+        let query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()

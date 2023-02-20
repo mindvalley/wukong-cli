@@ -1,7 +1,6 @@
 use super::QueryClient;
 use crate::error::APIError;
 use graphql_client::{GraphQLQuery, Response};
-use log::debug;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -28,8 +27,6 @@ impl ApplicationQuery {
                 })
             })
             .await?;
-
-        debug!("response: {:?}", &response);
 
         Ok(response)
     }
@@ -58,8 +55,6 @@ impl ApplicationsQuery {
             })
             .await?;
 
-        debug!("response: {:?}", &response);
-
         Ok(response)
     }
 }
@@ -73,7 +68,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_application_success_should_return_correct_application_info() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::new()
+        let query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -131,7 +126,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_application_list_success_should_return_application_list() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::new()
+        let query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
