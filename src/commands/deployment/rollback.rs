@@ -7,6 +7,7 @@ use crate::{
     output::colored_println,
     telemetry::{self, TelemetryData, TelemetryEvent},
 };
+use base64::Engine;
 use dialoguer::{theme::ColorfulTheme, Confirm, Select};
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
@@ -253,13 +254,20 @@ pub async fn handle_rollback(
                         let progress_bar = new_spinner_progress_bar();
                         progress_bar.set_message("Sending deployment ...");
 
+                        let changelog = format!(
+                            "Rollback the application from {} to {}",
+                            build_artifact, cd_pipeline.previous_deployed_artifacts[0]
+                        );
+                        let base64_encoded_changelog =
+                            base64::engine::general_purpose::STANDARD.encode(changelog);
+
                         let resp = client
                             .execute_cd_pipeline(
                                 &current_application,
                                 &selected_namespace.to_lowercase(),
                                 &selected_version.to_lowercase(),
                                 &cd_pipeline.previous_deployed_artifacts[0],
-                                None,
+                                Some(base64_encoded_changelog),
                                 true,
                             )
                             .await?
