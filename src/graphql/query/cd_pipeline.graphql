@@ -6,6 +6,7 @@ String!) {
     environment
     enabled
     lastDeployment
+    lastSuccessfullyDeployedArtifact
     name
     status
     version
