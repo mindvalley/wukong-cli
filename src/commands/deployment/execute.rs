@@ -83,6 +83,7 @@ struct CdPipelineWithBuilds {
     deployed_ref: Option<String>,
     build_artifact: Option<String>,
     last_deployed_at: Option<i64>,
+    last_successfully_deployed_artifact: Option<String>,
     status: Option<String>,
     jenkins_builds: Vec<JenkinsBuild>,
 }
@@ -321,6 +322,8 @@ pub async fn handle_execute(
                     enabled: cd_pipeline_data.enabled,
                     deployed_ref: cd_pipeline_data.deployed_ref,
                     build_artifact: cd_pipeline_data.build_artifact,
+                    last_successfully_deployed_artifact: cd_pipeline_data
+                        .last_successfully_deployed_artifact,
                     last_deployed_at: cd_pipeline_data.last_deployment,
                     status: cd_pipeline_data.status,
                     jenkins_builds: cd_pipeline_data
@@ -354,7 +357,9 @@ pub async fn handle_execute(
                         .collect(),
                 };
 
-                let build_selections = if let Some(build_artifact) = &cd_pipeline.build_artifact {
+                let build_selections = if let Some(build_artifact) =
+                    &cd_pipeline.last_successfully_deployed_artifact
+                {
                     if build_artifact.contains("-build-") {
                         let build_selection: Vec<ThreeColumns> = cd_pipeline
                             .jenkins_builds
