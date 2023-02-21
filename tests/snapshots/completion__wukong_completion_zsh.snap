@@ -37,10 +37,10 @@ By default, it'\''ll only report errors.
 `-vvvv` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
-'-V[Print version information]' \
-'--version[Print version information]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'-V[Print version]' \
+'--version[Print version]' \
 ":: :_wukong_commands" \
 "*::: :->wukong" \
 && ret=0
@@ -70,8 +70,8 @@ By default, it'\''ll only report errors.
 `-vvvv` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
+'-h[Print help]' \
+'--help[Print help]' \
 && ret=0
 ;;
 (application)
@@ -94,8 +94,8 @@ By default, it'\''ll only report errors.
 `-vvvv` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
+'-h[Print help]' \
+'--help[Print help]' \
 ":: :_wukong__application_commands" \
 "*::: :->application" \
 && ret=0
@@ -126,8 +126,8 @@ By default, it'\''ll only report errors.
 `-vvvv` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
+'-h[Print help]' \
+'--help[Print help]' \
 && ret=0
 ;;
 (help)
@@ -178,8 +178,8 @@ By default, it'\''ll only report errors.
 `-vvvv` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
+'-h[Print help]' \
+'--help[Print help]' \
 ":: :_wukong__pipeline_commands" \
 "*::: :->pipeline" \
 && ret=0
@@ -210,8 +210,8 @@ By default, it'\''ll only report errors.
 `-vvvv` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
+'-h[Print help]' \
+'--help[Print help]' \
 && ret=0
 ;;
 (describe)
@@ -234,8 +234,8 @@ By default, it'\''ll only report errors.
 `-vvvv` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
+'-h[Print help]' \
+'--help[Print help]' \
 ':name -- The pipeline name:' \
 && ret=0
 ;;
@@ -261,8 +261,8 @@ By default, it'\''ll only report errors.
 `-vvvv` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
+'-h[Print help]' \
+'--help[Print help]' \
 && ret=0
 ;;
 (help)
@@ -321,8 +321,8 @@ By default, it'\''ll only report errors.
 `-vvvv` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
+'-h[Print help]' \
+'--help[Print help]' \
 ":: :_wukong__deployment_commands" \
 "*::: :->deployment" \
 && ret=0
@@ -353,8 +353,8 @@ By default, it'\''ll only report errors.
 `-vvvv` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
+'-h[Print help]' \
+'--help[Print help]' \
 && ret=0
 ;;
 (execute)
@@ -380,8 +380,8 @@ By default, it'\''ll only report errors.
 `-vvvv` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
+'-h[Print help]' \
+'--help[Print help]' \
 && ret=0
 ;;
 (rollback)
@@ -406,8 +406,8 @@ By default, it'\''ll only report errors.
 `-vvvv` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
+'-h[Print help]' \
+'--help[Print help]' \
 && ret=0
 ;;
 (help)
@@ -466,8 +466,8 @@ By default, it'\''ll only report errors.
 `-vvvv` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
+'-h[Print help]' \
+'--help[Print help]' \
 ":: :_wukong__config_commands" \
 "*::: :->config" \
 && ret=0
@@ -498,8 +498,8 @@ By default, it'\''ll only report errors.
 `-vvvv` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
+'-h[Print help]' \
+'--help[Print help]' \
 && ret=0
 ;;
 (set)
@@ -522,8 +522,8 @@ By default, it'\''ll only report errors.
 `-vvvv` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
+'-h[Print help]' \
+'--help[Print help]' \
 ':config_name -- The config name:(application wukong-api-url okta-client-id)' \
 ':config_value -- The config value:' \
 && ret=0
@@ -548,8 +548,8 @@ By default, it'\''ll only report errors.
 `-vvvv` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
+'-h[Print help]' \
+'--help[Print help]' \
 ':config_name -- The config name:(application wukong-api-url okta-client-id)' \
 && ret=0
 ;;
@@ -609,8 +609,8 @@ By default, it'\''ll only report errors.
 `-vvvv` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
+'-h[Print help]' \
+'--help[Print help]' \
 && ret=0
 ;;
 (completion)
@@ -633,8 +633,8 @@ By default, it'\''ll only report errors.
 `-vvvv` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
+'-h[Print help]' \
+'--help[Print help]' \
 ':shell:(bash elvish fish powershell zsh)' \
 && ret=0
 ;;

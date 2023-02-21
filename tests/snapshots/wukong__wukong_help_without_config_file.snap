@@ -32,6 +32,6 @@ Options:
                                    `-vvv` show debug
                                    `-vvvv` show trace
   -q, --quiet...                   Do not print log message
-  -h, --help                       Print help information
-  -V, --version                    Print version information
+  -h, --help                       Print help
+  -V, --version                    Print version
 
