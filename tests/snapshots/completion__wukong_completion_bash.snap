@@ -3,7 +3,7 @@ source: tests/completion.rs
 expression: "std::str::from_utf8(&output.stdout).unwrap()"
 ---
 _wukong() {
-    local i cur prev opts cmds
+    local i cur prev opts cmd
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
