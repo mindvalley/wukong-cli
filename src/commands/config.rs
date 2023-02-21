@@ -1,9 +1,8 @@
 use crate::{
-    commands::ClapApp,
     error::{CliError, ConfigError},
     Config as CLIConfig, CONFIG_FILE,
 };
-use clap::{error::ErrorKind, Args, CommandFactory, Subcommand, ValueEnum};
+use clap::{Args, Subcommand, ValueEnum};
 
 #[derive(Debug, Args)]
 pub struct Config {
@@ -40,8 +39,6 @@ pub enum ConfigName {
 
 impl Config {
     pub fn handle_command(&self) -> Result<bool, CliError> {
-        let mut cmd = ClapApp::command();
-
         match &self.subcommand {
             ConfigSubcommand::List => {
                 let config_file = CONFIG_FILE
@@ -49,6 +46,7 @@ impl Config {
                     .expect("Unable to identify user's home directory");
 
                 let config = CLIConfig::load(config_file)?;
+
                 println!(
                     "{}",
                     toml::to_string(&config).map_err(ConfigError::SerializeTomlError)?
@@ -62,44 +60,36 @@ impl Config {
                     .as_ref()
                     .expect("Unable to identify user's home directory");
 
-                match CLIConfig::load(config_file) {
-                    Ok(mut config) => match config_name {
-                        ConfigName::Application => {
-                            config.core.application = config_value.trim().to_string();
-                            config.save(config_file)?;
-                            println!("Updated property [core/application].");
-                        }
-                        ConfigName::WukongApiUrl => {
-                            config.core.wukong_api_url = config_value.trim().to_string();
-                            config.save(config_file)?;
-                            println!("Updated property [core/wukong_api_url].");
-                        }
-                        ConfigName::OktaClientId => {
-                            config.core.okta_client_id = config_value.trim().to_string();
-                            config.save(config_file)?;
-                            println!("Updated property [core/okta_client_id].");
-                        }
-                    },
-                    Err(e) => {
-                        cmd.error(ErrorKind::Io, e).exit();
+                let mut config = CLIConfig::load(config_file)?;
+                match config_name {
+                    ConfigName::Application => {
+                        config.core.application = config_value.trim().to_string();
+                        config.save(config_file)?;
+                        println!("Updated property [core/application].");
                     }
-                }
+                    ConfigName::WukongApiUrl => {
+                        config.core.wukong_api_url = config_value.trim().to_string();
+                        config.save(config_file)?;
+                        println!("Updated property [core/wukong_api_url].");
+                    }
+                    ConfigName::OktaClientId => {
+                        config.core.okta_client_id = config_value.trim().to_string();
+                        config.save(config_file)?;
+                        println!("Updated property [core/okta_client_id].");
+                    }
+                };
             }
             ConfigSubcommand::Get { config_name } => {
                 let config_file = CONFIG_FILE
                     .as_ref()
                     .expect("Unable to identify user's home directory");
 
-                match CLIConfig::load(config_file) {
-                    Ok(config) => match config_name {
-                        ConfigName::Application => println!("{}", config.core.application),
-                        ConfigName::WukongApiUrl => println!("{}", config.core.wukong_api_url),
-                        ConfigName::OktaClientId => println!("{}", config.core.okta_client_id),
-                    },
-                    Err(e) => {
-                        cmd.error(ErrorKind::Io, e).exit();
-                    }
-                }
+                let config = CLIConfig::load(config_file)?;
+                match config_name {
+                    ConfigName::Application => println!("{}", config.core.application),
+                    ConfigName::WukongApiUrl => println!("{}", config.core.wukong_api_url),
+                    ConfigName::OktaClientId => println!("{}", config.core.okta_client_id),
+                };
             }
         };
 
