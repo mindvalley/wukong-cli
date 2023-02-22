@@ -39,7 +39,7 @@ The Wukong CLI is a set of tools to manages Mindvalley DevOps resources. Its goa
 
 * Currently the Jenkins sometimes does not return the list of changes during build, so the CLI is not able to determine the CHANGELOG properly. We are working on a solution in the future release.  
 
-# IMPORTANT !!
+## IMPORTANT !!
 
 Since the Wukong CLI is not stable yet (not v1.0.0), users must always use the latest version. The latest version currently is **0.0.5-beta2**. 
 If you are using Wukong version < **0.0.5-beta2`**, please follow the below instructions:
