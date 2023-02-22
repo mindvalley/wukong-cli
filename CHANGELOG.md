@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.0.5-beta2](https://github.com/mindvalley/wukong-cli/tree/0.0.5-beta2) (2023-02-22)
+
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/0.0.4-beta1...0.0.5-beta2)
+
+**Implemented enhancements:**
+
+-  PXP-467: \[CLI\] Generating a default changelog for the rollback operation \(re-open\) [\#62](https://github.com/mindvalley/wukong-cli/pull/62) ([jk-gan](https://github.com/jk-gan))
+- PXP-466: \[Wukong CLI\] Refactor the configuration logic [\#60](https://github.com/mindvalley/wukong-cli/pull/60) ([jk-gan](https://github.com/jk-gan))
+- Benchmarking Output Tokenizer [\#56](https://github.com/mindvalley/wukong-cli/pull/56) ([jk-gan](https://github.com/jk-gan))
+- PXP-459: \[CLI\] Do discovery on whether or not we can do text tokenisation on CLI outputs [\#54](https://github.com/mindvalley/wukong-cli/pull/54) ([jk-gan](https://github.com/jk-gan))
+- PXP-445: \[CLI\] Printing DEBUG log from the CLI [\#52](https://github.com/mindvalley/wukong-cli/pull/52) ([jk-gan](https://github.com/jk-gan))
+- PXP-444: \[CLI\] Support --verbose flag and WUKONG\_LOG flag [\#51](https://github.com/mindvalley/wukong-cli/pull/51) ([jk-gan](https://github.com/jk-gan))
+- Add config file for development environment [\#50](https://github.com/mindvalley/wukong-cli/pull/50) ([jk-gan](https://github.com/jk-gan))
+- PXP-423: \[CLI\] Display the build artifact name when listing deployments [\#44](https://github.com/mindvalley/wukong-cli/pull/44) ([jk-gan](https://github.com/jk-gan))
+
+**Merged pull requests:**
+
+- Bump version to v0.0.5-beta2 [\#66](https://github.com/mindvalley/wukong-cli/pull/66) ([onimsha](https://github.com/onimsha))
+- PXP-481: \[Wukong CLI\] Telemetry panic when the `~/.config/wukong` path is not exists  [\#65](https://github.com/mindvalley/wukong-cli/pull/65) ([jk-gan](https://github.com/jk-gan))
+- Bump version to v0.0.5-beta1 [\#64](https://github.com/mindvalley/wukong-cli/pull/64) ([onimsha](https://github.com/onimsha))
+- PXP-468: \[CLI\] Use the new field to determine what is the current deployed artifact [\#63](https://github.com/mindvalley/wukong-cli/pull/63) ([jk-gan](https://github.com/jk-gan))
+- chore\(deps\): bump openssl-src from 111.24.0+1.1.1s to 111.25.0+1.1.1t [\#59](https://github.com/mindvalley/wukong-cli/pull/59) ([dependabot[bot]](https://github.com/apps/dependabot))
+- chore\(deps\): bump tokio from 1.23.1 to 1.24.2 [\#58](https://github.com/mindvalley/wukong-cli/pull/58) ([dependabot[bot]](https://github.com/apps/dependabot))
+- PXP-463: \[CLI\] Implement the rollback command [\#57](https://github.com/mindvalley/wukong-cli/pull/57) ([jk-gan](https://github.com/jk-gan))
+- PXP-434: \[CLI\] Implement the application info command [\#55](https://github.com/mindvalley/wukong-cli/pull/55) ([jk-gan](https://github.com/jk-gan))
+- chore\(deps\): bump tokio from 1.23.0 to 1.23.1 [\#53](https://github.com/mindvalley/wukong-cli/pull/53) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Correct the command to check Wukong CLI version [\#49](https://github.com/mindvalley/wukong-cli/pull/49) ([onimsha](https://github.com/onimsha))
+- Add CHANGELOG [\#48](https://github.com/mindvalley/wukong-cli/pull/48) ([onimsha](https://github.com/onimsha))
+- PXP-426: \[CLI\] Show which build artifact is the current deployed one when selecting artifact [\#46](https://github.com/mindvalley/wukong-cli/pull/46) ([jk-gan](https://github.com/jk-gan))
+
 ## [0.0.4-beta1](https://github.com/mindvalley/wukong-cli/tree/0.0.4-beta1) (2022-12-09)
 
 [Full Changelog](https://github.com/mindvalley/wukong-cli/compare/0.0.3-alpha2...0.0.4-beta1)

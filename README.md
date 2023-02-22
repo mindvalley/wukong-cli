@@ -41,19 +41,19 @@ The Wukong CLI is a set of tools to manages Mindvalley DevOps resources. Its goa
 
 ## IMPORTANT !!
 
-The latest release of Wukong CLI contains several breaking changes. Users must upgrade to the latest version, which is at least `0.0.4-beta1` in order to continue using the Wukong CLI. If you are using Wukong version < `0.0.4-beta1`, please follow the below instructions:
+The latest release of Wukong CLI contains several breaking changes. Users must upgrade to the latest version, which is at least `0.0.5-beta2` in order to continue using the Wukong CLI. If you are using Wukong version < `0.0.5-beta2`, please follow the below instructions:
 
 ```
 # Check the current version of Wukong CLI.  
 $ wukong --version
 
-# If your version is < 0.0.4-beta1.  
+# If your version is < 0.0.5-beta2.  
 $ brew update  
 $ brew upgrade wukong  
 
-# Confirm that you're on version >= 0.0.4-beta1.  
+# Confirm that you're on version >= 0.0.5beta2.  
 $ brew list --versions wukong
-wukong 0.0.4-beta1
+wukong 0.0.5-beta2
 
 # Delete the current config.  
 $ rm ~/.config/wukong/config.toml
