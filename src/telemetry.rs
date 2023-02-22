@@ -1,18 +1,26 @@
+use std::{
+    fs::{create_dir_all, File},
+    io::Write,
+    path::Path,
+};
+
 use chrono::{offset::Utc, SecondsFormat};
+
 #[cfg(all(feature = "prod"))]
 use once_cell::sync::Lazy;
 #[cfg(all(feature = "prod"))]
 use reqwest::header;
+
 use serde::{Deserialize, Serialize};
 
 #[cfg(all(feature = "prod"))]
 const EVENT_THRESHOLD: usize = 20;
 
 #[cfg(all(feature = "prod"))]
-const HONEYCOMB_API_KEY: &'static str = env!("WUKONG_HONEYCOMB_API_KEY");
+const HONEYCOMB_API_KEY: &str = env!("WUKONG_HONEYCOMB_API_KEY");
 
 #[cfg(all(feature = "prod"))]
-const HONEYCOMB_DATASET: &'static str = "wukong_telemetry_prod";
+const HONEYCOMB_DATASET: &str = "wukong_telemetry_prod";
 
 /// The default path to the wukong telemetry file.
 ///
@@ -88,6 +96,60 @@ pub enum APIResponse {
     Error,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Telemetry {
+    data: Vec<TelemetryData>,
+}
+
+impl Telemetry {
+    /// Load telemetry data from file.
+    ///
+    /// # Errors
+    ///
+    /// This function may return typical file I/O errors.
+    #[allow(dead_code)]
+    pub fn load(path: &'static str) -> Self {
+        let telemetry_file_path = Path::new(path);
+
+        let telemetry_data = {
+            let content = std::fs::read_to_string(telemetry_file_path);
+            match content {
+                Ok(data) => match serde_json::from_str::<Vec<TelemetryData>>(&data) {
+                    Ok(data) => data,
+                    Err(_) => Vec::new(),
+                },
+                Err(_) => Vec::new(),
+            }
+        };
+
+        Telemetry {
+            data: telemetry_data,
+        }
+    }
+
+    /// Save telemetry data to file.
+    ///
+    /// If the file's directory does not exist, it will be created. If the file
+    /// already exists, it will be overwritten.
+    ///
+    /// # Errors
+    ///
+    /// This function may return typical file I/O errors.
+    #[allow(dead_code)]
+    pub fn save(&self, path: &str) {
+        let telemetry_file_path = Path::new(path);
+
+        if let Some(outdir) = telemetry_file_path.parent() {
+            create_dir_all(outdir).unwrap();
+        }
+
+        if let Ok(mut file) = File::create(path) {
+            file.write_all(serde_json::to_string_pretty(&self.data).unwrap().as_bytes())
+                .unwrap();
+        }
+    }
+}
+
 impl TelemetryData {
     pub fn new(event: TelemetryEvent, application: Option<String>, actor: String) -> Self {
         Self {
@@ -105,31 +167,21 @@ impl TelemetryData {
                 .as_ref()
                 .expect("Unable to identify user's home directory");
 
-            let mut telemetry_data = {
-                let read_result = std::fs::read_to_string(telemetry_file);
-                if let Ok(data) = read_result {
-                    serde_json::from_str::<Vec<TelemetryData>>(&data).unwrap()
-                } else {
-                    Vec::new()
-                }
-            };
+            let mut telemetry = Telemetry::load(telemetry_file);
 
-            telemetry_data.push(self.clone());
+            telemetry.data.push(self.clone());
 
             // if telemetry_data is more than the EVENT_THRESHOLD, then send the events in batch to honeycomb
-            if telemetry_data.len() >= EVENT_THRESHOLD {
+            if telemetry.data.len() >= EVENT_THRESHOLD {
                 let event_data: Vec<HoneycombEventData> =
-                    telemetry_data.into_iter().map(|each| each.into()).collect();
+                    telemetry.data.into_iter().map(|each| each.into()).collect();
 
                 send_event(event_data).await;
 
-                std::fs::write(telemetry_file, "[]").unwrap();
+                telemetry.data = Vec::new();
+                telemetry.save(telemetry_file);
             } else {
-                std::fs::write(
-                    telemetry_file,
-                    serde_json::to_string_pretty(&telemetry_data).unwrap(),
-                )
-                .unwrap();
+                telemetry.save(telemetry_file);
             }
         }
     }
@@ -137,14 +189,15 @@ impl TelemetryData {
 
 #[cfg(all(feature = "prod"))]
 async fn send_event(event_data: Vec<HoneycombEventData>) {
-    let client = reqwest::Client::builder().build().unwrap();
-    let url = format!("https://api.honeycomb.io/1/batch/{}", HONEYCOMB_DATASET);
+    if let Ok(client) = reqwest::Client::builder().build() {
+        let url = format!("https://api.honeycomb.io/1/batch/{}", HONEYCOMB_DATASET);
 
-    let _ = client
-        .post(url)
-        .header("X-Honeycomb-Team", HONEYCOMB_API_KEY)
-        .header(header::CONTENT_TYPE, "application/json")
-        .json(&event_data)
-        .send()
-        .await;
+        let _ = client
+            .post(url)
+            .header("X-Honeycomb-Team", HONEYCOMB_API_KEY)
+            .header(header::CONTENT_TYPE, "application/json")
+            .json(&event_data)
+            .send()
+            .await;
+    }
 }
