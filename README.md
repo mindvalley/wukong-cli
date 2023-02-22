@@ -55,9 +55,6 @@ $ brew upgrade wukong
 $ brew list --versions wukong
 wukong 0.0.5-beta2
 
-# Delete the current config.  
-$ rm ~/.config/wukong/config.toml
-
 # Re-init the Wukong CLI.  
 $ wukong init
 ```
