@@ -63,6 +63,9 @@ wukong_telemetry_macro = { path = "crates/wukong_telemetry_macro" }
 regex = "1.7.0"
 chrono-tz = "0.8.1"
 
+# elixir-linter
+elixir_linter = { path = "crates/elixir_linter" }
+
 [dev-dependencies]
 httpmock = "0.6.6"
 criterion = "0.4"
