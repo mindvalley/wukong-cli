@@ -1,6 +1,7 @@
 pub mod rules;
 
-use glob::{glob, Pattern};
+use glob::Pattern;
+use globwalk::glob;
 use std::time::Instant;
 
 use miette::{Diagnostic, GraphicalReportHandler, NamedSource, SourceSpan};
@@ -8,7 +9,7 @@ use rules::{
     no_env_in_dev_config::NoEnvInDevConfig, no_env_in_main_config::NoEnvInMainConfig,
     use_import_config_with_file_exists_checking::UseImportConfigWithFileExistsChecking, Rule,
 };
-use tree_sitter::{Language, Parser, Tree};
+use tree_sitter::{Language, Parser};
 
 #[derive(thiserror::Error, Debug, Diagnostic)]
 #[error("{name}")]
@@ -41,12 +42,15 @@ impl RuleExecutor {
         self
     }
 
-    pub fn run(&self, parse_tree: &Tree, src: String, file_path: &str) -> Vec<LintError> {
+    pub fn run(&self, parser: &mut Parser, src: String, file_path: &str) -> Vec<LintError> {
         let lint_errors: Vec<LintError> = self
             .rules
             .iter()
             .filter(|rule| Pattern::new(rule.glob()).unwrap().matches(file_path))
-            .map(|rule| rule.run(&parse_tree, src.clone(), file_path))
+            .map(|rule| {
+                let parse_tree = parser.parse(&src, None).unwrap();
+                rule.run(&parse_tree, src.clone(), file_path)
+            })
             .flatten()
             .collect();
 
@@ -89,21 +93,20 @@ pub fn run() {
         elixir_lang,
     )));
 
+    let mut lint_time_takens = vec![];
+    let mut count = 0;
+
     let program_load_time_taken = program_start.elapsed();
 
-    let mut lint_time_takens = vec![];
-
-    for entry in glob("**/config/*.exs").expect("Failed to read glob pattern") {
+    for entry in glob("**/*.{ex,exs}").expect("Failed to read glob pattern") {
+        count += 1;
         let now = Instant::now();
         if let Ok(entry) = entry {
-            // println!("{:?}", entry.as_path().as_os_str());
+            // println!("{:?}", entry.path().as_os_str());
 
-            let file_path = entry.as_path().to_str().unwrap();
+            let file_path = entry.path().to_str().unwrap();
             let src = std::fs::read_to_string(file_path).unwrap();
-            let parse_tree = parser.parse(&src, None).unwrap();
-            let lint_errors = rule_executor.run(&parse_tree, src.to_string(), &file_path);
-
-            lint_time_takens.push(now.elapsed());
+            let lint_errors = rule_executor.run(&mut parser, src.to_string(), &file_path);
 
             lint_errors.iter().for_each(|lint_error| {
                 let mut s = String::new();
@@ -114,19 +117,21 @@ pub fn run() {
                 println!("{s}");
             });
         }
+        lint_time_takens.push(now.elapsed());
     }
 
-    let lint_time_taken = lint_time_takens.into_iter().reduce(|a, b| a + b).unwrap();
-
     let total_time_taken = program_start.elapsed();
+
+    let lint_time_taken = lint_time_takens.into_iter().reduce(|a, b| a + b).unwrap();
 
     println!(
         "Total time taken: {:?} ({:?} to load, {:?} running {} checks)",
         total_time_taken,
         program_load_time_taken,
         lint_time_taken,
-        rule_executor.rules.len()
+        rule_executor.rules.len(),
     );
+    println!("Total files: {}", count);
 }
 
 pub fn add(left: usize, right: usize) -> usize {
