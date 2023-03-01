@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 glob = "0.3.1"
-globwalk = "0.8.1"
+ignore = "0.4.20"
 # globwalk = { git = "https://github.com/ds1-fs21-gruppe19/globwalk", branch = "master" }
 miette = { version = "5.5.0", features = ['fancy'] }
 thiserror = "1.0.38"

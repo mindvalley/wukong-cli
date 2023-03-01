@@ -1,7 +1,7 @@
 pub mod rules;
 
 use glob::Pattern;
-use globwalk::glob;
+use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use std::time::Instant;
 
 use miette::{Diagnostic, GraphicalReportHandler, NamedSource, SourceSpan};
@@ -98,31 +98,40 @@ pub fn run() {
 
     let program_load_time_taken = program_start.elapsed();
 
-    for entry in glob("**/*.{ex,exs}").expect("Failed to read glob pattern") {
-        count += 1;
+    let mut overrides = OverrideBuilder::new("./");
+    overrides.add("*.{ex,exs}").unwrap();
+
+    for entry in WalkBuilder::new("./")
+        .overrides(overrides.build().unwrap())
+        .build()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().is_file())
+    {
         let now = Instant::now();
-        if let Ok(entry) = entry {
-            // println!("{:?}", entry.path().as_os_str());
+        count += 1;
+        println!("{}", entry.path().display());
 
-            let file_path = entry.path().to_str().unwrap();
-            let src = std::fs::read_to_string(file_path).unwrap();
-            let lint_errors = rule_executor.run(&mut parser, src.to_string(), &file_path);
+        let file_path = entry.path().to_str().unwrap();
+        let src = std::fs::read_to_string(file_path).unwrap();
+        let lint_errors = rule_executor.run(&mut parser, src.to_string(), &file_path);
 
-            lint_errors.iter().for_each(|lint_error| {
-                let mut s = String::new();
-                GraphicalReportHandler::new()
-                    .render_report(&mut s, lint_error)
-                    .unwrap();
+        lint_errors.iter().for_each(|lint_error| {
+            let mut s = String::new();
+            GraphicalReportHandler::new()
+                .render_report(&mut s, lint_error)
+                .unwrap();
 
-                println!("{s}");
-            });
-        }
+            println!("{s}");
+        });
         lint_time_takens.push(now.elapsed());
     }
 
     let total_time_taken = program_start.elapsed();
 
-    let lint_time_taken = lint_time_takens.into_iter().reduce(|a, b| a + b).unwrap();
+    let lint_time_taken = lint_time_takens
+        .into_iter()
+        .reduce(|a, b| a + b)
+        .unwrap_or_default();
 
     println!(
         "Total time taken: {:?} ({:?} to load, {:?} running {} checks)",
@@ -132,19 +141,4 @@ pub fn run() {
         rule_executor.rules.len(),
     );
     println!("Total files: {}", count);
-}
-
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
 }
