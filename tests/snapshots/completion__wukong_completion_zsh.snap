@@ -446,6 +446,91 @@ esac
     ;;
 esac
 ;;
+(dev)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help]' \
+'--help[Print help]' \
+":: :_wukong__dev_commands" \
+"*::: :->dev" \
+&& ret=0
+
+    case $state in
+    (dev)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-dev-command-$line[1]:"
+        case $line[1] in
+            (config-lint)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::path -- The path to the project:_files' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+":: :_wukong__dev__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-dev-help-command-$line[1]:"
+        case $line[1] in
+            (config-lint)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+;;
 (config)
 _arguments "${_arguments_options[@]}" \
 '-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
@@ -730,6 +815,26 @@ _arguments "${_arguments_options[@]}" \
     ;;
 esac
 ;;
+(dev)
+_arguments "${_arguments_options[@]}" \
+":: :_wukong__help__dev_commands" \
+"*::: :->dev" \
+&& ret=0
+
+    case $state in
+    (dev)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:wukong-help-dev-command-$line[1]:"
+        case $line[1] in
+            (config-lint)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
 (config)
 _arguments "${_arguments_options[@]}" \
 ":: :_wukong__help__config_commands" \
@@ -786,6 +891,7 @@ _wukong_commands() {
 'application:This command group contains the commands to interact with an application’s configurations' \
 'pipeline:This command group contains the commands to view & interact with an application’s pipeline' \
 'deployment:This command group contains the commands to view and interact with the Continuous Delivery pipeline of an application' \
+'dev:This command group contains the commands to interact with the local development environment' \
 'config:This command group contains the commands to view & interact with Wukong'\''s configurations' \
 'login:Login to start using wukong command' \
 'completion:Generate wukong cli completions for your shell to stdout' \
@@ -852,6 +958,21 @@ _wukong__help__config_commands() {
     )
     _describe -t commands 'wukong help config commands' commands "$@"
 }
+(( $+functions[_wukong__dev__config-lint_commands] )) ||
+_wukong__dev__config-lint_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong dev config-lint commands' commands "$@"
+}
+(( $+functions[_wukong__dev__help__config-lint_commands] )) ||
+_wukong__dev__help__config-lint_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong dev help config-lint commands' commands "$@"
+}
+(( $+functions[_wukong__help__dev__config-lint_commands] )) ||
+_wukong__help__dev__config-lint_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help dev config-lint commands' commands "$@"
+}
 (( $+functions[_wukong__deployment_commands] )) ||
 _wukong__deployment_commands() {
     local commands; commands=(
@@ -885,6 +1006,21 @@ _wukong__pipeline__describe_commands() {
 _wukong__pipeline__help__describe_commands() {
     local commands; commands=()
     _describe -t commands 'wukong pipeline help describe commands' commands "$@"
+}
+(( $+functions[_wukong__dev_commands] )) ||
+_wukong__dev_commands() {
+    local commands; commands=(
+'config-lint:Linting the config and show possible warnings, as well as suggestion how to fix the config file' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong dev commands' commands "$@"
+}
+(( $+functions[_wukong__help__dev_commands] )) ||
+_wukong__help__dev_commands() {
+    local commands; commands=(
+'config-lint:Linting the config and show possible warnings, as well as suggestion how to fix the config file' \
+    )
+    _describe -t commands 'wukong help dev commands' commands "$@"
 }
 (( $+functions[_wukong__deployment__execute_commands] )) ||
 _wukong__deployment__execute_commands() {
@@ -959,6 +1095,19 @@ _wukong__deployment__help__help_commands() {
     local commands; commands=()
     _describe -t commands 'wukong deployment help help commands' commands "$@"
 }
+(( $+functions[_wukong__dev__help_commands] )) ||
+_wukong__dev__help_commands() {
+    local commands; commands=(
+'config-lint:Linting the config and show possible warnings, as well as suggestion how to fix the config file' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong dev help commands' commands "$@"
+}
+(( $+functions[_wukong__dev__help__help_commands] )) ||
+_wukong__dev__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong dev help help commands' commands "$@"
+}
 (( $+functions[_wukong__help_commands] )) ||
 _wukong__help_commands() {
     local commands; commands=(
@@ -966,6 +1115,7 @@ _wukong__help_commands() {
 'application:This command group contains the commands to interact with an application’s configurations' \
 'pipeline:This command group contains the commands to view & interact with an application’s pipeline' \
 'deployment:This command group contains the commands to view and interact with the Continuous Delivery pipeline of an application' \
+'dev:This command group contains the commands to interact with the local development environment' \
 'config:This command group contains the commands to view & interact with Wukong'\''s configurations' \
 'login:Login to start using wukong command' \
 'completion:Generate wukong cli completions for your shell to stdout' \
