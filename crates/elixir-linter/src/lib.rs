@@ -1,7 +1,6 @@
 pub mod rules;
 
 use glob::Pattern;
-use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use miette::{Diagnostic, NamedSource, SourceSpan};
 use rules::{
     no_env_in_dev_config::NoEnvInDevConfig, no_env_in_main_config::NoEnvInMainConfig,
@@ -68,27 +67,6 @@ impl RuleExecutor {
             .collect();
 
         lint_errors
-
-        // for result in R::run(&ctx) {
-        //     let text_range =
-        //         R::text_range(&ctx, &result).unwrap_or_else(|| params.query.text_range());
-        //
-        //     R::suppressed_nodes(&ctx, &result, &mut state.suppressions);
-        //
-        //     let signal = Box::new(RuleSignal::<R>::new(
-        //         params.root,
-        //         query_result.clone(),
-        //         result,
-        //         params.services,
-        //         params.apply_suppression_comment,
-        //     ));
-        //
-        //     params.signal_queue.push(SignalEntry {
-        //         signal,
-        //         rule: RuleKey::rule::<R>(),
-        //         text_range,
-        //     });
-        // }
     }
 }
 
@@ -104,20 +82,21 @@ pub enum AvailableRule {
 }
 
 pub struct Linter {
-    language: Language,
+    parser: Parser,
+    parse_tree_map: HashMap<String, Tree>,
     executor: RuleExecutor,
-}
-
-#[derive(Debug)]
-pub struct LintReport {
-    pub total_file_count: u32,
-    pub total_checks: u32,
-    pub report: Vec<LintError>,
 }
 
 impl Linter {
     pub fn new(rule: LintRule) -> Self {
         let elixir_lang: Language = tree_sitter_elixir::language();
+
+        let mut parser = Parser::new();
+        parser
+            .set_language(elixir_lang)
+            .expect("error loading elixir grammar");
+
+        let parse_tree_map = HashMap::new();
 
         let mut rule_executor = RuleExecutor::new();
         match rule {
@@ -144,51 +123,23 @@ impl Linter {
         }
 
         Self {
-            language: elixir_lang,
+            parser,
+            parse_tree_map,
             executor: rule_executor,
         }
     }
 
-    pub fn run(&self, path: &PathBuf) -> LintReport {
-        let mut parser = Parser::new();
-        parser
-            .set_language(self.language)
-            .expect("error loading elixir grammar");
-
-        let mut count = 0;
-
-        let mut overrides = OverrideBuilder::new(path);
-        overrides.add("**/lib/**/*.{ex,exs}").unwrap();
-        overrides.add("**/test/**/*.{ex,exs}").unwrap();
-        overrides.add("**/config/**/*.{ex,exs}").unwrap();
-
-        let mut parse_tree_map = HashMap::new();
-        let mut all_lint_errors = vec![];
-
-        for entry in WalkBuilder::new(path)
-            .overrides(overrides.build().unwrap())
-            .build()
-            .filter_map(|e| e.ok())
-            .filter(|e| e.path().is_file())
-        {
-            count += 1;
-
-            let file_path = entry.path().to_str().unwrap();
-            let src = std::fs::read_to_string(file_path).unwrap();
-            let lint_errors = self.executor.run(
-                &mut parser,
-                &mut parse_tree_map,
-                src.to_string(),
-                &file_path,
-            );
-
-            all_lint_errors.extend(lint_errors);
+    pub fn run(&mut self, path: &PathBuf) -> Vec<LintError> {
+        let mut output = vec![];
+        if let Ok(true) = path.try_exists() {
+            output = self.executor.run(
+                &mut self.parser,
+                &mut self.parse_tree_map,
+                std::fs::read_to_string(path).unwrap(),
+                path.to_str().unwrap(),
+            )
         }
 
-        LintReport {
-            total_file_count: count,
-            total_checks: self.executor.rules.len() as u32,
-            report: all_lint_errors,
-        }
+        output
     }
 }

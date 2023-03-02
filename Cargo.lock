@@ -1039,7 +1039,6 @@ name = "elixir_linter"
 version = "0.1.0"
 dependencies = [
  "glob",
- "ignore",
  "miette",
  "thiserror",
  "tree-sitter",
@@ -3997,6 +3996,7 @@ dependencies = [
  "graphql_client",
  "httpmock",
  "human-panic",
+ "ignore",
  "indicatif",
  "insta",
  "log",
