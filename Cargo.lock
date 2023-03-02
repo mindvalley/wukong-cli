@@ -4000,6 +4000,7 @@ dependencies = [
  "indicatif",
  "insta",
  "log",
+ "miette",
  "once_cell",
  "openidconnect",
  "openssl",

@@ -1,11 +1,9 @@
 mod config_lint;
 
-use std::path::PathBuf;
-
-use super::{Context, State};
 use crate::error::CliError;
-use clap::{Args, Subcommand, ValueEnum};
+use clap::{Args, Subcommand};
 use config_lint::handle_config_lint;
+use std::path::PathBuf;
 
 #[derive(Debug, Args)]
 pub struct Dev {

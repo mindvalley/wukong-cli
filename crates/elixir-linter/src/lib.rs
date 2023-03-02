@@ -2,12 +2,12 @@ pub mod rules;
 
 use glob::Pattern;
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
-use miette::{Diagnostic, GraphicalReportHandler, NamedSource, SourceSpan};
+use miette::{Diagnostic, NamedSource, SourceSpan};
 use rules::{
     no_env_in_dev_config::NoEnvInDevConfig, no_env_in_main_config::NoEnvInMainConfig,
     use_import_config_with_file_exists_checking::UseImportConfigWithFileExistsChecking, Rule,
 };
-use std::{collections::HashMap, path::PathBuf, time::Instant};
+use std::{collections::HashMap, path::PathBuf};
 use tree_sitter::{Language, Parser, Tree};
 
 #[derive(thiserror::Error, Debug, Diagnostic)]
@@ -92,69 +92,103 @@ impl RuleExecutor {
     }
 }
 
-pub fn run(path: &PathBuf) {
-    let program_start = Instant::now();
+pub enum LintRule {
+    All,
+    Custom(Vec<AvailableRule>),
+}
 
-    let elixir_lang: Language = tree_sitter_elixir::language();
-    let mut parser = Parser::new();
-    parser
-        .set_language(elixir_lang)
-        .expect("error loading elixir grammar");
+pub enum AvailableRule {
+    NoEnvInMainConfig,
+    NoEnvInDevConfig,
+    UseImportConfigWithFileExistsChecking,
+}
 
-    let mut rule_executor = RuleExecutor::new();
-    rule_executor.add_rule(Box::new(NoEnvInMainConfig::new(elixir_lang)));
-    rule_executor.add_rule(Box::new(NoEnvInDevConfig::new(elixir_lang)));
-    rule_executor.add_rule(Box::new(UseImportConfigWithFileExistsChecking::new(
-        elixir_lang,
-    )));
+pub struct Linter {
+    language: Language,
+    executor: RuleExecutor,
+}
 
-    let mut count = 0;
+#[derive(Debug)]
+pub struct LintReport {
+    pub total_file_count: u32,
+    pub total_checks: u32,
+    pub report: Vec<LintError>,
+}
 
-    let program_load_time_taken = program_start.elapsed();
+impl Linter {
+    pub fn new(rule: LintRule) -> Self {
+        let elixir_lang: Language = tree_sitter_elixir::language();
 
-    let mut overrides = OverrideBuilder::new("./");
-    overrides.add("**/lib/**/*.{ex,exs}").unwrap();
-    overrides.add("**/test/**/*.{ex,exs}").unwrap();
-    overrides.add("**/config/**/*.{ex,exs}").unwrap();
+        let mut rule_executor = RuleExecutor::new();
+        match rule {
+            LintRule::All => {
+                rule_executor.add_rule(Box::new(NoEnvInMainConfig::new(elixir_lang)));
+                rule_executor.add_rule(Box::new(NoEnvInDevConfig::new(elixir_lang)));
+                rule_executor.add_rule(Box::new(UseImportConfigWithFileExistsChecking::new(
+                    elixir_lang,
+                )));
+            }
+            LintRule::Custom(rules) => rules.iter().for_each(|rule| match rule {
+                AvailableRule::NoEnvInMainConfig => {
+                    rule_executor.add_rule(Box::new(NoEnvInMainConfig::new(elixir_lang)));
+                }
+                AvailableRule::NoEnvInDevConfig => {
+                    rule_executor.add_rule(Box::new(NoEnvInDevConfig::new(elixir_lang)));
+                }
+                AvailableRule::UseImportConfigWithFileExistsChecking => {
+                    rule_executor.add_rule(Box::new(UseImportConfigWithFileExistsChecking::new(
+                        elixir_lang,
+                    )));
+                }
+            }),
+        }
 
-    let mut parse_tree_map = HashMap::new();
-
-    for entry in WalkBuilder::new(path)
-        .overrides(overrides.build().unwrap())
-        .build()
-        .filter_map(|e| e.ok())
-        .filter(|e| e.path().is_file())
-    {
-        count += 1;
-
-        let file_path = entry.path().to_str().unwrap();
-        let src = std::fs::read_to_string(file_path).unwrap();
-        let lint_errors = rule_executor.run(
-            &mut parser,
-            &mut parse_tree_map,
-            src.to_string(),
-            &file_path,
-        );
-
-        lint_errors.iter().for_each(|lint_error| {
-            let mut s = String::new();
-            GraphicalReportHandler::new()
-                .render_report(&mut s, lint_error)
-                .unwrap();
-
-            println!("{s}");
-        });
+        Self {
+            language: elixir_lang,
+            executor: rule_executor,
+        }
     }
 
-    let total_time_taken = program_start.elapsed();
-    let lint_time_taken = total_time_taken - program_load_time_taken;
+    pub fn run(&self, path: &PathBuf) -> LintReport {
+        let mut parser = Parser::new();
+        parser
+            .set_language(self.language)
+            .expect("error loading elixir grammar");
 
-    println!(
-        "Total time taken: {:?} ({:?} to load, {:?} running {} checks)",
-        total_time_taken,
-        program_load_time_taken,
-        lint_time_taken,
-        rule_executor.rules.len(),
-    );
-    println!("Total files: {}", count);
+        let mut count = 0;
+
+        let mut overrides = OverrideBuilder::new(path);
+        overrides.add("**/lib/**/*.{ex,exs}").unwrap();
+        overrides.add("**/test/**/*.{ex,exs}").unwrap();
+        overrides.add("**/config/**/*.{ex,exs}").unwrap();
+
+        let mut parse_tree_map = HashMap::new();
+        let mut all_lint_errors = vec![];
+
+        for entry in WalkBuilder::new(path)
+            .overrides(overrides.build().unwrap())
+            .build()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.path().is_file())
+        {
+            count += 1;
+
+            let file_path = entry.path().to_str().unwrap();
+            let src = std::fs::read_to_string(file_path).unwrap();
+            let lint_errors = self.executor.run(
+                &mut parser,
+                &mut parse_tree_map,
+                src.to_string(),
+                &file_path,
+            );
+
+            all_lint_errors.extend(lint_errors);
+        }
+
+        LintReport {
+            total_file_count: count,
+            total_checks: self.executor.rules.len() as u32,
+            report: all_lint_errors,
+        }
+    }
 }
