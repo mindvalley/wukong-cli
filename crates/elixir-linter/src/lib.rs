@@ -2,13 +2,12 @@ pub mod rules;
 
 use glob::Pattern;
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
-use std::{collections::HashMap, time::Instant};
-
 use miette::{Diagnostic, GraphicalReportHandler, NamedSource, SourceSpan};
 use rules::{
     no_env_in_dev_config::NoEnvInDevConfig, no_env_in_main_config::NoEnvInMainConfig,
     use_import_config_with_file_exists_checking::UseImportConfigWithFileExistsChecking, Rule,
 };
+use std::{collections::HashMap, path::PathBuf, time::Instant};
 use tree_sitter::{Language, Parser, Tree};
 
 #[derive(thiserror::Error, Debug, Diagnostic)]
@@ -93,12 +92,14 @@ impl RuleExecutor {
     }
 }
 
-pub fn run() {
+pub fn run(path: &PathBuf) {
     let program_start = Instant::now();
 
     let elixir_lang: Language = tree_sitter_elixir::language();
     let mut parser = Parser::new();
-    parser.set_language(elixir_lang).unwrap();
+    parser
+        .set_language(elixir_lang)
+        .expect("error loading elixir grammar");
 
     let mut rule_executor = RuleExecutor::new();
     rule_executor.add_rule(Box::new(NoEnvInMainConfig::new(elixir_lang)));
@@ -118,7 +119,7 @@ pub fn run() {
 
     let mut parse_tree_map = HashMap::new();
 
-    for entry in WalkBuilder::new("./")
+    for entry in WalkBuilder::new(path)
         .overrides(overrides.build().unwrap())
         .build()
         .filter_map(|e| e.ok())

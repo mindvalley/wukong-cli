@@ -2,6 +2,7 @@ pub mod application;
 pub mod completion;
 pub mod config;
 pub mod deployment;
+pub mod dev;
 pub mod init;
 pub mod login;
 pub mod pipeline;
@@ -144,6 +145,8 @@ pub enum CommandGroup {
     /// This command group contains the commands to view and interact with the
     /// Continuous Delivery pipeline of an application.
     Deployment(deployment::Deployment),
+    /// This command group contains the commands to interact with the local development environment.
+    Dev(dev::Dev),
     /// This command group contains the commands to view & interact with Wukong's configurations
     Config(config::Config),
     /// Login to start using wukong command
@@ -174,6 +177,7 @@ impl ClapApp {
             CommandGroup::Pipeline(pipeline) => pipeline.handle_command(state).await,
             CommandGroup::Deployment(deployment) => deployment.handle_command(state).await,
             CommandGroup::Config(config) => config.handle_command(),
+            CommandGroup::Dev(dev) => dev.handle_command(),
         }
     }
 }

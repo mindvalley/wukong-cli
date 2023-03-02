@@ -1,5 +1,5 @@
 [package]
-name = "elixir-linter"
+name = "elixir_linter"
 version = "0.1.0"
 edition = "2021"
 
