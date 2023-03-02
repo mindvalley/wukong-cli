@@ -2,9 +2,9 @@ use crate::{error::CliError, loader::new_spinner_progress_bar};
 use elixir_linter::{LintRule, Linter};
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use miette::GraphicalReportHandler;
-use std::{env::current_dir, path::PathBuf, time::Instant};
+use std::{env::current_dir, path::Path, time::Instant};
 
-pub fn handle_config_lint(path: &PathBuf) -> Result<bool, CliError> {
+pub fn handle_config_lint(path: &Path) -> Result<bool, CliError> {
     let start = Instant::now();
 
     let progress_bar = new_spinner_progress_bar();
