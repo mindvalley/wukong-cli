@@ -1,5 +1,5 @@
 use crate::{error::CliError, loader::new_spinner_progress_bar};
-use elixir_linter::{LintError, LintRule, Linter};
+use elixir_linter::{LintRule, Linter};
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use miette::GraphicalReportHandler;
 use rayon::prelude::*;
@@ -30,13 +30,13 @@ pub fn handle_config_lint(path: &Path) -> Result<bool, CliError> {
         Err(_) => todo!(),
     };
 
-    let mut linter = Linter::new(LintRule::All);
+    let linter = Linter::new(LintRule::All);
 
     let load_time_taken = start.elapsed();
 
     let mut overrides = OverrideBuilder::new(&lint_path);
-    overrides.add("**/lib/**/*.{ex,exs}").unwrap();
-    overrides.add("**/test/**/*.{ex,exs}").unwrap();
+    // overrides.add("**/lib/**/*.{ex,exs}").unwrap();
+    // overrides.add("**/test/**/*.{ex,exs}").unwrap();
     overrides.add("**/config/**/*.{ex,exs}").unwrap();
 
     let mut all_lint_errors = vec![];
@@ -50,20 +50,6 @@ pub fn handle_config_lint(path: &Path) -> Result<bool, CliError> {
         .collect();
 
     all_lint_errors.par_extend(available_files.par_iter().flat_map(|file| linter.run(file)));
-    // all_lint_errors.extend(available_files.iter().flat_map(|file| linter.run(file)));
-
-    // for entry in WalkBuilder::new(&lint_path)
-    //     .overrides(overrides.build().unwrap())
-    //     .build()
-    //     .filter_map(|e| e.ok())
-    //     .filter(|e| e.path().is_file())
-    // {
-    //     count += 1;
-    //
-    //     let lint_error = linter.run(&entry.path().to_path_buf());
-    //
-    //     all_lint_errors.extend(lint_error);
-    // }
 
     let lint_time_taken = start.elapsed() - load_time_taken;
 

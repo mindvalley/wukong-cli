@@ -6,8 +6,8 @@ use rules::{
     no_env_in_dev_config::NoEnvInDevConfig, no_env_in_main_config::NoEnvInMainConfig,
     use_import_config_with_file_exists_checking::UseImportConfigWithFileExistsChecking, Rule,
 };
-use std::{collections::HashMap, path::PathBuf};
-use tree_sitter::{Language, Parser, Tree};
+use std::path::PathBuf;
+use tree_sitter::{Language, Parser};
 
 #[derive(thiserror::Error, Debug, Diagnostic)]
 #[error("{name}")]
@@ -44,7 +44,7 @@ impl RuleExecutor {
         let checks = self
             .rules
             .iter()
-            // .filter(|rule| Pattern::new(rule.glob()).unwrap().matches(file_path))
+            .filter(|rule| Pattern::new(rule.glob()).unwrap().matches(file_path))
             .collect::<Vec<&Box<dyn Rule>>>();
 
         let mut lint_errors: Vec<LintError> = vec![];
