@@ -67,6 +67,7 @@ chrono-tz = "0.8.1"
 elixir_linter = { path = "crates/elixir-linter" }
 miette = { version = "5.5.0", features = ["fancy"] }
 ignore = "0.4.20"
+rayon = "1.6.1"
 
 [dev-dependencies]
 httpmock = "0.6.6"

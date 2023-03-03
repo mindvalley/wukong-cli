@@ -4005,6 +4005,7 @@ dependencies = [
  "openidconnect",
  "openssl",
  "owo-colors",
+ "rayon",
  "regex",
  "reqwest",
  "rexpect",

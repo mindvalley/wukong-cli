@@ -40,31 +40,25 @@ impl RuleExecutor {
         self
     }
 
-    pub fn run(
-        &self,
-        parser: &mut Parser,
-        parse_tree_map: &mut HashMap<String, Tree>,
-        src: String,
-        file_path: &str,
-    ) -> Vec<LintError> {
-        let lint_errors: Vec<LintError> = self
+    pub fn run(&self, parser: &mut Parser, src: String, file_path: &str) -> Vec<LintError> {
+        let checks = self
             .rules
             .iter()
-            .filter(|rule| Pattern::new(rule.glob()).unwrap().matches(file_path))
-            .map(|rule| {
-                // cache the parse tree
-                let parse_tree = match parse_tree_map.get(file_path) {
-                    Some(tree) => tree,
-                    None => {
-                        let parse_tree = parser.parse(&src, None).unwrap();
-                        parse_tree_map.insert(file_path.to_string(), parse_tree);
-                        parse_tree_map.get(file_path).unwrap()
-                    }
-                };
-                rule.run(&parse_tree, src.clone(), file_path)
-            })
-            .flatten()
-            .collect();
+            // .filter(|rule| Pattern::new(rule.glob()).unwrap().matches(file_path))
+            .collect::<Vec<&Box<dyn Rule>>>();
+
+        let mut lint_errors: Vec<LintError> = vec![];
+
+        // we only parse the file if there are rules that need to be checked
+        // and the file is only parsed once
+        if !checks.is_empty() {
+            let parse_tree = parser.parse(&src, None).unwrap();
+            lint_errors = checks
+                .iter()
+                .map(|rule| rule.run(&parse_tree, src.clone(), file_path))
+                .flatten()
+                .collect();
+        }
 
         lint_errors
     }
@@ -82,8 +76,6 @@ pub enum AvailableRule {
 }
 
 pub struct Linter {
-    parser: Parser,
-    parse_tree_map: HashMap<String, Tree>,
     executor: RuleExecutor,
 }
 
@@ -95,8 +87,6 @@ impl Linter {
         parser
             .set_language(elixir_lang)
             .expect("error loading elixir grammar");
-
-        let parse_tree_map = HashMap::new();
 
         let mut rule_executor = RuleExecutor::new();
         match rule {
@@ -123,18 +113,22 @@ impl Linter {
         }
 
         Self {
-            parser,
-            parse_tree_map,
             executor: rule_executor,
         }
     }
 
-    pub fn run(&mut self, path: &PathBuf) -> Vec<LintError> {
+    pub fn run(&self, path: &PathBuf) -> Vec<LintError> {
+        let elixir_lang: Language = tree_sitter_elixir::language();
+
+        let mut parser = Parser::new();
+        parser
+            .set_language(elixir_lang)
+            .expect("error loading elixir grammar");
+
         let mut output = vec![];
         if let Ok(true) = path.try_exists() {
             output = self.executor.run(
-                &mut self.parser,
-                &mut self.parse_tree_map,
+                &mut parser,
                 std::fs::read_to_string(path).unwrap(),
                 path.to_str().unwrap(),
             )

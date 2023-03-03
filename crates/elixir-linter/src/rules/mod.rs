@@ -36,7 +36,7 @@ impl RuleMetadata {
     }
 }
 
-pub trait Rule {
+pub trait Rule: Send + Sync {
     fn name(&self) -> &'static str;
     fn glob(&self) -> &'static str;
     fn explain(&self) -> &'static str;
