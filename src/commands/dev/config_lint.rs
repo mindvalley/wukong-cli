@@ -59,7 +59,6 @@ pub fn handle_config_lint(path: &Path) -> Result<bool, CliError> {
 
     all_lint_errors.iter().for_each(|lint_error| {
         let mut s = String::new();
-        println!("{:?}", lint_error.severity());
 
         GraphicalReportHandler::new()
             .render_report(&mut s, lint_error)
