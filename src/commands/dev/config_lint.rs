@@ -1,7 +1,7 @@
 use crate::{error::CliError, loader::new_spinner_progress_bar};
 use elixir_linter::{LintRule, Linter};
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
-use miette::GraphicalReportHandler;
+use miette::{Diagnostic, GraphicalReportHandler};
 use rayon::prelude::*;
 use std::{
     env::current_dir,
@@ -55,6 +55,8 @@ pub fn handle_config_lint(path: &Path) -> Result<bool, CliError> {
 
     all_lint_errors.iter().for_each(|lint_error| {
         let mut s = String::new();
+        println!("{:?}", lint_error.severity());
+
         GraphicalReportHandler::new()
             .render_report(&mut s, lint_error)
             .unwrap();

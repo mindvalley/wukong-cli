@@ -86,8 +86,8 @@ impl Rule for UseImportConfigWithFileExistsChecking {
             .unwrap();
         let match_idx = self.query().capture_index_for_name("match").unwrap();
 
-        let matches = all_matches
-            .map(|each| {
+        all_matches
+            .flat_map(|each| {
                 each.captures
                     .iter()
                     .filter(|capture| {
@@ -98,17 +98,11 @@ impl Rule for UseImportConfigWithFileExistsChecking {
                     .filter(|capture| {
                         if capture.index == match_idx {
                             if let Some(parent) = capture.node.parent() {
-                                if parent.kind() == "source" {
-                                    return true;
-                                } else {
-                                    return false;
-                                }
-                            } else {
-                                return true;
+                                return parent.kind() == "source";
                             }
-                        } else {
-                            return true;
                         }
+
+                        true
                     })
                     .map(|capture| {
                         let range = capture.node.range();
@@ -138,9 +132,84 @@ impl Rule for UseImportConfigWithFileExistsChecking {
                     })
                     .collect::<Vec<_>>()
             })
-            .flatten()
-            .collect::<Vec<LintError>>();
+            .collect::<Vec<LintError>>()
+    }
+}
 
-        matches
+#[cfg(test)]
+mod test {
+    use super::*;
+    use glob::Pattern;
+    use tree_sitter::Parser;
+
+    #[test]
+    fn test_lint_check() {
+        let source = r#"
+use Mix.Config
+
+System.get_env("API_KEY")
+System.fetch_env("API_SECRET")
+System.fetch_env!("API_TOKEN")
+
+# invalid
+import_config "config/dev.exs"
+
+# valid
+if File.exists?("config/dev.exs") do
+  import_config "config/dev.exs"
+end
+
+# invalid
+if File.exists?("config/a.exs") do
+  import_config "config/b.exs"
+end
+
+# valid
+File.exists?("config/dev.exs") && import_config "config/dev.exs"
+# invalid
+File.exists?("config/a.exs") && import_config "config/b.exs"
+
+test_domain = System.get_env("TEST_DOMAIN", "mv.test.com")
+
+# Use Jason for JSON parsing in Phoenix
+config :phoenix, :json_library, Jason
+        "#;
+
+        let elixir_lang = tree_sitter_elixir::language();
+        let mut parser = Parser::new();
+        parser
+            .set_language(elixir_lang)
+            .expect("error loading elixir grammar");
+        let parse_tree = parser.parse(&source, None).unwrap();
+        let rule = UseImportConfigWithFileExistsChecking::new(elixir_lang);
+        let lint_result = rule.run(&parse_tree, source.to_string(), "config/dev.exs");
+
+        assert_eq!(lint_result.len(), 3);
+    }
+
+    #[test]
+    fn test_glob() {
+        let valid = vec![
+            "config/dev.exs",
+            "./config/dev.exs",
+            "path/to/config/dev.exs",
+            "path/to/config/to/config/dev.exs",
+        ];
+        let invalid = vec![
+            "config/config.exs",
+            "lib/config.ex",
+            "path/to/config/test.exs",
+        ];
+
+        let elixir_lang = tree_sitter_elixir::language();
+        let rule = UseImportConfigWithFileExistsChecking::new(elixir_lang);
+        let pattern = Pattern::new(rule.glob()).unwrap();
+
+        valid.iter().for_each(|each| {
+            assert!(pattern.matches(each));
+        });
+        invalid.iter().for_each(|each| {
+            assert!(!pattern.matches(each));
+        });
     }
 }

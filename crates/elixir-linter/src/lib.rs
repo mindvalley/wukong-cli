@@ -30,6 +30,12 @@ pub struct RuleExecutor {
     rules: Vec<Box<dyn Rule>>,
 }
 
+impl Default for RuleExecutor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RuleExecutor {
     pub fn new() -> Self {
         Self { rules: vec![] }
@@ -55,8 +61,7 @@ impl RuleExecutor {
             let parse_tree = parser.parse(&src, None).unwrap();
             lint_errors = checks
                 .iter()
-                .map(|rule| rule.run(&parse_tree, src.clone(), file_path))
-                .flatten()
+                .flat_map(|rule| rule.run(&parse_tree, src.clone(), file_path))
                 .collect();
         }
 
@@ -82,11 +87,6 @@ pub struct Linter {
 impl Linter {
     pub fn new(rule: LintRule) -> Self {
         let elixir_lang: Language = tree_sitter_elixir::language();
-
-        let mut parser = Parser::new();
-        parser
-            .set_language(elixir_lang)
-            .expect("error loading elixir grammar");
 
         let mut rule_executor = RuleExecutor::new();
         match rule {

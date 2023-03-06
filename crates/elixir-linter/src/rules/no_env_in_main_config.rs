@@ -58,7 +58,7 @@ impl Rule for NoEnvInMainConfig {
         let match_idx = self.query().capture_index_for_name("match").unwrap();
 
         all_matches
-            .map(|each_match| {
+            .flat_map(|each_match| {
                 each_match
                     .captures
                     .iter()
@@ -91,7 +91,62 @@ impl Rule for NoEnvInMainConfig {
                     })
                     .collect::<Vec<LintError>>()
             })
-            .flatten()
             .collect()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use glob::Pattern;
+    use tree_sitter::Parser;
+
+    #[test]
+    fn test_lint_check() {
+        let source = r#"
+use Mix.Config
+
+System.get_env("API_KEY")
+System.fetch_env("API_SECRET")
+System.fetch_env!("API_TOKEN")
+
+test_domain = System.get_env("TEST_DOMAIN", "mv.test.com")
+
+# Use Jason for JSON parsing in Phoenix
+config :phoenix, :json_library, Jason
+        "#;
+
+        let elixir_lang = tree_sitter_elixir::language();
+        let mut parser = Parser::new();
+        parser
+            .set_language(elixir_lang)
+            .expect("error loading elixir grammar");
+        let parse_tree = parser.parse(&source, None).unwrap();
+        let rule = NoEnvInMainConfig::new(elixir_lang);
+        let lint_result = rule.run(&parse_tree, source.to_string(), "config/config.exs");
+
+        assert_eq!(lint_result.len(), 4);
+    }
+
+    #[test]
+    fn test_glob() {
+        let valid = vec![
+            "config/config.exs",
+            "./config/config.exs",
+            "path/to/config/config.exs",
+            "path/to/config/to/config/config.exs",
+        ];
+        let invalid = vec!["config/dev.exs", "lib/config.ex", "path/to/config/test.exs"];
+
+        let elixir_lang = tree_sitter_elixir::language();
+        let rule = NoEnvInMainConfig::new(elixir_lang);
+        let pattern = Pattern::new(rule.glob()).unwrap();
+
+        valid.iter().for_each(|each| {
+            assert!(pattern.matches(each));
+        });
+        invalid.iter().for_each(|each| {
+            assert!(!pattern.matches(each));
+        });
     }
 }
