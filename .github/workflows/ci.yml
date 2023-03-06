@@ -20,12 +20,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
-          toolchain: stable
           components: rustfmt, clippy
-          override: true
 
       - name: Check formatting
         uses: actions-rs/cargo@v1
@@ -94,42 +91,3 @@ jobs:
           use-cross: ${{ matrix.job.use-cross }}
           command: build
           args: --locked --features prod --release --target=${{ matrix.job.target }}
-
-      # for testing
-      - name: Create tarball
-        id: package
-        shell: bash
-        run: |
-          PKG_suffix=".tar.gz" ; case ${{ matrix.job.target }} in *-pc-windows-*) PKG_suffix=".zip" ;; esac;
-          PKG_BASENAME=${PROJECT_NAME}-v${{ needs.tag-name.outputs.wukong_version }}-${{ matrix.job.name }}
-          PKG_NAME=${PKG_BASENAME}${PKG_suffix}
-          echo ::set-output name=PKG_NAME::${PKG_NAME}
-          BIN_NAME="${{ env.PROJECT_NAME }}"
-          PKG_STAGING="${{ env.CICD_INTERMEDIATES_DIR }}/package"
-          ARCHIVE_DIR="${PKG_STAGING}/${PKG_BASENAME}/"
-
-          mkdir -p "${ARCHIVE_DIR}"
-          mkdir -p "${ARCHIVE_DIR}/completions"
-
-          # Binary
-          cp "target/${{ matrix.job.target }}/release/${BIN_NAME}" "$ARCHIVE_DIR"
-
-          # Completions
-          cp -r completions/{bash,fish,zsh} "$ARCHIVE_DIR/completions"
-
-          # base compressed package
-          pushd "${PKG_STAGING}/" >/dev/null
-          case ${{ matrix.job.target }} in
-            *-pc-windows-*) 7z -y a "${PKG_NAME}" "${PKG_BASENAME}"/* | tail -2 ;;
-            *) tar czf "${PKG_NAME}" "${PKG_BASENAME}"/* ;;
-          esac;
-          popd >/dev/null
-          # Let subsequent steps know where to find the compressed package
-          echo ::set-output name=PKG_PATH::"${PKG_STAGING}/${PKG_NAME}"
-
-      - name: "Artifact upload: tarball"
-        uses: actions/upload-artifact@master
-        with:
-          name: ${{ steps.package.outputs.PKG_NAME }}
-          path: ${{ steps.package.outputs.PKG_PATH }}
-          retention-days: 1
