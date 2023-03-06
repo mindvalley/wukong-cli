@@ -33,8 +33,8 @@ jobs:
       matrix:
         rust: [ stable ]
         job:
-          - { name: "macOS-arm",          target: aarch64-apple-darwin          , os: ubuntu-22.04                    }
-          - { name: "macOS-x86",          target: x86_64-apple-darwin           , os: ubuntu-22.04                    }
+          - { name: "macOS-arm",          target: aarch64-apple-darwin          , os: macos-latest                    }
+          - { name: "macOS-x86",          target: x86_64-apple-darwin           , os: macos-latest                    }
           - { name: "linux-x86",          target: x86_64-unknown-linux-gnu      , os: ubuntu-22.04,   use-cross: true }
           - { name: "linux-x86-musl",     target: x86_64-unknown-linux-musl     , os: ubuntu-22.04,   use-cross: true }
     runs-on: ${{ matrix.job.os }}
@@ -67,26 +67,6 @@ jobs:
           case ${{ matrix.job.target }} in
             arm-unknown-linux-*) sudo apt-get -y update ; sudo apt-get -y install gcc-arm-linux-gnueabihf ;;
             aarch64-unknown-linux-gnu) sudo apt-get -y update ; sudo apt-get -y install gcc-aarch64-linux-gnu ;;
-          esac
-
-      - name: Set env
-        shell: bash
-        run: | 
-          case ${{ matrix.job.target }} in
-            aarch64-apple-darwin) 
-              LINKER_FILE="aarch64-apple-darwin21.4-clang"
-              AR_FILE="aarch64-apple-darwin21.4-ar"
-              echo "CARGO_TARGET_AARCH64_APPLE_DARWIN_LINKER=${LINKER_FILE}" >> $GITHUB_ENV
-              echo "CARGO_TARGET_AARCH64_APPLE_DARWIN_RUSTFLAGS=-Car=${AR_FILE},-Clink-arg=-undefined,-Clink-arg=dynamic_lookup" >> $GITHUB_ENV
-              echo "TARGET_CC=${LINKER_FILE}" >> $GITHUB_ENV
-              echo "TARGET_AR=${AR_FILE}" >> $GITHUB_ENV
-              ;;
-            x86_64-apple-darwin) 
-              LINKER_FILE="x86_64-apple-darwin21.4-clang"
-              AR_FILE="x86_64-apple-darwin21.4-ar"
-              echo "TARGET_CC=${LINKER_FILE}" >> $GITHUB_ENV
-              echo "TARGET_AR=${AR_FILE}" >> $GITHUB_ENV
-              ;;
           esac
 
       - name: Extract crate information
