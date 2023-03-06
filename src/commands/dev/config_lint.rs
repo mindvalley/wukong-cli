@@ -1,6 +1,7 @@
-use crate::{error::CliError, loader::new_spinner_progress_bar};
+use crate::{error::CliError, loader::new_progress_bar};
 use elixir_linter::{LintRule, Linter};
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
+use indicatif::ParallelProgressIterator;
 use miette::{Diagnostic, GraphicalReportHandler};
 use rayon::prelude::*;
 use std::{
@@ -11,9 +12,6 @@ use std::{
 
 pub fn handle_config_lint(path: &Path) -> Result<bool, CliError> {
     let start = Instant::now();
-
-    let progress_bar = new_spinner_progress_bar();
-    progress_bar.set_message("Linting ... ");
 
     let lint_path = match path.try_exists() {
         Ok(true) => {
@@ -35,8 +33,6 @@ pub fn handle_config_lint(path: &Path) -> Result<bool, CliError> {
     let load_time_taken = start.elapsed();
 
     let mut overrides = OverrideBuilder::new(&lint_path);
-    // overrides.add("**/lib/**/*.{ex,exs}").unwrap();
-    // overrides.add("**/test/**/*.{ex,exs}").unwrap();
     overrides.add("**/config/**/*.{ex,exs}").unwrap();
 
     let mut all_lint_errors = vec![];
@@ -49,7 +45,15 @@ pub fn handle_config_lint(path: &Path) -> Result<bool, CliError> {
         .map(|e| e.path().to_path_buf())
         .collect();
 
-    all_lint_errors.par_extend(available_files.par_iter().flat_map(|file| linter.run(file)));
+    let progress_bar = new_progress_bar(available_files.len() as u64);
+    progress_bar.set_message("Linting ... ");
+
+    all_lint_errors.par_extend(
+        available_files
+            .par_iter()
+            .progress_with(progress_bar)
+            .flat_map(|file| linter.run(file)),
+    );
 
     let lint_time_taken = start.elapsed() - load_time_taken;
 
@@ -72,5 +76,9 @@ pub fn handle_config_lint(path: &Path) -> Result<bool, CliError> {
     );
     eprintln!("Total files: {}", available_files.len());
 
-    Ok(true)
+    if all_lint_errors.is_empty() {
+        Ok(true)
+    } else {
+        Ok(false)
+    }
 }

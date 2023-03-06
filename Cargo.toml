@@ -20,7 +20,7 @@ harness = false
 clap = { version = "4", features = ["derive", "wrap_help", "cargo"] }
 clap_complete = { version = "4" }
 dirs = "4.0"
-indicatif = "0.17.0"
+indicatif = { version = "0.17.0", features = ["rayon"] }
 tabled = { version = "0.10.0", features = ["color"] }
 dialoguer = "0.10.1"
 
