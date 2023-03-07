@@ -13,6 +13,9 @@ fn test_wukong_dev_help() {
     insta::assert_snapshot!(std::str::from_utf8(&output.stdout).unwrap());
 }
 
+// FIXME: the test is using temporary directory to create config files, but the
+//       temporary directory name will be different for each test run, so the
+//       snapshot will be different for each test run.
 // #[test]
 // fn test_wukong_dev_config_lint_success() {
 //     let temp = assert_fs::TempDir::new().unwrap();
