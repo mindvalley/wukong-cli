@@ -2,7 +2,7 @@ use crate::{error::CliError, loader::new_progress_bar};
 use elixir_linter::{LintRule, Linter};
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use indicatif::ParallelProgressIterator;
-use miette::{Diagnostic, GraphicalReportHandler};
+use miette::GraphicalReportHandler;
 use rayon::prelude::*;
 use std::{
     env::current_dir,
