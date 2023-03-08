@@ -4017,6 +4017,8 @@ dependencies = [
  "time-humanize",
  "tokio",
  "toml 0.7.2",
+ "tree-sitter",
+ "tree-sitter-elixir",
  "url",
  "webbrowser",
  "wukong_telemetry_macro",
