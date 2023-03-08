@@ -28,6 +28,9 @@ _wukong() {
             wukong,deployment)
                 cmd="wukong__deployment"
                 ;;
+            wukong,dev)
+                cmd="wukong__dev"
+                ;;
             wukong,help)
                 cmd="wukong__help"
                 ;;
@@ -100,6 +103,18 @@ _wukong() {
             wukong__deployment__help,rollback)
                 cmd="wukong__deployment__help__rollback"
                 ;;
+            wukong__dev,config-lint)
+                cmd="wukong__dev__config__lint"
+                ;;
+            wukong__dev,help)
+                cmd="wukong__dev__help"
+                ;;
+            wukong__dev__help,config-lint)
+                cmd="wukong__dev__help__config__lint"
+                ;;
+            wukong__dev__help,help)
+                cmd="wukong__dev__help__help"
+                ;;
             wukong__help,application)
                 cmd="wukong__help__application"
                 ;;
@@ -111,6 +126,9 @@ _wukong() {
                 ;;
             wukong__help,deployment)
                 cmd="wukong__help__deployment"
+                ;;
+            wukong__help,dev)
+                cmd="wukong__help__dev"
                 ;;
             wukong__help,help)
                 cmd="wukong__help__help"
@@ -144,6 +162,9 @@ _wukong() {
                 ;;
             wukong__help__deployment,rollback)
                 cmd="wukong__help__deployment__rollback"
+                ;;
+            wukong__help__dev,config-lint)
+                cmd="wukong__help__dev__config__lint"
                 ;;
             wukong__help__pipeline,ci-status)
                 cmd="wukong__help__pipeline__ci__status"
@@ -185,7 +206,7 @@ _wukong() {
 
     case "${cmd}" in
         wukong)
-            opts="-a -v -q -h -V --application --verbose --quiet --help --version init application pipeline deployment config login completion help"
+            opts="-a -v -q -h -V --application --verbose --quiet --help --version init application pipeline deployment dev config login completion help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -650,8 +671,94 @@ _wukong() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
+        wukong__dev)
+            opts="-a -v -q -h --application --verbose --quiet --help config-lint help"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                --application)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                -a)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__dev__config__lint)
+            opts="-a -v -q -h --application --verbose --quiet --help [PATH]"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                --application)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                -a)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__dev__help)
+            opts="config-lint help"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__dev__help__config__lint)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__dev__help__help)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
         wukong__help)
-            opts="init application pipeline deployment config login completion help"
+            opts="init application pipeline deployment dev config login completion help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -805,6 +912,34 @@ _wukong() {
             return 0
             ;;
         wukong__help__deployment__rollback)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__help__dev)
+            opts="config-lint"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__help__dev__config__lint)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
