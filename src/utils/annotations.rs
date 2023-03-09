@@ -2,6 +2,8 @@ use tree_sitter::{Parser, Query, QueryCursor};
 
 #[allow(dead_code)]
 pub fn read_vault_annotation(src: &str) -> Vec<(&str, &str)> {
+    // the annotation patter -> wukong.mindvalley.dev/config-secrets-location: vault:secret/path/to/secret#secret_key
+
     let elixir_lang = tree_sitter_elixir::language();
     let mut parser = Parser::new();
     parser.set_language(elixir_lang).unwrap();
@@ -38,7 +40,7 @@ pub fn read_vault_annotation(src: &str) -> Vec<(&str, &str)> {
     ]
     (#eq? @file_checking "File.exists?")
     (#match? @identifier "import_config|import_config!")
-    (#match? @comment "\# wukong.mindvalley.dev/config-secrets-location:")
+    (#match? @comment "wukong.mindvalley.dev/config-secrets-location:")
 )
         "#,
     )
