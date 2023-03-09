@@ -24,18 +24,25 @@ enum BuildSelectionLayout {
 struct TwoColumns {
     left: String,
     right: Vec<String>,
+    left_width: usize,
 }
 
 impl Display for TwoColumns {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.right.is_empty() {
-            write!(f, "{0: <13}", self.left)?;
+            write!(f, "{0: <width$}", self.left, width = self.left_width)?;
         } else {
             for (i, value) in self.right.iter().enumerate() {
                 if i == 0 {
-                    write!(f, "{0: <13} {1}", self.left, value)?;
+                    write!(
+                        f,
+                        "{0: <width$} {1}",
+                        self.left,
+                        value,
+                        width = self.left_width
+                    )?;
                 } else {
-                    write!(f, "  {0: <13} {1}", "", value)?;
+                    write!(f, "  {0: <width$} {1}", "", value, width = self.left_width)?;
                 }
                 if i != (self.right.len() - 1) {
                     writeln!(f)?;
@@ -52,18 +59,39 @@ struct ThreeColumns {
     left: String,
     middle: String,
     right: Vec<String>,
+    left_width: usize,
 }
 
 impl Display for ThreeColumns {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.right.is_empty() {
-            write!(f, "{0: <12} {1: <10}", self.left, self.middle)?;
+            write!(
+                f,
+                "{0: <width$} {1: <1}",
+                self.left,
+                self.middle,
+                width = self.left_width
+            )?;
         } else {
             for (i, value) in self.right.iter().enumerate() {
                 if i == 0 {
-                    write!(f, "{0: <12} {1: <10} {2}", self.left, self.middle, value)?;
+                    write!(
+                        f,
+                        "{0: <width$} {1: <1} {2}",
+                        self.left,
+                        self.middle,
+                        value,
+                        width = self.left_width
+                    )?;
                 } else {
-                    write!(f, "  {0: <12} {1: <10} {2}", "", "", value)?;
+                    write!(
+                        f,
+                        "  {0: <width$} {1: <1} {2}",
+                        "",
+                        "",
+                        value,
+                        width = self.left_width
+                    )?;
                 }
                 if i != (self.right.len() - 1) {
                     writeln!(f)?;
@@ -361,7 +389,8 @@ pub async fn handle_execute(
                     &cd_pipeline.last_successfully_deployed_artifact
                 {
                     if build_artifact.contains("-build-") {
-                        let build_selection: Vec<ThreeColumns> = cd_pipeline
+                        let mut width = 0;
+                        let mut build_selection: Vec<ThreeColumns> = cd_pipeline
                             .jenkins_builds
                             .iter()
                             .map(|build| {
@@ -371,21 +400,32 @@ pub async fn handle_execute(
                                     .map(|commit| commit.message_headline.clone())
                                     .collect();
 
-                                if *build_artifact == build.build_artifact_name {
+                                let build_artifact_name = build.build_artifact_name.clone();
+                                if build_artifact_name.len() > width {
+                                    width = build_artifact_name.len();
+                                }
+
+                                if *build_artifact == build_artifact_name {
                                     ThreeColumns {
-                                        left: build.build_artifact_name.clone(),
-                                        middle: "(current)".to_string(),
+                                        left: build_artifact_name,
+                                        middle: "*".to_string(),
                                         right: commits,
+                                        left_width: 0,
                                     }
                                 } else {
                                     ThreeColumns {
-                                        left: build.build_artifact_name.clone(),
+                                        left: build_artifact_name,
                                         middle: "".to_string(),
                                         right: commits,
+                                        left_width: 0,
                                     }
                                 }
                             })
                             .collect();
+
+                        build_selection.iter_mut().for_each(|build| {
+                            build.left_width = width;
+                        });
 
                         BuildSelectionLayout::ThreeColumns {
                             data: build_selection,
@@ -416,7 +456,7 @@ pub async fn handle_execute(
                     BuildSelectionLayout::ThreeColumns { data } => {
                         Select::with_theme(&ColorfulTheme::default())
                             .with_prompt(
-                                "Step 3: Please choose the build artifact you want to deploy",
+                                "Step 3: Please choose the build artifact you want to deploy (* is the current deployed build)",
                             )
                             .default(0)
                             .items(&data[..])
@@ -569,7 +609,9 @@ pub async fn handle_execute(
 }
 
 fn generate_two_columns_build_selection(cd_pipeline: &CdPipelineWithBuilds) -> Vec<TwoColumns> {
-    cd_pipeline
+    let mut width = 0;
+
+    let mut two_columns: Vec<TwoColumns> = cd_pipeline
         .jenkins_builds
         .iter()
         .map(|build| {
@@ -579,10 +621,21 @@ fn generate_two_columns_build_selection(cd_pipeline: &CdPipelineWithBuilds) -> V
                 .map(|commit| commit.message_headline.clone())
                 .collect();
 
+            let build_artifact_name = build.build_artifact_name.clone();
+            if build_artifact_name.len() > width {
+                width = build_artifact_name.len();
+            }
+
             TwoColumns {
-                left: format!("build-{}", build.build_number),
+                left: build_artifact_name,
                 right: commits,
+                left_width: 0,
             }
         })
-        .collect()
+        .collect();
+
+    two_columns
+        .iter_mut()
+        .for_each(|each| each.left_width = width);
+    two_columns
 }
