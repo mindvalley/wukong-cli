@@ -109,7 +109,7 @@ mod test {
     # wukong.mindvalley.dev/config-secrets-location: vault:secret/xyz/development#test.secrets.exs
     import_config("test.secrets.exs")
 
-    # wukong.mindvalley.dev/config-secrets-location: vault:secret/abc/development#prod.secrets.exs
+    #wukong.mindvalley.dev/config-secrets-location: vault:secret/abc/development#prod.secrets.exs
 
     import_config("prod.secrets.exs")
 
@@ -128,7 +128,7 @@ mod test {
         assert_eq!(annotations[3].1, "aaa.secrets.exs");
         assert_eq!(annotations[4].0, "# wukong.mindvalley.dev/config-secrets-location: vault:secret/xyz/development#test.secrets.exs");
         assert_eq!(annotations[4].1, "test.secrets.exs");
-        assert_eq!(annotations[5].0, "# wukong.mindvalley.dev/config-secrets-location: vault:secret/abc/development#prod.secrets.exs");
+        assert_eq!(annotations[5].0, "#wukong.mindvalley.dev/config-secrets-location: vault:secret/abc/development#prod.secrets.exs");
         assert_eq!(annotations[5].1, "prod.secrets.exs");
     }
 }
