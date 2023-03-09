@@ -40,7 +40,7 @@ pub fn read_vault_annotation(src: &str) -> Vec<(&str, &str)> {
     ]
     (#eq? @file_checking "File.exists?")
     (#match? @identifier "import_config|import_config!")
-    (#match? @comment "wukong.mindvalley.dev/config-secrets-location:")
+    (#match? @comment "\#( )*wukong.mindvalley.dev/config-secrets-location:")
 )
         "#,
     )
@@ -113,6 +113,7 @@ mod test {
 
     import_config("prod.secrets.exs")
 
+    # you can use wukong.mindvalley.dev/config-secrets-location: vault:secret/location to annotate the secret path
     import_config("not_match_2.secrets.exs")
     "#;
 
