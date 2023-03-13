@@ -554,7 +554,6 @@ pub async fn handle_execute(
         // remove all comments
         let cleaned_changelog = edited
             .split('\n')
-            .into_iter()
             .filter(|each| !each.starts_with("<!--"))
             .collect::<Vec<&str>>()
             .join("\n");
