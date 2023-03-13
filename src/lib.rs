@@ -8,6 +8,7 @@ mod loader;
 mod logger;
 pub mod output;
 mod telemetry;
+mod utils;
 
 use app::App;
 use config::{Config, CONFIG_FILE};
