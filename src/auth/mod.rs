@@ -1,5 +1,6 @@
 use crate::error::CliError;
 use chrono::{Duration, Utc};
+use log::debug;
 use openidconnect::{
     core::{
         CoreClient, CoreIdTokenClaims, CoreIdTokenVerifier, CoreProviderMetadata, CoreResponseType,
@@ -226,8 +227,11 @@ impl Auth {
             .exchange_refresh_token(refresh_token)
             .request_async(async_http_client)
             .await
-            .map_err(|_err| CliError::AuthError {
-                message: "Failed to contact token endpoint",
+            .map_err(|err| {
+                debug!("Error when refreshing token: {}", err);
+                CliError::AuthError {
+                    message: "Failed to contact token endpoint",
+                }
             })?;
 
         let id_token = token_response
