@@ -1273,5 +1273,9 @@ _wukong__help__config__set_commands() {
     _describe -t commands 'wukong help config set commands' commands "$@"
 }
 
-_wukong "$@"
+if [ "$funcstack[1]" = "_wukong" ]; then
+    _wukong "$@"
+else
+    compdef _wukong wukong
+fi
 
