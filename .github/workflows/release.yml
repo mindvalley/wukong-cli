@@ -51,12 +51,6 @@ jobs:
           target: ${{ matrix.job.target }}
           components: rustfmt, clippy
 
-      - name: Install macOS packages
-        uses: mbround18/setup-osxcross@v1
-        if: contains(matrix.job.target, 'apple-darwin')
-        with:
-          osx-version: "12.3"
-
       - name: Install Linux packages
         if: contains(matrix.job.target, 'linux')
         shell: bash
