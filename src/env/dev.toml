@@ -5,3 +5,6 @@ url = "http://localhost:4000/api"
 
 [okta]
 client_id = "0oakfxaegyAV5JDD5357"
+
+[vault]
+client_id = "0oakfxaegyAV5JDD5357"
