@@ -7,6 +7,7 @@ use crate::{
 };
 use chrono::{DateTime, Local};
 use dialoguer::{theme::ColorfulTheme, Select};
+use log::debug;
 use openidconnect::RefreshToken;
 
 pub async fn handle_init() -> Result<bool, CliError> {
@@ -66,6 +67,8 @@ pub async fn handle_init() -> Result<bool, CliError> {
             .with_timezone(&Local);
 
         if local >= expiry {
+            debug!("Access token expired. Refreshing tokens...");
+
             let new_tokens = Auth::new(&config.core.okta_client_id)
                 .refresh_tokens(&RefreshToken::new(auth_config.refresh_token.clone()))
                 .await?;

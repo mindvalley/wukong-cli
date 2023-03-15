@@ -51,6 +51,8 @@ impl Context {
             .with_timezone(&Local);
 
         if local >= expiry {
+            debug!("Access token expired. Refreshing tokens...");
+
             let new_tokens = Auth::new(&config.core.okta_client_id)
                 .refresh_tokens(&RefreshToken::new(auth_config.refresh_token.clone()))
                 .await?;
