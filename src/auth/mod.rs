@@ -228,7 +228,7 @@ impl Auth {
             .request_async(async_http_client)
             .await
             .map_err(|err| {
-                debug!("Error when refreshing token: {}", err);
+                debug!("Error when refreshing token: {:?}", err);
                 CliError::AuthError {
                     message: "Failed to contact token endpoint",
                 }
