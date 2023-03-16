@@ -5,6 +5,3 @@ url = ""
 
 [okta]
 client_id = ""
-
-[vault]
-client_id = ""
