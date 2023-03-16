@@ -20,7 +20,7 @@ pub async fn handle_list(context: Context) -> Result<bool, CliError> {
         .id_token;
 
     // Call the vault client:
-    let client = Vault::new(Some(&api_key)).handle_login().await?;
+    let _client = Vault::new(Some(&api_key)).handle_login().await?;
 
     progress_bar.finish_and_clear();
 
