@@ -1,7 +1,7 @@
 use crate::{
     commands::Context,
     loader::new_spinner_progress_bar,
-    services::vault::client::VaultClient,
+    services::vault::vault::Vault,
     telemetry::{self, TelemetryData, TelemetryEvent},
     CliError,
 };
@@ -20,7 +20,7 @@ pub async fn handle_list(context: Context) -> Result<bool, CliError> {
         .id_token;
 
     // Call the vault client:
-    let client = VaultClient::new(Some(&api_key)).fetch_lists().await?;
+    let client = Vault::new(Some(&api_key)).handle_login().await?;
 
     progress_bar.finish_and_clear();
 

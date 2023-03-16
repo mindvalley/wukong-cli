@@ -15,6 +15,8 @@ pub enum CliError {
     OpenIDDiscoveryError,
     #[error("You are un-authenticated.")]
     UnAuthenticated,
+    #[error("Authentication failed.")]
+    AuthenticationFailed,
     #[error("You are un-initialised.")]
     UnInitialised,
     #[error("{message}")]
@@ -80,6 +82,9 @@ impl CliError {
             )),
             CliError::UnInitialised => Some(String::from(
                 "Run \"wukong init\" to initialise Wukong's configuration before running other commands.",
+            )),
+            CliError::AuthenticationFailed => Some(String::from(
+                "Your credentials is invalid. Please try again with your okta account.",
             )),
             CliError::ConfigError(error) => match error {
                 ConfigError::NotFound { .. } => Some(String::from(
