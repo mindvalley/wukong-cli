@@ -116,7 +116,7 @@ impl Vault {
                     .save(&config_with_path.path)
                     .unwrap();
 
-                colored_println!("You are now logged in as {}.", "mohamed".to_string());
+                colored_println!("You are now logged in as {}.", email.unwrap().to_string());
             }
             Err(e) => {
                 debug!("Error: {:?}", e);
