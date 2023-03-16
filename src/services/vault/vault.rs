@@ -11,6 +11,12 @@ pub struct Vault {
     api_key: Option<String>,
 }
 
+impl Default for VaultClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 struct ConfigWithPath {
     config: CLIConfig,
     path: String,
@@ -94,13 +100,13 @@ impl Vault {
 
         // Make login request:
         match vault_client
-            .login(&email.clone().unwrap(), &password.as_str())
+            .login(&email.clone().unwrap(), password.as_str())
             .await
         {
             Ok(data) => {
                 config_with_path.config.vault = Some(VaultConfig {
                     api_key: data.auth.client_token,
-                    email: email.clone().unwrap().to_string(),
+                    email: email.clone().unwrap(),
                 });
 
                 config_with_path
