@@ -54,6 +54,7 @@ pub static CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
 pub struct Config {
     pub core: CoreConfig,
     pub auth: Option<AuthConfig>,
+    pub vault: Option<VaultConfig>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -62,6 +63,12 @@ pub struct CoreConfig {
     pub application: String,
     pub wukong_api_url: String,
     pub okta_client_id: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct VaultConfig {
+    pub api_key: String,
+    pub email: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -86,6 +93,7 @@ impl Default for Config {
                 okta_client_id: OKTA_CLIENT_ID.to_string(),
             },
             auth: None,
+            vault: None,
         }
     }
 }
