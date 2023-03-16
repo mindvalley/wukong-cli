@@ -1,7 +1,7 @@
 use crate::{
     commands::Context,
     loader::new_spinner_progress_bar,
-    services::vault::vault::Vault,
+    services::vault::Vault,
     telemetry::{self, TelemetryData, TelemetryEvent},
     CliError,
 };

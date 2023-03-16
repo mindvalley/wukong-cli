@@ -1,6 +1,6 @@
 use crate::{
     commands::Context,
-    services::vault::vault::Vault,
+    services::vault::Vault,
     telemetry::{self, TelemetryData, TelemetryEvent},
     CliError,
 };
