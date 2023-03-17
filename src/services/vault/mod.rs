@@ -251,6 +251,8 @@ impl Vault {
                 debug!("Token verified: {:?}", data);
             }
             Err(e) => {
+                progress_bar.finish_and_clear();
+
                 if e.status().unwrap() == 403 {
                     // User is asked to re-login if the token is invalid
                     colored_println!("Your login session has expired. Please log in again.");
