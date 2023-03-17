@@ -9,7 +9,7 @@ use async_recursion::async_recursion;
 use dialoguer::{theme::ColorfulTheme, Select};
 use log::debug;
 
-use self::client::{FetchListData, VaultClient};
+use self::client::VaultClient;
 
 impl Default for VaultClient {
     fn default() -> Self {
@@ -149,31 +149,52 @@ impl Vault {
 
         let vault_client = VaultClient::new();
 
-        let lists = match vault_client.fetch_lists(api_key, path).await {
+        let lists = match vault_client.fetch_secrets(api_key, path).await {
             Ok(data) => {
-                debug!("Successfully fetched the lists");
+                debug!("Successfully fetched the secrets.");
                 data.data
             }
             Err(e) => {
-                debug!("Error: {:?}", e);
-
-                if e.status().unwrap() == 400 {
-                    return Err(CliError::AuthenticationFailed);
-                } else {
-                    colored_println!("An error occurred. Please try again.");
-                    return Err(CliError::APIError(APIError::ResponseError {
-                        code: e.status().unwrap().to_string(),
-                        message: e.to_string(),
-                    }));
-                }
+                self.handle_error(e)?;
+                return Err(CliError::SecretNotFound);
             }
         };
 
         progress_bar.finish_and_clear();
 
+        // Extract the secret from the list:
         let secret = lists.data.get(key).ok_or(CliError::SecretNotFound)?;
 
         Ok(secret.to_string())
+    }
+
+    pub async fn update_secret(
+        &self,
+        path: &str,
+        key: &str,
+        value: &str,
+    ) -> Result<bool, CliError> {
+        let api_key = &self.get_token(false).await?;
+
+        let progress_bar = new_spinner_progress_bar();
+        progress_bar.set_message("Updating secrets... ");
+
+        let vault_client = VaultClient::new();
+
+        match vault_client.update_secret(api_key, path, key, value).await {
+            Ok(_) => {
+                debug!("Successfully updated the secrets.");
+                colored_println!("Successfully updated the secrets.");
+            }
+            Err(e) => {
+                self.handle_error(e)?;
+                progress_bar.finish_and_clear();
+            }
+        };
+
+        progress_bar.finish_and_clear();
+
+        Ok(true)
     }
 
     #[async_recursion]
@@ -198,6 +219,22 @@ impl Vault {
         }
 
         Ok(api_key)
+    }
+
+    fn handle_error(&self, e: reqwest::Error) -> Result<(), CliError> {
+        debug!("Error: {:?}", e);
+
+        if e.status().unwrap() == 400 {
+            Err(CliError::AuthenticationFailed)
+        } else if e.status().unwrap() == 403 {
+            Err(CliError::SecretNotFound)
+        } else {
+            colored_println!("An error occurred. Please try again.");
+            Err(CliError::APIError(APIError::ResponseError {
+                code: e.status().unwrap().to_string(),
+                message: e.to_string(),
+            }))
+        }
     }
 
     async fn verify_token(&self, api_key: &str) -> Result<bool, CliError> {

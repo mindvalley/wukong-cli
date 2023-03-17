@@ -36,7 +36,8 @@ pub struct VerifyToken {
 mod api_vault_url {
     pub const LOGIN: &str = "https://bunker.mindvalley.dev:8200/v1/auth/okta/login";
     pub const VERIFY_TOKEN: &str = "https://bunker.mindvalley.dev:8200/v1/auth/token/lookup-self";
-    pub const FETCH_LISTS: &str = "https://bunker.mindvalley.dev:8200/v1/secret/data";
+    pub const FETCH_SECRETS: &str = "https://bunker.mindvalley.dev:8200/v1/secret/data";
+    pub const PATCH_SECRET: &str = "https://bunker.mindvalley.dev:8200/v1/secret/data";
 }
 
 pub struct VaultClient {}
@@ -65,14 +66,14 @@ impl VaultClient {
             .await
     }
 
-    pub async fn fetch_lists(
+    pub async fn fetch_secrets(
         &self,
         api_token: &str,
         path: &str,
     ) -> Result<FetchLists, reqwest::Error> {
         let url = format!(
             "{base_url}/{path}",
-            base_url = api_vault_url::FETCH_LISTS,
+            base_url = api_vault_url::FETCH_SECRETS,
             path = path
         );
 
@@ -94,6 +95,35 @@ impl VaultClient {
         client
             .get(api_vault_url::VERIFY_TOKEN)
             .header("X-Vault-Token", api_token)
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await
+    }
+
+    pub async fn update_secret(
+        &self,
+        api_token: &str,
+        path: &str,
+        key: &str,
+        value: &str,
+    ) -> Result<VerifyToken, reqwest::Error> {
+        let url = format!(
+            "{base_url}/{path}",
+            base_url = api_vault_url::PATCH_SECRET,
+            path = path
+        );
+
+        let mut secret_data = HashMap::new();
+        secret_data.insert(key.to_string(), value.to_string());
+
+        let client = reqwest::Client::new();
+
+        client
+            .patch(url)
+            .header("X-Vault-Token", api_token)
+            .json(&secret_data)
             .send()
             .await?
             .error_for_status()?
