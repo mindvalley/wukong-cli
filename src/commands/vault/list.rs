@@ -9,20 +9,19 @@ use wukong_telemetry_macro::wukong_telemetry;
 
 #[wukong_telemetry(command_event = "vault_list")]
 pub async fn handle_list(context: Context) -> Result<bool, CliError> {
-    let progress_bar = new_spinner_progress_bar();
-    progress_bar.set_message("Fetching vault list ... ");
+    // let progress_bar = new_spinner_progress_bar();
+    // progress_bar.set_message("Fetching vault list ... ");
 
-    // Get the vaule token from the context:
-    let api_key = context
-        .config
-        .auth
-        .ok_or(CliError::UnAuthenticated)?
-        .id_token;
+    // let api_key = context
+    //     .config
+    //     .vault
+    //     .ok_or(CliError::UnAuthenticated)?
+    //     .api_key;
 
     // Call the vault client:
-    let _client = Vault::new(Some(&api_key)).handle_login().await?;
+    let _client = Vault::new(None).get_lists().await?;
 
-    progress_bar.finish_and_clear();
+    // progress_bar.finish_and_clear();
 
     Ok(true)
 }

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -11,12 +13,29 @@ pub struct Login {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct FetchListData {
+    pub data: HashMap<String, String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct FetchLists {
-    pub auth: Auth,
+    pub data: FetchListData,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VerifyTokenData {
+    pub expire_time: String,
+    pub issue_time: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VerifyToken {
+    pub data: VerifyTokenData,
 }
 
 mod api_vault_url {
     pub const LOGIN: &str = "https://bunker.mindvalley.dev:8200/v1/auth/okta/login";
+    pub const VERIFY_TOKEN: &str = "https://bunker.mindvalley.dev:8200/v1/auth/token/lookup-self";
     pub const FETCH_LISTS: &str = "https://bunker.mindvalley.dev:8200/v1/secret/data";
 }
 
@@ -51,11 +70,29 @@ impl VaultClient {
         api_token: &str,
         path: &str,
     ) -> Result<FetchLists, reqwest::Error> {
+        let url = format!(
+            "{base_url}/{path}",
+            base_url = api_vault_url::FETCH_LISTS,
+            path = path
+        );
+
         let client = reqwest::Client::new();
 
         client
-            .get(api_vault_url::FETCH_LISTS)
-            .query(&[("path", path)])
+            .get(url)
+            .header("X-Vault-Token", api_token)
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await
+    }
+
+    pub async fn verify_token(&self, api_token: &str) -> Result<VerifyToken, reqwest::Error> {
+        let client = reqwest::Client::new();
+
+        client
+            .get(api_vault_url::VERIFY_TOKEN)
             .header("X-Vault-Token", api_token)
             .send()
             .await?
