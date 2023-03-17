@@ -10,11 +10,13 @@ use log::debug;
 
 use self::client::VaultClient;
 
-pub struct Vault {
-    api_key: Option<String>,
+impl Default for VaultClient {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
-impl Default for VaultClient {
+impl Default for Vault {
     fn default() -> Self {
         Self::new()
     }
@@ -25,13 +27,11 @@ struct ConfigWithPath {
     path: String,
 }
 
-impl Vault {
-    pub fn new(api_key: Option<&str>) -> Self {
-        let api_key_string = api_key.map(|s| s.to_string());
+pub struct Vault {}
 
-        Self {
-            api_key: api_key_string,
-        }
+impl Vault {
+    pub fn new() -> Self {
+        Self {}
     }
 
     fn get_config_with_path(&self) -> Result<ConfigWithPath, CliError> {
@@ -115,7 +115,7 @@ impl Vault {
                     .save(&config_with_path.path)
                     .unwrap();
 
-                colored_println!("You are now logged in as {}.", email.unwrap().to_string());
+                colored_println!("You are now logged in as {}.", email.unwrap());
             }
             Err(e) => {
                 debug!("Error: {:?}", e);
