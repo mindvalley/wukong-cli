@@ -2,13 +2,14 @@ pub mod client;
 
 use crate::config::VaultConfig;
 use crate::error::APIError;
+use crate::loader::new_spinner_progress_bar;
 use crate::output::colored_println;
 use crate::{config::CONFIG_FILE, error::CliError, Config as CLIConfig};
 use async_recursion::async_recursion;
 use dialoguer::{theme::ColorfulTheme, Select};
 use log::debug;
 
-use self::client::VaultClient;
+use self::client::{FetchListData, VaultClient};
 
 impl Default for VaultClient {
     fn default() -> Self {
@@ -97,6 +98,9 @@ impl Vault {
             .with_prompt("Enter your password")
             .interact()?;
 
+        let progress_bar = new_spinner_progress_bar();
+        progress_bar.set_message("Authenticating the user...");
+
         let vault_client = VaultClient::new();
 
         // Make login request:
@@ -132,20 +136,26 @@ impl Vault {
             }
         };
 
+        progress_bar.finish_and_clear();
+
         Ok(true)
     }
 
-    pub async fn get_lists(&self) -> Result<bool, CliError> {
+    pub async fn get_lists(&self) -> Result<FetchListData, CliError> {
         let api_key = &self.get_token(false).await?;
+
+        let progress_bar = new_spinner_progress_bar();
+        progress_bar.set_message("Fetching secrets... ");
 
         let vault_client = VaultClient::new();
 
-        match vault_client
+        let lists = match vault_client
             .fetch_lists(api_key, "engineering/fastly/staging")
             .await
         {
             Ok(data) => {
-                println!("{:?}", data);
+                debug!("Successfully fetched the lists");
+                data.data
             }
             Err(e) => {
                 debug!("Error: {:?}", e);
@@ -160,9 +170,12 @@ impl Vault {
                     }));
                 }
             }
-        }
+        };
 
-        Ok(true)
+        progress_bar.finish_and_clear();
+        colored_println!("Successfully fetched the lists {:?}", lists);
+
+        Ok(lists)
     }
 
     #[async_recursion]
