@@ -155,6 +155,7 @@ impl Vault {
                 data.data
             }
             Err(e) => {
+                progress_bar.finish_and_clear();
                 self.handle_error(e)?;
                 return Err(CliError::SecretNotFound);
             }
@@ -187,8 +188,8 @@ impl Vault {
                 colored_println!("Successfully updated the secrets.");
             }
             Err(e) => {
-                self.handle_error(e)?;
                 progress_bar.finish_and_clear();
+                self.handle_error(e)?;
             }
         };
 
