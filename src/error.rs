@@ -23,6 +23,8 @@ pub enum CliError {
     AuthError { message: &'static str },
     #[error(transparent)]
     DeploymentError(#[from] DeploymentError),
+    #[error("Secret not found.")]
+    SecretNotFound,
 }
 
 #[derive(Debug, ThisError)]

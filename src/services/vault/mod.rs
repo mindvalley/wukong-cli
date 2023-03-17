@@ -141,7 +141,7 @@ impl Vault {
         Ok(true)
     }
 
-    pub async fn get_lists(&self) -> Result<FetchListData, CliError> {
+    pub async fn get_secret(&self, path: &str, key: &str) -> Result<String, CliError> {
         let api_key = &self.get_token(false).await?;
 
         let progress_bar = new_spinner_progress_bar();
@@ -149,10 +149,7 @@ impl Vault {
 
         let vault_client = VaultClient::new();
 
-        let lists = match vault_client
-            .fetch_lists(api_key, "engineering/fastly/staging")
-            .await
-        {
+        let lists = match vault_client.fetch_lists(api_key, path).await {
             Ok(data) => {
                 debug!("Successfully fetched the lists");
                 data.data
@@ -173,9 +170,10 @@ impl Vault {
         };
 
         progress_bar.finish_and_clear();
-        colored_println!("Successfully fetched the lists {:?}", lists);
 
-        Ok(lists)
+        let secret = lists.data.get(key).ok_or(CliError::SecretNotFound)?;
+
+        Ok(secret.to_string())
     }
 
     #[async_recursion]
