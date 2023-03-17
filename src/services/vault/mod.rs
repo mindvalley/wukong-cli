@@ -204,6 +204,10 @@ impl Vault {
 
     async fn verify_token(&self, api_key: &str) -> Result<bool, CliError> {
         debug!("Verifying token ...");
+
+        let progress_bar = new_spinner_progress_bar();
+        progress_bar.set_message("Verifying the token...");
+
         let vault_client = VaultClient::new();
 
         match vault_client.verify_token(api_key).await {
@@ -225,6 +229,8 @@ impl Vault {
                 }
             }
         }
+
+        progress_bar.finish_and_clear();
 
         Ok(true)
     }
