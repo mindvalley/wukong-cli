@@ -21,6 +21,10 @@ pub enum CliError {
     AuthError { message: &'static str },
     #[error(transparent)]
     DeploymentError(#[from] DeploymentError),
+    #[error("Timeout Error")]
+    Timeout,
+    #[error("Domain Error")]
+    DomainError,
 }
 
 #[derive(Debug, ThisError)]
@@ -33,6 +37,10 @@ pub enum APIError {
     UnAuthenticated,
     #[error("The selected build number is the same as the current deployed version. So there is no changelog.")]
     ChangelogComparingSameBuild,
+    #[error("Timeout Error")]
+    Timeout,
+    #[error("Domain Error")]
+    DomainError,
 }
 
 #[derive(Debug, ThisError)]

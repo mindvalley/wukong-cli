@@ -19,10 +19,11 @@ use crate::{
     error::APIError,
     telemetry::{self, TelemetryData, TelemetryEvent},
 };
-use graphql_client::{GraphQLQuery, Response};
+use graphql_client::{GraphQLQuery, QueryBody, Response};
 use log::debug;
 use reqwest::header;
 use std::fmt::Debug;
+use std::{thread, time};
 use wukong_telemetry_macro::wukong_telemetry;
 
 #[derive(Debug, Default)]
@@ -97,21 +98,66 @@ impl QueryClient {
         Q::ResponseData: Debug,
     {
         let body = Q::build_query(variables);
-        let request = self.inner().post(&self.api_url).json(&body);
+        let client = self.inner();
 
         debug!("url: {:?}", &self.api_url);
-        debug!("request: {:#?}", request);
         debug!("GraphQL query: \n{}", body.query);
 
-        let response: Response<Q::ResponseData> = request.send().await?.json().await?;
+        let response = self.retry_request::<Q>(client, body, handler).await;
         debug!("GraphQL response: {:#?}", response);
 
-        if let Some(errors) = response.errors.clone() {
-            let first_error = errors[0].clone();
+        response
+    }
 
-            match check_auth_error(&first_error) {
-                Some(err) => return Err(err),
-                None => return handler(response, first_error),
+    async fn retry_request<Q>(
+        &self,
+        client: &reqwest::Client,
+        body: QueryBody<Q::Variables>,
+        handler: impl Fn(
+            Response<Q::ResponseData>,
+            graphql_client::Error,
+        ) -> Result<Response<Q::ResponseData>, APIError>,
+    ) -> Result<Response<Q::ResponseData>, APIError>
+    where
+        Q: GraphQLQuery,
+        Q::ResponseData: Debug,
+    {
+        let mut retry_count = 0;
+        let mut response: Response<<Q as GraphQLQuery>::ResponseData> = client
+            .post(&self.api_url)
+            .json(&body)
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        while response.errors.is_some() && retry_count <= 3 {
+            if let Some(errors) = response.errors.clone() {
+                let first_error = errors[0].clone();
+
+                if retry_count == 3 {
+                    return handler(response, first_error);
+                }
+
+                match check_retry_and_auth_error(&first_error) {
+                    Some(APIError::UnAuthenticated) => return Err(APIError::UnAuthenticated),
+                    Some(APIError::Timeout) => {
+                        retry_count += 1;
+                        eprintln!(
+                            "... request timeout, retrying the request {}/3",
+                            retry_count
+                        );
+                        thread::sleep(time::Duration::from_secs(5));
+                        response = client
+                            .post(&self.api_url)
+                            .json(&body)
+                            .send()
+                            .await?
+                            .json()
+                            .await?;
+                    }
+                    _ => return handler(response, first_error),
+                }
             }
         }
 
@@ -228,10 +274,22 @@ impl QueryClient {
     }
 }
 
-pub fn check_auth_error(error: &graphql_client::Error) -> Option<APIError> {
+// pub fn check_auth_error(error: &graphql_client::Error) -> Option<APIError> {
+//     if error.message == "Unauthenticated" {
+//         return Some(APIError::UnAuthenticated);
+//     }
+//
+//     None
+// }
+
+pub fn check_retry_and_auth_error(error: &graphql_client::Error) -> Option<APIError> {
     if error.message == "Unauthenticated" {
         return Some(APIError::UnAuthenticated);
+    } else if error.message.contains("timeout") {
+        return Some(APIError::Timeout);
+    } else if error.message.contains("domain") {
+        return Some(APIError::DomainError);
+    } else {
+        return None;
     }
-
-    None
 }
