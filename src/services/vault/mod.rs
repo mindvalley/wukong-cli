@@ -9,7 +9,7 @@ use async_recursion::async_recursion;
 use dialoguer::{theme::ColorfulTheme, Select};
 use log::debug;
 
-use self::client::{FetchListData, VaultClient};
+use self::client::{FetchSecretsData, VaultClient};
 
 impl Default for VaultClient {
     fn default() -> Self {
@@ -142,15 +142,15 @@ impl Vault {
     }
 
     pub async fn get_secret(&self, path: &str, key: &str) -> Result<String, CliError> {
-        let lists = self.get_secrets(path).await?;
+        let secrets = self.get_secrets(path).await?;
 
-        // Extract the secret from the list:
-        let secret = lists.data.get(key).ok_or(CliError::SecretNotFound)?;
+        // Extract the secret from the response:
+        let secret = secrets.data.get(key).ok_or(CliError::SecretNotFound)?;
 
         Ok(secret.to_string())
     }
 
-    pub async fn get_secrets(&self, path: &str) -> Result<FetchListData, CliError> {
+    pub async fn get_secrets(&self, path: &str) -> Result<FetchSecretsData, CliError> {
         let api_key = &self.get_token(false).await?;
 
         let progress_bar = new_spinner_progress_bar();
@@ -158,7 +158,7 @@ impl Vault {
 
         let vault_client = VaultClient::new();
 
-        let lists = match vault_client.fetch_secrets(api_key, path).await {
+        let secrets = match vault_client.fetch_secrets(api_key, path).await {
             Ok(data) => {
                 debug!("Successfully fetched the secrets.");
                 data.data
@@ -172,7 +172,7 @@ impl Vault {
 
         progress_bar.finish_and_clear();
 
-        Ok(lists)
+        Ok(secrets)
     }
 
     pub async fn update_secret(

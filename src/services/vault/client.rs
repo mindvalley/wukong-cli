@@ -12,13 +12,13 @@ pub struct Login {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct FetchListData {
+pub struct FetchSecretsData {
     pub data: HashMap<String, String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct FetchLists {
-    pub data: FetchListData,
+pub struct FetchSecrets {
+    pub data: FetchSecretsData,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -76,7 +76,7 @@ impl VaultClient {
         &self,
         api_token: &str,
         path: &str,
-    ) -> Result<FetchLists, reqwest::Error> {
+    ) -> Result<FetchSecrets, reqwest::Error> {
         let url = format!(
             "{base_url}/{path}",
             base_url = api_vault_url::FETCH_SECRETS,
