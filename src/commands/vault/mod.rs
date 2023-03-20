@@ -1,11 +1,13 @@
 pub mod list;
 pub mod login;
+pub mod update;
 
 use super::{Context, State};
 use crate::CliError;
 use clap::{Args, Subcommand};
 use list::handle_list;
 use login::handle_login;
+use update::update_secret;
 
 #[derive(Debug, Args)]
 pub struct Vault {
@@ -19,6 +21,8 @@ pub enum VaultSubcommand {
     List,
     /// Authenticate locally
     Login,
+    /// Update Secret
+    Update,
 }
 
 impl Vault {
@@ -28,6 +32,7 @@ impl Vault {
         match &self.subcommand {
             VaultSubcommand::List => handle_list(context).await,
             VaultSubcommand::Login => handle_login(context).await,
+            VaultSubcommand::Update => update_secret(context).await,
         }
     }
 }

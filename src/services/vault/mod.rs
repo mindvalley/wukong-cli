@@ -190,7 +190,6 @@ impl Vault {
 
         match vault_client.update_secret(api_key, path, key, value).await {
             Ok(_) => {
-                debug!("Successfully updated the secrets.");
                 colored_println!("Successfully updated the secrets.");
             }
             Err(e) => {

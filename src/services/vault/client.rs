@@ -1,6 +1,5 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Auth {
@@ -31,6 +30,13 @@ pub struct VerifyTokenData {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct VerifyToken {
     pub data: VerifyTokenData,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UpdateSecret {
+    wrap_info: Option<String>,
+    warnings: Option<String>,
+    auth: Option<Auth>,
 }
 
 mod api_vault_url {
@@ -108,7 +114,7 @@ impl VaultClient {
         path: &str,
         key: &str,
         value: &str,
-    ) -> Result<VerifyToken, reqwest::Error> {
+    ) -> Result<UpdateSecret, reqwest::Error> {
         let url = format!(
             "{base_url}/{path}",
             base_url = api_vault_url::PATCH_SECRET,
@@ -116,12 +122,14 @@ impl VaultClient {
         );
 
         let mut secret_data = HashMap::new();
-        secret_data.insert(key.to_string(), value.to_string());
+        let mut data = HashMap::new();
+        data.insert(key.to_string(), value.to_string());
+        secret_data.insert("data", data);
 
         let client = reqwest::Client::new();
 
         client
-            .patch(url)
+            .put(url)
             .header("X-Vault-Token", api_token)
             .json(&secret_data)
             .send()

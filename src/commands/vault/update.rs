@@ -7,10 +7,10 @@ use crate::{
 use wukong_telemetry_macro::wukong_telemetry;
 
 #[wukong_telemetry(command_event = "vault_list")]
-pub async fn handle_list(context: Context) -> Result<bool, CliError> {
+pub async fn update_secret(context: Context) -> Result<bool, CliError> {
     // Call the vault client:
     let _client = Vault::new()
-        .get_secret("wukong-cli/development", "test")
+        .update_secret("wukong-cli/development", "test", "test2")
         .await?;
 
     print!("{:?}", _client);
