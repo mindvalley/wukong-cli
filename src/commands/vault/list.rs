@@ -10,7 +10,7 @@ use wukong_telemetry_macro::wukong_telemetry;
 pub async fn handle_list(context: Context) -> Result<bool, CliError> {
     // Call the vault client:
     let _client = Vault::new()
-        .get_secret("engineering/fastly/staging", "assets-blue-cache-purge")
+        .get_secrets("engineering/fastly/staging")
         .await?;
 
     print!("{:?}", _client);
