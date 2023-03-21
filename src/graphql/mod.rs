@@ -276,11 +276,11 @@ impl QueryClient {
 
 pub fn check_retry_and_auth_error(error: &graphql_client::Error) -> Option<APIError> {
     if error.message == "Unauthenticated" {
-        return Some(APIError::UnAuthenticated);
+        Some(APIError::UnAuthenticated)
     } else if error.message.contains("request_timeout") {
-        let domain = error.message.split("_").next().unwrap();
+        let domain = error.message.split('_').next().unwrap();
         return Some(APIError::Timeout {
-            domain: format!("{domain}"),
+            domain: domain.to_string(),
         });
     } else if error.message.contains("domain") {
         return Some(APIError::DomainError);
