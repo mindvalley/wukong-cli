@@ -6,7 +6,7 @@ use crate::loader::new_spinner_progress_bar;
 use crate::output::colored_println;
 use crate::{config::CONFIG_FILE, error::CliError, Config as CLIConfig};
 use async_recursion::async_recursion;
-use dialoguer::{theme::ColorfulTheme, Select};
+use dialoguer::theme::ColorfulTheme;
 use log::debug;
 
 use self::client::{FetchSecretsData, VaultClient};
@@ -54,44 +54,14 @@ impl Vault {
         let mut email: Option<String> = None;
         let mut config_with_path = self.get_config_with_path().unwrap();
 
-        if let Some(vault_config) = &config_with_path.config.vault {
-            let selections = vec!["Use the existing account", "Log in with a new account"];
-
-            let selection = Select::with_theme(&ColorfulTheme::default())
-                .with_prompt(
-                    format!(
-                "You have previously logged in as \"{}\". Would you like to continue using this account?",
-                vault_config.email
-            ))
-                .default(0)
-                .items(&selections[..])
-                .interact()?;
-
-            match selection {
-                0 => {
-                    colored_println!("Continuing with \"{}\"...", vault_config.email);
-
-                    email = Some(vault_config.email.to_string())
-                }
-                1 => {
-                    let input_email: String =
-                        dialoguer::Input::with_theme(&ColorfulTheme::default())
-                            .with_prompt("Please enter your email address")
-                            .interact()?;
-
-                    email = Some(input_email.trim().to_string());
-                }
-                _ => panic!("Invalid selection"),
-            }
+        if let Some(vault_config) = &config_with_path.config.auth {
+            colored_println!("Continuing with \"{}\"...", vault_config.account);
+            email = Some(vault_config.account.to_string())
         }
 
-        // If the user has not logged in before, or has chosen to log in with a new account:
         if email.is_none() {
-            let input_email: String = dialoguer::Input::with_theme(&ColorfulTheme::default())
-                .with_prompt("Please enter your email address")
-                .interact()?;
-
-            email = Some(input_email.trim().to_string());
+            debug!("No email found in config file");
+            return Err(CliError::UnInitialised);
         }
 
         let password = dialoguer::Password::with_theme(&ColorfulTheme::default())
@@ -111,7 +81,6 @@ impl Vault {
             Ok(data) => {
                 config_with_path.config.vault = Some(VaultConfig {
                     api_key: data.auth.client_token,
-                    email: email.clone().unwrap(),
                 });
 
                 config_with_path

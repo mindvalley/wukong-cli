@@ -68,7 +68,6 @@ pub struct CoreConfig {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct VaultConfig {
     pub api_key: String,
-    pub email: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
