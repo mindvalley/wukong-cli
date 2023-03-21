@@ -77,21 +77,21 @@ impl VaultClient {
         &self,
         api_token: &str,
         path: &str,
-    ) -> Result<FetchSecrets, reqwest::Error> {
+    ) -> Result<reqwest::Response, reqwest::Error> {
         let url = format!(
             "{base_url}/{path}",
             base_url = api_vault_url::FETCH_SECRETS,
             path = path
         );
 
-        self.client
+        let response = self
+            .client
             .get(url)
             .header("X-Vault-Token", api_token)
             .send()
-            .await?
-            .error_for_status()?
-            .json()
-            .await
+            .await?;
+
+        Ok(response)
     }
 
     pub async fn verify_token(&self, api_token: &str) -> Result<VerifyToken, reqwest::Error> {

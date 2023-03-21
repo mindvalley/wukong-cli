@@ -113,14 +113,14 @@ impl Vault {
         Ok(true)
     }
 
-    pub async fn get_secret(&self, path: &str, key: &str) -> Result<String, CliError> {
-        let secrets = self.get_secrets(path).await?;
+    // pub async fn get_secret(&self, path: &str, key: &str) -> Result<String, CliError> {
+    //     let secrets = self.get_secrets(path).await?;
 
-        // Extract the secret from the response:
-        let secret = secrets.data.get(key).ok_or(CliError::SecretNotFound)?;
+    //     // Extract the secret from the response:
+    //     let secret = secrets.data.get(key).ok_or(CliError::SecretNotFound)?;
 
-        Ok(secret.to_string())
-    }
+    //     Ok(secret.to_string())
+    // }
 
     pub async fn get_secrets(&self, path: &str) -> Result<FetchSecretsData, CliError> {
         let api_key = &self.get_token(false).await?;
@@ -131,7 +131,13 @@ impl Vault {
         let secrets = match self.vault_client.fetch_secrets(api_key, path).await {
             Ok(data) => {
                 debug!("Successfully fetched the secrets.");
-                data.data
+                let resp = data.json::<FetchSecretsData>().await.map_err(|e| {
+                    CliError::APIError(APIError::ResponseError {
+                        code: "500".to_string(),
+                        message: e.to_string(),
+                    })
+                })?;
+                resp
             }
             Err(e) => {
                 progress_bar.finish_and_clear();
