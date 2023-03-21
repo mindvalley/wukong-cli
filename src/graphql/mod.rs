@@ -103,7 +103,8 @@ impl QueryClient {
         debug!("url: {:?}", &self.api_url);
         debug!("GraphQL query: \n{}", body.query);
 
-        let response = self.retry_request::<Q>(client, body, handler).await;
+        let response: Result<Response<Q::ResponseData>, APIError> =
+            self.retry_request::<Q>(client, body, handler).await;
         debug!("GraphQL response: {:#?}", response);
 
         response
@@ -135,13 +136,12 @@ impl QueryClient {
             if let Some(errors) = response.errors.clone() {
                 let first_error = errors[0].clone();
 
-                if retry_count == 3 {
-                    return handler(response, first_error);
-                }
-
                 match check_retry_and_auth_error(&first_error) {
                     Some(APIError::UnAuthenticated) => return Err(APIError::UnAuthenticated),
-                    Some(APIError::Timeout) => {
+                    Some(APIError::Timeout { domain }) => {
+                        if retry_count == 3 {
+                            return Err(APIError::Timeout { domain });
+                        }
                         retry_count += 1;
                         eprintln!(
                             "... request timeout, retrying the request {}/3",
@@ -274,19 +274,14 @@ impl QueryClient {
     }
 }
 
-// pub fn check_auth_error(error: &graphql_client::Error) -> Option<APIError> {
-//     if error.message == "Unauthenticated" {
-//         return Some(APIError::UnAuthenticated);
-//     }
-//
-//     None
-// }
-
 pub fn check_retry_and_auth_error(error: &graphql_client::Error) -> Option<APIError> {
     if error.message == "Unauthenticated" {
         return Some(APIError::UnAuthenticated);
-    } else if error.message.contains("timeout") {
-        return Some(APIError::Timeout);
+    } else if error.message.contains("request_timeout") {
+        let domain = error.message.split("_").next().unwrap();
+        return Some(APIError::Timeout {
+            domain: format!("{domain}"),
+        });
     } else if error.message.contains("domain") {
         return Some(APIError::DomainError);
     } else {
