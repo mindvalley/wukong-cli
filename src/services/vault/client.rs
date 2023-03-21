@@ -46,11 +46,14 @@ mod api_vault_url {
     pub const PATCH_SECRET: &str = "https://bunker.mindvalley.dev:8200/v1/secret/data";
 }
 
-pub struct VaultClient {}
+pub struct VaultClient {
+    client: reqwest::Client,
+}
 
 impl VaultClient {
     pub fn new() -> Self {
-        Self {}
+        let client = reqwest::Client::new();
+        Self { client }
     }
 
     pub async fn login(&self, email: &str, password: &str) -> Result<Login, reqwest::Error> {
@@ -60,9 +63,7 @@ impl VaultClient {
             email = email
         );
 
-        let client = reqwest::Client::new();
-
-        client
+        self.client
             .post(url)
             .form(&[("password", password)])
             .send()
@@ -83,9 +84,7 @@ impl VaultClient {
             path = path
         );
 
-        let client = reqwest::Client::new();
-
-        client
+        self.client
             .get(url)
             .header("X-Vault-Token", api_token)
             .send()
@@ -96,9 +95,7 @@ impl VaultClient {
     }
 
     pub async fn verify_token(&self, api_token: &str) -> Result<VerifyToken, reqwest::Error> {
-        let client = reqwest::Client::new();
-
-        client
+        self.client
             .get(api_vault_url::VERIFY_TOKEN)
             .header("X-Vault-Token", api_token)
             .send()
@@ -126,9 +123,7 @@ impl VaultClient {
         data.insert(key.to_string(), value.to_string());
         secret_data.insert("data", data);
 
-        let client = reqwest::Client::new();
-
-        client
+        self.client
             .put(url)
             .header("X-Vault-Token", api_token)
             .json(&secret_data)
