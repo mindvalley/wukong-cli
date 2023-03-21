@@ -28,11 +28,15 @@ struct ConfigWithPath {
     path: String,
 }
 
-pub struct Vault {}
+pub struct Vault {
+    vault_client: VaultClient,
+}
 
 impl Vault {
     pub fn new() -> Self {
-        Self {}
+        Self {
+            vault_client: VaultClient::new(),
+        }
     }
 
     fn get_config_with_path(&self) -> Result<ConfigWithPath, CliError> {
@@ -71,10 +75,9 @@ impl Vault {
         let progress_bar = new_spinner_progress_bar();
         progress_bar.set_message("Authenticating the user...");
 
-        let vault_client = VaultClient::new();
-
         // Make login request:
-        match vault_client
+        match self
+            .vault_client
             .login(&email.clone().unwrap(), password.as_str())
             .await
         {
@@ -125,9 +128,7 @@ impl Vault {
         let progress_bar = new_spinner_progress_bar();
         progress_bar.set_message("Fetching secrets... ");
 
-        let vault_client = VaultClient::new();
-
-        let secrets = match vault_client.fetch_secrets(api_key, path).await {
+        let secrets = match self.vault_client.fetch_secrets(api_key, path).await {
             Ok(data) => {
                 debug!("Successfully fetched the secrets.");
                 data.data
@@ -155,9 +156,11 @@ impl Vault {
         let progress_bar = new_spinner_progress_bar();
         progress_bar.set_message("Updating secrets... ");
 
-        let vault_client = VaultClient::new();
-
-        match vault_client.update_secret(api_key, path, key, value).await {
+        match self
+            .vault_client
+            .update_secret(api_key, path, key, value)
+            .await
+        {
             Ok(_) => {
                 colored_println!("Successfully updated the secrets.");
             }
@@ -218,9 +221,7 @@ impl Vault {
         let progress_bar = new_spinner_progress_bar();
         progress_bar.set_message("Verifying the token...");
 
-        let vault_client = VaultClient::new();
-
-        match vault_client.verify_token(api_key).await {
+        match self.vault_client.verify_token(api_key).await {
             Ok(data) => {
                 debug!("Token verified: {:?}", data);
             }
