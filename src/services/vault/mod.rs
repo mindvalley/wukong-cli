@@ -76,7 +76,6 @@ impl Vault {
             colored_println!("You are now logged in as {}.", email.unwrap());
         } else {
             self.handle_error(response).await?;
-            unreachable!()
         }
 
         Ok(true)
@@ -133,7 +132,6 @@ impl Vault {
             response.json::<UpdateSecret>().await?;
         } else {
             self.handle_error(response).await?;
-            unreachable!()
         }
 
         Ok(true)
