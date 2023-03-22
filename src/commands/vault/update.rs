@@ -10,7 +10,7 @@ use wukong_telemetry_macro::wukong_telemetry;
 pub async fn update_secret(context: Context) -> Result<bool, CliError> {
     // Call the vault client:
     let _client = Vault::new()
-        .update_secret("wukong-cli/development", "tests", "test3")
+        .update_secret("wukong-cli/development", "test", "test2")
         .await?;
 
     print!("{:?}", _client);
