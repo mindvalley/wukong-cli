@@ -278,6 +278,7 @@ pub fn check_retry_and_auth_error(error: &graphql_client::Error) -> Option<APIEr
     if error.message == "Unauthenticated" {
         Some(APIError::UnAuthenticated)
     } else if error.message.contains("request_timeout") {
+        // The Wukong API returns a message like "{{domain}_request_timeout}", so we need to extract the domain
         let domain = error.message.split('_').next().unwrap();
         return Some(APIError::Timeout {
             domain: domain.to_string(),
