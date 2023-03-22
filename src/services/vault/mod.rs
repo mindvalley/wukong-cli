@@ -188,19 +188,17 @@ impl Vault {
 
         match status {
             StatusCode::NOT_FOUND => {
-                debug!("The requested resource was not found.");
                 return Err(VaultError::SecretNotFound);
             }
             StatusCode::FORBIDDEN => {
+                // Throw error and let the app handle it:
                 colored_println!("Your login session has expired/invalid. Please log in again.");
                 self.handle_login().await?;
             }
             StatusCode::BAD_REQUEST => {
                 if message.contains("Okta auth failed") {
-                    colored_println!("Invalid credentials. Please try again.");
                     return Err(VaultError::AuthenticationFailed);
                 } else {
-                    colored_println!("Bad request. Please try again.");
                     return Err(VaultError::ResponseError {
                         code: status.to_string(),
                         message,
@@ -208,7 +206,6 @@ impl Vault {
                 }
             }
             _ => {
-                colored_println!("Error: {}", message);
                 return Err(VaultError::ResponseError {
                     code: status.to_string(),
                     message,
