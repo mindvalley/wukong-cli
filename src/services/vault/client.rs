@@ -177,6 +177,7 @@ mod tests {
 
         let mock_server = server.mock(|when, then| {
             when.method(POST)
+                .path_contains(email)
                 .path_contains(VaultClient::LOGIN)
                 .body(format!("password={}", password));
             then.status(200)
@@ -195,6 +196,37 @@ mod tests {
 
         let login_data = response.json::<Login>().await.unwrap();
         assert_eq!(login_data.auth.client_token, "test_token");
+    }
+
+    #[tokio::test]
+    async fn test_login_failed_with_bad_credentials() {
+        let server = MockServer::start();
+
+        let email = "test@example.com";
+        let password = "wrong_password";
+
+        let api_resp = r#"
+            {
+              "errors": ["Okta auth failed"]
+            }"#;
+
+        let mock_server = server.mock(|when, then| {
+            when.method(POST)
+                .path_contains(VaultClient::LOGIN)
+                .path_contains(email)
+                .body(format!("password={}", password));
+            then.status(400)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+
+        let vault_client = VaultClient::new().with_base_url(server.base_url());
+        let response = vault_client.login(email, password).await;
+
+        mock_server.assert();
+
+        let response = response.unwrap();
+        assert_eq!(response.status(), 400);
     }
 
     #[tokio::test]
