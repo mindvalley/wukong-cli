@@ -69,7 +69,7 @@ impl VaultClient {
         email: &str,
         password: &str,
     ) -> Result<reqwest::Response, reqwest::Error> {
-        let url = format!("{}{}/{}", Self::LOGIN, email, self.base_url);
+        let url = format!("{}{}/{}", self.base_url, Self::LOGIN, email);
 
         let response = self
             .client
@@ -99,7 +99,7 @@ impl VaultClient {
     }
 
     pub async fn verify_token(&self, api_token: &str) -> Result<reqwest::Response, reqwest::Error> {
-        let url = format!("{}{}", self.base_url, Self::VERIFY_TOKEN,);
+        let url = format!("{}{}", self.base_url, Self::VERIFY_TOKEN);
 
         let response = self
             .client

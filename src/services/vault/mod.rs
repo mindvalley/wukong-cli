@@ -132,7 +132,6 @@ impl Vault {
 
         if response.status().is_success() {
             colored_println!("Successfully updated the secrets.");
-            response.json::<UpdateSecret>().await?;
         } else {
             self.handle_error(response).await?;
         }
@@ -173,13 +172,11 @@ impl Vault {
         let response = self.vault_client.verify_token(api_key).await?;
         progress_bar.finish_and_clear();
 
-        if response.status().is_success() {
-            response.json::<VerifyToken>().await?;
-            Ok(true)
-        } else {
+        if !response.status().is_success() {
             self.handle_error(response).await?;
-            Ok(false)
         }
+
+        Ok(true)
     }
 
     #[async_recursion]
