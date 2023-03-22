@@ -58,6 +58,7 @@ impl VaultClient {
         }
     }
 
+    #[cfg(test)]
     pub fn with_base_url(mut self, base_url: String) -> Self {
         self.base_url = base_url;
         self
