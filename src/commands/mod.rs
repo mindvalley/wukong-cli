@@ -6,7 +6,6 @@ pub mod dev;
 pub mod init;
 pub mod login;
 pub mod pipeline;
-pub mod vault;
 
 use chrono::{DateTime, Local};
 use clap::{command, crate_version, Parser, Subcommand};
@@ -157,8 +156,6 @@ pub enum CommandGroup {
         #[arg(value_enum)]
         shell: Shell,
     },
-    /// Vault
-    Vault(vault::Vault),
 }
 
 impl ClapApp {
@@ -181,7 +178,6 @@ impl ClapApp {
             CommandGroup::Deployment(deployment) => deployment.handle_command(state).await,
             CommandGroup::Config(config) => config.handle_command(),
             CommandGroup::Dev(dev) => dev.handle_command(),
-            CommandGroup::Vault(vault) => vault.handle_command(state).await,
         }
     }
 }
