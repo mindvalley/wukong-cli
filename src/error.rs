@@ -23,8 +23,6 @@ pub enum CliError {
     AuthError { message: &'static str },
     #[error(transparent)]
     DeploymentError(#[from] DeploymentError),
-    #[error("Secret not found.")]
-    SecretNotFound,
     #[error(transparent)]
     VaultError(#[from] VaultError),
 }
@@ -41,6 +39,8 @@ pub enum VaultError {
     UnInitialised,
     #[error(transparent)]
     Io(#[from] ::std::io::Error),
+    #[error("Secret not found.")]
+    SecretNotFound,
 }
 
 #[derive(Debug, ThisError)]

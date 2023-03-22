@@ -5,10 +5,11 @@ use crate::error::VaultError;
 use crate::loader::new_spinner_progress_bar;
 use crate::output::colored_println;
 use crate::services::vault::client::{FetchSecrets, UpdateSecret, VerifyToken};
-use crate::{error::CliError, Config as CLIConfig};
+use crate::Config as CLIConfig;
 use async_recursion::async_recursion;
 use dialoguer::theme::ColorfulTheme;
 use log::debug;
+use reqwest::StatusCode;
 
 use self::client::{FetchSecretsData, Login, VaultClient};
 
@@ -61,6 +62,8 @@ impl Vault {
             .login(&email.clone().unwrap(), password.as_str())
             .await?;
 
+        progress_bar.finish_and_clear();
+
         if response.status().is_success() {
             let data = response.json::<Login>().await?;
 
@@ -81,11 +84,11 @@ impl Vault {
         Ok(true)
     }
 
-    pub async fn get_secret(&self, path: &str, key: &str) -> Result<String, CliError> {
+    pub async fn get_secret(&self, path: &str, key: &str) -> Result<String, VaultError> {
         let secrets = self.get_secrets(path).await?;
 
         // Extract the secret from the response:
-        let secret = secrets.data.get(key).ok_or(CliError::SecretNotFound)?;
+        let secret = secrets.data.get(key).ok_or(VaultError::SecretNotFound)?;
 
         Ok(secret.to_string())
     }
@@ -168,13 +171,14 @@ impl Vault {
         progress_bar.set_message("Verifying the token...");
 
         let response = self.vault_client.verify_token(api_key).await?;
+        progress_bar.finish_and_clear();
 
         if response.status().is_success() {
             response.json::<VerifyToken>().await?;
             Ok(true)
         } else {
             self.handle_error(response).await?;
-            unreachable!()
+            Ok(false)
         }
     }
 
@@ -185,22 +189,36 @@ impl Vault {
         let status = response.status();
         let message = response.text().await?;
 
-        if status == 400 {
-            if message.contains("Okta auth failed") {
-                colored_println!("Your login session has expired. Please log in again.");
+        match status {
+            StatusCode::NOT_FOUND => {
+                debug!("The requested resource was not found.");
+                return Err(VaultError::SecretNotFound);
+            }
+            StatusCode::FORBIDDEN => {
+                colored_println!("Your login session has expired/invalid. Please log in again.");
                 self.handle_login().await?;
-                Err(VaultError::AuthenticationFailed)
-            } else {
-                Err(VaultError::ResponseError {
+            }
+            StatusCode::BAD_REQUEST => {
+                if message.contains("Okta auth failed") {
+                    colored_println!("Invalid credentials. Please try again.");
+                    return Err(VaultError::AuthenticationFailed);
+                } else {
+                    colored_println!("Bad request. Please try again.");
+                    return Err(VaultError::ResponseError {
+                        code: status.to_string(),
+                        message,
+                    });
+                }
+            }
+            _ => {
+                colored_println!("Error: {}", message);
+                return Err(VaultError::ResponseError {
                     code: status.to_string(),
                     message,
-                })
+                });
             }
-        } else {
-            Err(VaultError::ResponseError {
-                code: status.to_string(),
-                message,
-            })
-        }
+        };
+
+        Ok(())
     }
 }
