@@ -8,7 +8,7 @@ mod loader;
 mod logger;
 pub mod output;
 mod services {
-    pub mod vault;
+    mod vault;
 }
 mod telemetry;
 mod utils;
