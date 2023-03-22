@@ -35,8 +35,6 @@ pub enum VaultError {
     ReqwestError(#[from] reqwest::Error),
     #[error("API Response Error: {message}")]
     ResponseError { code: String, message: String },
-    #[error("You are un-authenticated.")]
-    UnAuthenticated,
     #[error("Authentication failed.")]
     AuthenticationFailed,
     #[error("You are un-initialised.")]

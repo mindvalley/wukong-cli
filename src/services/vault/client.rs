@@ -39,8 +39,6 @@ pub struct UpdateSecret {
     auth: Option<Auth>,
 }
 
-mod api_vault_url {}
-
 pub struct VaultClient {
     client: reqwest::Client,
 }

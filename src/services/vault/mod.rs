@@ -191,18 +191,18 @@ impl Vault {
             if message.contains("Okta auth failed") {
                 colored_println!("Your login session has expired. Please log in again.");
                 self.handle_login().await?;
-                return Err(VaultError::AuthenticationFailed);
+                Err(VaultError::AuthenticationFailed)
             } else {
-                return Err(VaultError::ResponseError {
+                Err(VaultError::ResponseError {
                     code: status.to_string(),
                     message,
-                });
+                })
             }
         } else {
-            return Err(VaultError::ResponseError {
+            Err(VaultError::ResponseError {
                 code: status.to_string(),
                 message,
-            });
+            })
         }
     }
 }
