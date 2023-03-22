@@ -21,10 +21,6 @@ pub enum CliError {
     AuthError { message: &'static str },
     #[error(transparent)]
     DeploymentError(#[from] DeploymentError),
-    #[error("Request to {domain} timed out.")]
-    Timeout { domain: String },
-    #[error("Domain Error")]
-    DomainError,
 }
 
 #[derive(Debug, ThisError)]
