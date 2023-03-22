@@ -39,38 +39,38 @@ pub struct UpdateSecret {
     auth: Option<Auth>,
 }
 
-mod api_vault_url {
-    pub const LOGIN: &str = "https://bunker.mindvalley.dev:8200/v1/auth/okta/login";
-    pub const VERIFY_TOKEN: &str = "https://bunker.mindvalley.dev:8200/v1/auth/token/lookup-self";
-    pub const FETCH_SECRETS: &str = "https://bunker.mindvalley.dev:8200/v1/secret/data";
-    pub const PATCH_SECRET: &str = "https://bunker.mindvalley.dev:8200/v1/secret/data";
-}
+mod api_vault_url {}
 
 pub struct VaultClient {
     client: reqwest::Client,
 }
 
 impl VaultClient {
+    const LOGIN: &str = "https://bunker.mindvalley.dev:8200/v1/auth/okta/login";
+    const VERIFY_TOKEN: &str = "https://bunker.mindvalley.dev:8200/v1/auth/token/lookup-self";
+    const FETCH_SECRETS: &str = "https://bunker.mindvalley.dev:8200/v1/secret/data";
+    const PATCH_SECRET: &str = "https://bunker.mindvalley.dev:8200/v1/secret/data";
+
     pub fn new() -> Self {
         let client = reqwest::Client::new();
         Self { client }
     }
 
-    pub async fn login(&self, email: &str, password: &str) -> Result<Login, reqwest::Error> {
-        let url = format!(
-            "{base_url}/{email}",
-            base_url = api_vault_url::LOGIN,
-            email = email
-        );
+    pub async fn login(
+        &self,
+        email: &str,
+        password: &str,
+    ) -> Result<reqwest::Response, reqwest::Error> {
+        let url = format!("{base_url}/{email}", base_url = Self::LOGIN, email = email);
 
-        self.client
+        let response = self
+            .client
             .post(url)
             .form(&[("password", password)])
             .send()
-            .await?
-            .error_for_status()?
-            .json()
-            .await
+            .await?;
+
+        Ok(response)
     }
 
     pub async fn fetch_secrets(
@@ -80,7 +80,7 @@ impl VaultClient {
     ) -> Result<reqwest::Response, reqwest::Error> {
         let url = format!(
             "{base_url}/{path}",
-            base_url = api_vault_url::FETCH_SECRETS,
+            base_url = Self::FETCH_SECRETS,
             path = path
         );
 
@@ -94,15 +94,15 @@ impl VaultClient {
         Ok(response)
     }
 
-    pub async fn verify_token(&self, api_token: &str) -> Result<VerifyToken, reqwest::Error> {
-        self.client
-            .get(api_vault_url::VERIFY_TOKEN)
+    pub async fn verify_token(&self, api_token: &str) -> Result<reqwest::Response, reqwest::Error> {
+        let response = self
+            .client
+            .get(Self::VERIFY_TOKEN)
             .header("X-Vault-Token", api_token)
             .send()
-            .await?
-            .error_for_status()?
-            .json()
-            .await
+            .await?;
+
+        Ok(response)
     }
 
     pub async fn update_secret(
@@ -111,10 +111,10 @@ impl VaultClient {
         path: &str,
         key: &str,
         value: &str,
-    ) -> Result<UpdateSecret, reqwest::Error> {
+    ) -> Result<reqwest::Response, reqwest::Error> {
         let url = format!(
             "{base_url}/{path}",
-            base_url = api_vault_url::PATCH_SECRET,
+            base_url = Self::PATCH_SECRET,
             path = path
         );
 
@@ -123,14 +123,14 @@ impl VaultClient {
         data.insert(key.to_string(), value.to_string());
         secret_data.insert("data", data);
 
-        self.client
+        let response = self
+            .client
             .put(url)
             .header("X-Vault-Token", api_token)
             .json(&secret_data)
             .send()
-            .await?
-            .error_for_status()?
-            .json()
-            .await
+            .await?;
+
+        Ok(response)
     }
 }

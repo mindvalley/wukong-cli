@@ -70,6 +70,11 @@ pub struct VaultConfig {
     pub api_key: String,
 }
 
+pub struct ConfigWithPath {
+    pub config: Config,
+    pub path: String,
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct AuthConfig {
     pub account: String,
@@ -146,6 +151,21 @@ impl Config {
         file.write_all(&serialized.into_bytes())?;
 
         Ok(())
+    }
+
+    pub fn get_config_with_path() -> Result<ConfigWithPath, CliError> {
+        let config_file = CONFIG_FILE
+            .as_ref()
+            .expect("Unable to identify user's home directory");
+
+        let config = Config::load(config_file)?;
+
+        let config_with_path = ConfigWithPath {
+            config,
+            path: config_file.to_string(),
+        };
+
+        Ok(config_with_path)
     }
 }
 

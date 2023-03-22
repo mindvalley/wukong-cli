@@ -25,6 +25,24 @@ pub enum CliError {
     DeploymentError(#[from] DeploymentError),
     #[error("Secret not found.")]
     SecretNotFound,
+    #[error(transparent)]
+    VaultError(#[from] VaultError),
+}
+
+#[derive(Debug, ThisError)]
+pub enum VaultError {
+    #[error(transparent)]
+    ReqwestError(#[from] reqwest::Error),
+    #[error("API Response Error: {message}")]
+    ResponseError { code: String, message: String },
+    #[error("You are un-authenticated.")]
+    UnAuthenticated,
+    #[error("Authentication failed.")]
+    AuthenticationFailed,
+    #[error("You are un-initialised.")]
+    UnInitialised,
+    #[error(transparent)]
+    Io(#[from] ::std::io::Error),
 }
 
 #[derive(Debug, ThisError)]
