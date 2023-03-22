@@ -175,7 +175,9 @@ mod tests {
             }"#;
 
         let mock_server = server.mock(|when, then| {
-            when.method(POST).path_contains("/auth/okta/login");
+            when.method(POST)
+                .path_contains(VaultClient::LOGIN)
+                .body(format!("password={}", password));
             then.status(200)
                 .header("content-type", "application/json; charset=UTF-8")
                 .body(api_resp);
@@ -195,6 +197,46 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn verify_token() {
+        let server = MockServer::start();
+
+        let api_token = "secret_token";
+
+        let api_resp = r#"
+            {
+              "data": {
+                "expire_time": "2019-12-10T10:10:10.000000Z",
+                "issue_time": "2019-10-10T10:10:10.000000Z"
+                }
+            }"#;
+
+        let mock_server = server.mock(|when, then| {
+            when.method(GET)
+                .path_contains(VaultClient::VERIFY_TOKEN)
+                .header("X-Vault-Token", api_token);
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+
+        let vault_client = VaultClient::new().with_base_url(server.base_url());
+        let response = vault_client.verify_token(api_token).await;
+
+        mock_server.assert();
+        assert!(response.is_ok());
+
+        let response = response.unwrap();
+        assert_eq!(response.status(), 200);
+
+        let verify_token = response.json::<VerifyToken>().await.unwrap();
+
+        assert!(
+            !verify_token.data.expire_time.is_empty(),
+            "Value should not be None"
+        );
+    }
+
+    #[tokio::test]
     async fn fetch_secrets() {
         let server = MockServer::start();
 
@@ -204,7 +246,9 @@ mod tests {
         let api_resp = r#"
             {
               "data": {
-                "test2": "secret_token"
+                "data": {
+                    "test2": "secret_token"
+                    }
                 }
             }"#;
 
@@ -250,8 +294,8 @@ mod tests {
             }"#;
 
         let mock_server = server.mock(|when, then| {
-            when.method(POST)
-                .path_contains("/v1/secret/data")
+            when.method(PUT)
+                .path_contains(VaultClient::UPDATE_SECRET)
                 .body(format!(r#"{{"data":{{"{}":"{}"}}}}"#, key, value))
                 .header("X-Vault-Token", api_token);
             then.status(200)
