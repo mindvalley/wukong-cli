@@ -35,8 +35,6 @@ pub enum APIError {
     ChangelogComparingSameBuild,
     #[error("Request to {domain} timed out.")]
     Timeout { domain: String },
-    #[error("Domain Error")]
-    DomainError,
 }
 
 #[derive(Debug, ThisError)]
