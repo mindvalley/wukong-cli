@@ -4,7 +4,7 @@ use crate::config::VaultConfig;
 use crate::error::VaultError;
 use crate::loader::new_spinner_progress_bar;
 use crate::output::colored_println;
-use crate::services::vault::client::{FetchSecrets, UpdateSecret, VerifyToken};
+use crate::services::vault::client::FetchSecrets;
 use crate::Config as CLIConfig;
 use async_recursion::async_recursion;
 use dialoguer::theme::ColorfulTheme;
