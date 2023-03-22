@@ -98,21 +98,20 @@ impl QueryClient {
         Q::ResponseData: Debug,
     {
         let body = Q::build_query(variables);
-        let client = self.inner();
 
         debug!("url: {:?}", &self.api_url);
         debug!("GraphQL query: \n{}", body.query);
 
         let response: Result<Response<Q::ResponseData>, APIError> =
-            self.retry_request::<Q>(client, body, handler).await;
+            self.retry_request::<Q>(body, handler).await;
         debug!("GraphQL response: {:#?}", response);
 
         response
     }
 
+    // Attempts the request and retries up to 3 times if the request times out.
     async fn retry_request<Q>(
         &self,
-        client: &reqwest::Client,
         body: QueryBody<Q::Variables>,
         handler: impl Fn(
             Response<Q::ResponseData>,
@@ -124,14 +123,15 @@ impl QueryClient {
         Q::ResponseData: Debug,
     {
         let mut retry_count = 0;
-        let mut response: Response<<Q as GraphQLQuery>::ResponseData> = client
-            .post(&self.api_url)
-            .json(&body)
-            .send()
-            .await?
-            .json()
-            .await?;
+        let request = self.inner().post(&self.api_url).json(&body);
+        let mut response: Response<<Q as GraphQLQuery>::ResponseData> =
+            request.send().await?.json().await?;
 
+        debug!("GraphQL response: {:#?}", response);
+
+        // We use <= 3 so it does one extra loop where the last response is checked
+        // in order to return an APIError::Timeout if it was a timeout error in the
+        // case of it failing all 3 retries.
         while response.errors.is_some() && retry_count <= 3 {
             if let Some(errors) = response.errors.clone() {
                 let first_error = errors[0].clone();
@@ -144,17 +144,20 @@ impl QueryClient {
                         }
                         retry_count += 1;
                         eprintln!(
-                            "... request timeout, retrying the request {}/3",
+                            "... request to {domain} timed out, retrying the request {}/3",
                             retry_count
                         );
+                        debug!("request to {domain} timed out. Retry {retry_count}/3");
+
                         thread::sleep(time::Duration::from_secs(5));
-                        response = client
-                            .post(&self.api_url)
-                            .json(&body)
-                            .send()
-                            .await?
-                            .json()
-                            .await?;
+
+                        let request = self.inner().post(&self.api_url).json(&body);
+
+                        debug!("request: {:?}", request);
+
+                        response = request.send().await?.json().await?;
+
+                        debug!("GraphQL response: {:#?}", response);
                     }
                     _ => return handler(response, first_error),
                 }
@@ -274,11 +277,14 @@ impl QueryClient {
     }
 }
 
-pub fn check_retry_and_auth_error(error: &graphql_client::Error) -> Option<APIError> {
+// Check if the error is a retryable error or an authentication error. If the code
+// is a retryable error, we rerun the request up to 3 times and return the result.
+fn check_retry_and_auth_error(error: &graphql_client::Error) -> Option<APIError> {
     if error.message == "Unauthenticated" {
         Some(APIError::UnAuthenticated)
     } else if error.message.contains("request_timeout") {
         // The Wukong API returns a message like "{{domain}_request_timeout}", so we need to extract the domain
+        // from the message. The domain can be one of 'jenkins', 'spinnaker' or 'github'
         let domain = error.message.split('_').next().unwrap();
         return Some(APIError::Timeout {
             domain: domain.to_string(),
