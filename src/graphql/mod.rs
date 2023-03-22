@@ -277,8 +277,8 @@ impl QueryClient {
     }
 }
 
-// Check if the error is a retryable error or an authentication error. If the code
-// is a retryable error, we rerun the request up to 3 times and return the result.
+// Check if the error is a timeout error or an authentication error.
+// For Timeout errors, we get the domain and return it as part of the Timeout error.
 fn check_retry_and_auth_error(error: &graphql_client::Error) -> Option<APIError> {
     if error.message == "Unauthenticated" {
         Some(APIError::UnAuthenticated)
