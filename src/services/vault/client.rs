@@ -230,7 +230,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn verify_token() {
+    async fn test_verify_token() {
         let server = MockServer::start();
 
         let api_token = "secret_token";
@@ -270,7 +270,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn fetch_secrets() {
+    async fn test_fetch_secrets() {
         let server = MockServer::start();
 
         let api_token = "test_token";
@@ -311,7 +311,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn update_secret() {
+    async fn test_update_secret() {
         let server = MockServer::start();
 
         let api_token = "test_token";
