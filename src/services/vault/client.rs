@@ -47,7 +47,7 @@ impl VaultClient {
     const LOGIN: &str = "https://bunker.mindvalley.dev:8200/v1/auth/okta/login";
     const VERIFY_TOKEN: &str = "https://bunker.mindvalley.dev:8200/v1/auth/token/lookup-self";
     const FETCH_SECRETS: &str = "https://bunker.mindvalley.dev:8200/v1/secret/data";
-    const PATCH_SECRET: &str = "https://bunker.mindvalley.dev:8200/v1/secret/data";
+    const UPDATE_SECRET: &str = "https://bunker.mindvalley.dev:8200/v1/secret/data";
 
     pub fn new() -> Self {
         let client = reqwest::Client::new();
@@ -112,7 +112,7 @@ impl VaultClient {
     ) -> Result<reqwest::Response, reqwest::Error> {
         let url = format!(
             "{base_url}/{path}",
-            base_url = Self::PATCH_SECRET,
+            base_url = Self::UPDATE_SECRET,
             path = path
         );
 
