@@ -282,8 +282,6 @@ pub fn check_retry_and_auth_error(error: &graphql_client::Error) -> Option<APIEr
         return Some(APIError::Timeout {
             domain: domain.to_string(),
         });
-    } else if error.message.contains("domain") {
-        return Some(APIError::DomainError);
     } else {
         return None;
     }
