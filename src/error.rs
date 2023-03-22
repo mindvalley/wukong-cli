@@ -15,8 +15,6 @@ pub enum CliError {
     OpenIDDiscoveryError,
     #[error("You are un-authenticated.")]
     UnAuthenticated,
-    #[error("Authentication failed.")]
-    AuthenticationFailed,
     #[error("You are un-initialised.")]
     UnInitialised,
     #[error("{message}")]
