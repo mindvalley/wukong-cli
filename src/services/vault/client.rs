@@ -69,12 +69,7 @@ impl VaultClient {
         email: &str,
         password: &str,
     ) -> Result<reqwest::Response, reqwest::Error> {
-        let url = format!(
-            "{base_url}{base_path}/{email}",
-            base_path = Self::LOGIN,
-            email = email,
-            base_url = self.base_url
-        );
+        let url = format!("{}{}/{}", Self::LOGIN, email, self.base_url);
 
         let response = self
             .client
@@ -91,12 +86,7 @@ impl VaultClient {
         api_token: &str,
         path: &str,
     ) -> Result<reqwest::Response, reqwest::Error> {
-        let url = format!(
-            "{base_url}{base_path}/{path}",
-            base_url = self.base_url,
-            base_path = Self::FETCH_SECRETS,
-            path = path
-        );
+        let url = format!("{}{}/{}", self.base_url, Self::FETCH_SECRETS, path);
 
         let response = self
             .client
@@ -109,11 +99,7 @@ impl VaultClient {
     }
 
     pub async fn verify_token(&self, api_token: &str) -> Result<reqwest::Response, reqwest::Error> {
-        let url = format!(
-            "{base_url}{base_path}",
-            base_url = self.base_url,
-            base_path = Self::VERIFY_TOKEN,
-        );
+        let url = format!("{}{}", self.base_url, Self::VERIFY_TOKEN,);
 
         let response = self
             .client
@@ -132,12 +118,7 @@ impl VaultClient {
         key: &str,
         value: &str,
     ) -> Result<reqwest::Response, reqwest::Error> {
-        let url = format!(
-            "{base_url}{base_path}/{path}",
-            base_url = self.base_url,
-            base_path = Self::UPDATE_SECRET,
-            path = path
-        );
+        let url = format!("{}{}/{}", self.base_url, Self::UPDATE_SECRET, path);
 
         let mut secret_data = HashMap::new();
         let mut data = HashMap::new();
