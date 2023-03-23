@@ -40,9 +40,9 @@ pub enum VaultError {
     #[error("Secret not found.")]
     SecretNotFound,
     #[error("API key not found.")]
-    ApiKeyNotFound,
+    ApiTokenNotFound,
     #[error("Invalid API key.")]
-    ApiKeyInvalid,
+    ApiTokenInvalid,
 }
 
 #[derive(Debug, ThisError)]
