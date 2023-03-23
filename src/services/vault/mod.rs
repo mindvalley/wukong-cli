@@ -41,13 +41,13 @@ impl Vault {
     pub async fn get_token_or_login(&self) -> Result<String, VaultError> {
         let mut token = match self.get_token().await {
             Ok(token) => token,
-            Err(VaultError::ApiTokenNotFound) => self.handle_login().await?,
+            Err(VaultError::ApiKeyNotFound) => self.handle_login().await?,
             Err(err) => return Err(err),
         };
 
         match self.is_valid_token(&token).await {
             Ok(_) => Ok(token),
-            Err(VaultError::ApiTokenInvalid) => {
+            Err(VaultError::ApiKeyInvalid) => {
                 token = self.handle_login().await?;
                 Ok(token)
             }
@@ -166,7 +166,7 @@ impl Vault {
         let api_key = match &config_with_path.config.vault {
             Some(vault_config) => vault_config.api_key.clone(),
             None => {
-                return Err(VaultError::ApiTokenNotFound);
+                return Err(VaultError::ApiKeyNotFound);
             }
         };
 
@@ -197,7 +197,7 @@ impl Vault {
 
         match status {
             StatusCode::NOT_FOUND => Err(VaultError::SecretNotFound),
-            StatusCode::FORBIDDEN => Err(VaultError::ApiTokenInvalid),
+            StatusCode::FORBIDDEN => Err(VaultError::ApiKeyInvalid),
             StatusCode::BAD_REQUEST => {
                 if message.contains("Okta auth failed") {
                     Err(VaultError::AuthenticationFailed)
