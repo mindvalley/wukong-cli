@@ -8,7 +8,6 @@ use crate::loader::new_spinner_progress_bar;
 use crate::output::colored_println;
 use crate::services::vault::client::FetchSecrets;
 use crate::Config as CLIConfig;
-use async_recursion::async_recursion;
 use dialoguer::theme::ColorfulTheme;
 use log::debug;
 use reqwest::StatusCode;
@@ -39,7 +38,24 @@ impl Vault {
         }
     }
 
-    pub async fn handle_login(&self) -> Result<bool, VaultError> {
+    pub async fn get_token_or_login(&self) -> Result<String, VaultError> {
+        let mut token = match self.get_token().await {
+            Ok(token) => token,
+            Err(VaultError::ApiTokenNotFound) => self.handle_login().await?,
+            Err(err) => return Err(err),
+        };
+
+        match self.is_valid_token(&token).await {
+            Ok(_) => Ok(token),
+            Err(VaultError::ApiTokenInvalid) => {
+                token = self.handle_login().await?;
+                Ok(token)
+            }
+            Err(err) => Err(err),
+        }
+    }
+
+    pub async fn handle_login(&self) -> Result<String, VaultError> {
         let mut email: Option<String> = None;
         let mut config_with_path = CLIConfig::get_config_with_path().unwrap();
 
@@ -71,7 +87,7 @@ impl Vault {
             let data = response.json::<Login>().await?;
 
             config_with_path.config.vault = Some(VaultConfig {
-                api_key: data.auth.client_token,
+                api_key: data.auth.client_token.clone(),
             });
 
             config_with_path
@@ -80,25 +96,31 @@ impl Vault {
                 .unwrap();
 
             colored_println!("You are now logged in as {}.", email.unwrap());
+
+            Ok(data.auth.client_token)
         } else {
             self.handle_error(response).await?;
+            unreachable!()
         }
-
-        Ok(true)
     }
 
-    pub async fn get_secret(&self, path: &str, key: &str) -> Result<String, VaultError> {
-        let secrets = self.get_secrets(path).await?;
-
-        // Extract the secret from the response:
+    pub async fn get_secret(
+        &self,
+        api_key: &str,
+        path: &str,
+        key: &str,
+    ) -> Result<String, VaultError> {
+        let secrets = self.get_secrets(api_key, path).await?;
         let secret = secrets.data.get(key).ok_or(VaultError::SecretNotFound)?;
 
         Ok(secret.to_string())
     }
 
-    pub async fn get_secrets(&self, path: &str) -> Result<FetchSecretsData, VaultError> {
-        let api_key = &self.get_token(false).await?;
-
+    pub async fn get_secrets(
+        &self,
+        api_key: &str,
+        path: &str,
+    ) -> Result<FetchSecretsData, VaultError> {
         let progress_bar = new_spinner_progress_bar();
         progress_bar.set_message("Fetching secrets... ");
 
@@ -117,11 +139,10 @@ impl Vault {
 
     pub async fn update_secret(
         &self,
+        api_key: &str,
         path: &str,
         data: &HashMap<&str, &str>,
     ) -> Result<bool, VaultError> {
-        let api_key = &self.get_token(false).await?;
-
         let progress_bar = new_spinner_progress_bar();
         progress_bar.set_message("Updating secrets... ");
 
@@ -138,31 +159,21 @@ impl Vault {
         Ok(true)
     }
 
-    #[async_recursion]
-    async fn get_token(&self, skip_verify: bool) -> Result<String, VaultError> {
+    async fn get_token(&self) -> Result<String, VaultError> {
         debug!("Getting token ...");
 
         let config_with_path = CLIConfig::get_config_with_path().unwrap();
-        let mut api_key = match &config_with_path.config.vault {
+        let api_key = match &config_with_path.config.vault {
             Some(vault_config) => vault_config.api_key.clone(),
             None => {
-                debug!("No token found in config file. Prompting user to log in ...");
-                colored_println!("You are not logged in. Please log in to continue.");
-
-                self.handle_login().await?;
-                self.get_token(true).await? // Set the skip_verify flag to true on recursive call
+                return Err(VaultError::ApiTokenNotFound);
             }
         };
-
-        if !skip_verify {
-            self.verify_token(&api_key).await?;
-            api_key = self.get_token(true).await?;
-        }
 
         Ok(api_key)
     }
 
-    async fn verify_token(&self, api_key: &str) -> Result<bool, VaultError> {
+    async fn is_valid_token(&self, api_key: &str) -> Result<bool, VaultError> {
         debug!("Verifying token ...");
 
         let progress_bar = new_spinner_progress_bar();
@@ -178,7 +189,6 @@ impl Vault {
         Ok(true)
     }
 
-    #[async_recursion]
     async fn handle_error(&self, response: reqwest::Response) -> Result<(), VaultError> {
         debug!("Error: {:?}", response);
 
@@ -186,32 +196,22 @@ impl Vault {
         let message = response.text().await?;
 
         match status {
-            StatusCode::NOT_FOUND => {
-                return Err(VaultError::SecretNotFound);
-            }
-            StatusCode::FORBIDDEN => {
-                // Throw error and let the app handle it:
-                eprintln!("Your login session has expired/invalid. Please log in again.");
-                self.handle_login().await?;
-            }
+            StatusCode::NOT_FOUND => Err(VaultError::SecretNotFound),
+            StatusCode::FORBIDDEN => Err(VaultError::ApiTokenInvalid),
             StatusCode::BAD_REQUEST => {
                 if message.contains("Okta auth failed") {
-                    return Err(VaultError::AuthenticationFailed);
+                    Err(VaultError::AuthenticationFailed)
                 } else {
-                    return Err(VaultError::ResponseError {
+                    Err(VaultError::ResponseError {
                         code: status.to_string(),
                         message,
-                    });
+                    })
                 }
             }
-            _ => {
-                return Err(VaultError::ResponseError {
-                    code: status.to_string(),
-                    message,
-                });
-            }
-        };
-
-        Ok(())
+            _ => Err(VaultError::ResponseError {
+                code: status.to_string(),
+                message,
+            }),
+        }
     }
 }
