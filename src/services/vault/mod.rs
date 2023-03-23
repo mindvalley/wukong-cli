@@ -146,7 +146,10 @@ impl Vault {
         let progress_bar = new_spinner_progress_bar();
         progress_bar.set_message("Updating secrets... ");
 
-        let response = self.vault_client.update_secret(api_token, path, data).await?;
+        let response = self
+            .vault_client
+            .update_secret(api_token, path, data)
+            .await?;
 
         progress_bar.finish_and_clear();
 
