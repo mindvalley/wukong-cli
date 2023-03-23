@@ -120,6 +120,7 @@ impl VaultClient {
     ) -> Result<reqwest::Response, reqwest::Error> {
         let url = format!("{}{}/{}", self.base_url, Self::UPDATE_SECRET, path);
 
+        // Update the secret with updated value:
         let mut secret_data = HashMap::new();
         let mut data = HashMap::new();
         data.insert(key.to_string(), value.to_string());

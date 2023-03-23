@@ -29,6 +29,7 @@ pub struct Vault {
     vault_client: VaultClient,
 }
 
+#[allow(dead_code)]
 impl Vault {
     pub fn new() -> Self {
         Self {
