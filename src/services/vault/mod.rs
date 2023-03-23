@@ -1,5 +1,7 @@
 pub mod client;
 
+use std::collections::HashMap;
+
 use crate::config::VaultConfig;
 use crate::error::VaultError;
 use crate::loader::new_spinner_progress_bar;
@@ -116,18 +118,14 @@ impl Vault {
     pub async fn update_secret(
         &self,
         path: &str,
-        key: &str,
-        value: &str,
+        data: &HashMap<&str, &str>,
     ) -> Result<bool, VaultError> {
         let api_key = &self.get_token(false).await?;
 
         let progress_bar = new_spinner_progress_bar();
         progress_bar.set_message("Updating secrets... ");
 
-        let response = self
-            .vault_client
-            .update_secret(api_key, path, key, value)
-            .await?;
+        let response = self.vault_client.update_secret(api_key, path, data).await?;
 
         progress_bar.finish_and_clear();
 
@@ -193,7 +191,7 @@ impl Vault {
             }
             StatusCode::FORBIDDEN => {
                 // Throw error and let the app handle it:
-                colored_println!("Your login session has expired/invalid. Please log in again.");
+                eprintln!("Your login session has expired/invalid. Please log in again.");
                 self.handle_login().await?;
             }
             StatusCode::BAD_REQUEST => {

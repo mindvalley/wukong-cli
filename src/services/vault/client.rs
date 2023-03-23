@@ -115,15 +115,12 @@ impl VaultClient {
         &self,
         api_token: &str,
         path: &str,
-        key: &str,
-        value: &str,
+        data: &HashMap<&str, &str>,
     ) -> Result<reqwest::Response, reqwest::Error> {
         let url = format!("{}{}/{}", self.base_url, Self::UPDATE_SECRET, path);
 
         // Update the secret with updated value:
         let mut secret_data = HashMap::new();
-        let mut data = HashMap::new();
-        data.insert(key.to_string(), value.to_string());
         secret_data.insert("data", data);
 
         let response = self
@@ -142,6 +139,7 @@ impl VaultClient {
 mod tests {
     use super::*;
     use httpmock::prelude::*;
+    use serde_json::json;
 
     #[tokio::test]
     async fn test_login() {
@@ -300,6 +298,8 @@ mod tests {
         let path = "devenv/test";
         let key = "update_key";
         let value = "updated_value";
+        let mut update_data = HashMap::new();
+        update_data.insert("test", "test4");
 
         let api_resp = r#"
             {
@@ -321,7 +321,7 @@ mod tests {
         let vault_client = VaultClient::new().with_base_url(server.base_url());
 
         let response = vault_client
-            .update_secret(api_token, path, key, value)
+            .update_secret(api_token, path, &update_data)
             .await;
 
         mock_server.assert();
