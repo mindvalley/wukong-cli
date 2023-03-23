@@ -39,9 +39,9 @@ pub enum VaultError {
     Io(#[from] ::std::io::Error),
     #[error("Secret not found.")]
     SecretNotFound,
-    #[error("API key not found.")]
+    #[error("API token ot found.")]
     ApiTokenNotFound,
-    #[error("Invalid API key.")]
+    #[error("Invalid API token.")]
     ApiTokenInvalid,
 }
 
