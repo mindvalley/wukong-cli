@@ -54,6 +54,7 @@ pub static CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
 pub struct Config {
     pub core: CoreConfig,
     pub auth: Option<AuthConfig>,
+    pub vault: Option<VaultConfig>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -62,6 +63,16 @@ pub struct CoreConfig {
     pub application: String,
     pub wukong_api_url: String,
     pub okta_client_id: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct VaultConfig {
+    pub api_key: String,
+}
+
+pub struct ConfigWithPath {
+    pub config: Config,
+    pub path: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -86,6 +97,7 @@ impl Default for Config {
                 okta_client_id: OKTA_CLIENT_ID.to_string(),
             },
             auth: None,
+            vault: None,
         }
     }
 }
@@ -139,6 +151,21 @@ impl Config {
         file.write_all(&serialized.into_bytes())?;
 
         Ok(())
+    }
+
+    pub fn get_config_with_path() -> Result<ConfigWithPath, CliError> {
+        let config_file = CONFIG_FILE
+            .as_ref()
+            .expect("Unable to identify user's home directory");
+
+        let config = Config::load(config_file)?;
+
+        let config_with_path = ConfigWithPath {
+            config,
+            path: config_file.to_string(),
+        };
+
+        Ok(config_with_path)
     }
 }
 
