@@ -87,7 +87,7 @@ impl Vault {
             let data = response.json::<Login>().await?;
 
             config_with_path.config.vault = Some(VaultConfig {
-                api_key: data.auth.client_token.clone(),
+                api_token: data.auth.client_token.clone(),
             });
 
             config_with_path
@@ -106,11 +106,11 @@ impl Vault {
 
     pub async fn get_secret(
         &self,
-        api_key: &str,
+        api_token: &str,
         path: &str,
         key: &str,
     ) -> Result<String, VaultError> {
-        let secrets = self.get_secrets(api_key, path).await?;
+        let secrets = self.get_secrets(api_token, path).await?;
         let secret = secrets.data.get(key).ok_or(VaultError::SecretNotFound)?;
 
         Ok(secret.to_string())
@@ -118,13 +118,13 @@ impl Vault {
 
     pub async fn get_secrets(
         &self,
-        api_key: &str,
+        api_token: &str,
         path: &str,
     ) -> Result<FetchSecretsData, VaultError> {
         let progress_bar = new_spinner_progress_bar();
         progress_bar.set_message("Fetching secrets... ");
 
-        let response = self.vault_client.fetch_secrets(api_key, path).await?;
+        let response = self.vault_client.fetch_secrets(api_token, path).await?;
 
         progress_bar.finish_and_clear();
 
@@ -139,14 +139,14 @@ impl Vault {
 
     pub async fn update_secret(
         &self,
-        api_key: &str,
+        api_token: &str,
         path: &str,
         data: &HashMap<&str, &str>,
     ) -> Result<bool, VaultError> {
         let progress_bar = new_spinner_progress_bar();
         progress_bar.set_message("Updating secrets... ");
 
-        let response = self.vault_client.update_secret(api_key, path, data).await?;
+        let response = self.vault_client.update_secret(api_token, path, data).await?;
 
         progress_bar.finish_and_clear();
 
@@ -163,23 +163,23 @@ impl Vault {
         debug!("Getting token ...");
 
         let config_with_path = CLIConfig::get_config_with_path().unwrap();
-        let api_key = match &config_with_path.config.vault {
-            Some(vault_config) => vault_config.api_key.clone(),
+        let api_token = match &config_with_path.config.vault {
+            Some(vault_config) => vault_config.api_token.clone(),
             None => {
                 return Err(VaultError::ApiTokenNotFound);
             }
         };
 
-        Ok(api_key)
+        Ok(api_token)
     }
 
-    async fn is_valid_token(&self, api_key: &str) -> Result<bool, VaultError> {
+    async fn is_valid_token(&self, api_token: &str) -> Result<bool, VaultError> {
         debug!("Verifying token ...");
 
         let progress_bar = new_spinner_progress_bar();
         progress_bar.set_message("Verifying the token...");
 
-        let response = self.vault_client.verify_token(api_key).await?;
+        let response = self.vault_client.verify_token(api_token).await?;
         progress_bar.finish_and_clear();
 
         if !response.status().is_success() {

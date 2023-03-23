@@ -67,7 +67,7 @@ pub struct CoreConfig {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct VaultConfig {
-    pub api_key: String,
+    pub api_token: String,
 }
 
 pub struct ConfigWithPath {
