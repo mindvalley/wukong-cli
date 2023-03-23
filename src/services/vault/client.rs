@@ -139,7 +139,6 @@ impl VaultClient {
 mod tests {
     use super::*;
     use httpmock::prelude::*;
-    use serde_json::json;
 
     #[tokio::test]
     async fn test_login() {
