@@ -100,11 +100,11 @@ impl QueryClient {
         let body = Q::build_query(variables);
 
         debug!("url: {:?}", &self.api_url);
-        debug!("GraphQL query: \n{}", body.query);
+        debug!("query: \n{}", body.query);
 
         let response: Result<Response<Q::ResponseData>, APIError> =
             self.retry_request::<Q>(body, handler).await;
-        debug!("GraphQL response: {:#?}", response);
+        debug!("response: {:#?}", response);
 
         response
     }
@@ -125,12 +125,12 @@ impl QueryClient {
         let mut retry_count = 0;
         let request = self.inner().post(&self.api_url).json(&body);
 
-        debug!("GraphQL equest: {:#?}", request);
+        debug!("request: {:#?}", request);
 
         let mut response: Response<<Q as GraphQLQuery>::ResponseData> =
             request.send().await?.json().await?;
 
-        debug!("GraphQL response: {:#?}", response);
+        debug!("response: {:#?}", response);
 
         // We use <= 3 so it does one extra loop where the last response is checked
         // in order to return an APIError::Timeout if it was a timeout error in the
@@ -159,7 +159,7 @@ impl QueryClient {
 
                         response = request.send().await?.json().await?;
 
-                        debug!("GraphQL response: {:#?}", response);
+                        debug!("response: {:#?}", response);
                     }
                     _ => return handler(response, first_error),
                 }
