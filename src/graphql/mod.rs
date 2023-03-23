@@ -124,6 +124,9 @@ impl QueryClient {
     {
         let mut retry_count = 0;
         let request = self.inner().post(&self.api_url).json(&body);
+
+        debug!("GraphQL equest: {:#?}", request);
+
         let mut response: Response<<Q as GraphQLQuery>::ResponseData> =
             request.send().await?.json().await?;
 
@@ -147,13 +150,12 @@ impl QueryClient {
                             "... request to {domain} timed out, retrying the request {}/3",
                             retry_count
                         );
-                        debug!("request to {domain} timed out. Retry {retry_count}/3");
 
                         thread::sleep(time::Duration::from_secs(5));
 
                         let request = self.inner().post(&self.api_url).json(&body);
 
-                        debug!("request: {:?}", request);
+                        debug!("request: {:#?}", request);
 
                         response = request.send().await?.json().await?;
 
