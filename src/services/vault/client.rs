@@ -295,22 +295,20 @@ mod tests {
 
         let api_token = "test_token";
         let path = "devenv/test";
-        let key = "update_key";
-        let value = "updated_value";
         let mut update_data = HashMap::new();
         update_data.insert("test", "test4");
 
         let api_resp = r#"
             {
               "data": {
-                "test2": "secret_token"
+                "test": "test4"
                 }
             }"#;
 
         let mock_server = server.mock(|when, then| {
             when.method(POST)
                 .path_contains(VaultClient::UPDATE_SECRET)
-                .body(format!(r#"{{"data":{{"{}":"{}"}}}}"#, key, value))
+                .body(format!(r#"{{"data":{{"{}":"{}"}}}}"#, "test", "test4"))
                 .header("X-Vault-Token", api_token);
             then.status(200)
                 .header("content-type", "application/json; charset=UTF-8")
