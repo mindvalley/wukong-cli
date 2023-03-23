@@ -127,7 +127,7 @@ impl VaultClient {
 
         let response = self
             .client
-            .put(url)
+            .post(url)
             .header("X-Vault-Token", api_token)
             .json(&secret_data)
             .send()
@@ -308,7 +308,7 @@ mod tests {
             }"#;
 
         let mock_server = server.mock(|when, then| {
-            when.method(PUT)
+            when.method(POST)
                 .path_contains(VaultClient::UPDATE_SECRET)
                 .body(format!(r#"{{"data":{{"{}":"{}"}}}}"#, key, value))
                 .header("X-Vault-Token", api_token);
