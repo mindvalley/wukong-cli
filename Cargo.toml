@@ -69,7 +69,6 @@ miette = { version = "5.5.0", features = ["fancy"] }
 ignore = "0.4.20"
 rayon = "1.7.0"
 tree-sitter = "0.20.9"
-async-recursion = "1.0.2"
 
 [dev-dependencies]
 httpmock = "0.6.7"
@@ -85,7 +84,4 @@ git2 = "0.16.1"
 git = "https://github.com/elixir-lang/tree-sitter-elixir"
 
 [profile.dev.package.insta]
-opt-level = 3
-
-[profile.dev.package.similar]
 opt-level = 3
