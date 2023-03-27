@@ -179,7 +179,7 @@ impl ClapApp {
             CommandGroup::Pipeline(pipeline) => pipeline.handle_command(state).await,
             CommandGroup::Deployment(deployment) => deployment.handle_command(state).await,
             CommandGroup::Config(config) => config.handle_command(),
-            CommandGroup::Dev(dev) => dev.handle_command(),
+            CommandGroup::Dev(dev) => dev.handle_command().await,
         }
     }
 }
