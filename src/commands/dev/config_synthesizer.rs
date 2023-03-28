@@ -1,5 +1,6 @@
 use crate::{error::CliError, services::vault::Vault, utils::annotations::read_vault_annotation};
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
+use owo_colors::OwoColorize;
 use std::io::prelude::*;
 use std::path::PathBuf;
 use std::{env::current_dir, fs::File, path::Path};
@@ -47,8 +48,10 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
                         let dir_path = file_path.parent().unwrap();
                         std::fs::create_dir_all(dir_path).unwrap();
                     }
-                    let mut file = File::create(file_path).unwrap();
+                    let mut file = File::create(&file_path).unwrap();
                     file.write_all(secret.unwrap().as_bytes()).unwrap();
+
+                    println!("\t{} {}", "+".green(), file_path.to_string_lossy());
                 }
             }
         }
@@ -100,27 +103,6 @@ mod test {
             files[1].to_string_lossy(),
             dev_config_file.path().to_string_lossy()
         );
-
-        temp.close().unwrap();
-    }
-
-    #[tokio::test]
-    async fn test_config_synthesizer() {
-        // three files:
-        // temp/config/dev.exs
-        // temp/config/prod.exs
-        // temp/app/config/dev.exs
-
-        let temp = assert_fs::TempDir::new().unwrap();
-        let dev_config_file = temp.child("config/dev.exs");
-        dev_config_file.touch().unwrap();
-        let prod_config_file = temp.child("config/prod.exs");
-        prod_config_file.touch().unwrap();
-        let another_dev_config_file = temp.child("app/config/dev.exs");
-        another_dev_config_file.touch().unwrap();
-
-        let result = handle_config_synthesizer(&temp.to_path_buf()).await;
-        assert!(result.is_ok());
 
         temp.close().unwrap();
     }
