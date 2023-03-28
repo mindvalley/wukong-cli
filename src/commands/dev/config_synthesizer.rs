@@ -1,10 +1,11 @@
 use crate::{error::CliError, services::vault::Vault, utils::annotations::read_vault_annotation};
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use std::io::prelude::*;
-use std::{env::current_dir, fs::File, path::PathBuf};
+use std::path::PathBuf;
+use std::{env::current_dir, fs::File, path::Path};
 
-pub async fn handle_config_synthesizer(path: &PathBuf) -> Result<bool, CliError> {
-    let lint_path = match path.try_exists() {
+pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
+    let path = match path.try_exists() {
         Ok(true) => {
             if path.to_string_lossy() == "." {
                 current_dir().unwrap()
@@ -19,56 +20,33 @@ pub async fn handle_config_synthesizer(path: &PathBuf) -> Result<bool, CliError>
         Err(_) => todo!(),
     };
 
-    let mut overrides = OverrideBuilder::new(&lint_path);
-    overrides.add("**/config/dev.exs").unwrap();
-
-    let available_files: Vec<PathBuf> = WalkBuilder::new(&lint_path)
-        .overrides(overrides.build().unwrap())
-        .build()
-        .flatten()
-        .filter(|e| e.path().is_file())
-        .map(|e| e.path().to_path_buf())
-        .collect();
-
-    println!("available_files: {:#?}", available_files);
+    let available_files = get_dev_config_files(&path);
 
     for file in available_files {
         let src = std::fs::read_to_string(file.clone()).unwrap();
         let annotations = read_vault_annotation(&src);
 
         if !annotations.is_empty() {
-            // println!("Found annotations in file: {}", file.to_string_lossy());
             for annotation in annotations {
                 let vault = Vault::new();
                 let vault_token = vault.get_token_or_login().await.unwrap();
-                println!("vault_token: {:#?}", vault_token);
 
-                println!("annotation: {:#?}", annotation);
+                if annotation.key == "wukong.mindvalley.dev/config-secrets-location" {
+                    let secret_path = annotation.secret_path.clone();
+                    let local_secret_path = annotation.destination_file.clone();
 
-                if annotation.0 .0 == "wukong.mindvalley.dev/config-secrets-location" {
-                    let path = annotation.0 .1.clone();
-                    let local_secret_path = annotation.1.to_string();
-
-                    let path_part = path.split("#").collect::<Vec<&str>>();
-                    let path = path_part[0].to_string();
-                    let key = path_part[1].to_string();
-                    // TODO: check the first part is "vault"
-                    let vault_path_part = path.split(":").collect::<Vec<&str>>();
+                    let vault_path_part = secret_path.split(':').collect::<Vec<&str>>();
                     let vault_secret_path = vault_path_part[1].to_string();
-                    println!("path: {:#?}", vault_secret_path);
-                    println!("local_secret_path: {:#?}", local_secret_path);
 
                     let secret = vault
-                        .get_secret(&vault_token, &vault_secret_path, &key)
+                        .get_secret(&vault_token, &vault_secret_path, &annotation.secret_name)
                         .await;
-                    println!("secrets: {:#?}", secret);
 
                     let file_path = file.parent().unwrap().join(local_secret_path.clone());
-                    if local_secret_path.contains("/") {
+                    if local_secret_path.contains('/') {
                         let dir_path = file_path.parent().unwrap();
                         std::fs::create_dir_all(dir_path).unwrap();
                     }
-                    println!("file_path: {:#?}", file_path);
                     let mut file = File::create(file_path).unwrap();
                     file.write_all(secret.unwrap().as_bytes()).unwrap();
                 }
@@ -77,4 +55,73 @@ pub async fn handle_config_synthesizer(path: &PathBuf) -> Result<bool, CliError>
     }
 
     Ok(true)
+}
+
+fn get_dev_config_files(path: &Path) -> Vec<PathBuf> {
+    let mut overrides = OverrideBuilder::new(path);
+    overrides.add("**/config/dev.exs").unwrap();
+
+    WalkBuilder::new(path)
+        .overrides(overrides.build().unwrap())
+        .build()
+        .flatten()
+        .filter(|e| e.path().is_file())
+        .map(|e| e.path().to_path_buf())
+        .collect()
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use assert_fs::prelude::{FileTouch, PathChild};
+
+    #[test]
+    fn test_dev_files() {
+        // three files:
+        // temp/config/dev.exs
+        // temp/config/prod.exs
+        // temp/app/config/dev.exs
+
+        let temp = assert_fs::TempDir::new().unwrap();
+        let dev_config_file = temp.child("config/dev.exs");
+        dev_config_file.touch().unwrap();
+        let prod_config_file = temp.child("config/prod.exs");
+        prod_config_file.touch().unwrap();
+        let another_dev_config_file = temp.child("app/config/dev.exs");
+        another_dev_config_file.touch().unwrap();
+
+        let files = get_dev_config_files(&temp.to_path_buf());
+        assert_eq!(files.len(), 2);
+        assert_eq!(
+            files[0].to_string_lossy(),
+            another_dev_config_file.path().to_string_lossy()
+        );
+        assert_eq!(
+            files[1].to_string_lossy(),
+            dev_config_file.path().to_string_lossy()
+        );
+
+        temp.close().unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_config_synthesizer() {
+        // three files:
+        // temp/config/dev.exs
+        // temp/config/prod.exs
+        // temp/app/config/dev.exs
+
+        let temp = assert_fs::TempDir::new().unwrap();
+        let dev_config_file = temp.child("config/dev.exs");
+        dev_config_file.touch().unwrap();
+        let prod_config_file = temp.child("config/prod.exs");
+        prod_config_file.touch().unwrap();
+        let another_dev_config_file = temp.child("app/config/dev.exs");
+        another_dev_config_file.touch().unwrap();
+
+        let result = handle_config_synthesizer(&temp.to_path_buf()).await;
+        assert!(result.is_ok());
+
+        temp.close().unwrap();
+    }
 }
