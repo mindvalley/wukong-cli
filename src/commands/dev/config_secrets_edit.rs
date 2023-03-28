@@ -14,7 +14,7 @@ pub async fn config_secrets_edit(path: &str) -> Result<bool, CliError> {
     let vault = Vault::new();
     let api_token = vault.get_token_or_login().await?;
 
-    let secrets = vault.get_secrets(&api_token, &path).await?.data;
+    let secrets = vault.get_secrets(&api_token, path).await?.data;
 
     println!("{:?}", secrets);
     // Open editor with secrets:
@@ -158,5 +158,5 @@ fn generate_checklist_items(
         items.push(item);
     }
 
-    return items;
+    items
 }
