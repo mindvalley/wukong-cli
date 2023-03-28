@@ -23,6 +23,10 @@ pub enum CliError {
     DeploymentError(#[from] DeploymentError),
     #[error(transparent)]
     VaultError(#[from] VaultError),
+    #[error(transparent)]
+    SerdeJsonError(#[from] serde_json::Error),
+    #[error("{message}")]
+    DuplicateKeyError { message: String },
 }
 
 #[derive(Debug, ThisError)]
