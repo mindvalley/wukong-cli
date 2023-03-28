@@ -16,7 +16,6 @@ pub async fn config_secrets_edit(path: &str) -> Result<bool, CliError> {
 
     let secrets = vault.get_secrets(&api_token, path).await?.data;
 
-    println!("{:?}", secrets);
     // Open editor with secrets:
     let edited_secrets_str = edit::edit_with_builder(
         serde_json::to_string_pretty::<HashMap<String, String>>(&secrets)?,
@@ -64,7 +63,6 @@ pub async fn config_secrets_edit(path: &str) -> Result<bool, CliError> {
         .map(|(k, v)| (k.as_str(), v.as_str()))
         .collect();
 
-    println!("{:?}", secrets_to_update_refs);
     vault
         .update_secret(&api_token, path, &secrets_to_update_refs)
         .await?;
@@ -120,7 +118,7 @@ fn generate_checklist_items(
                 format!(
                     "{:<width$} \t {} → {}",
                     key_with_style,
-                    format!(
+                    format_args!(
                         "{:<width$}",
                         old_value_with_style,
                         width = max_old_value_len
@@ -144,7 +142,7 @@ fn generate_checklist_items(
             format!(
                 "{:<width$} \t {} → {}",
                 format!("{}{}", style("-").red(), style(key).red()),
-                format!(
+                format_args!(
                     "{:<width$}",
                     secrets.get(key).unwrap_or(&String::from("")),
                     width = max_old_value_len
