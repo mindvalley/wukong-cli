@@ -51,7 +51,7 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
                     let mut file = File::create(&file_path).unwrap();
                     file.write_all(secret.unwrap().as_bytes()).unwrap();
 
-                    println!("\t{} {}", "+".green(), file_path.to_string_lossy());
+                    eprintln!("\t{} {}", "+".green(), file_path.to_string_lossy());
                 }
             }
         }

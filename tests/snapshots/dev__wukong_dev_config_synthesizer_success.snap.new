@@ -1,0 +1,9 @@
+---
+source: tests/dev.rs
+assertion_line: 243
+expression: "std::str::from_utf8(&output.stderr).unwrap()"
+---
+	[32m+[39m /var/folders/rd/zhzktwnd2gl85yv4708zh7qc0000gn/T/.tmptgBuYI/config/config/a.secret.exs
+	[32m+[39m /var/folders/rd/zhzktwnd2gl85yv4708zh7qc0000gn/T/.tmptgBuYI/config/config/b.secret.exs
+	[32m+[39m /var/folders/rd/zhzktwnd2gl85yv4708zh7qc0000gn/T/.tmptgBuYI/config/config/c.secret.exs
+
