@@ -194,7 +194,7 @@ mod test {
         assert!(result.is_err());
         assert!(matches!(
             result,
-            Err(CliError::ConfigError(ConfigError::NotFound { .. }))
+            Err(ConfigError::NotFound { .. })
         ));
     }
 }

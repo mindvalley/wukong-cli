@@ -1,11 +1,3 @@
-use aion::*;
-use assert_fs::prelude::{FileTouch, FileWriteStr, PathChild};
-use httpmock::{
-    Method::{GET, POST},
-    MockServer,
-};
-use wukong::services::vault::client::VaultClient;
-
 mod common;
 
 #[test]
