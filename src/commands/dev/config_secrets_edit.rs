@@ -156,3 +156,48 @@ fn generate_checklist_items(
 
     items
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_generate_checklist_items() {
+        let mut secrets = HashMap::new();
+        secrets.insert("github_token".to_owned(), "not_changed".to_owned());
+        secrets.insert("jenkins_password".to_owned(), "not_changed".to_owned());
+        secrets.insert("jenkins_url".to_owned(), "to_remove".to_owned());
+
+        let mut edited_secrets = HashMap::new();
+        edited_secrets.insert("github_token".to_owned(), "not_changed".to_owned());
+        edited_secrets.insert("jenkins_password".to_owned(), "changed".to_owned());
+        edited_secrets.insert("jenkins_username".to_owned(), "new".to_owned());
+
+        let mut expected_items = HashMap::new();
+
+        expected_items.insert(
+            "github_token \t not_changed → not_changed".to_owned(),
+            "github_token".to_owned(),
+        );
+        expected_items.insert(
+            "\u{1b}[32m+\u{1b}[0m\u{1b}[32mjenkins_username\u{1b}[0m \t new         → new"
+                .to_owned(),
+            "jenkins_username".to_owned(),
+        );
+        expected_items.insert(
+            "jenkins_password \t not_changed → \u{1b}[31mnot_\u{1b}[0mchanged".to_owned(),
+            "jenkins_password".to_owned(),
+        );
+        expected_items.insert(
+            "\u{1b}[31m-\u{1b}[0m\u{1b}[31mjenkins_url\u{1b}[0m \t to_remove   → to_remove"
+                .to_owned(),
+            "jenkins_url".to_owned(),
+        );
+
+        let items = generate_checklist_items(&secrets, &edited_secrets);
+
+        for item in items {
+            assert_eq!(expected_items.get(&item.0), Some(&item.1));
+        }
+    }
+}
