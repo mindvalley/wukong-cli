@@ -12,9 +12,9 @@ use std::collections::HashMap;
 
 pub async fn config_secrets_edit(path: &str) -> Result<bool, CliError> {
     let vault = Vault::new();
-    let api_token = vault.get_token_or_login().await?;
 
-    let secrets = vault.get_secrets(&api_token, path).await?.data;
+    let api_token = vault.get_token_or_login().await?;
+    let mut secrets = vault.get_secrets(&api_token, path).await?.data;
 
     // Open editor with secrets:
     let edited_secrets_str = edit::edit_with_builder(
@@ -41,24 +41,22 @@ pub async fn config_secrets_edit(path: &str) -> Result<bool, CliError> {
         .report(false)
         .interact()?;
 
-    let mut secrets_to_update: HashMap<String, String> = secrets.clone();
-
     for selected_secrets in selected_secrets {
         let key = &secrets_checklist_items[selected_secrets].1;
 
         // Update the secret with updated value:
         if let Some(value) = edited_secrets.get(&key.to_string()) {
-            secrets_to_update.insert(key.to_string(), value.to_string());
+            secrets.insert(key.to_string(), value.to_string());
         }
 
         // Delete the secret if it's empty:
         if edited_secrets.get(&key.to_string()).is_none() {
-            secrets_to_update.remove(&key.to_string());
+            secrets.remove(&key.to_string());
         }
     }
 
     // Update into as a ref:
-    let secrets_to_update_refs: HashMap<&str, &str> = secrets_to_update
+    let secrets_to_update_refs: HashMap<&str, &str> = secrets
         .iter()
         .map(|(k, v)| (k.as_str(), v.as_str()))
         .collect();
