@@ -28,7 +28,7 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
 
         if !annotations.is_empty() {
             let vault = Vault::new();
-            let vault_token = vault.get_token_or_login().await.unwrap();
+            let vault_token = vault.get_token_or_login().await?;
 
             for annotation in annotations {
                 if annotation.key == "wukong.mindvalley.dev/config-secrets-location" {
