@@ -2,8 +2,11 @@ use crate::{error::CliError, services::vault::Vault, utils::annotations::read_va
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use owo_colors::OwoColorize;
 use std::io::{prelude::*, ErrorKind};
-use std::path::PathBuf;
-use std::{env::current_dir, fs::File, path::Path};
+use std::{
+    env::current_dir,
+    fs::File,
+    path::{Path, PathBuf},
+};
 
 pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
     let path = path.try_exists().map(|value| match value {
@@ -29,6 +32,11 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
         let annotations = read_vault_annotation(&src);
 
         if !annotations.is_empty() {
+            eprintln!(
+                "🔍 {} annotation(s) found in {}",
+                annotations.len(),
+                file.to_string_lossy()
+            );
             for annotation in annotations {
                 if annotation.key == "wukong.mindvalley.dev/config-secrets-location" {
                     let secret_path = annotation.secret_path.clone();

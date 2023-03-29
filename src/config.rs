@@ -123,7 +123,7 @@ impl Config {
             _ => err.into(),
         })?;
 
-        let config = toml::from_str(&content).map_err(|err| ConfigError::BadTomlData(err))?;
+        let config = toml::from_str(&content).map_err(ConfigError::BadTomlData)?;
 
         Ok(config)
     }
