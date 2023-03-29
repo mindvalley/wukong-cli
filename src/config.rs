@@ -1,4 +1,4 @@
-use crate::error::{CliError, ConfigError};
+use crate::error::ConfigError;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -109,7 +109,7 @@ impl Config {
     /// # Errors
     ///
     /// This function may return typical file I/O errors.
-    pub fn load(path: &'static str) -> Result<Self, CliError> {
+    pub fn load(path: &'static str) -> Result<Self, ConfigError> {
         let config_file_path = Path::new(path);
 
         let content = std::fs::read_to_string(
@@ -118,17 +118,12 @@ impl Config {
                 .expect("The config file path is not valid."),
         )
         .map_err(|err| match err.kind() {
-            io::ErrorKind::NotFound => {
-                CliError::ConfigError(ConfigError::NotFound { path, source: err })
-            }
-            io::ErrorKind::PermissionDenied => {
-                CliError::ConfigError(ConfigError::PermissionDenied { path, source: err })
-            }
-            _ => CliError::Io(err),
+            io::ErrorKind::NotFound => ConfigError::NotFound { path, source: err },
+            io::ErrorKind::PermissionDenied => ConfigError::PermissionDenied { path, source: err },
+            _ => err.into(),
         })?;
 
-        let config = toml::from_str(&content)
-            .map_err(|err| CliError::ConfigError(ConfigError::BadTomlData(err)))?;
+        let config = toml::from_str(&content).map_err(|err| ConfigError::BadTomlData(err))?;
 
         Ok(config)
     }
@@ -141,7 +136,7 @@ impl Config {
     /// # Errors
     ///
     /// This function may return typical file I/O errors.
-    pub fn save(&self, path: &str) -> Result<(), CliError> {
+    pub fn save(&self, path: &str) -> Result<(), ConfigError> {
         let config_file_path = Path::new(path);
         let serialized = toml::to_string(self).map_err(ConfigError::SerializeTomlError)?;
 
@@ -154,7 +149,7 @@ impl Config {
         Ok(())
     }
 
-    pub fn get_config_with_path() -> Result<ConfigWithPath, CliError> {
+    pub fn get_config_with_path() -> Result<ConfigWithPath, ConfigError> {
         let config_file = CONFIG_FILE
             .as_ref()
             .expect("Unable to identify user's home directory");

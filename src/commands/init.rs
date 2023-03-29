@@ -20,9 +20,8 @@ pub async fn handle_init() -> Result<bool, CliError> {
     let config = match Config::load(config_file) {
         Ok(config) => config,
         Err(error) => match error {
-            CliError::ConfigError(ConfigError::NotFound { .. })
-            | CliError::ConfigError(ConfigError::BadTomlData(_)) => Config::default(),
-            error => return Err(error),
+            ConfigError::NotFound { .. } | ConfigError::BadTomlData(_) => Config::default(),
+            error => return Err(error.into()),
         },
     };
 

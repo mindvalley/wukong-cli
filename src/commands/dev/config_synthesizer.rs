@@ -20,6 +20,8 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
         )),
     })??;
 
+    let vault = Vault::new();
+    let vault_token = vault.get_token_or_login().await?;
     let available_files = get_dev_config_files(&path);
 
     for file in available_files {
@@ -27,9 +29,6 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
         let annotations = read_vault_annotation(&src);
 
         if !annotations.is_empty() {
-            let vault = Vault::new();
-            let vault_token = vault.get_token_or_login().await?;
-
             for annotation in annotations {
                 if annotation.key == "wukong.mindvalley.dev/config-secrets-location" {
                     let secret_path = annotation.secret_path.clone();
