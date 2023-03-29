@@ -75,7 +75,7 @@ impl Theme for CustomDialoguerTheme {
     }
 }
 
-/// A colorful theme
+/// A Custom theme
 pub struct CustomDialoguerTheme {
     /// The style for default values
     pub defaults_style: Style,
