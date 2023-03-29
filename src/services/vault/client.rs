@@ -101,8 +101,6 @@ impl VaultClient {
             .send()
             .await?;
 
-        println!("response: {:?}", response);
-
         Ok(response)
     }
 
