@@ -1,30 +1,29 @@
 use crate::{error::CliError, services::vault::Vault, utils::annotations::read_vault_annotation};
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use owo_colors::OwoColorize;
-use std::io::prelude::*;
+use std::io::{prelude::*, ErrorKind};
 use std::path::PathBuf;
 use std::{env::current_dir, fs::File, path::Path};
 
 pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
-    let path = match path.try_exists() {
-        Ok(true) => {
+    let path = path.try_exists().map(|value| match value {
+        true => {
             if path.to_string_lossy() == "." {
-                current_dir().unwrap()
+                current_dir()
             } else {
-                path.to_path_buf()
+                Ok(path.to_path_buf())
             }
         }
-        Ok(false) => {
-            eprintln!("path '{}' does not exist", path.to_string_lossy());
-            panic!();
-        }
-        Err(_) => todo!(),
-    };
+        false => Err(std::io::Error::new(
+            ErrorKind::NotFound,
+            format!("path '{}' does not exist", path.to_string_lossy()),
+        )),
+    })??;
 
     let available_files = get_dev_config_files(&path);
 
     for file in available_files {
-        let src = std::fs::read_to_string(file.clone()).unwrap();
+        let src = std::fs::read_to_string(file.clone())?;
         let annotations = read_vault_annotation(&src);
 
         if !annotations.is_empty() {
@@ -46,10 +45,10 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
                     let file_path = file.parent().unwrap().join(local_secret_path.clone());
                     if local_secret_path.contains('/') {
                         let dir_path = file_path.parent().unwrap();
-                        std::fs::create_dir_all(dir_path).unwrap();
+                        std::fs::create_dir_all(dir_path)?;
                     }
-                    let mut file = File::create(&file_path).unwrap();
-                    file.write_all(secret.unwrap().as_bytes()).unwrap();
+                    let mut file = File::create(&file_path)?;
+                    file.write_all(secret.unwrap().as_bytes())?;
 
                     eprintln!("\t{} {}", "+".green(), file_path.to_string_lossy());
                 }
