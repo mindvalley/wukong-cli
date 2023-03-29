@@ -192,9 +192,6 @@ mod test {
         let result = Config::load(path);
 
         assert!(result.is_err());
-        assert!(matches!(
-            result,
-            Err(ConfigError::NotFound { .. })
-        ));
+        assert!(matches!(result, Err(ConfigError::NotFound { .. })));
     }
 }
