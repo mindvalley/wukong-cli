@@ -174,7 +174,6 @@ mod test {
         edited_secrets.insert("jenkins_username".to_owned(), "new".to_owned());
 
         let mut expected_items = HashMap::new();
-
         expected_items.insert(
             "github_token \t not_changed → not_changed".to_owned(),
             "github_token".to_owned(),
@@ -196,7 +195,10 @@ mod test {
 
         let items = generate_checklist_items(&secrets, &edited_secrets);
 
+        assert_eq!(items.len(), expected_items.len());
+
         for item in items {
+            // Verify the key
             assert_eq!(expected_items.get(&item.0), Some(&item.1));
         }
     }
