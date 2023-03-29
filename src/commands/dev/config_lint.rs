@@ -6,6 +6,7 @@ use miette::GraphicalReportHandler;
 use rayon::prelude::*;
 use std::{
     env::current_dir,
+    io::ErrorKind,
     path::{Path, PathBuf},
     time::Instant,
 };
@@ -13,20 +14,19 @@ use std::{
 pub fn handle_config_lint(path: &Path) -> Result<bool, CliError> {
     let start = Instant::now();
 
-    let lint_path = match path.try_exists() {
-        Ok(true) => {
+    let lint_path = path.try_exists().map(|value| match value {
+        true => {
             if path.to_string_lossy() == "." {
-                current_dir().unwrap()
+                current_dir()
             } else {
-                path.to_path_buf()
+                Ok(path.to_path_buf())
             }
         }
-        Ok(false) => {
-            eprintln!("path '{}' does not exist", path.to_string_lossy());
-            panic!();
-        }
-        Err(_) => todo!(),
-    };
+        false => Err(std::io::Error::new(
+            ErrorKind::NotFound,
+            format!("path '{}' does not exist", path.to_string_lossy()),
+        )),
+    })??;
 
     let linter = Linter::new(LintRule::All);
 
