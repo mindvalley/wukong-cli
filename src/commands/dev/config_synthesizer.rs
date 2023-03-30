@@ -1,6 +1,9 @@
+use crate::error::VaultError;
+use crate::services::vault::client::FetchSecretsData;
 use crate::{error::CliError, services::vault::Vault, utils::annotations::read_vault_annotation};
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use owo_colors::OwoColorize;
+use std::collections::HashMap;
 use std::io::{prelude::*, ErrorKind};
 use std::{
     env::current_dir,
@@ -32,6 +35,8 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
         let annotations = read_vault_annotation(&src);
 
         if !annotations.is_empty() {
+            let mut secrets_cache: HashMap<String, FetchSecretsData> = HashMap::new();
+
             eprintln!(
                 "🔍 {} annotation(s) found in {}",
                 annotations.len(),
@@ -45,9 +50,28 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
                     let vault_path_part = secret_path.split(':').collect::<Vec<&str>>();
                     let vault_secret_path = vault_path_part[1].to_string();
 
-                    let secret = vault
-                        .get_secret(&vault_token, &vault_secret_path, &annotation.secret_name)
-                        .await;
+                    // cache the secrets so we don't call vault api multiple times for the same
+                    // path
+                    let secret = match secrets_cache.get(&vault_secret_path) {
+                        Some(secrets) => secrets
+                            .data
+                            .get(&annotation.secret_name)
+                            .ok_or(VaultError::SecretNotFound)?
+                            .to_string(),
+                        None => {
+                            let secrets =
+                                vault.get_secrets(&vault_token, &vault_secret_path).await?;
+                            secrets_cache.insert(vault_secret_path.clone(), secrets);
+
+                            secrets_cache
+                                .get(&vault_secret_path)
+                                .unwrap()
+                                .data
+                                .get(&annotation.secret_name)
+                                .ok_or(VaultError::SecretNotFound)?
+                                .to_string()
+                        }
+                    };
 
                     let file_path = file.parent().unwrap().join(local_secret_path.clone());
                     if local_secret_path.contains('/') {
@@ -55,7 +79,7 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
                         std::fs::create_dir_all(dir_path)?;
                     }
                     let mut file = File::create(&file_path)?;
-                    file.write_all(secret.unwrap().as_bytes())?;
+                    file.write_all(secret.as_bytes())?;
 
                     eprintln!("\t{} {}", "+".green(), file_path.to_string_lossy());
                 }
