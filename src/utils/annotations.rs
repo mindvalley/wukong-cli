@@ -90,12 +90,19 @@ pub fn read_vault_annotation(src: &str) -> Vec<VaultSecretAnnotation> {
         let key = annotation_part[0].clone();
         let value = annotation_part[1].clone();
         let value_part = value.split('#').collect::<Vec<&str>>();
+        if value_part.len() != 2 {
+            continue;
+        }
         let secret_path_with_source = value_part[0].to_string();
         let secret_name = value_part[1].to_string();
 
         let splited_source_and_path = secret_path_with_source.split(':').collect::<Vec<&str>>();
+        if splited_source_and_path.len() != 2 {
+            continue;
+        }
         let source = splited_source_and_path[0].to_string();
         let path_with_engine = splited_source_and_path[1].to_string();
+
         let splited_engine_and_path = path_with_engine.split('/').collect::<Vec<&str>>();
         let (engine, path) = splited_engine_and_path.split_at(1);
 
@@ -165,6 +172,9 @@ mod test {
 
     # you can use wukong.mindvalley.dev/config-secrets-location: vault:secret/location to annotate the secret path
     import_config("not_match_2.secrets.exs")
+
+    # wukong.mindvalley.dev/config-secrets-location: vault:secret
+    import_config("invalid.secrets.exs")
     "#;
 
         let annotations = read_vault_annotation(src);
