@@ -1,0 +1,9 @@
+---
+source: tests/dev.rs
+expression: "std::str::from_utf8(&output.stderr).unwrap()"
+---
+🔍 3 annotation(s) found in [TEMP_DIR]/config/dev.exs
+	[32m+[39m [TEMP_DIR]/config/config/a.secret.exs
+	[32m+[39m [TEMP_DIR]/config/config/b.secret.exs
+	[32m+[39m [TEMP_DIR]/config/config/c.secret.exs
+
