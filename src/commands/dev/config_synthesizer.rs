@@ -38,6 +38,7 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
         if !annotations.is_empty() {
             let mut secrets_cache: HashMap<String, FetchSecretsData> = HashMap::new();
 
+            eprintln!();
             eprintln!(
                 "🔍 {} annotation(s) found in {}",
                 annotations.len(),
@@ -45,17 +46,23 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
             );
             for annotation in annotations {
                 if annotation.key == "wukong.mindvalley.dev/config-secrets-location" {
+                    if annotation.source != "vault" {
+                        debug!("Invalid source: {}", annotation.source);
+                        continue;
+                    }
+                    if annotation.engine != "secret" {
+                        debug!("Invalid engine: {}", annotation.engine);
+                        continue;
+                    }
+
                     let secret_path = annotation.secret_path.clone();
                     let local_secret_path = annotation.destination_file.clone();
-
-                    let vault_path_part = secret_path.split(':').collect::<Vec<&str>>();
-                    let vault_secret_path = vault_path_part[1].to_string();
 
                     let file_path = file.parent().unwrap().join(local_secret_path.clone());
 
                     // cache the secrets so we don't call vault api multiple times for the same
                     // path
-                    let secret = match secrets_cache.get(&vault_secret_path) {
+                    let secret = match secrets_cache.get(&secret_path) {
                         Some(secrets) => match secrets.data.get(&annotation.secret_name) {
                             Some(secret) => secret.to_string(),
                             None => {
@@ -72,29 +79,26 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
                             }
                         },
                         None => {
-                            let secrets =
-                                match vault.get_secrets(&vault_token, &vault_secret_path).await {
-                                    Ok(secrets) => secrets,
-                                    Err(err) => {
-                                        debug!(
-                                            "Error while fetching secrets: {:?}",
-                                            &vault_secret_path
-                                        );
-                                        eprintln!(
-                                            "\t{} {} {} {}",
-                                            "Not created".red(),
-                                            file_path.to_string_lossy(),
-                                            "because".bold(),
-                                            err.bold().red()
-                                        );
-                                        has_error = true;
-                                        continue;
-                                    }
-                                };
-                            secrets_cache.insert(vault_secret_path.clone(), secrets);
+                            let secrets = match vault.get_secrets(&vault_token, &secret_path).await
+                            {
+                                Ok(secrets) => secrets,
+                                Err(err) => {
+                                    debug!("Error while fetching secrets: {:?}", &secret_path);
+                                    eprintln!(
+                                        "\t{} {} {} {}",
+                                        "Not created".red(),
+                                        file_path.to_string_lossy(),
+                                        "because".bold(),
+                                        err.bold().red()
+                                    );
+                                    has_error = true;
+                                    continue;
+                                }
+                            };
+                            secrets_cache.insert(secret_path.clone(), secrets);
 
                             match secrets_cache
-                                .get(&vault_secret_path)
+                                .get(&secret_path)
                                 .unwrap()
                                 .data
                                 .get(&annotation.secret_name)

@@ -209,15 +209,15 @@ System.get_env("API_KEY")
 System.fetch_env("API_SECRET")
 System.fetch_env!("API_TOKEN")
 
-# wukong.mindvalley.dev/config-secrets-location: vault:mv/tech/app/dev#a.secret.exs
+# wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#a.secret.exs
 import_config "config/a.secret.exs"
 
-# wukong.mindvalley.dev/config-secrets-location: vault:mv/tech/app/dev#b.secret.exs
+# wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#b.secret.exs
 if File.exists?("config/b.secret.exs") do
   import_config "config/b.secret.exs"
 end
 
-# wukong.mindvalley.dev/config-secrets-location: vault:mv/tech/app/dev#c.secret.exs
+# wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#c.secret.exs
 File.exists?("config/c.secret.exs") && import_config "config/c.secret.exs"
 
 test_domain = System.get_env("TEST_DOMAIN", "mv.test.com")

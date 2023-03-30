@@ -1,17 +1,27 @@
 use serde::{Deserialize, Serialize};
 use tree_sitter::{Parser, Query, QueryCursor};
 
+// The annotation pattern:
+// # wukong.mindvalley.dev/config-secrets-location: vault:secret/path/to/secret#secret_key
+// import_config("dev.secret.exs")
+//
+// key = wukong.mindvalley.dev/config-secrets-location
+// source = vault
+// engine = secret
+// secret_path = path/to/secret
+// secret_name = secret_key
+// destination_file = dev.secret.exs
 #[derive(Debug, Serialize, Deserialize)]
 pub struct VaultSecretAnnotation {
     pub key: String,
+    pub source: String,
+    pub engine: String,
     pub secret_path: String,
     pub secret_name: String,
     pub destination_file: String,
 }
 
 pub fn read_vault_annotation(src: &str) -> Vec<VaultSecretAnnotation> {
-    // the annotation pattern -> wukong.mindvalley.dev/config-secrets-location: vault:secret/path/to/secret#secret_key
-
     let elixir_lang = tree_sitter_elixir::language();
     let mut parser = Parser::new();
     parser.set_language(elixir_lang).unwrap();
@@ -77,11 +87,19 @@ pub fn read_vault_annotation(src: &str) -> Vec<VaultSecretAnnotation> {
             continue;
         }
 
-        let annotation_key = annotation_part[0].clone();
-        let annotation_value = annotation_part[1].clone();
-        let annotation_value_part = annotation_value.split('#').collect::<Vec<&str>>();
-        let annotation_secret_path = annotation_value_part[0].to_string();
-        let annotation_secret_name = annotation_value_part[1].to_string();
+        let key = annotation_part[0].clone();
+        let value = annotation_part[1].clone();
+        let value_part = value.split('#').collect::<Vec<&str>>();
+        let secret_path_with_source = value_part[0].to_string();
+        let secret_name = value_part[1].to_string();
+
+        let splited_source_and_path = secret_path_with_source.split(':').collect::<Vec<&str>>();
+        let source = splited_source_and_path[0].to_string();
+        let path_with_engine = splited_source_and_path[1].to_string();
+        let splited_engine_and_path = path_with_engine.split('/').collect::<Vec<&str>>();
+        let (engine, path) = splited_engine_and_path.split_at(1);
+
+        let secret_path = path.join("/");
 
         let file_name = each
             .captures
@@ -90,9 +108,11 @@ pub fn read_vault_annotation(src: &str) -> Vec<VaultSecretAnnotation> {
             .unwrap();
 
         annotations.push(VaultSecretAnnotation {
-            key: annotation_key,
-            secret_path: annotation_secret_path,
-            secret_name: annotation_secret_name,
+            key,
+            source,
+            engine: engine[0].to_string(),
+            secret_path,
+            secret_name,
             destination_file: file_name
                 .node
                 .utf8_text(src.as_bytes())
@@ -153,10 +173,9 @@ mod test {
             annotations[0].key,
             "wukong.mindvalley.dev/config-secrets-location".to_string(),
         );
-        assert_eq!(
-            annotations[0].secret_path,
-            "vault:secret/path/to/secret".to_string()
-        );
+        assert_eq!(annotations[0].source, "vault".to_string());
+        assert_eq!(annotations[0].engine, "secret".to_string());
+        assert_eq!(annotations[0].secret_path, "path/to/secret".to_string());
         assert_eq!(annotations[0].secret_name, "secret_key".to_string());
         assert_eq!(annotations[0].destination_file, "config/config.exs");
 
@@ -164,10 +183,9 @@ mod test {
             annotations[1].key,
             "wukong.mindvalley.dev/config-secrets-location".to_string(),
         );
-        assert_eq!(
-            annotations[1].secret_path,
-            "vault:secret/abc/development".to_string()
-        );
+        assert_eq!(annotations[1].source, "vault".to_string());
+        assert_eq!(annotations[1].engine, "secret".to_string());
+        assert_eq!(annotations[1].secret_path, "abc/development".to_string());
         assert_eq!(annotations[1].secret_name, "abc.secrets.exs".to_string());
         assert_eq!(annotations[1].destination_file, "abc.secrets.exs");
 
@@ -175,10 +193,9 @@ mod test {
             annotations[2].key,
             "wukong.mindvalley.dev/config-secrets-location".to_string(),
         );
-        assert_eq!(
-            annotations[2].secret_path,
-            "vault:secret/xyz/development".to_string()
-        );
+        assert_eq!(annotations[2].source, "vault".to_string());
+        assert_eq!(annotations[2].engine, "secret".to_string());
+        assert_eq!(annotations[2].secret_path, "xyz/development".to_string());
         assert_eq!(annotations[2].secret_name, "xyz.secrets.exs".to_string());
         assert_eq!(annotations[2].destination_file, "xyz.secrets.exs");
 
@@ -186,10 +203,9 @@ mod test {
             annotations[3].key,
             "wukong.mindvalley.dev/config-secrets-location".to_string(),
         );
-        assert_eq!(
-            annotations[3].secret_path,
-            "vault:secret/abc/development".to_string()
-        );
+        assert_eq!(annotations[3].source, "vault".to_string());
+        assert_eq!(annotations[3].engine, "secret".to_string());
+        assert_eq!(annotations[3].secret_path, "abc/development".to_string());
         assert_eq!(annotations[3].secret_name, "aaa.secrets.exs".to_string());
         assert_eq!(annotations[3].destination_file, "aaa.secrets.exs");
 
@@ -197,10 +213,9 @@ mod test {
             annotations[4].key,
             "wukong.mindvalley.dev/config-secrets-location".to_string(),
         );
-        assert_eq!(
-            annotations[4].secret_path,
-            "vault:secret/xyz/development".to_string()
-        );
+        assert_eq!(annotations[4].source, "vault".to_string());
+        assert_eq!(annotations[4].engine, "secret".to_string());
+        assert_eq!(annotations[4].secret_path, "xyz/development".to_string());
         assert_eq!(annotations[4].secret_name, "test.secrets.exs".to_string());
         assert_eq!(annotations[4].destination_file, "test.secrets.exs");
 
@@ -208,10 +223,9 @@ mod test {
             annotations[5].key,
             "wukong.mindvalley.dev/config-secrets-location".to_string(),
         );
-        assert_eq!(
-            annotations[5].secret_path,
-            "vault:secret/abc/development".to_string()
-        );
+        assert_eq!(annotations[5].source, "vault".to_string());
+        assert_eq!(annotations[5].engine, "secret".to_string());
+        assert_eq!(annotations[5].secret_path, "abc/development".to_string());
         assert_eq!(annotations[5].secret_name, "prod.secrets.exs".to_string());
         assert_eq!(annotations[5].destination_file, "prod.secrets.exs");
     }
