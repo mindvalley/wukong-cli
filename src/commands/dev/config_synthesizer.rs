@@ -29,6 +29,7 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
     let vault = Vault::new();
     let vault_token = vault.get_token_or_login().await?;
     let available_files = get_dev_config_files(&path);
+    let mut has_error = false;
 
     for file in available_files {
         let src = std::fs::read_to_string(file.clone())?;
@@ -66,6 +67,7 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
                                     "because".bold(),
                                     "Secret not found".bold().red()
                                 );
+                                has_error = true;
                                 continue;
                             }
                         },
@@ -85,6 +87,7 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
                                             "because".bold(),
                                             err.bold().red()
                                         );
+                                        has_error = true;
                                         continue;
                                     }
                                 };
@@ -106,6 +109,7 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
                                         "because".bold(),
                                         "Secret not found".bold().red()
                                     );
+                                    has_error = true;
                                     continue;
                                 }
                             }
@@ -123,6 +127,7 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
                                 "because".bold(),
                                 err.to_string().bold().red()
                             );
+                            has_error = true;
                             continue;
                         };
                     }
@@ -138,6 +143,7 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
                                     "because".bold(),
                                     err.to_string().bold().red()
                                 );
+                                has_error = true;
                                 continue;
                             };
                         }
@@ -150,6 +156,7 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
                                 "because".bold(),
                                 err.to_string().bold().red()
                             );
+                            has_error = true;
                             continue;
                         }
                     }
@@ -160,7 +167,11 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
         }
     }
 
-    Ok(true)
+    if has_error {
+        Ok(false)
+    } else {
+        Ok(true)
+    }
 }
 
 fn get_dev_config_files(path: &Path) -> Vec<PathBuf> {
