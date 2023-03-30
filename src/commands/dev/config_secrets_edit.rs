@@ -10,7 +10,7 @@ use edit::Builder;
 use serde_json;
 use std::collections::HashMap;
 
-pub async fn config_secrets_edit(path: &str) -> Result<bool, CliError> {
+pub async fn handle_config_secrets_edit(path: &str) -> Result<bool, CliError> {
     let vault = Vault::new();
 
     let api_token = vault.get_token_or_login().await?;
@@ -206,8 +206,8 @@ mod test {
             }
         }
 
-        assert!(added_found, "The added secret was not found");
+        assert!(added_found, "The added secrets was not found");
         assert!(modified_found, "The modified secrets were not found");
-        assert!(removed_found, "The removed secret was not found");
+        assert!(removed_found, "The removed secrets was not found");
     }
 }
