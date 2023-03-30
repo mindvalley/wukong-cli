@@ -104,7 +104,6 @@ impl QueryClient {
 
         let response: Result<Response<Q::ResponseData>, APIError> =
             self.retry_request::<Q>(body, handler).await;
-        debug!("response: {:#?}", response);
 
         response
     }
