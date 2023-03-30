@@ -44,7 +44,7 @@ impl Vault {
 
         match self.is_valid_token(&token).await {
             Ok(_) => Ok(token),
-            Err(VaultError::ApiTokenInvalid) => {
+            Err(VaultError::PermissionDenied) => {
                 token = self.handle_login().await?;
                 Ok(token)
             }
@@ -193,7 +193,7 @@ impl Vault {
 
         match status {
             StatusCode::NOT_FOUND => Err(VaultError::SecretNotFound),
-            StatusCode::FORBIDDEN => Err(VaultError::ApiTokenInvalid),
+            StatusCode::FORBIDDEN => Err(VaultError::PermissionDenied),
             StatusCode::BAD_REQUEST => {
                 if message.contains("Okta auth failed") {
                     Err(VaultError::AuthenticationFailed)

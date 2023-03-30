@@ -1,7 +1,7 @@
-use crate::error::VaultError;
 use crate::services::vault::client::FetchSecretsData;
 use crate::{error::CliError, services::vault::Vault, utils::annotations::read_vault_annotation};
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
+use log::debug;
 use owo_colors::OwoColorize;
 use std::collections::HashMap;
 use std::io::{prelude::*, ErrorKind};
@@ -50,38 +50,111 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
                     let vault_path_part = secret_path.split(':').collect::<Vec<&str>>();
                     let vault_secret_path = vault_path_part[1].to_string();
 
+                    let file_path = file.parent().unwrap().join(local_secret_path.clone());
+
                     // cache the secrets so we don't call vault api multiple times for the same
                     // path
                     let secret = match secrets_cache.get(&vault_secret_path) {
-                        Some(secrets) => secrets
-                            .data
-                            .get(&annotation.secret_name)
-                            .ok_or(VaultError::SecretNotFound)?
-                            .to_string(),
+                        Some(secrets) => match secrets.data.get(&annotation.secret_name) {
+                            Some(secret) => secret.to_string(),
+                            None => {
+                                debug!("Secret not found: {:?}", annotation.secret_name);
+                                eprintln!(
+                                    "\t{} {} {} {}",
+                                    "Not created".red(),
+                                    file_path.to_string_lossy(),
+                                    "because".bold(),
+                                    "Secret not found".bold().red()
+                                );
+                                continue;
+                            }
+                        },
                         None => {
                             let secrets =
-                                vault.get_secrets(&vault_token, &vault_secret_path).await?;
+                                match vault.get_secrets(&vault_token, &vault_secret_path).await {
+                                    Ok(secrets) => secrets,
+                                    Err(err) => {
+                                        debug!(
+                                            "Error while fetching secrets: {:?}",
+                                            &vault_secret_path
+                                        );
+                                        eprintln!(
+                                            "\t{} {} {} {}",
+                                            "Not created".red(),
+                                            file_path.to_string_lossy(),
+                                            "because".bold(),
+                                            err.bold().red()
+                                        );
+                                        continue;
+                                    }
+                                };
                             secrets_cache.insert(vault_secret_path.clone(), secrets);
 
-                            secrets_cache
+                            match secrets_cache
                                 .get(&vault_secret_path)
                                 .unwrap()
                                 .data
                                 .get(&annotation.secret_name)
-                                .ok_or(VaultError::SecretNotFound)?
-                                .to_string()
+                            {
+                                Some(secret) => secret.to_string(),
+                                None => {
+                                    debug!("Secret not found: {:?}", annotation.secret_name);
+                                    eprintln!(
+                                        "\t{} {} {} {}",
+                                        "Not created".red(),
+                                        file_path.to_string_lossy(),
+                                        "because".bold(),
+                                        "Secret not found".bold().red()
+                                    );
+                                    continue;
+                                }
+                            }
                         }
                     };
 
-                    let file_path = file.parent().unwrap().join(local_secret_path.clone());
                     if local_secret_path.contains('/') {
                         let dir_path = file_path.parent().unwrap();
-                        std::fs::create_dir_all(dir_path)?;
+                        if let Err(err) = std::fs::create_dir_all(dir_path) {
+                            debug!("Error while creating directory: {:?}", err);
+                            eprintln!(
+                                "\t{} {} {} {}",
+                                "Not created".red(),
+                                file_path.to_string_lossy(),
+                                "because".bold(),
+                                err.to_string().bold().red()
+                            );
+                            continue;
+                        };
                     }
-                    let mut file = File::create(&file_path)?;
-                    file.write_all(secret.as_bytes())?;
 
-                    eprintln!("\t{} {}", "+".green(), file_path.to_string_lossy());
+                    match File::create(&file_path) {
+                        Ok(mut file) => {
+                            if let Err(err) = file.write_all(secret.as_bytes()) {
+                                debug!("Error while creating file: {:?}", err);
+                                eprintln!(
+                                    "\t{} {} {} {}",
+                                    "Not created".red(),
+                                    file_path.to_string_lossy(),
+                                    "because".bold(),
+                                    err.to_string().bold().red()
+                                );
+                                continue;
+                            };
+                        }
+                        Err(err) => {
+                            debug!("Error while writing file: {:?}", err);
+                            eprintln!(
+                                "\t{} {} {} {}",
+                                "Not created".red(),
+                                file_path.to_string_lossy(),
+                                "because".bold(),
+                                err.to_string().bold().red()
+                            );
+                            continue;
+                        }
+                    }
+
+                    eprintln!("\t{} {}", "Created".green(), file_path.to_string_lossy());
                 }
             }
         }

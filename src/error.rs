@@ -43,6 +43,8 @@ pub enum VaultError {
     ApiTokenNotFound,
     #[error("Invalid API token.")]
     ApiTokenInvalid,
+    #[error("Permission denied.")]
+    PermissionDenied,
     #[error(transparent)]
     ConfigError(#[from] ConfigError),
 }
