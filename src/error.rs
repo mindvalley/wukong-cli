@@ -55,6 +55,8 @@ pub enum APIError {
     UnAuthenticated,
     #[error("The selected build number is the same as the current deployed version. So there is no changelog.")]
     ChangelogComparingSameBuild,
+    #[error("Request to {domain} timed out.")]
+    Timeout { domain: String },
 }
 
 #[derive(Debug, ThisError)]
