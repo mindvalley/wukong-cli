@@ -53,7 +53,7 @@ impl VaultClient {
     pub fn new() -> Self {
         let client = reqwest::Client::new();
         #[cfg(all(feature = "prod"))]
-        let base_url = "https://bunker.mindvalley.com".to_string();
+        let base_url = "https://bunker.mindvalley.dev:8200".to_string();
 
         #[cfg(not(feature = "prod"))]
         let base_url = match std::env::var("WUKONG_DEV_VAULT_API_URL") {
