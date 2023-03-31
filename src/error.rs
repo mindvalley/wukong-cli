@@ -141,7 +141,7 @@ If none of the above steps work for you, please contact the following people on 
             },
             CliError::VaultError(error) => match error {
                 VaultError::ApiPermissionDenied=> Some(
-                    String::from("Please check your secret path. It could be invalid or you don't have the permission to access it.")
+                    String::from("Please check your vault secret path. It could be invalid or you don't have the permission to access it.")
                 ),
                 _ => None,
             },
