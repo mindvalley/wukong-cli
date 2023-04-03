@@ -70,6 +70,7 @@ ignore = "0.4.20"
 rayon = "1.7.0"
 tree-sitter = "0.20.9"
 difference = "2.0.0"
+async-recursion = "1.0.4"
 
 [dev-dependencies]
 httpmock = "0.6.7"
