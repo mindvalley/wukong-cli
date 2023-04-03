@@ -61,6 +61,9 @@ async fn edit_secrets(annotation: &(String, String)) -> Result<(), CliError> {
         Builder::new().prefix("config_secrets_edit").suffix(".json"),
     )?;
 
+    // Remove the additional newline character at the end of edited_secrets_str
+    let edited_secrets_str = edited_secrets_str.trim_end();
+
     // Intentionally placed here to throw json parse error if the user input is invalid:
     let edited_secrets: HashMap<&str, &str> = serde_json::from_str(&edited_secrets_str)?;
 
@@ -182,7 +185,7 @@ fn collect_filtered_annotations(
 }
 
 fn print_diff(secret_string: &str, edited_secrets_str: &str) {
-    let changeset = Changeset::new(edited_secrets_str, secret_string, "\n");
+    let changeset = Changeset::new(secret_string, edited_secrets_str, "\n");
 
     for diff in &changeset.diffs {
         match diff {
