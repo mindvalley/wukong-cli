@@ -99,7 +99,7 @@ pub async fn handle_config_secrets_edit(path: &Path) -> Result<bool, CliError> {
 
             // Get the secret path based on the selection:
             let (secret_path, _) = &annotations_selections[index];
-            let secrets = vault.get_secrets(&vault_token, &secret_path).await?.data;
+            let secrets = vault.get_secrets(&vault_token, secret_path).await?.data;
 
             let secret_string = serde_json::to_string_pretty::<HashMap<String, String>>(&secrets)?;
 
@@ -137,8 +137,8 @@ pub async fn handle_config_secrets_edit(path: &Path) -> Result<bool, CliError> {
     Ok(true)
 }
 
-fn print_diff(secret_string: &str, edited_secrets_str: &str) -> () {
-    let changeset = Changeset::new(&edited_secrets_str, &secret_string, "\n");
+fn print_diff(secret_string: &str, edited_secrets_str: &str) {
+    let changeset = Changeset::new(edited_secrets_str, secret_string, "\n");
 
     for diff in &changeset.diffs {
         match diff {
