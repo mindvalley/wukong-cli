@@ -45,12 +45,12 @@ pub async fn handle_config_secrets_edit(path: &Path) -> Result<bool, CliError> {
     Ok(true)
 }
 
-async fn edit_secrets(annotation: &(String, String)) -> Result<(), CliError> {
+async fn edit_secrets(available_annotation: &(String, String)) -> Result<(), CliError> {
     let vault = Vault::new();
     let vault_token = vault.get_token_or_login().await?;
 
     // Get the secret path based on the selection:
-    let (secret_path, _) = annotation;
+    let (secret_path, _) = available_annotation;
     let secrets = vault.get_secrets(&vault_token, secret_path).await?.data;
 
     let secret_string = serde_json::to_string_pretty::<HashMap<String, String>>(&secrets)?;
