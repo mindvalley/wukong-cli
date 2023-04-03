@@ -36,9 +36,52 @@ pub async fn handle_config_secrets_edit(path: &Path) -> Result<bool, CliError> {
         .bright_yellow()
     );
 
-    select_and_edit_secrets(&available_annotations).await?;
+    if available_annotations.len() == 1 {
+        edit_secrets(&available_annotations[0]).await?;
+    } else {
+        select_and_edit_secrets(&available_annotations).await?;
+    }
 
     Ok(true)
+}
+
+async fn edit_secrets(annotation: &(String, String)) -> Result<(), CliError> {
+    let vault = Vault::new();
+    let vault_token = vault.get_token_or_login().await?;
+
+    // Get the secret path based on the selection:
+    let (secret_path, _) = annotation;
+    let secrets = vault.get_secrets(&vault_token, secret_path).await?.data;
+
+    let secret_string = serde_json::to_string_pretty::<HashMap<String, String>>(&secrets)?;
+
+    // Open editor with secrets:
+    let edited_secrets_str = edit::edit_with_builder(
+        serde_json::to_string_pretty::<HashMap<String, String>>(&secrets)?,
+        Builder::new().prefix("config_secrets_edit").suffix(".json"),
+    )?;
+
+    // Intentionally placed here to throw json parse error if the user input is invalid:
+    let edited_secrets: HashMap<&str, &str> = serde_json::from_str(&edited_secrets_str)?;
+
+    println!(
+        "{}",
+        "Finished editing, please review your changes before pusing to Bunker...".cyan()
+    );
+    print_diff(&secret_string, &edited_secrets_str);
+
+    let agree_to_update = Confirm::with_theme(&ColorfulTheme::default())
+        .with_prompt("Are you sure to push this change?")
+        .default(false)
+        .interact()?;
+
+    if agree_to_update {
+        vault
+            .update_secret(&vault_token, secret_path, &edited_secrets)
+            .await?;
+    }
+
+    Ok(())
 }
 
 #[async_recursion]
@@ -63,40 +106,7 @@ async fn select_and_edit_secrets(
 
     match selection {
         Some(index) => {
-            let vault = Vault::new();
-            let vault_token = vault.get_token_or_login().await?;
-
-            // Get the secret path based on the selection:
-            let (secret_path, _) = &available_annotations[index];
-            let secrets = vault.get_secrets(&vault_token, secret_path).await?.data;
-
-            let secret_string = serde_json::to_string_pretty::<HashMap<String, String>>(&secrets)?;
-
-            // Open editor with secrets:
-            let edited_secrets_str = edit::edit_with_builder(
-                serde_json::to_string_pretty::<HashMap<String, String>>(&secrets)?,
-                Builder::new().prefix("config_secrets_edit").suffix(".json"),
-            )?;
-
-            // Intentionally placed here to throw json parse error if the user input is invalid:
-            let edited_secrets: HashMap<&str, &str> = serde_json::from_str(&edited_secrets_str)?;
-
-            println!(
-                "{}",
-                "Finished editing, please review your changes before pusing to Bunker...".cyan()
-            );
-            print_diff(&secret_string, &edited_secrets_str);
-
-            let agree_to_update = Confirm::with_theme(&ColorfulTheme::default())
-                .with_prompt("Are you sure to push this change?")
-                .default(false)
-                .interact()?;
-
-            if agree_to_update {
-                vault
-                    .update_secret(&vault_token, secret_path, &edited_secrets)
-                    .await?;
-            }
+            edit_secrets(&available_annotations[index]).await?;
         }
         None => {
             return Ok(false);
