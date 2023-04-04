@@ -91,7 +91,6 @@ fn get_local_config_as_string(
     let path = PathBuf::from(config_path);
     let dir_path = path.parent().unwrap();
     let local_secrets = dir_path.join(destination_file);
-
     let local_secrets = std::fs::read_to_string(local_secrets)?;
 
     Ok(local_secrets)
@@ -116,7 +115,6 @@ async fn update_secrets(
 
     print_diff(remote_config, &local_config_string);
 
-    // print_diff(&secret_string, &edited_secrets_str);
     let agree_to_update = Confirm::with_theme(&ColorfulTheme::default())
         .with_prompt("Confirm this change & push?")
         .default(false)
