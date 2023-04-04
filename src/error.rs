@@ -43,6 +43,10 @@ pub enum VaultError {
     ApiTokenNotFound,
     #[error("Invalid API token.")]
     ApiTokenInvalid,
+    #[error("Permission denied.")]
+    PermissionDenied,
+    #[error(transparent)]
+    ConfigError(#[from] ConfigError),
 }
 
 #[derive(Debug, ThisError)]
@@ -77,6 +81,8 @@ pub enum ConfigError {
     BadTomlData(#[source] toml::de::Error),
     #[error("Failed to serialize configuration data into TOML.")]
     SerializeTomlError(#[source] toml::ser::Error),
+    #[error(transparent)]
+    Io(#[from] ::std::io::Error),
 }
 
 #[derive(Debug, ThisError)]

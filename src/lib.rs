@@ -7,7 +7,7 @@ mod graphql;
 mod loader;
 mod logger;
 pub mod output;
-mod services {
+pub mod services {
     pub mod vault;
 }
 mod telemetry;

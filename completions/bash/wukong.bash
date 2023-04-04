@@ -102,11 +102,17 @@ _wukong() {
             wukong__dev,config-lint)
                 cmd="wukong__dev__config__lint"
                 ;;
+            wukong__dev,config-synthesizer)
+                cmd="wukong__dev__config__synthesizer"
+                ;;
             wukong__dev,help)
                 cmd="wukong__dev__help"
                 ;;
             wukong__dev__help,config-lint)
                 cmd="wukong__dev__help__config__lint"
+                ;;
+            wukong__dev__help,config-synthesizer)
+                cmd="wukong__dev__help__config__synthesizer"
                 ;;
             wukong__dev__help,help)
                 cmd="wukong__dev__help__help"
@@ -161,6 +167,9 @@ _wukong() {
                 ;;
             wukong__help__dev,config-lint)
                 cmd="wukong__help__dev__config__lint"
+                ;;
+            wukong__help__dev,config-synthesizer)
+                cmd="wukong__help__dev__config__synthesizer"
                 ;;
             wukong__help__pipeline,ci-status)
                 cmd="wukong__help__pipeline__ci__status"
@@ -668,7 +677,7 @@ _wukong() {
             return 0
             ;;
         wukong__dev)
-            opts="-a -v -q -h --application --verbose --quiet --help config-lint help"
+            opts="-a -v -q -h --application --verbose --quiet --help config-lint config-synthesizer help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -711,8 +720,30 @@ _wukong() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
+        wukong__dev__config__synthesizer)
+            opts="-a -v -q -h --application --verbose --quiet --help [PATH]"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                --application)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                -a)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
         wukong__dev__help)
-            opts="config-lint help"
+            opts="config-lint config-synthesizer help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -726,6 +757,20 @@ _wukong() {
             return 0
             ;;
         wukong__dev__help__config__lint)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__dev__help__config__synthesizer)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -922,7 +967,7 @@ _wukong() {
             return 0
             ;;
         wukong__help__dev)
-            opts="config-lint"
+            opts="config-lint config-synthesizer"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -936,6 +981,20 @@ _wukong() {
             return 0
             ;;
         wukong__help__dev__config__lint)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__help__dev__config__synthesizer)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )

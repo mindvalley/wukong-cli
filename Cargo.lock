@@ -1635,7 +1635,7 @@ dependencies = [
  "console",
  "lazy_static",
  "linked-hash-map",
- "serde",
+ "regex",
  "similar",
  "yaml-rust",
 ]

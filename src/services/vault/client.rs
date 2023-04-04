@@ -45,17 +45,23 @@ pub struct VaultClient {
 }
 
 impl VaultClient {
-    const LOGIN: &str = "/v1/auth/okta/login";
-    const VERIFY_TOKEN: &str = "/v1/auth/token/lookup-self";
-    const FETCH_SECRETS: &str = "/v1/secret/data";
-    const UPDATE_SECRET: &str = "/v1/secret/data";
+    pub const LOGIN: &str = "/v1/auth/okta/login";
+    pub const VERIFY_TOKEN: &str = "/v1/auth/token/lookup-self";
+    pub const FETCH_SECRETS: &str = "/v1/secret/data";
+    pub const UPDATE_SECRET: &str = "/v1/secret/data";
 
     pub fn new() -> Self {
         let client = reqwest::Client::new();
-        Self {
-            client,
-            base_url: "https://bunker.mindvalley.dev:8200".to_string(),
-        }
+        #[cfg(all(feature = "prod"))]
+        let base_url = "https://bunker.mindvalley.dev:8200".to_string();
+
+        #[cfg(not(feature = "prod"))]
+        let base_url = match std::env::var("WUKONG_DEV_VAULT_API_URL") {
+            Ok(vault_api_url) => vault_api_url,
+            Err(_) => "https://bunker.mindvalley.dev:8200".to_string(),
+        };
+
+        Self { client, base_url }
     }
 
     #[cfg(test)]

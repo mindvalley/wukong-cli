@@ -1,7 +1,6 @@
 pub mod client;
 
-use std::collections::HashMap;
-
+use self::client::{FetchSecretsData, Login, VaultClient};
 use crate::config::VaultConfig;
 use crate::error::VaultError;
 use crate::loader::new_spinner_progress_bar;
@@ -11,8 +10,7 @@ use crate::Config as CLIConfig;
 use dialoguer::theme::ColorfulTheme;
 use log::debug;
 use reqwest::StatusCode;
-
-use self::client::{FetchSecretsData, Login, VaultClient};
+use std::collections::HashMap;
 
 impl Default for VaultClient {
     fn default() -> Self {
@@ -30,7 +28,6 @@ pub struct Vault {
     vault_client: VaultClient,
 }
 
-#[allow(dead_code)]
 impl Vault {
     pub fn new() -> Self {
         Self {
@@ -47,7 +44,7 @@ impl Vault {
 
         match self.is_valid_token(&token).await {
             Ok(_) => Ok(token),
-            Err(VaultError::ApiTokenInvalid) => {
+            Err(VaultError::PermissionDenied) => {
                 token = self.handle_login().await?;
                 Ok(token)
             }
@@ -56,30 +53,29 @@ impl Vault {
     }
 
     pub async fn handle_login(&self) -> Result<String, VaultError> {
-        let mut email: Option<String> = None;
-        let mut config_with_path = CLIConfig::get_config_with_path().unwrap();
+        let mut config_with_path = CLIConfig::get_config_with_path()?;
 
-        if let Some(vault_config) = &config_with_path.config.auth {
-            colored_println!("Continuing with \"{}\"...", vault_config.account);
-            email = Some(vault_config.account.to_string())
-        }
-
-        if email.is_none() {
-            debug!("No email found in config file");
-            return Err(VaultError::UnInitialised);
-        }
+        let email = match &config_with_path.config.auth {
+            Some(auth_config) => {
+                colored_println!("Login Vault with okta account {}", auth_config.account);
+                auth_config.account.to_string()
+            }
+            None => {
+                debug!("No email found in config file");
+                return Err(VaultError::UnInitialised);
+            }
+        };
 
         let password = dialoguer::Password::with_theme(&ColorfulTheme::default())
-            .with_prompt("Enter your password")
+            .with_prompt("Enter okta password")
             .interact()?;
 
         let progress_bar = new_spinner_progress_bar();
-        progress_bar.set_message("Authenticating the user...");
+        progress_bar.set_message(
+            "Authenticating the user... You may need to check your device for an MFA notification.",
+        );
 
-        let response = self
-            .vault_client
-            .login(&email.clone().unwrap(), password.as_str())
-            .await?;
+        let response = self.vault_client.login(&email, &password).await?;
 
         progress_bar.finish_and_clear();
 
@@ -90,12 +86,9 @@ impl Vault {
                 api_token: data.auth.client_token.clone(),
             });
 
-            config_with_path
-                .config
-                .save(&config_with_path.path)
-                .unwrap();
+            config_with_path.config.save(&config_with_path.path)?;
 
-            colored_println!("You are now logged in as {}.", email.unwrap());
+            colored_println!("You are now logged in as {}.\n", email);
 
             Ok(data.auth.client_token)
         } else {
@@ -165,7 +158,7 @@ impl Vault {
     async fn get_token(&self) -> Result<String, VaultError> {
         debug!("Getting token ...");
 
-        let config_with_path = CLIConfig::get_config_with_path().unwrap();
+        let config_with_path = CLIConfig::get_config_with_path()?;
         let api_token = match &config_with_path.config.vault {
             Some(vault_config) => vault_config.api_token.clone(),
             None => {
@@ -200,7 +193,7 @@ impl Vault {
 
         match status {
             StatusCode::NOT_FOUND => Err(VaultError::SecretNotFound),
-            StatusCode::FORBIDDEN => Err(VaultError::ApiTokenInvalid),
+            StatusCode::FORBIDDEN => Err(VaultError::PermissionDenied),
             StatusCode::BAD_REQUEST => {
                 if message.contains("Okta auth failed") {
                     Err(VaultError::AuthenticationFailed)

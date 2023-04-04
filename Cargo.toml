@@ -76,7 +76,7 @@ criterion = "0.4"
 rexpect = "0.5.0"
 assert_fs = "1.0.10"
 aion = "0.2.0"
-insta = { version = "1.28.0", features = ["yaml"] }
+insta = { version = "1.28.0", features = ["filters"] }
 assert_cmd = "2.0.8"
 git2 = "0.16.1"
 

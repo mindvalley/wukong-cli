@@ -503,6 +503,31 @@ By default, it'\''ll only report errors.
 '::path -- The path to the project:_files' \
 && ret=0
 ;;
+(config-synthesizer)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::path -- The path to the project:_files' \
+&& ret=0
+;;
 (help)
 _arguments "${_arguments_options[@]}" \
 ":: :_wukong__dev__help_commands" \
@@ -516,6 +541,10 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-dev-help-command-$line[1]:"
         case $line[1] in
             (config-lint)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(config-synthesizer)
 _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
@@ -831,6 +860,10 @@ _arguments "${_arguments_options[@]}" \
 _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
+(config-synthesizer)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
         esac
     ;;
 esac
@@ -973,6 +1006,21 @@ _wukong__help__dev__config-lint_commands() {
     local commands; commands=()
     _describe -t commands 'wukong help dev config-lint commands' commands "$@"
 }
+(( $+functions[_wukong__dev__config-synthesizer_commands] )) ||
+_wukong__dev__config-synthesizer_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong dev config-synthesizer commands' commands "$@"
+}
+(( $+functions[_wukong__dev__help__config-synthesizer_commands] )) ||
+_wukong__dev__help__config-synthesizer_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong dev help config-synthesizer commands' commands "$@"
+}
+(( $+functions[_wukong__help__dev__config-synthesizer_commands] )) ||
+_wukong__help__dev__config-synthesizer_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help dev config-synthesizer commands' commands "$@"
+}
 (( $+functions[_wukong__deployment_commands] )) ||
 _wukong__deployment_commands() {
     local commands; commands=(
@@ -1011,6 +1059,7 @@ _wukong__pipeline__help__describe_commands() {
 _wukong__dev_commands() {
     local commands; commands=(
 'config-lint:Linting the config and show possible warnings, as well as suggestion how to fix the config file' \
+'config-synthesizer:Synthesize the development config with secrets file from Bunker' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'wukong dev commands' commands "$@"
@@ -1019,6 +1068,7 @@ _wukong__dev_commands() {
 _wukong__help__dev_commands() {
     local commands; commands=(
 'config-lint:Linting the config and show possible warnings, as well as suggestion how to fix the config file' \
+'config-synthesizer:Synthesize the development config with secrets file from Bunker' \
     )
     _describe -t commands 'wukong help dev commands' commands "$@"
 }
@@ -1099,6 +1149,7 @@ _wukong__deployment__help__help_commands() {
 _wukong__dev__help_commands() {
     local commands; commands=(
 'config-lint:Linting the config and show possible warnings, as well as suggestion how to fix the config file' \
+'config-synthesizer:Synthesize the development config with secrets file from Bunker' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'wukong dev help commands' commands "$@"

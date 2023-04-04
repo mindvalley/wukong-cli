@@ -159,18 +159,19 @@ complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_s
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from execute; and not __fish_seen_subcommand_from rollback; and not __fish_seen_subcommand_from help" -f -a "execute" -d 'Start the deployment pipeline'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from execute; and not __fish_seen_subcommand_from rollback; and not __fish_seen_subcommand_from help" -f -a "rollback" -d 'Rollback the deployment pipeline'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from execute; and not __fish_seen_subcommand_from rollback; and not __fish_seen_subcommand_from help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
-complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config-lint; and not __fish_seen_subcommand_from help" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
-complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config-lint; and not __fish_seen_subcommand_from help" -s v -l verbose -d 'Use verbos output. More output per occurrence.
+complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config-lint; and not __fish_seen_subcommand_from config-synthesizer; and not __fish_seen_subcommand_from help" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
+complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config-lint; and not __fish_seen_subcommand_from config-synthesizer; and not __fish_seen_subcommand_from help" -s v -l verbose -d 'Use verbos output. More output per occurrence.
 
 By default, it\'ll only report errors.
 `-v` show warnings
 `-vv` show info
 `-vvv` show debug
 `-vvvv` show trace'
-complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config-lint; and not __fish_seen_subcommand_from help" -s q -l quiet -d 'Do not print log message'
-complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config-lint; and not __fish_seen_subcommand_from help" -s h -l help -d 'Print help'
-complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config-lint; and not __fish_seen_subcommand_from help" -f -a "config-lint" -d 'Linting the config and show possible warnings, as well as suggestion how to fix the config file'
-complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config-lint; and not __fish_seen_subcommand_from help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config-lint; and not __fish_seen_subcommand_from config-synthesizer; and not __fish_seen_subcommand_from help" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config-lint; and not __fish_seen_subcommand_from config-synthesizer; and not __fish_seen_subcommand_from help" -s h -l help -d 'Print help'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config-lint; and not __fish_seen_subcommand_from config-synthesizer; and not __fish_seen_subcommand_from help" -f -a "config-lint" -d 'Linting the config and show possible warnings, as well as suggestion how to fix the config file'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config-lint; and not __fish_seen_subcommand_from config-synthesizer; and not __fish_seen_subcommand_from help" -f -a "config-synthesizer" -d 'Synthesize the development config with secrets file from Bunker'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config-lint; and not __fish_seen_subcommand_from config-synthesizer; and not __fish_seen_subcommand_from help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config-lint" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config-lint" -s v -l verbose -d 'Use verbos output. More output per occurrence.
 
@@ -181,8 +182,19 @@ By default, it\'ll only report errors.
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config-lint" -s q -l quiet -d 'Do not print log message'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config-lint" -s h -l help -d 'Print help'
-complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from config-lint; and not __fish_seen_subcommand_from help" -f -a "config-lint" -d 'Linting the config and show possible warnings, as well as suggestion how to fix the config file'
-complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from config-lint; and not __fish_seen_subcommand_from help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config-synthesizer" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
+complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config-synthesizer" -s v -l verbose -d 'Use verbos output. More output per occurrence.
+
+By default, it\'ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config-synthesizer" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config-synthesizer" -s h -l help -d 'Print help'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from config-lint; and not __fish_seen_subcommand_from config-synthesizer; and not __fish_seen_subcommand_from help" -f -a "config-lint" -d 'Linting the config and show possible warnings, as well as suggestion how to fix the config file'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from config-lint; and not __fish_seen_subcommand_from config-synthesizer; and not __fish_seen_subcommand_from help" -f -a "config-synthesizer" -d 'Synthesize the development config with secrets file from Bunker'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from config-lint; and not __fish_seen_subcommand_from config-synthesizer; and not __fish_seen_subcommand_from help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
 complete -c wukong -n "__fish_seen_subcommand_from config; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from set; and not __fish_seen_subcommand_from get; and not __fish_seen_subcommand_from help" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
 complete -c wukong -n "__fish_seen_subcommand_from config; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from set; and not __fish_seen_subcommand_from get; and not __fish_seen_subcommand_from help" -s v -l verbose -d 'Use verbos output. More output per occurrence.
 
@@ -267,7 +279,8 @@ complete -c wukong -n "__fish_seen_subcommand_from help; and __fish_seen_subcomm
 complete -c wukong -n "__fish_seen_subcommand_from help; and __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from execute; and not __fish_seen_subcommand_from rollback" -f -a "list" -d 'List the current available deployment pipelines of an application'
 complete -c wukong -n "__fish_seen_subcommand_from help; and __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from execute; and not __fish_seen_subcommand_from rollback" -f -a "execute" -d 'Start the deployment pipeline'
 complete -c wukong -n "__fish_seen_subcommand_from help; and __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from execute; and not __fish_seen_subcommand_from rollback" -f -a "rollback" -d 'Rollback the deployment pipeline'
-complete -c wukong -n "__fish_seen_subcommand_from help; and __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config-lint" -f -a "config-lint" -d 'Linting the config and show possible warnings, as well as suggestion how to fix the config file'
+complete -c wukong -n "__fish_seen_subcommand_from help; and __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config-lint; and not __fish_seen_subcommand_from config-synthesizer" -f -a "config-lint" -d 'Linting the config and show possible warnings, as well as suggestion how to fix the config file'
+complete -c wukong -n "__fish_seen_subcommand_from help; and __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config-lint; and not __fish_seen_subcommand_from config-synthesizer" -f -a "config-synthesizer" -d 'Synthesize the development config with secrets file from Bunker'
 complete -c wukong -n "__fish_seen_subcommand_from help; and __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from set; and not __fish_seen_subcommand_from get" -f -a "list" -d 'List the configurations'
 complete -c wukong -n "__fish_seen_subcommand_from help; and __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from set; and not __fish_seen_subcommand_from get" -f -a "set" -d 'Set the value of a configuration'
 complete -c wukong -n "__fish_seen_subcommand_from help; and __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from set; and not __fish_seen_subcommand_from get" -f -a "get" -d 'Print the value of a configuration'
