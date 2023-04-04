@@ -168,6 +168,8 @@ pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
                     eprintln!("\t{} {}", "Created".green(), file_path.to_string_lossy());
                 }
             }
+        } else {
+            eprintln!("🔍 No annotation found in {}", file.to_string_lossy());
         }
     }
 
