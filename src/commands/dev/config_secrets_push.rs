@@ -26,80 +26,95 @@ pub async fn handle_config_secrets_push(path: &Path) -> Result<bool, CliError> {
         return Ok(false);
     }
 
-    println!(
-        "{}",
-        format!("There are ({}) config files found!", config_files.len()).bright_yellow()
-    );
-
-    compare_config_files(&config_files).await?;
-
-    Ok(true)
-}
-
-async fn compare_config_files(
-    config_files: &HashMap<String, VaultSecretAnnotation>,
-) -> Result<(), CliError> {
-    // Comparing local vs remote ....
-    println!("{}", "Comparing local config vs remote config...".cyan());
+    if config_files.len() != 1 {
+        println!(
+            "{}",
+            format!("There are ({}) config files found!", config_files.len()).bright_yellow()
+        );
+    }
 
     let vault = Vault::new();
     let vault_token = vault.get_token_or_login().await?;
 
-    let mut configss = HashMap::new();
+    let updated_configs = get_updated_configs(&vault, &vault_token, &config_files).await?;
+
+    if updated_configs.is_empty() {
+        eprintln!("No config files need to be updated!");
+        return Ok(false);
+    }
+
+    let config_to_update = select_config(&updated_configs).await;
+    update_secrets(&vault, &vault_token, &config_to_update).await?;
+
+    Ok(true)
+}
+
+async fn get_updated_configs(
+    vault: &Vault,
+    vault_token: &str,
+    config_files: &HashMap<String, VaultSecretAnnotation>,
+) -> Result<HashMap<String, VaultSecretAnnotation>, CliError> {
+    // Comparing local vs remote ....
+    println!("{}", "Comparing local config vs remote config...".cyan());
+
+    let mut updated_configs = HashMap::new();
 
     for config_file in config_files {
         let (config_path, vault_secret_annotation) = config_file;
         let remote_secrets = vault
-            .get_secrets(&vault_token, &vault_secret_annotation.secret_path)
+            .get_secrets(vault_token, &vault_secret_annotation.secret_path)
             .await?
             .data;
 
-        let path = PathBuf::from(config_path);
-        let dir_path = path.parent().unwrap();
-
-        let local_secrets = dir_path.join(&vault_secret_annotation.destination_file);
-        let local_secrets = std::fs::read_to_string(local_secrets)?;
+        let config_string =
+            get_local_config_as_string(&vault_secret_annotation.destination_file, config_path)?;
 
         // Get only one key from hashmap
         let remote_config = remote_secrets
             .get(&vault_secret_annotation.secret_name)
             .unwrap();
 
-        let changeset = Changeset::new(remote_config, &local_secrets, "\n");
+        let changeset = Changeset::new(remote_config, &config_string, "\n");
 
         if has_diff(&changeset) {
-            configss.insert(config_path.clone(), vault_secret_annotation.clone());
+            updated_configs.insert(config_path.clone(), vault_secret_annotation.clone());
         }
     }
 
-    let config_to_update = select_config(&configss).await;
-    update_secrets(&config_to_update).await?;
+    Ok(updated_configs)
+}
 
-    Ok(())
+fn get_local_config_as_string(
+    destination_file: &str,
+    config_path: &str,
+) -> Result<String, CliError> {
+    let path = PathBuf::from(config_path);
+    let dir_path = path.parent().unwrap();
+    let local_secrets = dir_path.join(destination_file);
+
+    let local_secrets = std::fs::read_to_string(local_secrets)?;
+
+    Ok(local_secrets)
 }
 
 async fn update_secrets(
+    vault: &Vault,
+    vault_token: &str,
     config_to_update: &(String, VaultSecretAnnotation),
 ) -> Result<(), CliError> {
-    let vault = Vault::new();
-
-    let vault_token = vault.get_token_or_login().await?;
-
     let (secret_path, vault_secret_annotation) = config_to_update;
 
-    let path = PathBuf::from(secret_path);
-    let dir_path = path.parent().unwrap();
+    let local_config_string =
+        get_local_config_as_string(&vault_secret_annotation.destination_file, secret_path)?;
 
-    let local_secrets = dir_path.join(&vault_secret_annotation.destination_file);
-    let local_secrets = std::fs::read_to_string(local_secrets)?;
     let mut secrets = vault
-        .get_secrets(&vault_token, &vault_secret_annotation.secret_path)
+        .get_secrets(vault_token, &vault_secret_annotation.secret_path)
         .await?
         .data;
 
     let remote_config = secrets.get(&vault_secret_annotation.secret_name).unwrap();
 
-    print_diff(remote_config, &local_secrets.to_owned());
+    print_diff(remote_config, &local_config_string);
 
     // print_diff(&secret_string, &edited_secrets_str);
     let agree_to_update = Confirm::with_theme(&ColorfulTheme::default())
@@ -108,7 +123,10 @@ async fn update_secrets(
         .interact()?;
 
     // Update one key from secrets:
-    secrets.insert(vault_secret_annotation.secret_name.clone(), local_secrets);
+    secrets.insert(
+        vault_secret_annotation.secret_name.clone(),
+        local_config_string,
+    );
 
     let hashmap: HashMap<&str, &str> = secrets
         .iter()
@@ -117,7 +135,7 @@ async fn update_secrets(
 
     if agree_to_update {
         vault
-            .update_secret(&vault_token, &vault_secret_annotation.secret_path, &hashmap)
+            .update_secret(vault_token, &vault_secret_annotation.secret_path, &hashmap)
             .await?;
     }
 
