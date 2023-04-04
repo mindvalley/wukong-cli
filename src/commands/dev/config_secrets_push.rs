@@ -210,8 +210,8 @@ fn filter_vault_secret_annotations(
     let mut filtered_annotations: HashMap<String, VaultSecretAnnotation> = HashMap::new();
 
     for file in available_files {
-        let src = std::fs::read_to_string(file.clone())?;
-        let annotations = read_vault_annotation(&src);
+        let file_contents = std::fs::read_to_string(file.clone())?;
+        let annotations = read_vault_annotation(&file_contents);
 
         for annotation in annotations {
             if annotation.key == "wukong.mindvalley.dev/config-secrets-location"
