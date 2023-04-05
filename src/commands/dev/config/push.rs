@@ -43,8 +43,23 @@ pub async fn handle_config_push(path: &Path) -> Result<bool, CliError> {
         return Ok(false);
     }
 
-    let config_to_update = select_config(&updated_configs).await;
-    update_secrets(&vault, &vault_token, &config_to_update).await?;
+    if updated_configs.len() != 1 {
+        let config_to_update = select_config(&updated_configs).await;
+        update_secrets(&vault, &vault_token, &config_to_update).await?;
+    } else {
+        println!(
+            "{}",
+            "There is only one config file to update...".bright_yellow()
+        );
+        let (config_path, annotation) = updated_configs.iter().next().unwrap();
+
+        update_secrets(
+            &vault,
+            &vault_token,
+            &(config_path.clone(), annotation.clone()),
+        )
+        .await?;
+    }
 
     Ok(true)
 }
@@ -55,7 +70,7 @@ async fn get_updated_configs(
     config_files: &HashMap<String, VaultSecretAnnotation>,
 ) -> Result<HashMap<String, VaultSecretAnnotation>, CliError> {
     // Comparing local vs remote ....
-    println!("{}", "Comparing local config vs remote config...".cyan());
+    println!("{}", "comparing local config vs remote config...".cyan());
 
     let mut updated_configs = HashMap::new();
 
@@ -126,14 +141,18 @@ async fn update_secrets(
         local_config_string,
     );
 
-    let hashmap: HashMap<&str, &str> = secrets
+    let secrets_ref: HashMap<&str, &str> = secrets
         .iter()
         .map(|(k, v)| (k.as_str(), v.as_str()))
         .collect();
 
     if agree_to_update {
         vault
-            .update_secret(vault_token, &vault_secret_annotation.secret_path, &hashmap)
+            .update_secret(
+                vault_token,
+                &vault_secret_annotation.secret_path,
+                &secrets_ref,
+            )
             .await?;
     }
 
