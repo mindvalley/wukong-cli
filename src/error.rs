@@ -23,8 +23,6 @@ pub enum CliError {
     DeploymentError(#[from] DeploymentError),
     #[error(transparent)]
     VaultError(#[from] VaultError),
-    #[error(transparent)]
-    SerdeJsonError(#[from] serde_json::Error),
 }
 
 #[derive(Debug, ThisError)]
@@ -43,7 +41,7 @@ pub enum VaultError {
     SecretNotFound,
     #[error("API token not found.")]
     ApiTokenNotFound,
-    #[error("Invalid token.")]
+    #[error("Invalid API token.")]
     ApiTokenInvalid,
     #[error("Permission denied.")]
     PermissionDenied,
