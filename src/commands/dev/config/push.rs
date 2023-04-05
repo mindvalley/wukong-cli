@@ -166,11 +166,7 @@ fn has_diff(old_secret_config: &str, new_secret_config: &str) -> bool {
 
     changeset
         .iter_all_changes()
-        .any(|change| match change.tag() {
-            ChangeTag::Delete => true,
-            ChangeTag::Insert => true,
-            _ => false,
-        })
+        .any(|change| matches!(change.tag(), ChangeTag::Delete | ChangeTag::Insert))
 }
 
 async fn select_config(
