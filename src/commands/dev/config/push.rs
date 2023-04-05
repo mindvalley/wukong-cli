@@ -1,11 +1,15 @@
 use crate::loader::new_spinner_progress_bar;
 use crate::utils::annotations::VaultSecretAnnotation;
-use crate::{error::CliError, services::vault::Vault, utils::annotations::read_vault_annotation};
+use crate::{
+    error::CliError, services::vault::Vault, utils::annotations::read_vault_annotation,
+    utils::line::Line,
+};
+use dialoguer::console::{style, Style};
 use dialoguer::Confirm;
 use dialoguer::{theme::ColorfulTheme, Select};
-use difference::{Changeset, Difference};
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use owo_colors::OwoColorize;
+use similar::{ChangeTag, TextDiff};
 use std::{collections::HashMap, io::ErrorKind};
 use std::{
     env::current_dir,
@@ -89,9 +93,7 @@ async fn get_updated_configs(
             .get(&vault_secret_annotation.secret_name)
             .unwrap();
 
-        let changeset = Changeset::new(remote_config, &config_string, "\n");
-
-        if has_diff(&changeset) {
+        if has_diff(remote_config, &config_string) {
             updated_configs.insert(config_path.clone(), vault_secret_annotation.clone());
         }
     }
@@ -128,7 +130,7 @@ async fn update_secrets(
 
     let remote_config = secrets.get(&vault_secret_annotation.secret_name).unwrap();
 
-    print_diff(remote_config, &local_config_string);
+    print_diff(remote_config, &local_config_string, secret_path);
 
     let agree_to_update = Confirm::with_theme(&ColorfulTheme::default())
         .with_prompt("Confirm this change & push?")
@@ -159,11 +161,16 @@ async fn update_secrets(
     Ok(())
 }
 
-fn has_diff(changeset: &Changeset) -> bool {
+fn has_diff(old_secret_config: &str, new_secret_config: &str) -> bool {
+    let changeset = TextDiff::from_lines(old_secret_config, new_secret_config);
+
     changeset
-        .diffs
-        .iter()
-        .any(|diff| matches!(diff, Difference::Add(_) | Difference::Rem(_)))
+        .iter_all_changes()
+        .any(|change| match change.tag() {
+            ChangeTag::Delete => true,
+            ChangeTag::Insert => true,
+            _ => false,
+        })
 }
 
 async fn select_config(
@@ -245,18 +252,44 @@ fn filter_vault_secret_annotations(
     Ok(filtered_annotations)
 }
 
-fn print_diff(secret_string: &str, edited_secrets_str: &str) {
-    let changeset = Changeset::new(secret_string, edited_secrets_str, "\n");
-
+fn print_diff(old_secret_config: &str, new_secret_config: &str, secret_path: &str) {
     println!();
+    println!("{}", secret_path.dimmed());
 
-    for diff in changeset.diffs.iter() {
-        match diff {
-            Difference::Same(part) => println!("{}", part),
-            Difference::Add(part) => println!("\x1b[32m+{}\x1b[0m", part),
-            Difference::Rem(part) => println!("\x1b[31m-{}\x1b[0m", part),
+    let diff = TextDiff::from_lines(old_secret_config, new_secret_config);
+
+    for (idx, group) in diff.grouped_ops(3).iter().enumerate() {
+        if idx > 0 {
+            println!("{:-^1$}", "-", 80);
+        }
+        for op in group {
+            for change in diff.iter_inline_changes(op) {
+                let (sign, s) = match change.tag() {
+                    ChangeTag::Delete => ("-", Style::new().red()),
+                    ChangeTag::Insert => ("+", Style::new().green()),
+                    ChangeTag::Equal => (" ", Style::new().dim()),
+                };
+                print!(
+                    "{}{} |{}",
+                    style(Line(change.old_index())).dim(),
+                    style(Line(change.new_index())).dim(),
+                    s.apply_to(sign).bold(),
+                );
+                for (emphasized, value) in change.iter_strings_lossy() {
+                    if emphasized {
+                        print!("{}", s.apply_to(value).underlined().on_black());
+                    } else {
+                        print!("{}", s.apply_to(value));
+                    }
+                }
+                if change.missing_newline() {
+                    println!();
+                }
+            }
         }
     }
+
+    println!();
 }
 
 fn remove_parent_directories(path: &str) -> String {
