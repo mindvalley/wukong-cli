@@ -21,7 +21,7 @@ pub async fn handle_config_push(path: &Path) -> Result<bool, CliError> {
     progress_bar.set_message("🔍 Finding config with annotation");
 
     let available_files = get_available_files(path)?;
-    let config_files = filter_vault_secret_annotations(available_files)?;
+    let config_files = filter_config_with_secret_annotations(available_files)?;
 
     progress_bar.finish_and_clear();
 
@@ -47,10 +47,7 @@ pub async fn handle_config_push(path: &Path) -> Result<bool, CliError> {
         return Ok(false);
     }
 
-    if updated_configs.len() != 1 {
-        let config_to_update = select_config(&updated_configs).await;
-        update_secrets(&vault, &vault_token, &config_to_update).await?;
-    } else {
+    if updated_configs.len() == 1 {
         println!(
             "{}",
             "There is only one config file to update...".bright_yellow()
@@ -63,6 +60,9 @@ pub async fn handle_config_push(path: &Path) -> Result<bool, CliError> {
             &(config_path.clone(), annotation.clone()),
         )
         .await?;
+    } else {
+        let config_to_update = select_config(&updated_configs).await;
+        update_secrets(&vault, &vault_token, &config_to_update).await?;
     }
 
     Ok(true)
@@ -226,7 +226,7 @@ fn get_available_files(path: &Path) -> Result<Vec<PathBuf>, CliError> {
     Ok(available_files)
 }
 
-fn filter_vault_secret_annotations(
+fn filter_config_with_secret_annotations(
     available_files: Vec<PathBuf>,
 ) -> Result<HashMap<String, VaultSecretAnnotation>, CliError> {
     let mut filtered_annotations: HashMap<String, VaultSecretAnnotation> = HashMap::new();
