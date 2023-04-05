@@ -12,7 +12,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub async fn handle_config_secrets_push(path: &Path) -> Result<bool, CliError> {
+pub async fn handle_config_push(path: &Path) -> Result<bool, CliError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("🔍 Finding config with annotation");
 
