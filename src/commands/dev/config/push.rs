@@ -310,3 +310,45 @@ fn get_dev_config_files(path: &Path) -> Vec<PathBuf> {
         .map(|e| e.path().to_path_buf())
         .collect()
 }
+
+// Test:
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_empty_string() {
+        let path = "";
+        let result = remove_parent_directories(path);
+        assert_eq!(result, "");
+    }
+
+    #[test]
+    fn test_no_parent_directories() {
+        let path = "dir1/dir2/file.txt";
+        let result = remove_parent_directories(path);
+        assert_eq!(result, "dir1/dir2/file.txt");
+    }
+
+    #[test]
+    fn test_single_parent_directory() {
+        let path = "dir1/../dir2/file.txt";
+        let result = remove_parent_directories(path);
+        assert_eq!(result, "dir1/dir2/file.txt");
+    }
+
+    #[test]
+    fn test_invalid_characters() {
+        let path = "dir1/inv@lid/../dir2/file.txt";
+        let result = remove_parent_directories(path);
+        assert_eq!(result, "dir1/inv@lid/dir2/file.txt");
+    }
+
+    #[test]
+    fn test_non_existent_file() {
+        let non_existent_path = "non_existent_file.txt";
+
+        let result = get_local_config_as_string("destination_file", non_existent_path);
+        assert!(result.is_err());
+    }
+}
