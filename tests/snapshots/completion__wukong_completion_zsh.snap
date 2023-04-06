@@ -582,7 +582,6 @@ By default, it'\''ll only report errors.
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
 '--help[Print help]' \
-'::path -- The path to the project:_files' \
 && ret=0
 ;;
 (help)

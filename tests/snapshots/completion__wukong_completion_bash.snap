@@ -838,7 +838,7 @@ _wukong() {
             return 0
             ;;
         wukong__dev__config__push)
-            opts="-a -v -q -h --application --verbose --quiet --help [PATH]"
+            opts="-a -v -q -h --application --verbose --quiet --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
