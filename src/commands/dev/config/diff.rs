@@ -15,7 +15,7 @@ pub async fn handle_config_diff() -> Result<bool, CliError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("🔍 Finding config with annotation");
 
-    let config_files = get_dev_config_files()?;
+    let dev_config_files = get_dev_config_files()?;
     let dev_config_with_secret_annotations =
         filter_config_with_secret_annotations(dev_config_files)?;
 
