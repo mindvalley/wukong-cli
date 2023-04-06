@@ -1,7 +1,11 @@
-use google_logging2::{api::ListLogEntriesRequest, hyper, hyper_rustls};
-use std::env;
-
 use crate::error::GCloudError;
+use google_logging2::{
+    api::ListLogEntriesRequest,
+    hyper, hyper_rustls,
+    oauth2::{ApplicationSecret, InstalledFlowAuthenticator, InstalledFlowReturnMethod},
+    Logging,
+};
+use std::env;
 
 pub struct LogEntriesOption {
     pub project_ids: Option<Vec<String>>,
@@ -17,7 +21,9 @@ pub struct LogEntries {
     pub next_page_token: Option<String>,
 }
 
-pub struct GCloudClient {}
+pub struct GCloudClient {
+    hub: Logging<hyper_rustls::HttpsConnector<hyper::client::HttpConnector>>,
+}
 
 impl GCloudClient {
     const TOKEN_URI: &'static str = "https://oauth2.googleapis.com/token";
@@ -25,12 +31,7 @@ impl GCloudClient {
     const REDIRECT_URI: &'static str = "http://127.0.0.1/8855";
     const AUTH_PROVIDER_X509_CERT_URL: &'static str = "https://www.googleapis.com/oauth2/v1/certs";
 
-    pub async fn get_log_entries(options: LogEntriesOption) -> Result<LogEntries, GCloudError> {
-        use google_logging2::{
-            oauth2::{ApplicationSecret, InstalledFlowAuthenticator, InstalledFlowReturnMethod},
-            Logging,
-        };
-
+    pub async fn new() -> Result<Self, GCloudError> {
         let secret = ApplicationSecret {
             client_id: env::var("GOOGLE_CLIENT_ID")
                 .expect("Missing the GOOGLE_CLIENT_ID environment variable."),
@@ -87,6 +88,13 @@ impl GCloudClient {
             auth,
         );
 
+        Ok(Self { hub })
+    }
+
+    pub async fn get_log_entries(
+        &self,
+        options: LogEntriesOption,
+    ) -> Result<LogEntries, GCloudError> {
         let request = ListLogEntriesRequest {
             filter: options.filter,
             order_by: options.order_by,
@@ -95,7 +103,7 @@ impl GCloudClient {
             project_ids: options.project_ids,
             resource_names: options.resource_names,
         };
-        let call = hub.entries().list(request);
+        let call = self.hub.entries().list(request);
         let (_response, output_schema) = call
             .add_scope("https://www.googleapis.com/auth/logging.read")
             .doit()
