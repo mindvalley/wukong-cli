@@ -72,6 +72,7 @@ pub fn print_diff(old_secret_config: &str, new_secret_config: &str, secret_path:
         if idx > 0 {
             println!("{:-^1$}", "-", 80);
         }
+
         for op in group {
             for change in diff.iter_inline_changes(op) {
                 let (sign, s) = match change.tag() {
@@ -100,4 +101,32 @@ pub fn print_diff(old_secret_config: &str, new_secret_config: &str, secret_path:
     }
 
     println!();
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_has_diff() {
+        let old_secret_config = "first line\nsecond line\nthird line";
+        let new_secret_config = "first line\nnew second line\nthird line";
+
+        assert_eq!(has_diff(old_secret_config, new_secret_config), true);
+
+        let old_secret_config = "first line\nsecond line\nthird line";
+        let new_secret_config = "first line\nsecond line\nthird line";
+
+        assert_eq!(has_diff(old_secret_config, new_secret_config), false);
+
+        let old_secret_config = "first line\nsecond line";
+        let new_secret_config = "first line\nsecond line\nthird line";
+
+        assert_eq!(has_diff(old_secret_config, new_secret_config), true);
+
+        let old_secret_config = "first line\nsecond line\nthird line";
+        let new_secret_config = "first line\nsecond line";
+
+        assert_eq!(has_diff(old_secret_config, new_secret_config), true);
+    }
 }
