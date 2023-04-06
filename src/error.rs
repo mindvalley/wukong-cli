@@ -23,30 +23,8 @@ pub enum CliError {
     DeploymentError(#[from] DeploymentError),
     #[error(transparent)]
     VaultError(#[from] VaultError),
-}
-
-#[derive(Debug, ThisError)]
-pub enum VaultError {
     #[error(transparent)]
-    ReqwestError(#[from] reqwest::Error),
-    #[error("API Response Error: {message}")]
-    ResponseError { code: String, message: String },
-    #[error("Invalid credentials. Please try again.")]
-    AuthenticationFailed,
-    #[error("You are un-initialised.")]
-    UnInitialised,
-    #[error(transparent)]
-    Io(#[from] ::std::io::Error),
-    #[error("Secret not found.")]
-    SecretNotFound,
-    #[error("API token not found.")]
-    ApiTokenNotFound,
-    #[error("Invalid API token.")]
-    ApiTokenInvalid,
-    #[error("Permission denied.")]
-    PermissionDenied,
-    #[error(transparent)]
-    ConfigError(#[from] ConfigError),
+    GCloudError(#[from] GCloudError),
 }
 
 #[derive(Debug, ThisError)]
@@ -98,6 +76,40 @@ pub enum DeploymentError {
         version: String,
         application: String,
     },
+}
+
+// Vault Service Error
+#[derive(Debug, ThisError)]
+pub enum VaultError {
+    #[error(transparent)]
+    ReqwestError(#[from] reqwest::Error),
+    #[error("API Response Error: {message}")]
+    ResponseError { code: String, message: String },
+    #[error("Invalid credentials. Please try again.")]
+    AuthenticationFailed,
+    #[error("You are un-initialised.")]
+    UnInitialised,
+    #[error(transparent)]
+    Io(#[from] ::std::io::Error),
+    #[error("Secret not found.")]
+    SecretNotFound,
+    #[error("API token not found.")]
+    ApiTokenNotFound,
+    #[error("Invalid API token.")]
+    ApiTokenInvalid,
+    #[error("Permission denied.")]
+    PermissionDenied,
+    #[error(transparent)]
+    ConfigError(#[from] ConfigError),
+}
+
+// GCloud Service Error
+#[derive(Debug, ThisError)]
+pub enum GCloudError {
+    #[error(transparent)]
+    Io(#[from] ::std::io::Error),
+    #[error(transparent)]
+    GoogleLogging2Error(#[from] google_logging2::Error),
 }
 
 impl CliError {
