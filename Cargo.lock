@@ -4437,7 +4437,6 @@ dependencies = [
  "insta",
  "log",
  "miette",
- "oauth2",
  "once_cell",
  "openidconnect",
  "openssl",
