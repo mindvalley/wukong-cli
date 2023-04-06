@@ -73,7 +73,7 @@ pub enum DevConfigError {
     ConfigSecretNotFound,
     // Invalid secret path in the annotation in config file:
     #[error("Invalid secret path in the config file")]
-    InvalidSecretPath { path: String },
+    InvalidSecretPath { config_path: String },
 }
 
 #[derive(Debug, ThisError)]
@@ -162,8 +162,8 @@ If none of the above steps work for you, please contact the following people on 
                 DevConfigError::ConfigSecretNotFound => Some(
                     "Run \"wukong config dev pull\" to pull the latest dev config.".to_string()
                 ),
-                DevConfigError::InvalidSecretPath { path } => Some(format!(
-                "Please check the secret path in the config file: config/{path}"
+                DevConfigError::InvalidSecretPath { config_path } => Some(format!(
+                    "Please check the secret path in the config file: {config_path}"
                 )),
                 _ => None,
             },

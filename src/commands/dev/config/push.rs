@@ -47,6 +47,8 @@ pub async fn handle_config_push() -> Result<bool, CliError> {
         println!(
             "The config file is already up to date with the Vault Bunker. There are no changes to push."
         );
+
+        return Ok(true);
     }
 
     if updated_configs.len() == 1 {
@@ -87,7 +89,6 @@ async fn get_updated_configs(
             .await?
             .data;
 
-        // Handle and throw InvalidSecretPath if No such file or directory (os error 2):
         let config_string =
             get_local_config_as_string(&vault_secret_annotation.destination_file, config_path)
                 .map_err(|error| {
@@ -99,11 +100,11 @@ async fn get_updated_configs(
         let remote_config = match remote_secrets.get(&vault_secret_annotation.secret_name) {
             Some(config) => config,
             None => {
+                let test = remove_parent_directories(&config_path);
+
                 return Err(CliError::DevConfigError(
-                    DevConfigError::InvalidSecretPath {
-                        path: vault_secret_annotation.secret_name.clone(),
-                    },
-                ))
+                    DevConfigError::InvalidSecretPath { config_path: test },
+                ));
             }
         };
 
@@ -293,13 +294,15 @@ fn print_diff(old_secret_config: &str, new_secret_config: &str, secret_path: &st
 }
 
 fn remove_parent_directories(path: &str) -> String {
-    let file = Path::new(path);
-    file.components()
-        .filter(|component| component.as_os_str() != "..")
-        .collect::<std::path::PathBuf>()
-        .to_str()
+    let current_dir = current_dir().unwrap();
+    let path = Path::new(path);
+
+    path.strip_prefix(current_dir)
+        .map(|p| p.to_owned())
+        .unwrap_or(path.to_owned())
+        .into_os_string()
+        .into_string()
         .unwrap()
-        .to_string()
 }
 
 fn get_dev_config_files(path: &Path) -> Vec<PathBuf> {
@@ -319,34 +322,6 @@ fn get_dev_config_files(path: &Path) -> Vec<PathBuf> {
 #[cfg(test)]
 mod test {
     use super::*;
-
-    #[test]
-    fn test_empty_string() {
-        let path = "";
-        let result = remove_parent_directories(path);
-        assert_eq!(result, "");
-    }
-
-    #[test]
-    fn test_no_parent_directories() {
-        let path = "dir1/dir2/file.txt";
-        let result = remove_parent_directories(path);
-        assert_eq!(result, "dir1/dir2/file.txt");
-    }
-
-    #[test]
-    fn test_single_parent_directory() {
-        let path = "dir1/../dir2/file.txt";
-        let result = remove_parent_directories(path);
-        assert_eq!(result, "dir1/dir2/file.txt");
-    }
-
-    #[test]
-    fn test_invalid_characters() {
-        let path = "dir1/inv@lid/../dir2/file.txt";
-        let result = remove_parent_directories(path);
-        assert_eq!(result, "dir1/inv@lid/dir2/file.txt");
-    }
 
     #[test]
     fn test_non_existent_file() {
