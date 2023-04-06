@@ -92,7 +92,7 @@ fn get_local_config_as_string(
 pub fn get_dev_config_files() -> Result<Vec<PathBuf>, CliError> {
     let current_path = current_dir()?;
 
-    let mut overrides = OverrideBuilder::new(current_path);
+    let mut overrides = OverrideBuilder::new(current_path.clone());
     overrides.add("**/config/dev.exs").unwrap();
 
     let config_files = WalkBuilder::new(current_path)
