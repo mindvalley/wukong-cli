@@ -1,3 +1,4 @@
+use crate::error::DevConfigError;
 use crate::loader::new_spinner_progress_bar;
 use crate::utils::annotations::VaultSecretAnnotation;
 use crate::{
@@ -8,26 +9,26 @@ use dialoguer::console::{style, Style};
 use dialoguer::Confirm;
 use dialoguer::{theme::ColorfulTheme, Select};
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
+use log::debug;
 use owo_colors::OwoColorize;
 use similar::{ChangeTag, TextDiff};
-use std::{collections::HashMap, io::ErrorKind};
+use std::collections::HashMap;
 use std::{
     env::current_dir,
     path::{Path, PathBuf},
 };
 
-pub async fn handle_config_push(path: &Path) -> Result<bool, CliError> {
+pub async fn handle_config_push() -> Result<bool, CliError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("🔍 Finding config with annotation");
 
-    let available_files = get_available_files(path)?;
+    let available_files = get_available_files()?;
     let config_files = filter_config_with_secret_annotations(available_files)?;
 
     progress_bar.finish_and_clear();
 
     if config_files.is_empty() {
-        eprintln!("No config files found!");
-        return Ok(false);
+        return Err(CliError::DevConfigError(DevConfigError::ConfigNotFound));
     }
 
     if config_files.len() != 1 {
@@ -43,8 +44,7 @@ pub async fn handle_config_push(path: &Path) -> Result<bool, CliError> {
     let updated_configs = get_updated_configs(&vault, &vault_token, &config_files).await?;
 
     if updated_configs.is_empty() {
-        eprintln!("No config files need to be updated!");
-        return Ok(false);
+        return Err(CliError::DevConfigError(DevConfigError::UpToDateError));
     }
 
     if updated_configs.len() == 1 {
@@ -85,13 +85,27 @@ async fn get_updated_configs(
             .await?
             .data;
 
+        // Handle and throw InvalidSecretPath if No such file or directory (os error 2):
         let config_string =
-            get_local_config_as_string(&vault_secret_annotation.destination_file, config_path)?;
+            get_local_config_as_string(&vault_secret_annotation.destination_file, config_path)
+                .map_err(|error| {
+                    debug!("Error: {:?}", error);
+                    CliError::DevConfigError(DevConfigError::InvalidSecretPath {
+                        path: vault_secret_annotation.secret_name.clone(),
+                    })
+                })?;
 
         // Get only one key from hashmap
-        let remote_config = remote_secrets
-            .get(&vault_secret_annotation.secret_name)
-            .unwrap();
+        let remote_config = match remote_secrets.get(&vault_secret_annotation.secret_name) {
+            Some(config) => config,
+            None => {
+                return Err(CliError::DevConfigError(
+                    DevConfigError::InvalidSecretPath {
+                        path: vault_secret_annotation.secret_name.clone(),
+                    },
+                ))
+            }
+        };
 
         if has_diff(remote_config, &config_string) {
             updated_configs.insert(config_path.clone(), vault_secret_annotation.clone());
@@ -209,19 +223,9 @@ async fn select_config(
     };
 }
 
-fn get_available_files(path: &Path) -> Result<Vec<PathBuf>, CliError> {
-    let path = path.try_exists().map(|value| match value {
-        true => match path.to_string_lossy() == "." {
-            true => current_dir(),
-            false => Ok(path.to_path_buf()),
-        },
-        false => Err(std::io::Error::new(
-            ErrorKind::NotFound,
-            format!("path '{}' does not exist", path.to_string_lossy()),
-        )),
-    })??;
-
-    let available_files = get_dev_config_files(&path);
+fn get_available_files() -> Result<Vec<PathBuf>, CliError> {
+    let current_path = current_dir()?;
+    let available_files = get_dev_config_files(&current_path);
 
     Ok(available_files)
 }
