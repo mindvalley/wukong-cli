@@ -1,6 +1,6 @@
 [package]
 name = "wukong"
-version = "0.0.6-rc1"
+version = "0.0.7-rc1"
 edition = "2021"
 
 [features]
