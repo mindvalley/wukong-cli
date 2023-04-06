@@ -44,7 +44,9 @@ pub async fn handle_config_push() -> Result<bool, CliError> {
     let updated_configs = get_updated_configs(&vault, &vault_token, &config_files).await?;
 
     if updated_configs.is_empty() {
-        return Err(CliError::DevConfigError(DevConfigError::UpToDateError));
+        println!(
+            "The config file is already up to date with the Vault Bunker. There are no changes to push."
+        );
     }
 
     if updated_configs.len() == 1 {

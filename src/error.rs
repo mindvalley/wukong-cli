@@ -71,10 +71,6 @@ pub enum DevConfigError {
     ConfigNotFound,
     #[error("No dev secret config files found!")]
     ConfigSecretNotFound,
-    #[error(
-        "The config file is already up to date with the Vault Bunker. There are no changes to push."
-    )]
-    UpToDateError,
     // Invalid secret path in the annotation in config file:
     #[error("Invalid secret path in the config file")]
     InvalidSecretPath { path: String },
