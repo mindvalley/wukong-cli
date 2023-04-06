@@ -108,7 +108,7 @@ config :phoenix, :json_library, Jason
 
     insta::with_settings!({filters => vec![
         (format!("{}", temp.path().to_str().unwrap()).as_str(), "[TEMP_DIR]"),
-        (r"\d+(.\d+)ms", "[DURATION_IN_MS]"),
+        (r"\d+(.\d+)ms|\d+(.\d+)s", "[DURATION]"),
     ]}, {
         insta::assert_snapshot!(std::str::from_utf8(&output.stderr).unwrap());
     });

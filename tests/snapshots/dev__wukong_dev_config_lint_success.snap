@@ -124,6 +124,6 @@ expression: "std::str::from_utf8(&output.stderr).unwrap()"
     `----
 [36m  help: [0mMove this config value into either `runtime.exs` if you’re reading them during runtime, or providing a static value.
 
-Total time taken: [DURATION_IN_MS] ([DURATION_IN_MS] to load, [DURATION_IN_MS] running 3 checks)
+Total time taken: [DURATION] ([DURATION] to load, [DURATION] running 3 checks)
 Total files: 2
 
