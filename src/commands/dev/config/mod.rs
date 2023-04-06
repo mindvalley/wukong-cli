@@ -1,5 +1,6 @@
 mod diff;
 mod push;
+mod utils;
 
 use crate::error::CliError;
 use clap::{Args, Subcommand};
@@ -16,6 +17,7 @@ pub struct Config {
 pub enum ConfigSubcommand {
     /// Push the current configuration changes to the Bunker.
     Push,
+    /// Show changes between the local configuration and the Bunker.
     Diff,
 }
 
