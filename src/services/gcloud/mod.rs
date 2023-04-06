@@ -5,7 +5,6 @@ use google_logging2::{
     oauth2::{ApplicationSecret, InstalledFlowAuthenticator, InstalledFlowReturnMethod},
     Logging,
 };
-use std::env;
 
 pub struct LogEntriesOption {
     pub project_ids: Option<Vec<String>>,
@@ -26,6 +25,9 @@ pub struct GCloudClient {
 }
 
 impl GCloudClient {
+    const GOOGLE_CLIENT_ID: &'static str =
+        "16448589901-ccrhj03hhg6adn9uv8vi2trnpmd62k6n.apps.googleusercontent.com";
+    const GOOGLE_CLIENT_SECRET: &'static str = "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";
     const TOKEN_URI: &'static str = "https://oauth2.googleapis.com/token";
     const AUTH_URI: &'static str = "https://accounts.google.com/o/oauth2/auth";
     const REDIRECT_URI: &'static str = "http://127.0.0.1/8855";
@@ -33,10 +35,8 @@ impl GCloudClient {
 
     pub async fn new() -> Result<Self, GCloudError> {
         let secret = ApplicationSecret {
-            client_id: env::var("GOOGLE_CLIENT_ID")
-                .expect("Missing the GOOGLE_CLIENT_ID environment variable."),
-            client_secret: env::var("GOOGLE_CLIENT_SECRET")
-                .expect("Missing the GOOGLE_CLIENT_SECRET environment variable."),
+            client_id: Self::GOOGLE_CLIENT_ID.to_string(),
+            client_secret: Self::GOOGLE_CLIENT_SECRET.to_string(),
             token_uri: Self::TOKEN_URI.to_string(),
             auth_uri: Self::AUTH_URI.to_string(),
             redirect_uris: vec![Self::REDIRECT_URI.to_string()],
