@@ -100,10 +100,10 @@ async fn get_updated_configs(
         let remote_config = match remote_secrets.get(&vault_secret_annotation.secret_name) {
             Some(config) => config,
             None => {
-                let test = remove_parent_directories(&config_path);
-
                 return Err(CliError::DevConfigError(
-                    DevConfigError::InvalidSecretPath { config_path: test },
+                    DevConfigError::InvalidSecretPath {
+                        config_path: remove_parent_directories(&config_path),
+                    },
                 ));
             }
         };
