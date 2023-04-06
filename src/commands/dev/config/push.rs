@@ -324,10 +324,25 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_non_existent_file() {
-        let non_existent_path = "non_existent_file.txt";
+    fn test_remove_parent_directories() {
+        let current_dir = std::env::current_dir().unwrap();
 
-        let result = get_local_config_as_string("destination_file", non_existent_path);
-        assert!(result.is_err());
+        let path = current_dir.join("some_directory/some_file.txt");
+        let input = path.to_str().unwrap();
+        let expected_output = "some_directory/some_file.txt";
+        assert_eq!(remove_parent_directories(input), expected_output);
+
+        let path = current_dir.join("another_directory/another_file.txt");
+        let input = path.to_str().unwrap();
+        let expected_output = "another_directory/another_file.txt";
+        assert_eq!(remove_parent_directories(input), expected_output);
+
+        let input = "/absolute/path/to/some/file.txt";
+        let expected_output = "/absolute/path/to/some/file.txt";
+        assert_eq!(remove_parent_directories(input), expected_output);
+
+        let input = "relative/path/to/some/file.txt";
+        let expected_output = "relative/path/to/some/file.txt";
+        assert_eq!(remove_parent_directories(input), expected_output);
     }
 }
