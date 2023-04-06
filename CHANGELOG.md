@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.0.7-rc1](https://github.com/mindvalley/wukong-cli/tree/0.0.7-rc1) (2023-04-06)
+
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/0.0.6-rc1...0.0.7-rc1)
+
+**Merged pull requests:**
+
+- Bump version to 0.0.7-rc1 [\#83](https://github.com/mindvalley/wukong-cli/pull/83) ([onimsha](https://github.com/onimsha))
+- PXP-476: \[CLI\] Develop the config synthesizer command [\#80](https://github.com/mindvalley/wukong-cli/pull/80) ([jk-gan](https://github.com/jk-gan))
+- chore\(deps\): bump openssl from 0.10.45 to 0.10.48 [\#79](https://github.com/mindvalley/wukong-cli/pull/79) ([dependabot[bot]](https://github.com/apps/dependabot))
+- PXP-475: \[Wukong CLI\] Refactor auth logic [\#78](https://github.com/mindvalley/wukong-cli/pull/78) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-489 retry request on query timeout [\#77](https://github.com/mindvalley/wukong-cli/pull/77) ([Fadhil](https://github.com/Fadhil))
+- PXP-475: \[Wukong CLI\] Integrate vault client [\#76](https://github.com/mindvalley/wukong-cli/pull/76) ([mfauzaan](https://github.com/mfauzaan))
+
+## [0.0.6-rc1](https://github.com/mindvalley/wukong-cli/tree/0.0.6-rc1) (2023-03-15)
+
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/0.0.5-beta2...0.0.6-rc1)
+
+**Implemented enhancements:**
+
+- PXP-493: \[Wukong CLI\] Fix the text alignment when listing build artifacts [\#70](https://github.com/mindvalley/wukong-cli/pull/70) ([jk-gan](https://github.com/jk-gan))
+
+**Fixed bugs:**
+
+- fix: show refresh token error using debug output [\#75](https://github.com/mindvalley/wukong-cli/pull/75) ([jk-gan](https://github.com/jk-gan))
+- fix: remove unused step for macos [\#74](https://github.com/mindvalley/wukong-cli/pull/74) ([jk-gan](https://github.com/jk-gan))
+
+**Merged pull requests:**
+
+- PXP-494: \[Wukong CLI\] Improving the debug log for Okta refresh token flow [\#73](https://github.com/mindvalley/wukong-cli/pull/73) ([jk-gan](https://github.com/jk-gan))
+- Bumping version to 0.0.6-rc1 [\#72](https://github.com/mindvalley/wukong-cli/pull/72) ([onimsha](https://github.com/onimsha))
+- Fix clippy rule [\#71](https://github.com/mindvalley/wukong-cli/pull/71) ([onimsha](https://github.com/onimsha))
+- PXP-474: \[CLI\] Develop the ability to read annotations in dev config [\#69](https://github.com/mindvalley/wukong-cli/pull/69) ([jk-gan](https://github.com/jk-gan))
+- PXP-488: \[CLI\] Implement the Elixir linter  [\#68](https://github.com/mindvalley/wukong-cli/pull/68) ([jk-gan](https://github.com/jk-gan))
+- Update CHANGELOG and README [\#67](https://github.com/mindvalley/wukong-cli/pull/67) ([onimsha](https://github.com/onimsha))
+
 ## [0.0.5-beta2](https://github.com/mindvalley/wukong-cli/tree/0.0.5-beta2) (2023-02-22)
 
 [Full Changelog](https://github.com/mindvalley/wukong-cli/compare/0.0.4-beta1...0.0.5-beta2)
@@ -87,15 +122,15 @@
 
 ## [0.0.3-alpha](https://github.com/mindvalley/wukong-cli/tree/0.0.3-alpha) (2022-10-13)
 
-[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/0.0.1-alpha...0.0.3-alpha)
-
-## [0.0.1-alpha](https://github.com/mindvalley/wukong-cli/tree/0.0.1-alpha) (2022-10-12)
-
-[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/0.0.2-alpha...0.0.1-alpha)
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/0.0.2-alpha...0.0.3-alpha)
 
 ## [0.0.2-alpha](https://github.com/mindvalley/wukong-cli/tree/0.0.2-alpha) (2022-10-12)
 
-[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/0.0.1-dev...0.0.2-alpha)
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/0.0.1-alpha...0.0.2-alpha)
+
+## [0.0.1-alpha](https://github.com/mindvalley/wukong-cli/tree/0.0.1-alpha) (2022-10-12)
+
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/0.0.1-dev...0.0.1-alpha)
 
 **Merged pull requests:**
 
