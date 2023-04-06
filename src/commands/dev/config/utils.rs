@@ -14,18 +14,6 @@ use std::{
 
 use super::diff::has_diff;
 
-pub fn make_path_relative(path: &str) -> String {
-    let current_dir = current_dir().unwrap();
-    let path = Path::new(path);
-
-    path.strip_prefix(current_dir)
-        .map(|p| p.to_owned())
-        .unwrap_or(path.to_owned())
-        .into_os_string()
-        .into_string()
-        .unwrap()
-}
-
 pub async fn get_updated_configs(
     vault: &Vault,
     vault_token: &str,
@@ -77,7 +65,7 @@ pub async fn get_updated_configs(
     Ok(updated_configs)
 }
 
-fn get_local_config_as_string(
+pub fn get_local_config_as_string(
     destination_file: &str,
     config_path: &str,
 ) -> Result<String, CliError> {
@@ -106,6 +94,18 @@ pub fn get_dev_config_files() -> Result<Vec<PathBuf>, CliError> {
     Ok(config_files)
 }
 
+pub fn make_path_relative(path: &str) -> String {
+    let current_dir = current_dir().unwrap();
+    let path = Path::new(path);
+
+    path.strip_prefix(current_dir)
+        .map(|p| p.to_owned())
+        .unwrap_or(path.to_owned())
+        .into_os_string()
+        .into_string()
+        .unwrap()
+}
+
 pub fn filter_config_with_secret_annotations(
     available_files: Vec<PathBuf>,
 ) -> Result<HashMap<String, VaultSecretAnnotation>, CliError> {
@@ -126,4 +126,120 @@ pub fn filter_config_with_secret_annotations(
     }
 
     Ok(filtered_annotations)
+}
+
+// Test:
+#[cfg(test)]
+mod test {
+    use std::fs::File;
+    use std::io::Write;
+    use tempfile::tempdir;
+
+    use super::*;
+
+    #[test]
+    fn test_filter_config_with_secret_annotations() -> Result<(), Box<dyn std::error::Error>> {
+        let dir = tempdir()?;
+        let file1_path = dir.path().join("dev.exs");
+        let file2_path = dir.path().join("dev2.exs");
+
+        let mut file1 = File::create(&file1_path)?;
+        writeln!(
+            file1,
+            r#"# Import development secrets
+            # wukong.mindvalley.dev/config-secrets-location: vault:secret/wukong-cli/sandboxes#dev.secrets.exs
+            import_config("dev.secrets.exs")"#
+        )?;
+
+        let mut file2 = File::create(&file2_path)?;
+        writeln!(file2, "Some other content")?;
+
+        let available_files = vec![file1_path.clone(), file2_path.clone()];
+        let filtered_annotations = filter_config_with_secret_annotations(available_files)?;
+
+        assert_eq!(filtered_annotations.len(), 1);
+        assert!(filtered_annotations.contains_key(&file1_path.to_string_lossy().to_string()));
+
+        let annotation = filtered_annotations
+            .get(&file1_path.to_string_lossy().to_string())
+            .unwrap();
+        assert_eq!(
+            annotation.key,
+            "wukong.mindvalley.dev/config-secrets-location"
+        );
+        assert_eq!(annotation.source, "vault");
+        assert_eq!(annotation.engine, "secret");
+
+        dir.close()?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_local_config_as_string() -> Result<(), Box<dyn std::error::Error>> {
+        let dir = tempdir()?;
+        let subdir = dir.path().join("config");
+        std::fs::create_dir_all(&subdir)?;
+
+        let file_path = subdir.join("config.exs");
+        let config_content = "Some test content";
+
+        let mut file = File::create(&file_path)?;
+        writeln!(file, "{}", config_content)?;
+
+        let destination_file = "config/config.exs";
+        let config_path = subdir.to_str().unwrap();
+
+        let local_config = get_local_config_as_string(destination_file, config_path)?;
+
+        assert_eq!(local_config.trim(), config_content);
+
+        dir.close()?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_make_path_relative() {
+        let current_dir = current_dir().unwrap();
+        let sub_path = PathBuf::from("/parent/some/config/dev.exs");
+        let absolute_path = current_dir.join(&sub_path);
+
+        let relative_path = make_path_relative(absolute_path.to_str().unwrap());
+
+        assert_eq!(relative_path, sub_path.to_str().unwrap());
+    }
+
+    // #[test]
+    // fn test_get_dev_config_files() -> Result<(), Box<dyn std::error::Error>> {
+    //     let dir = tempdir()?;
+    //     let subdir1 = dir.path().join("config");
+    //     let subdir2 = dir.path().join("another_config");
+    //     create_dir_all(&subdir1)?;
+    //     create_dir_all(&subdir2)?;
+
+    //     let dev_config1 = subdir1.join("dev.exs");
+    //     let dev_config2 = subdir2.join("dev.exs");
+    //     let non_target_file = subdir1.join("dev.secrets.exe");
+
+    //     File::create(&dev_config1)?;
+    //     File::create(&dev_config2)?;
+    //     File::create(&non_target_file)?;
+
+    //     // Set the current directory to the temporary directory
+    //     set_current_dir(dir.path())?;
+
+    //     let config_files = get_dev_config_files()?;
+
+    //     // Reset the current directory to the original one after the test
+    //     set_current_dir(current_dir()?)?;
+
+    //     // assert!(config_files.contains(&dev_config1));
+    //     // assert!(config_files.contains(&dev_config2));
+    //     // assert!(!config_files.contains(&non_target_file));
+
+    //     dir.close()?;
+
+    //     Ok(())
+    // }
 }

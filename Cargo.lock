@@ -4130,6 +4130,7 @@ dependencies = [
  "serde_json",
  "similar",
  "tabled",
+ "tempfile",
  "thiserror",
  "time-humanize",
  "tokio",

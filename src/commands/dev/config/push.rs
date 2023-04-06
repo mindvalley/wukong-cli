@@ -6,12 +6,11 @@ use dialoguer::Confirm;
 use dialoguer::{theme::ColorfulTheme, Select};
 use owo_colors::OwoColorize;
 use std::collections::HashMap;
-use std::path::PathBuf;
 
 use super::diff::print_diff;
 use super::utils::{
-    filter_config_with_secret_annotations, get_dev_config_files, get_updated_configs,
-    make_path_relative,
+    filter_config_with_secret_annotations, get_dev_config_files, get_local_config_as_string,
+    get_updated_configs, make_path_relative,
 };
 
 pub async fn handle_config_push() -> Result<bool, CliError> {
@@ -72,18 +71,6 @@ pub async fn handle_config_push() -> Result<bool, CliError> {
     }
 
     Ok(true)
-}
-
-fn get_local_config_as_string(
-    destination_file: &str,
-    config_path: &str,
-) -> Result<String, CliError> {
-    let path = PathBuf::from(config_path);
-    let dir_path = path.parent().unwrap();
-    let local_secrets = dir_path.join(destination_file);
-    let local_secrets = std::fs::read_to_string(local_secrets)?;
-
-    Ok(local_secrets)
 }
 
 async fn update_secrets(
