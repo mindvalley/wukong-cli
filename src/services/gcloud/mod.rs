@@ -5,6 +5,10 @@ use std::{
 };
 
 use chrono::{Duration, Utc};
+use google_logging2::{
+    api::{ListLogEntriesRequest, ListLogEntriesResponse},
+    hyper, hyper_rustls,
+};
 use oauth2::{
     basic::BasicClient, reqwest::async_http_client, AuthorizationCode, ClientId, ClientSecret,
     CsrfToken, PkceCodeChallenge, RedirectUrl, Scope, TokenResponse,
@@ -152,5 +156,62 @@ impl GCloudClient {
             .to_rfc3339();
 
         println!("Access token expires at: {}", expiry);
+    }
+
+    pub async fn get_logs() {
+        use google_logging2::{
+            oauth2::{ApplicationSecret, InstalledFlowAuthenticator, InstalledFlowReturnMethod},
+            Logging,
+        };
+
+        let secret = ApplicationSecret {
+            client_id: env::var("GOOGLE_CLIENT_ID")
+                .expect("Missing the GOOGLE_CLIENT_ID environment variable."),
+            client_secret: env::var("GOOGLE_CLIENT_SECRET")
+                .expect("Missing the GOOGLE_CLIENT_SECRET environment variable."),
+            token_uri: "https://oauth2.googleapis.com/token".to_string(),
+            auth_uri: "https://accounts.google.com/o/oauth2/auth".to_string(),
+            redirect_uris: vec!["http://127.0.0.1:8855/oauth2callback".to_string()],
+            project_id: Some("mv-prod-wukong-api".to_string()),
+            client_email: None,
+            auth_provider_x509_cert_url: Some(
+                "https://www.googleapis.com/oauth2/v1/certs".to_string(),
+            ),
+            client_x509_cert_url: None,
+        };
+
+        let auth = InstalledFlowAuthenticator::builder(
+            secret,
+            InstalledFlowReturnMethod::HTTPPortRedirect(8855),
+        )
+        .build()
+        .await
+        .unwrap();
+
+        // let scopes = &["https://www.googleapis.com/auth/logging.read"];
+        // let token = auth.token(scopes).await.unwrap();
+        //
+        // println!("token {:#?}", token);
+
+        let hub = Logging::new(
+            hyper::Client::builder().build(
+                hyper_rustls::HttpsConnectorBuilder::new()
+                    .with_native_roots()
+                    .https_or_http()
+                    .enable_http1()
+                    .enable_http2()
+                    .build(),
+            ),
+            auth,
+        );
+
+        let mut request = ListLogEntriesRequest::default();
+        let mut call = hub.entries().list(request);
+        let response = call
+            .add_scope("https://www.googleapis.com/auth/logging.read")
+            .doit()
+            .await
+            .unwrap();
+        println!("response {:#?}", response);
     }
 }
