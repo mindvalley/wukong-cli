@@ -10,34 +10,40 @@ use std::path::PathBuf;
 
 use super::diff::print_diff;
 use super::utils::{
-    filter_config_with_secret_annotations, get_available_files, get_updated_configs,
-    remove_parent_directories,
+    filter_config_with_secret_annotations, get_dev_config_files, get_updated_configs,
+    make_path_relative,
 };
 
 pub async fn handle_config_push() -> Result<bool, CliError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("🔍 Finding config with annotation");
 
-    let available_files = get_available_files()?;
-    let config_files = filter_config_with_secret_annotations(available_files)?;
+    let dev_config_files = get_dev_config_files()?;
+    let dev_config_with_secret_annotations =
+        filter_config_with_secret_annotations(dev_config_files)?;
 
     progress_bar.finish_and_clear();
 
-    if config_files.is_empty() {
+    if dev_config_with_secret_annotations.is_empty() {
         return Err(CliError::DevConfigError(DevConfigError::ConfigNotFound));
     }
 
-    if config_files.len() != 1 {
+    if dev_config_with_secret_annotations.len() != 1 {
         println!(
             "{}",
-            format!("There are ({}) config files found!", config_files.len()).bright_yellow()
+            format!(
+                "There are ({}) config files found!",
+                dev_config_with_secret_annotations.len()
+            )
+            .bright_yellow()
         );
     }
 
     let vault = Vault::new();
     let vault_token = vault.get_token_or_login().await?;
 
-    let updated_configs = get_updated_configs(&vault, &vault_token, &config_files).await?;
+    let updated_configs =
+        get_updated_configs(&vault, &vault_token, &dev_config_with_secret_annotations).await?;
 
     if updated_configs.is_empty() {
         println!(
@@ -138,7 +144,7 @@ async fn select_config(
                 .map(|(config_path, (annotation, _, _))| {
                     format!(
                         "{} \t {}::{}/{}#{}",
-                        remove_parent_directories(config_path),
+                        make_path_relative(config_path),
                         annotation.source,
                         annotation.engine,
                         annotation.secret_path,

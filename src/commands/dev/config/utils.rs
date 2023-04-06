@@ -14,7 +14,7 @@ use std::{
 
 use super::diff::has_diff;
 
-pub fn remove_parent_directories(path: &str) -> String {
+pub fn make_path_relative(path: &str) -> String {
     let current_dir = current_dir().unwrap();
     let path = Path::new(path);
 
@@ -56,7 +56,7 @@ pub async fn get_updated_configs(
             None => {
                 return Err(CliError::DevConfigError(
                     DevConfigError::InvalidSecretPath {
-                        config_path: remove_parent_directories(config_path),
+                        config_path: make_path_relative(config_path),
                     },
                 ));
             }
@@ -89,24 +89,21 @@ fn get_local_config_as_string(
     Ok(local_secrets)
 }
 
-pub fn get_dev_config_files(path: &Path) -> Vec<PathBuf> {
-    let mut overrides = OverrideBuilder::new(path);
+pub fn get_dev_config_files() -> Result<Vec<PathBuf>, CliError> {
+    let current_path = current_dir()?;
+
+    let mut overrides = OverrideBuilder::new(current_path);
     overrides.add("**/config/dev.exs").unwrap();
 
-    WalkBuilder::new(path)
+    let config_files = WalkBuilder::new(current_path)
         .overrides(overrides.build().unwrap())
         .build()
         .flatten()
         .filter(|e| e.path().is_file())
         .map(|e| e.path().to_path_buf())
-        .collect()
-}
+        .collect();
 
-pub fn get_available_files() -> Result<Vec<PathBuf>, CliError> {
-    let current_path = current_dir()?;
-    let available_files = get_dev_config_files(&current_path);
-
-    Ok(available_files)
+    Ok(config_files)
 }
 
 pub fn filter_config_with_secret_annotations(
