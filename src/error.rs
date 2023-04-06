@@ -69,6 +69,8 @@ pub enum APIError {
 pub enum DevConfigError {
     #[error("No config files found!")]
     ConfigNotFound,
+    #[error("No dev secret config files found!")]
+    ConfigSecretNotFound,
     #[error(
         "The config file is already up to date with the Vault Bunker. There are no changes to push."
     )]
@@ -161,7 +163,7 @@ If none of the above steps work for you, please contact the following people on 
                 _ => None,
             },
             CliError::DevConfigError(error) => match error {
-                DevConfigError::ConfigNotFound => Some(
+                DevConfigError::ConfigSecretNotFound => Some(
                     "Run \"wukong config dev pull\" to pull the latest dev config.".to_string()
                 ),
                 DevConfigError::InvalidSecretPath { path } => Some(format!(
