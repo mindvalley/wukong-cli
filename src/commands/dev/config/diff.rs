@@ -79,7 +79,6 @@ pub fn print_diff(old_secret_config: &str, new_secret_config: &str, local_config
         if idx > 0 {
             println!("{:-^1$}", "-", 80);
         }
-
         for op in group {
             for change in diff.iter_inline_changes(op) {
                 let (sign, s) = match change.tag() {
