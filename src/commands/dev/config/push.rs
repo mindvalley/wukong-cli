@@ -102,7 +102,7 @@ async fn get_updated_configs(
             None => {
                 return Err(CliError::DevConfigError(
                     DevConfigError::InvalidSecretPath {
-                        config_path: remove_parent_directories(&config_path),
+                        config_path: remove_parent_directories(config_path),
                     },
                 ));
             }
