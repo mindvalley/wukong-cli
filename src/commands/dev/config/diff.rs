@@ -10,17 +10,17 @@ use dialoguer::{theme::ColorfulTheme, Select};
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use owo_colors::OwoColorize;
 use similar::{ChangeTag, TextDiff};
-use std::{collections::HashMap, io::ErrorKind};
+use std::collections::HashMap;
 use std::{
     env::current_dir,
     path::{Path, PathBuf},
 };
 
-pub async fn handle_config_diff(path: &Path) -> Result<bool, CliError> {
+pub async fn handle_config_diff() -> Result<bool, CliError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("🔍 Finding config with annotation");
 
-    let available_files = get_available_files(path)?;
+    let available_files = get_available_files()?;
     let config_files = filter_config_with_secret_annotations(available_files)?;
 
     progress_bar.finish_and_clear();
@@ -93,9 +93,7 @@ async fn get_updated_configs(
             .get(&vault_secret_annotation.secret_name)
             .unwrap();
 
-        if has_diff(remote_config, &config_string) {
-            updated_configs.insert(config_path.clone(), vault_secret_annotation.clone());
-        }
+        print_diff(remote_config, &config_string, config_path)
     }
 
     Ok(updated_configs)
@@ -209,19 +207,9 @@ async fn select_config(
     };
 }
 
-fn get_available_files(path: &Path) -> Result<Vec<PathBuf>, CliError> {
-    let path = path.try_exists().map(|value| match value {
-        true => match path.to_string_lossy() == "." {
-            true => current_dir(),
-            false => Ok(path.to_path_buf()),
-        },
-        false => Err(std::io::Error::new(
-            ErrorKind::NotFound,
-            format!("path '{}' does not exist", path.to_string_lossy()),
-        )),
-    })??;
-
-    let available_files = get_dev_config_files(&path);
+fn get_available_files() -> Result<Vec<PathBuf>, CliError> {
+    let current_path = current_dir()?;
+    let available_files = get_dev_config_files(&current_path);
 
     Ok(available_files)
 }
