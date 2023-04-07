@@ -1,17 +1,59 @@
+use std::{future::Future, pin::Pin};
+
 use crate::error::GCloudError;
+use chrono::Duration;
 use google_logging2::{
-    api::ListLogEntriesRequest,
+    api::{ListLogEntriesRequest, TailLogEntriesRequest},
     hyper, hyper_rustls,
-    oauth2::{ApplicationSecret, InstalledFlowAuthenticator, InstalledFlowReturnMethod},
+    oauth2::{
+        authenticator_delegate::{DefaultInstalledFlowDelegate, InstalledFlowDelegate},
+        ApplicationSecret, InstalledFlowAuthenticator, InstalledFlowReturnMethod,
+    },
     Logging,
 };
 
-pub struct LogEntriesOption {
+/// async function to be pinned by the `present_user_url` method of the trait
+/// we use the existing `DefaultInstalledFlowDelegate::present_user_url` method as a fallback for
+/// when the browser did not open for example, the user still see's the URL.
+async fn browser_user_url(url: &str, need_code: bool) -> Result<String, String> {
+    if webbrowser::open(url).is_ok() {
+        println!("webbrowser was successfully opened.");
+    }
+    let def_delegate = DefaultInstalledFlowDelegate;
+    def_delegate.present_user_url(url, need_code).await
+}
+
+/// our custom delegate struct we will implement a flow delegate trait for:
+/// in this case we will implement the `InstalledFlowDelegated` trait
+#[derive(Copy, Clone)]
+struct InstalledFlowBrowserDelegate;
+
+/// here we implement only the present_user_url method with the added webbrowser opening
+/// the other behaviour of the trait does not need to be changed.
+impl InstalledFlowDelegate for InstalledFlowBrowserDelegate {
+    /// the actual presenting of URL and browser opening happens in the function defined above here
+    /// we only pin it
+    fn present_user_url<'a>(
+        &'a self,
+        url: &'a str,
+        need_code: bool,
+    ) -> Pin<Box<dyn Future<Output = Result<String, String>> + Send + 'a>> {
+        Box::pin(browser_user_url(url, need_code))
+    }
+}
+
+pub struct LogEntriesOptions {
     pub project_ids: Option<Vec<String>>,
     pub filter: Option<String>,
     pub page_size: Option<i32>,
     pub page_token: Option<String>,
     pub order_by: Option<String>,
+    pub resource_names: Option<Vec<String>>,
+}
+
+pub struct LogEntriesTailOptions {
+    pub filter: Option<String>,
+    pub buffer_window: Option<Duration>,
     pub resource_names: Option<Vec<String>>,
 }
 
@@ -73,6 +115,7 @@ impl GCloudClient {
             InstalledFlowReturnMethod::HTTPPortRedirect(8855),
         )
         .persist_tokens_to_disk(format!("{}/gcloud_logging", config_dir))
+        .flow_delegate(Box::new(InstalledFlowBrowserDelegate))
         .build()
         .await?;
 
@@ -93,7 +136,7 @@ impl GCloudClient {
 
     pub async fn get_log_entries(
         &self,
-        options: LogEntriesOption,
+        options: LogEntriesOptions,
     ) -> Result<LogEntries, GCloudError> {
         let request = ListLogEntriesRequest {
             filter: options.filter,
@@ -113,5 +156,26 @@ impl GCloudClient {
             entries: output_schema.entries,
             next_page_token: output_schema.next_page_token,
         })
+    }
+
+    pub async fn get_log_entries_tail(
+        &self,
+        options: LogEntriesTailOptions,
+    ) -> Result<(), GCloudError> {
+        let request = TailLogEntriesRequest {
+            filter: options.filter,
+            buffer_window: options.buffer_window,
+            resource_names: options.resource_names,
+        };
+        let call = self.hub.entries().tail(request);
+        let (response, output_schema) = call
+            .add_scope("https://www.googleapis.com/auth/logging.read")
+            .doit()
+            .await?;
+
+        println!("{:#?}", output_schema);
+        println!("{:#?}", response);
+
+        Ok(())
     }
 }
