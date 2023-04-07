@@ -4,7 +4,6 @@ use crate::{
     loader::new_spinner_progress_bar,
     services::gcloud::{GCloudClient, LogEntriesOptions, LogEntriesTailOptions},
 };
-use aion::*;
 
 pub async fn handle_logs_demo(_context: Context) -> Result<bool, CliError> {
     let gcloud_client = GCloudClient::new().await?;
