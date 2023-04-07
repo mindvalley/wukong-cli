@@ -17,10 +17,12 @@ use google_logging2::{
 /// when the browser did not open for example, the user still see's the URL.
 async fn browser_user_url(url: &str, need_code: bool) -> Result<String, String> {
     if webbrowser::open(url).is_ok() {
-        println!("webbrowser was successfully opened.");
+        println!("Your browser has been opened to visit:\n\n\t{url}\n");
+        Ok(String::new())
+    } else {
+        let def_delegate = DefaultInstalledFlowDelegate;
+        def_delegate.present_user_url(url, need_code).await
     }
-    let def_delegate = DefaultInstalledFlowDelegate;
-    def_delegate.present_user_url(url, need_code).await
 }
 
 /// our custom delegate struct we will implement a flow delegate trait for:
