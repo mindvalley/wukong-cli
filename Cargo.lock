@@ -4128,6 +4128,7 @@ dependencies = [
  "rexpect",
  "serde",
  "serde_json",
+ "similar",
  "tabled",
  "thiserror",
  "time-humanize",

@@ -11,7 +11,7 @@ use tree_sitter::{Parser, Query, QueryCursor};
 // secret_path = path/to/secret
 // secret_name = secret_key
 // destination_file = dev.secret.exs
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct VaultSecretAnnotation {
     pub key: String,
     pub source: String,

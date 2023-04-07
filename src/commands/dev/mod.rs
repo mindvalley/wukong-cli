@@ -1,3 +1,4 @@
+mod config;
 mod config_lint;
 mod config_synthesizer;
 
@@ -27,6 +28,8 @@ pub enum DevSubcommand {
         #[arg(default_value = ".")]
         path: PathBuf,
     },
+    /// This command group contains the commands to interact with the config secrets with bunker.
+    Config(config::Config),
 }
 
 impl Dev {
@@ -34,6 +37,7 @@ impl Dev {
         match &self.subcommand {
             DevSubcommand::ConfigLint { path } => handle_config_lint(path),
             DevSubcommand::ConfigSynthesizer { path } => handle_config_synthesizer(path).await,
+            DevSubcommand::Config(config) => config.handle_command().await,
         }
     }
 }
