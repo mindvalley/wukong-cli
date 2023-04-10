@@ -1,14 +1,14 @@
 mod diff;
-mod push;
 mod pull;
+mod push;
 mod utils;
 
-use std::path::PathBuf;
 use crate::error::CliError;
 use clap::{Args, Subcommand};
 use diff::handle_config_diff;
-use push::handle_config_push;
 use pull::handle_config_pull;
+use push::handle_config_push;
+use std::path::PathBuf;
 
 #[derive(Debug, Args)]
 pub struct Config {
@@ -24,9 +24,9 @@ pub enum ConfigSubcommand {
     Diff,
     /// Pull the development config with secrets file from Bunker.
     Pull {
-      /// The path to the project
-      #[arg(default_value = ".")]
-      path: PathBuf,
+        /// The path to the project
+        #[arg(default_value = ".")]
+        path: PathBuf,
     },
 }
 
