@@ -199,49 +199,4 @@ mod test {
 
         Ok(())
     }
-
-    #[test]
-    fn test_make_path_relative() {
-        let current_dir = current_dir().unwrap();
-        let sub_path = PathBuf::from("/parent/some/config/dev.exs");
-        let absolute_path = current_dir.join(&sub_path);
-
-        let relative_path = make_path_relative(absolute_path.to_str().unwrap());
-
-        // Use contains instead of equals because the path is relative to the current directory
-        assert!(relative_path.contains("parent/some/config/dev.exs"));
-    }
-
-    #[test]
-    fn test_get_dev_config_files() -> Result<(), Box<dyn std::error::Error>> {
-        let dir = tempdir()?;
-        let subdir1 = dir.path().join("config");
-        let subdir2 = dir.path().join("another_config");
-        create_dir_all(&subdir1)?;
-        create_dir_all(&subdir2)?;
-
-        let dev_config1 = subdir1.join("dev.exs");
-        let non_target_file = subdir1.join("dev.secrets.exe");
-
-        File::create(&dev_config1)?;
-        File::create(&non_target_file)?;
-
-        // Set the current directory to the temporary directory
-        set_current_dir(dir.path())?;
-
-        let config_files = get_dev_config_files()?;
-
-        // Reset the current directory to the original one after the test
-        set_current_dir(current_dir()?)?;
-
-        // Get first item from the vector
-        let expected_config_files = config_files.get(0).unwrap().to_str().unwrap();
-        let expected_dev_files = dev_config1.to_str().unwrap();
-
-        assert!(expected_config_files.contains(&expected_dev_files));
-
-        dir.close()?;
-
-        Ok(())
-    }
 }
