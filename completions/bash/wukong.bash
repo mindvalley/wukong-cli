@@ -99,6 +99,9 @@ _wukong() {
             wukong__deployment__help,rollback)
                 cmd="wukong__deployment__help__rollback"
                 ;;
+            wukong__dev,config)
+                cmd="wukong__dev__config"
+                ;;
             wukong__dev,config-lint)
                 cmd="wukong__dev__config__lint"
                 ;;
@@ -108,6 +111,21 @@ _wukong() {
             wukong__dev,help)
                 cmd="wukong__dev__help"
                 ;;
+            wukong__dev__config,help)
+                cmd="wukong__dev__config__help"
+                ;;
+            wukong__dev__config,push)
+                cmd="wukong__dev__config__push"
+                ;;
+            wukong__dev__config__help,help)
+                cmd="wukong__dev__config__help__help"
+                ;;
+            wukong__dev__config__help,push)
+                cmd="wukong__dev__config__help__push"
+                ;;
+            wukong__dev__help,config)
+                cmd="wukong__dev__help__config"
+                ;;
             wukong__dev__help,config-lint)
                 cmd="wukong__dev__help__config__lint"
                 ;;
@@ -116,6 +134,9 @@ _wukong() {
                 ;;
             wukong__dev__help,help)
                 cmd="wukong__dev__help__help"
+                ;;
+            wukong__dev__help__config,push)
+                cmd="wukong__dev__help__config__push"
                 ;;
             wukong__help,application)
                 cmd="wukong__help__application"
@@ -165,11 +186,17 @@ _wukong() {
             wukong__help__deployment,rollback)
                 cmd="wukong__help__deployment__rollback"
                 ;;
+            wukong__help__dev,config)
+                cmd="wukong__help__dev__config"
+                ;;
             wukong__help__dev,config-lint)
                 cmd="wukong__help__dev__config__lint"
                 ;;
             wukong__help__dev,config-synthesizer)
                 cmd="wukong__help__dev__config__synthesizer"
+                ;;
+            wukong__help__dev__config,push)
+                cmd="wukong__help__dev__config__push"
                 ;;
             wukong__help__pipeline,ci-status)
                 cmd="wukong__help__pipeline__ci__status"
@@ -677,8 +704,30 @@ _wukong() {
             return 0
             ;;
         wukong__dev)
-            opts="-a -v -q -h --application --verbose --quiet --help config-lint config-synthesizer help"
+            opts="-a -v -q -h --application --verbose --quiet --help config-lint config-synthesizer config help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                --application)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                -a)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__dev__config)
+            opts="-a -v -q -h --application --verbose --quiet --help push help"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
@@ -742,9 +791,87 @@ _wukong() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
+        wukong__dev__config__help)
+            opts="push help"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__dev__config__help__help)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 5 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__dev__config__help__push)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 5 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__dev__config__push)
+            opts="-a -v -q -h --application --verbose --quiet --help"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                --application)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                -a)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
         wukong__dev__help)
-            opts="config-lint config-synthesizer help"
+            opts="config-lint config-synthesizer config help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__dev__help__config)
+            opts="push"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
@@ -773,6 +900,20 @@ _wukong() {
         wukong__dev__help__config__synthesizer)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__dev__help__config__push)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 5 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
@@ -967,8 +1108,22 @@ _wukong() {
             return 0
             ;;
         wukong__help__dev)
-            opts="config-lint config-synthesizer"
+            opts="config-lint config-synthesizer config"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__help__dev__config)
+            opts="push"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
@@ -997,6 +1152,20 @@ _wukong() {
         wukong__help__dev__config__synthesizer)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__help__dev__config__push)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 5 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi

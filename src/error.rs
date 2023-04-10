@@ -24,6 +24,8 @@ pub enum CliError {
     #[error(transparent)]
     VaultError(#[from] VaultError),
     #[error(transparent)]
+    DevConfigError(#[from] DevConfigError),
+    #[error(transparent)]
     GCloudError(#[from] GCloudError),
 }
 
@@ -39,6 +41,17 @@ pub enum APIError {
     ChangelogComparingSameBuild,
     #[error("Request to {domain} timed out.")]
     Timeout { domain: String },
+}
+
+#[derive(Debug, ThisError)]
+pub enum DevConfigError {
+    #[error("No config files found!")]
+    ConfigNotFound,
+    #[error("No dev secret config files found!")]
+    ConfigSecretNotFound,
+    // Invalid secret path in the annotation in config file:
+    #[error("Invalid secret path in the config file")]
+    InvalidSecretPath { config_path: String },
 }
 
 #[derive(Debug, ThisError)]
@@ -155,6 +168,15 @@ If none of the above steps work for you, please contact the following people on 
                 APIError::UnAuthenticated => Some(
                     "Run \"wukong login\" to authenticate with your okta account.".to_string()
                 ),
+                _ => None,
+            },
+            CliError::DevConfigError(error) => match error {
+                DevConfigError::ConfigSecretNotFound => Some(
+                    "Run \"wukong config dev pull\" to pull the latest dev config.".to_string()
+                ),
+                DevConfigError::InvalidSecretPath { config_path } => Some(format!(
+                    "Please check the secret path in the config file: {config_path}"
+                )),
                 _ => None,
             },
             _ => None,
