@@ -135,8 +135,7 @@ pub fn filter_config_with_secret_annotations(
 // Test:
 #[cfg(test)]
 mod test {
-    use std::env::set_current_dir;
-    use std::fs::{create_dir_all, File};
+    use std::fs::File;
     use std::io::Write;
 
     use super::*;
