@@ -2,7 +2,7 @@ use crate::{
     commands::Context,
     error::CliError,
     loader::new_spinner_progress_bar,
-    services::gcloud::{GCloudClient, LogEntriesOptions, LogEntriesTailOptions},
+    services::gcloud::{GCloudClient, LogEntriesOptions},
 };
 
 pub async fn handle_logs_demo(_context: Context) -> Result<bool, CliError> {
@@ -22,13 +22,13 @@ pub async fn handle_logs_demo(_context: Context) -> Result<bool, CliError> {
         })
         .await?;
 
-    let _log_tail = gcloud_client
-        .get_log_entries_tail(LogEntriesTailOptions {
-            resource_names: Some(vec!["projects/mv-stg-applications-hub".to_string()]),
-            filter: None,
-            buffer_window: None,
-        })
-        .await?;
+    // let _log_tail = gcloud_client
+    //     .get_log_entries_tail(LogEntriesTailOptions {
+    //         resource_names: Some(vec!["projects/mv-stg-applications-hub".to_string()]),
+    //         filter: None,
+    //         buffer_window: None,
+    //     })
+    //     .await?;
 
     progress_bar.finish_and_clear();
 
