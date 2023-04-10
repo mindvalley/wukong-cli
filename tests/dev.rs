@@ -230,7 +230,8 @@ config :phoenix, :json_library, Jason
 
     let cmd = common::wukong_raw_command()
         .arg("dev")
-        .arg("config-synthesizer")
+        .arg("config")
+        .arg("pull")
         .arg(elixir_temp.path().to_str().unwrap())
         .env("WUKONG_DEV_CONFIG_FILE", wk_config_file.path())
         .env("WUKONG_DEV_VAULT_API_URL", server.base_url())
