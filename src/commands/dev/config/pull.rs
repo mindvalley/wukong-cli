@@ -11,7 +11,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub async fn handle_config_synthesizer(path: &Path) -> Result<bool, CliError> {
+pub async fn handle_config_pull(path: &Path) -> Result<bool, CliError> {
     let path = path.try_exists().map(|value| match value {
         true => {
             if path.to_string_lossy() == "." {
