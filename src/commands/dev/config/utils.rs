@@ -131,7 +131,8 @@ pub fn filter_config_with_secret_annotations(
 // Test:
 #[cfg(test)]
 mod test {
-    use std::fs::File;
+    use std::env::set_current_dir;
+    use std::fs::{create_dir_all, File};
     use std::io::Write;
     use tempfile::tempdir;
 
@@ -210,36 +211,36 @@ mod test {
         assert_eq!(relative_path, sub_path.to_str().unwrap());
     }
 
-    // #[test]
-    // fn test_get_dev_config_files() -> Result<(), Box<dyn std::error::Error>> {
-    //     let dir = tempdir()?;
-    //     let subdir1 = dir.path().join("config");
-    //     let subdir2 = dir.path().join("another_config");
-    //     create_dir_all(&subdir1)?;
-    //     create_dir_all(&subdir2)?;
+    #[test]
+    fn test_get_dev_config_files() -> Result<(), Box<dyn std::error::Error>> {
+        let dir = tempdir()?;
+        let subdir1 = dir.path().join("config");
+        let subdir2 = dir.path().join("another_config");
+        create_dir_all(&subdir1)?;
+        create_dir_all(&subdir2)?;
 
-    //     let dev_config1 = subdir1.join("dev.exs");
-    //     let dev_config2 = subdir2.join("dev.exs");
-    //     let non_target_file = subdir1.join("dev.secrets.exe");
+        let dev_config1 = subdir1.join("dev.exs");
+        let non_target_file = subdir1.join("dev.secrets.exe");
 
-    //     File::create(&dev_config1)?;
-    //     File::create(&dev_config2)?;
-    //     File::create(&non_target_file)?;
+        File::create(&dev_config1)?;
+        File::create(&non_target_file)?;
 
-    //     // Set the current directory to the temporary directory
-    //     set_current_dir(dir.path())?;
+        // Set the current directory to the temporary directory
+        set_current_dir(dir.path())?;
 
-    //     let config_files = get_dev_config_files()?;
+        let config_files = get_dev_config_files()?;
 
-    //     // Reset the current directory to the original one after the test
-    //     set_current_dir(current_dir()?)?;
+        // Reset the current directory to the original one after the test
+        set_current_dir(current_dir()?)?;
 
-    //     // assert!(config_files.contains(&dev_config1));
-    //     // assert!(config_files.contains(&dev_config2));
-    //     // assert!(!config_files.contains(&non_target_file));
+        // Get first item from the vector
+        let expected_config_files = config_files.get(0).unwrap().to_str().unwrap();
+        let expected_dev_files = dev_config1.to_str().unwrap();
 
-    //     dir.close()?;
+        assert!(expected_config_files.contains(&expected_dev_files));
 
-    //     Ok(())
-    // }
+        dir.close()?;
+
+        Ok(())
+    }
 }
