@@ -6,6 +6,7 @@ use dialoguer::Confirm;
 use dialoguer::{theme::ColorfulTheme, Select};
 use owo_colors::OwoColorize;
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 use super::diff::print_diff;
 use super::utils::{
@@ -90,7 +91,15 @@ async fn update_secrets(
 
     let remote_config = secrets.get(&vault_secret_annotation.secret_name).unwrap();
 
-    print_diff(remote_config, &local_config_string, secret_path);
+    let path = PathBuf::from(secret_path);
+    let dir_path = path.parent().unwrap();
+    let dev_config_path = dir_path.join(&vault_secret_annotation.destination_file);
+
+    print_diff(
+        remote_config,
+        &local_config_string,
+        &dev_config_path.to_string_lossy(),
+    );
 
     let agree_to_update = Confirm::with_theme(&ColorfulTheme::default())
         .with_prompt("Confirm this change & push?")

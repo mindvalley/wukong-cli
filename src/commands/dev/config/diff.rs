@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use crate::error::{CliError, DevConfigError};
 use crate::loader::new_spinner_progress_bar;
 use crate::services::vault::Vault;
@@ -47,8 +49,16 @@ pub async fn handle_config_diff() -> Result<bool, CliError> {
         return Ok(true);
     }
 
-    for (config_path, (_, remote_config, local_config)) in &updated_configs {
-        print_diff(remote_config, local_config, config_path);
+    for (config_path, (secret_annotation, remote_config, local_config)) in &updated_configs {
+        let path = PathBuf::from(config_path);
+        let dir_path = path.parent().unwrap();
+        let dev_config_path = dir_path.join(&secret_annotation.destination_file);
+
+        print_diff(
+            remote_config,
+            local_config,
+            &dev_config_path.to_string_lossy(),
+        );
     }
 
     Ok(true)
