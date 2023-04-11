@@ -138,13 +138,17 @@ async fn select_config(
             &available_config
                 .iter()
                 .map(|(config_path, (annotation, _, _))| {
+                    let path = PathBuf::from(config_path);
+                    let dir_path = path.parent().unwrap();
+                    let dev_config_secret_path = dir_path.join(&annotation.destination_file);
+
                     format!(
-                        "{} \t {}::{}/{}#{}",
-                        make_path_relative(config_path),
+                        "{:<50}{}::{}/{}#{}",
+                        make_path_relative(&dev_config_secret_path.to_string_lossy()),
                         annotation.source,
                         annotation.engine,
                         annotation.secret_path,
-                        annotation.secret_name
+                        annotation.secret_name,
                     )
                 })
                 .collect::<Vec<String>>(),
