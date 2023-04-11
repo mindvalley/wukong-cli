@@ -6,7 +6,6 @@ use dialoguer::Confirm;
 use dialoguer::{theme::ColorfulTheme, Select};
 use owo_colors::OwoColorize;
 use std::collections::HashMap;
-use std::path::PathBuf;
 
 use super::diff::print_diff;
 use super::utils::{
@@ -58,7 +57,7 @@ pub async fn handle_config_push() -> Result<bool, CliError> {
             "{}",
             "There is only one config file to update...".bright_yellow()
         );
-        let (annotation, _, _, config_path) = updated_configs.iter().next().unwrap();
+        let (annotation, _, _, config_path) = updated_configs.first().unwrap();
 
         update_secrets(
             &vault,
@@ -130,16 +129,16 @@ async fn update_secrets(
 }
 
 async fn select_config(
-    available_config: &Vec<(VaultSecretAnnotation, String, String, String)>,
+    available_config: &[(VaultSecretAnnotation, String, String, String)],
 ) -> (String, VaultSecretAnnotation) {
     let selection = Select::with_theme(&ColorfulTheme::default())
         .items(
             &available_config
                 .iter()
                 .map(|(annotation, _, _, config_path)| {
-                  let local_config_path =
-                  get_local_config_path(config_path, &annotation.destination_file);
-                  
+                    let local_config_path =
+                        get_local_config_path(config_path, &annotation.destination_file);
+
                     format!(
                         "{:<50}{}::{}/{}#{}",
                         make_path_relative(&local_config_path.to_string_lossy()),
@@ -162,7 +161,7 @@ async fn select_config(
 
     return match selection {
         Some(index) => {
-            let (annotation, _, _, config_path) = available_config.iter().nth(index).unwrap();
+            let (annotation, _, _, config_path) = available_config.get(index).unwrap();
             (config_path.clone(), annotation.clone())
         }
         None => {
