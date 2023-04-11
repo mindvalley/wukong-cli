@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use crate::error::{CliError, DevConfigError};
 use crate::loader::new_spinner_progress_bar;
 use crate::services::vault::Vault;
