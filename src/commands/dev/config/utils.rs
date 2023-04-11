@@ -65,16 +65,20 @@ pub async fn get_updated_configs(
     Ok(updated_configs)
 }
 
+pub fn get_local_config_path(destination_file: &str, config_path: &str) -> PathBuf {
+    let path = PathBuf::from(config_path);
+    let dir_path = path.parent().unwrap();
+    dir_path.join(destination_file)
+}
+
 pub fn get_local_config_as_string(
     destination_file: &str,
     config_path: &str,
 ) -> Result<String, CliError> {
-    let path = PathBuf::from(config_path);
-    let dir_path = path.parent().unwrap();
-    let local_secrets = dir_path.join(destination_file);
-    let local_secrets = std::fs::read_to_string(local_secrets)?;
+    let local_config_path = get_local_config_path(destination_file, config_path);
+    let local_config = std::fs::read_to_string(local_config_path)?;
 
-    Ok(local_secrets)
+    Ok(local_config)
 }
 
 pub fn get_dev_config_files() -> Result<Vec<PathBuf>, CliError> {

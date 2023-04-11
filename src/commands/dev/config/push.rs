@@ -11,7 +11,7 @@ use std::path::PathBuf;
 use super::diff::print_diff;
 use super::utils::{
     filter_config_with_secret_annotations, get_dev_config_files, get_local_config_as_string,
-    get_updated_configs, make_path_relative,
+    get_local_config_path, get_updated_configs, make_path_relative,
 };
 
 pub async fn handle_config_push() -> Result<bool, CliError> {
@@ -79,10 +79,10 @@ async fn update_secrets(
     vault_token: &str,
     config_to_update: &(String, VaultSecretAnnotation),
 ) -> Result<(), CliError> {
-    let (secret_path, vault_secret_annotation) = config_to_update;
+    let (config_path, vault_secret_annotation) = config_to_update;
 
     let local_config_string =
-        get_local_config_as_string(&vault_secret_annotation.destination_file, secret_path)?;
+        get_local_config_as_string(&vault_secret_annotation.destination_file, config_path)?;
 
     let mut secrets = vault
         .get_secrets(vault_token, &vault_secret_annotation.secret_path)
@@ -91,14 +91,13 @@ async fn update_secrets(
 
     let remote_config = secrets.get(&vault_secret_annotation.secret_name).unwrap();
 
-    let path = PathBuf::from(secret_path);
-    let dir_path = path.parent().unwrap();
-    let dev_config_path = dir_path.join(&vault_secret_annotation.destination_file);
+    let local_config_path =
+        get_local_config_path(config_path, &vault_secret_annotation.destination_file);
 
     print_diff(
         remote_config,
         &local_config_string,
-        &dev_config_path.to_string_lossy(),
+        &local_config_path.to_string_lossy(),
     );
 
     let agree_to_update = Confirm::with_theme(&ColorfulTheme::default())
@@ -138,13 +137,12 @@ async fn select_config(
             &available_config
                 .iter()
                 .map(|(config_path, (annotation, _, _))| {
-                    let path = PathBuf::from(config_path);
-                    let dir_path = path.parent().unwrap();
-                    let dev_config_secret_path = dir_path.join(&annotation.destination_file);
+                    let local_config_path =
+                        get_local_config_path(config_path, &annotation.destination_file);
 
                     format!(
                         "{:<50}{}::{}/{}#{}",
-                        make_path_relative(&dev_config_secret_path.to_string_lossy()),
+                        make_path_relative(&local_config_path.to_string_lossy()),
                         annotation.source,
                         annotation.engine,
                         annotation.secret_path,

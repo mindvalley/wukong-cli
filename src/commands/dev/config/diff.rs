@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use crate::error::{CliError, DevConfigError};
 use crate::loader::new_spinner_progress_bar;
 use crate::services::vault::Vault;
@@ -9,8 +7,8 @@ use owo_colors::OwoColorize;
 use similar::{ChangeTag, TextDiff};
 
 use super::utils::{
-    filter_config_with_secret_annotations, get_dev_config_files, get_updated_configs,
-    make_path_relative,
+    filter_config_with_secret_annotations, get_dev_config_files, get_local_config_path,
+    get_updated_configs, make_path_relative,
 };
 
 pub async fn handle_config_diff() -> Result<bool, CliError> {
@@ -50,14 +48,13 @@ pub async fn handle_config_diff() -> Result<bool, CliError> {
     }
 
     for (config_path, (vault_secret_annotation, remote_config, local_config)) in &updated_configs {
-        let path = PathBuf::from(config_path);
-        let dir_path = path.parent().unwrap();
-        let dev_config_path = dir_path.join(&vault_secret_annotation.destination_file);
+        let local_config_path =
+            get_local_config_path(config_path, &vault_secret_annotation.destination_file);
 
         print_diff(
             remote_config,
             local_config,
-            &dev_config_path.to_string_lossy(),
+            &local_config_path.to_string_lossy(),
         );
     }
 
@@ -72,9 +69,9 @@ pub fn has_diff(old_secret_config: &str, new_secret_config: &str) -> bool {
         .any(|change| matches!(change.tag(), ChangeTag::Delete | ChangeTag::Insert))
 }
 
-pub fn print_diff(old_secret_config: &str, new_secret_config: &str, secret_path: &str) {
+pub fn print_diff(old_secret_config: &str, new_secret_config: &str, local_config_path: &str) {
     println!();
-    println!("{}", make_path_relative(secret_path).dimmed());
+    println!("{}", make_path_relative(local_config_path).dimmed());
 
     let diff = TextDiff::from_lines(old_secret_config, new_secret_config);
 
