@@ -49,10 +49,10 @@ pub async fn handle_config_diff() -> Result<bool, CliError> {
         return Ok(true);
     }
 
-    for (config_path, (secret_annotation, remote_config, local_config)) in &updated_configs {
+    for (config_path, (vault_secret_annotation, remote_config, local_config)) in &updated_configs {
         let path = PathBuf::from(config_path);
         let dir_path = path.parent().unwrap();
-        let dev_config_path = dir_path.join(&secret_annotation.destination_file);
+        let dev_config_path = dir_path.join(&vault_secret_annotation.destination_file);
 
         print_diff(
             remote_config,
