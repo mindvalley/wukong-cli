@@ -6,7 +6,6 @@ use dialoguer::Confirm;
 use dialoguer::{theme::ColorfulTheme, Select};
 use owo_colors::OwoColorize;
 use std::collections::HashMap;
-use std::path::PathBuf;
 
 use super::diff::print_diff;
 use super::utils::{
