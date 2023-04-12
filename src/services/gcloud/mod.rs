@@ -1,15 +1,28 @@
-use std::{future::Future, pin::Pin};
+#[path = "api"]
+mod google {
+    #[path = ""]
+    pub mod logging {
+        #[path = "google.logging.r#type.rs"]
+        mod r#type;
+        #[path = "google.logging.v2.rs"]
+        pub mod v2;
+    }
+    #[path = "google.api.rs"]
+    mod api;
+    #[path = "google.rpc.rs"]
+    mod rpc;
+}
 
 use crate::error::GCloudError;
 use chrono::Duration;
-use google_logging2::{
-    api::{ListLogEntriesRequest, TailLogEntriesRequest},
-    hyper, hyper_rustls,
-    oauth2::{
-        authenticator_delegate::{DefaultInstalledFlowDelegate, InstalledFlowDelegate},
-        ApplicationSecret, InstalledFlowAuthenticator, InstalledFlowReturnMethod,
-    },
-    Logging,
+use google::logging::v2::{
+    logging_service_v2_client::LoggingServiceV2Client, ListLogEntriesRequest,
+};
+use std::{future::Future, pin::Pin};
+use tonic::{metadata::MetadataValue, transport::Channel, Request};
+use yup_oauth2::{
+    authenticator_delegate::{DefaultInstalledFlowDelegate, InstalledFlowDelegate},
+    ApplicationSecret, InstalledFlowAuthenticator, InstalledFlowReturnMethod,
 };
 
 /// async function to be pinned by the `present_user_url` method of the trait
@@ -44,6 +57,7 @@ impl InstalledFlowDelegate for InstalledFlowBrowserDelegate {
     }
 }
 
+#[derive(Debug, Default)]
 pub struct LogEntriesOptions {
     pub project_ids: Option<Vec<String>>,
     pub filter: Option<String>,
@@ -53,6 +67,18 @@ pub struct LogEntriesOptions {
     pub resource_names: Option<Vec<String>>,
 }
 
+impl Into<ListLogEntriesRequest> for LogEntriesOptions {
+    fn into(self) -> ListLogEntriesRequest {
+        ListLogEntriesRequest {
+            filter: self.filter.unwrap_or_default(),
+            page_size: self.page_size.unwrap_or_default(),
+            page_token: self.page_token.unwrap_or_default(),
+            order_by: self.order_by.unwrap_or_default(),
+            resource_names: self.resource_names.unwrap_or_default(),
+        }
+    }
+}
+
 pub struct LogEntriesTailOptions {
     pub filter: Option<String>,
     pub buffer_window: Option<Duration>,
@@ -60,12 +86,12 @@ pub struct LogEntriesTailOptions {
 }
 
 pub struct LogEntries {
-    pub entries: Option<Vec<google_logging2::api::LogEntry>>,
+    pub entries: Option<Vec<google::logging::v2::LogEntry>>,
     pub next_page_token: Option<String>,
 }
 
 pub struct GCloudClient {
-    hub: Logging<hyper_rustls::HttpsConnector<hyper::client::HttpConnector>>,
+    access_token: String,
 }
 
 impl GCloudClient {
@@ -77,7 +103,7 @@ impl GCloudClient {
     const REDIRECT_URI: &'static str = "http://127.0.0.1/8855";
     const AUTH_PROVIDER_X509_CERT_URL: &'static str = "https://www.googleapis.com/oauth2/v1/certs";
 
-    pub async fn new() -> Result<Self, GCloudError> {
+    pub async fn new() -> Self {
         let secret = ApplicationSecret {
             client_id: Self::GOOGLE_CLIENT_ID.to_string(),
             client_secret: Self::GOOGLE_CLIENT_SECRET.to_string(),
@@ -112,72 +138,66 @@ impl GCloudClient {
             }
         };
 
-        let auth = InstalledFlowAuthenticator::builder(
+        let client = hyper::Client::builder().build(
+            hyper_rustls::HttpsConnectorBuilder::new()
+                .with_native_roots()
+                .https_only()
+                .enable_http1()
+                .enable_http2()
+                .build(),
+        );
+
+        let authenticator = InstalledFlowAuthenticator::with_client(
             secret,
             InstalledFlowReturnMethod::HTTPPortRedirect(8855),
+            client,
         )
         .persist_tokens_to_disk(format!("{}/gcloud_logging", config_dir))
         .flow_delegate(Box::new(InstalledFlowBrowserDelegate))
         .build()
-        .await?;
+        .await
+        .unwrap();
 
-        let hub = Logging::new(
-            hyper::Client::builder().build(
-                hyper_rustls::HttpsConnectorBuilder::new()
-                    .with_native_roots()
-                    .https_or_http()
-                    .enable_http1()
-                    .enable_http2()
-                    .build(),
-            ),
-            auth,
-        );
+        let access_token = authenticator
+            .token(&["https://www.googleapis.com/auth/logging.read"])
+            .await
+            .unwrap();
 
-        Ok(Self { hub })
+        Self {
+            access_token: access_token.token().unwrap().to_string(),
+        }
     }
 
     pub async fn get_log_entries(
         &self,
         options: LogEntriesOptions,
     ) -> Result<LogEntries, GCloudError> {
-        let request = ListLogEntriesRequest {
-            filter: options.filter,
-            order_by: options.order_by,
-            page_size: options.page_size.or(Some(10)),
-            page_token: options.page_token,
-            project_ids: options.project_ids,
-            resource_names: options.resource_names,
-        };
-        let call = self.hub.entries().list(request);
-        let (_response, output_schema) = call
-            .add_scope("https://www.googleapis.com/auth/logging.read")
-            .doit()
-            .await?;
+        let bearer_token = format!("Bearer {}", self.access_token);
+        let header_value: MetadataValue<_> = bearer_token.parse().unwrap();
+
+        let channel = Channel::from_static("https://logging.googleapis.com")
+            .connect()
+            .await
+            .unwrap();
+
+        let mut service =
+            LoggingServiceV2Client::with_interceptor(channel, move |mut req: Request<()>| {
+                req.metadata_mut()
+                    .insert("authorization", header_value.clone());
+                Ok(req)
+            });
+
+        let request: ListLogEntriesRequest = options.into();
+
+        let response = service
+            .list_log_entries(Request::new(request))
+            .await
+            .unwrap()
+            .into_inner();
 
         Ok(LogEntries {
-            entries: output_schema.entries,
-            next_page_token: output_schema.next_page_token,
+            entries: Some(response.entries),
+            next_page_token: Some(response.next_page_token),
         })
-    }
-
-    pub async fn get_log_entries_tail(
-        &self,
-        options: LogEntriesTailOptions,
-    ) -> Result<(), GCloudError> {
-        let request = TailLogEntriesRequest {
-            filter: options.filter,
-            buffer_window: options.buffer_window,
-            resource_names: options.resource_names,
-        };
-        let call = self.hub.entries().tail(request);
-        let (response, output_schema) = call
-            .add_scope("https://www.googleapis.com/auth/logging.read")
-            .doit()
-            .await?;
-
-        println!("{:#?}", output_schema);
-        println!("{:#?}", response);
-
-        Ok(())
     }
 }

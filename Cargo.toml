@@ -75,7 +75,11 @@ similar = { version = "2.2.1", features = ["inline"] }
 # Google cloud client
 google-logging2 = "5.0.2"
 prost = "0.11.8"
-tonic = "0.9.1"
+tonic = { version = "0.9.1", features = ["tls", "tls-webpki-roots"] }
+prost-types = "0.11.8"
+yup-oauth2 = "8.1.1"
+hyper = "0.14.25"
+hyper-rustls = { version = "0.24.0", features = ["http2"] }
 
 [dependencies.tree-sitter-elixir]
 git = "https://github.com/elixir-lang/tree-sitter-elixir"
