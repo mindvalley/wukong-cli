@@ -1,7 +1,9 @@
 mod common;
-
 use aion::*;
-use assert_fs::prelude::{FileTouch, FileWriteStr, PathChild};
+use assert_fs::{
+    fixture::ChildPath,
+    prelude::{FileTouch, FileWriteStr, PathChild},
+};
 use httpmock::{Method::GET, MockServer};
 use serial_test::serial;
 use std::env;
@@ -21,46 +23,7 @@ fn teardown(wk_temp: assert_fs::TempDir, elixir_temp: assert_fs::TempDir) {
     elixir_temp.close().unwrap();
 }
 
-#[test]
-fn test_wukong_dev_config_help() {
-    let cmd = common::wukong_raw_command()
-        .arg("dev")
-        .arg("config")
-        .arg("help")
-        .assert()
-        .success();
-
-    let output = cmd.get_output();
-
-    insta::assert_snapshot!(std::str::from_utf8(&output.stdout).unwrap());
-}
-
-#[test]
-#[serial]
-fn test_wukong_dev_config_diff_success() {
-    let (wk_temp, elixir_temp) = setup();
-    let server = MockServer::start();
-
-    let secret_api_resp = r#"
-        {
-          "data": {
-            "data": {
-              "b.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5",
-              "c.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5"
-            },
-            "metadata": {
-              "created_time": "2015-02-22T02:24:06.945319214Z",
-              "custom_metadata": {
-                "owner": "xxx",
-                "mission_critical": "false"
-              },
-              "deletion_time": "",
-              "destroyed": false,
-              "version": 2
-            }
-          }
-        }"#;
-
+fn verify_token_mock(server: &MockServer) -> httpmock::Mock {
     let verify_token_api_resp = r#"
         {
           "data": {
@@ -69,22 +32,51 @@ fn test_wukong_dev_config_diff_success() {
             }
         }"#;
 
-    let verify_token_mock = server.mock(|when, then| {
+    server.mock(|when, then| {
         when.method(GET)
             .path_contains(VaultClient::VERIFY_TOKEN)
             .header("X-Vault-Token", "valid_vault_api_token");
         then.status(200)
             .header("content-type", "application/json; charset=UTF-8")
             .body(verify_token_api_resp);
-    });
+    })
+}
 
-    let secret_data_mock = server.mock(|when, then| {
+fn get_secret_mock<'a>(server: &'a MockServer, custom_data: Option<&'a str>) -> httpmock::Mock<'a> {
+    let data = custom_data.unwrap_or_else(|| r#"
+        {
+          "b.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5",
+          "c.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5"
+        }"#);
+
+    let secret_api_resp = format!(
+        r#"{{
+          "data": {{
+            "data": {},
+            "metadata": {{
+              "created_time": "2015-02-22T02:24:06.945319214Z",
+              "custom_metadata": {{
+                "owner": "xxx",
+                "mission_critical": "false"
+              }},
+              "deletion_time": "",
+              "destroyed": false,
+              "version": 2
+            }}
+          }}
+        }}"#,
+        data
+    );
+
+    server.mock(|when, then| {
         when.method(GET).path_contains(VaultClient::FETCH_SECRETS);
         then.status(200)
             .header("content-type", "application/json; charset=UTF-8")
             .body(secret_api_resp);
-    });
+    })
+}
 
+fn mock_user_config(wk_temp: &assert_fs::TempDir, server_url: String) -> ChildPath {
     let wk_config_file = wk_temp.child("config.toml");
     wk_config_file.touch().unwrap();
 
@@ -108,12 +100,39 @@ fn test_wukong_dev_config_diff_success() {
                     expiry_time = "{}"
                     refresh_token = "refresh_token"
                 "#,
-                server.base_url(),
+                server_url,
                 2.days().from_now().to_rfc3339()
             )
             .as_str(),
         )
         .unwrap();
+
+    wk_config_file
+}
+
+#[test]
+fn test_wukong_dev_config_help() {
+    let cmd = common::wukong_raw_command()
+        .arg("dev")
+        .arg("config")
+        .arg("help")
+        .assert()
+        .success();
+
+    let output = cmd.get_output();
+
+    insta::assert_snapshot!(std::str::from_utf8(&output.stdout).unwrap());
+}
+
+#[test]
+#[serial]
+fn test_wukong_dev_config_diff_success() {
+    let (wk_temp, elixir_temp) = setup();
+    let server = MockServer::start();
+
+    let verify_token_mock = verify_token_mock(&server);
+    let secret_data_mock = get_secret_mock(&server, None);
+    let wk_config_file = mock_user_config(&wk_temp, server.base_url());
 
     let dev_config_file = elixir_temp.child("config/dev.exs");
     dev_config_file.touch().unwrap();
@@ -189,78 +208,17 @@ fn test_wukong_dev_config_diff_when_secret_key_not_found_from_bunker() {
     let (wk_temp, elixir_temp) = setup();
     let server = MockServer::start();
 
-    let secret_api_resp = r#"
+    let verify_token_mock = verify_token_mock(&server);
+    let secret_data_mock = get_secret_mock(
+        &server,
+        Some(
+            r#"
         {
-          "data": {
-            "data": {
-              "a.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo"
-            },
-            "metadata": {
-              "created_time": "2015-02-22T02:24:06.945319214Z",
-              "custom_metadata": {
-                "owner": "xxx",
-                "mission_critical": "false"
-              },
-              "deletion_time": "",
-              "destroyed": false,
-              "version": 2
-            }
-          }
-        }"#;
-
-    let verify_token_api_resp = r#"
-        {
-          "data": {
-            "expire_time": "2019-12-10T10:10:10.000000Z",
-            "issue_time": "2019-10-10T10:10:10.000000Z"
-            }
-        }"#;
-
-    let verify_token_mock = server.mock(|when, then| {
-        when.method(GET)
-            .path_contains(VaultClient::VERIFY_TOKEN)
-            .header("X-Vault-Token", "valid_vault_api_token");
-        then.status(200)
-            .header("content-type", "application/json; charset=UTF-8")
-            .body(verify_token_api_resp);
-    });
-
-    let secret_data_mock = server.mock(|when, then| {
-        when.method(GET).path_contains(VaultClient::FETCH_SECRETS);
-        then.status(200)
-            .header("content-type", "application/json; charset=UTF-8")
-            .body(secret_api_resp);
-    });
-
-    let wk_config_file = wk_temp.child("config.toml");
-    wk_config_file.touch().unwrap();
-
-    wk_config_file
-        .write_str(
-            format!(
-                r#"
-                    [core]
-                    application = "valid-application"
-                    wukong_api_url = "{}"
-                    okta_client_id = "valid-okta-client-id"
-
-                    [vault]
-                    api_token = "valid_vault_api_token"
-
-                    [auth]
-                    account = "test@email.com"
-                    subject = "subject"
-                    id_token = "id_token"
-                    access_token = "access_token"
-                    expiry_time = "{}"
-                    refresh_token = "refresh_token"
-                "#,
-                server.base_url(),
-                2.days().from_now().to_rfc3339()
-            )
-            .as_str(),
-        )
-        .unwrap();
+          "a.secret.exs": "test"
+        }"#,
+        ),
+    );
+    let wk_config_file = mock_user_config(&wk_temp, server.base_url());
 
     let dev_config_file = elixir_temp.child("config/dev.exs");
     dev_config_file.touch().unwrap();
@@ -328,80 +286,18 @@ fn test_wukong_dev_config_diff_when_secret_file_not_found() {
     let (wk_temp, elixir_temp) = setup();
     let server = MockServer::start();
 
-    let secret_api_resp = r#"
+    let verify_token_mock = verify_token_mock(&server);
+    let secret_data_mock = get_secret_mock(
+        &server,
+        Some(
+            r#"
         {
-          "data": {
-            "data": {
               "b.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5",
               "c.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo"
-            },
-            "metadata": {
-              "created_time": "2015-02-22T02:24:06.945319214Z",
-              "custom_metadata": {
-                "owner": "xxx",
-                "mission_critical": "false"
-              },
-              "deletion_time": "",
-              "destroyed": false,
-              "version": 2
-            }
-          }
-        }"#;
-
-    let verify_token_api_resp = r#"
-        {
-          "data": {
-            "expire_time": "2019-12-10T10:10:10.000000Z",
-            "issue_time": "2019-10-10T10:10:10.000000Z"
-            }
-        }"#;
-
-    let verify_token_mock = server.mock(|when, then| {
-        when.method(GET)
-            .path_contains(VaultClient::VERIFY_TOKEN)
-            .header("X-Vault-Token", "valid_vault_api_token");
-        then.status(200)
-            .header("content-type", "application/json; charset=UTF-8")
-            .body(verify_token_api_resp);
-    });
-
-    let secret_data_mock = server.mock(|when, then| {
-        when.method(GET).path_contains(VaultClient::FETCH_SECRETS);
-        then.status(200)
-            .header("content-type", "application/json; charset=UTF-8")
-            .body(secret_api_resp);
-    });
-
-    let wk_config_file = wk_temp.child("config.toml");
-    wk_config_file.touch().unwrap();
-
-    wk_config_file
-        .write_str(
-            format!(
-                r#"
-                    [core]
-                    application = "valid-application"
-                    wukong_api_url = "{}"
-                    okta_client_id = "valid-okta-client-id"
-
-                    [vault]
-                    api_token = "valid_vault_api_token"
-
-                    [auth]
-                    account = "test@email.com"
-                    subject = "subject"
-                    id_token = "id_token"
-                    access_token = "access_token"
-                    expiry_time = "{}"
-                    refresh_token = "refresh_token"
-                "#,
-                server.base_url(),
-                2.days().from_now().to_rfc3339()
-            )
-            .as_str(),
-        )
-        .unwrap();
-
+            }"#,
+        ),
+    );
+    let wk_config_file = mock_user_config(&wk_temp, server.base_url());
     let dev_config_file = elixir_temp.child("config/dev.exs");
     dev_config_file.touch().unwrap();
 
@@ -458,79 +354,18 @@ fn test_wukong_dev_config_diff_when_no_changes_found() {
     let (wk_temp, elixir_temp) = setup();
     let server = MockServer::start();
 
-    let secret_api_resp = r#"
+    let verify_token_mock = verify_token_mock(&server);
+    let secret_data_mock = get_secret_mock(
+        &server,
+        Some(
+            r#"
         {
-          "data": {
-            "data": {
               "b.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5",
               "c.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo"
-            },
-            "metadata": {
-              "created_time": "2015-02-22T02:24:06.945319214Z",
-              "custom_metadata": {
-                "owner": "xxx",
-                "mission_critical": "false"
-              },
-              "deletion_time": "",
-              "destroyed": false,
-              "version": 2
-            }
-          }
-        }"#;
-
-    let verify_token_api_resp = r#"
-        {
-          "data": {
-            "expire_time": "2019-12-10T10:10:10.000000Z",
-            "issue_time": "2019-10-10T10:10:10.000000Z"
-            }
-        }"#;
-
-    let verify_token_mock = server.mock(|when, then| {
-        when.method(GET)
-            .path_contains(VaultClient::VERIFY_TOKEN)
-            .header("X-Vault-Token", "valid_vault_api_token");
-        then.status(200)
-            .header("content-type", "application/json; charset=UTF-8")
-            .body(verify_token_api_resp);
-    });
-
-    let secret_data_mock = server.mock(|when, then| {
-        when.method(GET).path_contains(VaultClient::FETCH_SECRETS);
-        then.status(200)
-            .header("content-type", "application/json; charset=UTF-8")
-            .body(secret_api_resp);
-    });
-
-    let wk_config_file = wk_temp.child("config.toml");
-    wk_config_file.touch().unwrap();
-
-    wk_config_file
-        .write_str(
-            format!(
-                r#"
-                    [core]
-                    application = "valid-application"
-                    wukong_api_url = "{}"
-                    okta_client_id = "valid-okta-client-id"
-
-                    [vault]
-                    api_token = "valid_vault_api_token"
-
-                    [auth]
-                    account = "test@email.com"
-                    subject = "subject"
-                    id_token = "id_token"
-                    access_token = "access_token"
-                    expiry_time = "{}"
-                    refresh_token = "refresh_token"
-                "#,
-                server.base_url(),
-                2.days().from_now().to_rfc3339()
-            )
-            .as_str(),
-        )
-        .unwrap();
+            }"#,
+        ),
+    );
+    let wk_config_file = mock_user_config(&wk_temp, server.base_url());
 
     let dev_config_file = elixir_temp.child("config/dev.exs");
     dev_config_file.touch().unwrap();
