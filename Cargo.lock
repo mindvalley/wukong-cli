@@ -320,6 +320,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "async-stream"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cd56dd203fef61ac097dd65721a419ddccb106b2d2b70ba60a6b529f03961a51"
+dependencies = [
+ "async-stream-impl",
+ "futures-core",
+ "pin-project-lite",
+]
+
+[[package]]
+name = "async-stream-impl"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16e62a023e7c117e27523144c5d2459f4397fcc3cab0085af8e2224f643a0193"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.15",
+]
+
+[[package]]
 name = "async-task"
 version = "4.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3090,7 +3112,7 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
- "webpki-roots",
+ "webpki-roots 0.22.6",
  "winreg",
 ]
 
@@ -3973,6 +3995,7 @@ version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "38bd8e87955eb13c1986671838177d6792cdc52af9bffced0d2c8a9a7f741ab3"
 dependencies = [
+ "async-stream",
  "async-trait",
  "axum",
  "base64 0.21.0",
@@ -3987,12 +4010,15 @@ dependencies = [
  "percent-encoding 2.2.0",
  "pin-project",
  "prost",
+ "rustls-pemfile",
  "tokio",
+ "tokio-rustls 0.24.0",
  "tokio-stream",
  "tower",
  "tower-layer",
  "tower-service",
  "tracing",
+ "webpki-roots 0.23.0",
 ]
 
 [[package]]
@@ -4419,6 +4445,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "webpki-roots"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aa54963694b65584e170cf5dc46aeb4dcaa5584e652ff5f3952e56d66aff0125"
+dependencies = [
+ "rustls-webpki",
+]
+
+[[package]]
 name = "which"
 version = "4.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4659,6 +4694,8 @@ dependencies = [
  "graphql_client",
  "httpmock",
  "human-panic",
+ "hyper",
+ "hyper-rustls 0.24.0",
  "ignore",
  "indicatif",
  "insta",
@@ -4669,6 +4706,7 @@ dependencies = [
  "openssl",
  "owo-colors",
  "prost",
+ "prost-types",
  "rayon",
  "regex",
  "reqwest",
@@ -4689,6 +4727,7 @@ dependencies = [
  "url 2.3.1",
  "webbrowser",
  "wukong_telemetry_macro",
+ "yup-oauth2",
 ]
 
 [[package]]
