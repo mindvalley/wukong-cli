@@ -428,6 +428,7 @@ config :application, Application.Repo"#,
 }
 
 #[test]
+#[serial]
 fn test_wukong_dev_config_diff_when_config_not_found() {
     let (wk_temp, elixir_temp) = setup();
 
