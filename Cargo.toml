@@ -74,6 +74,14 @@ similar = { version = "2.2.1", features = ["inline"] }
 
 # Google cloud client
 google-logging2 = "5.0.2"
+prost = "0.11.8"
+tonic = "0.9.1"
+
+[dependencies.tree-sitter-elixir]
+git = "https://github.com/elixir-lang/tree-sitter-elixir"
+
+[build-dependencies]
+tonic-build = "0.9.1"
 
 [dev-dependencies]
 httpmock = "0.6.7"
@@ -85,8 +93,6 @@ assert_cmd = "2.0.8"
 git2 = "0.16.1"
 serial_test = "2.0.0"
 
-[dependencies.tree-sitter-elixir]
-git = "https://github.com/elixir-lang/tree-sitter-elixir"
 
 [profile.dev.package.insta]
 opt-level = 3
