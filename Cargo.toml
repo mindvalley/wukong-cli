@@ -70,7 +70,6 @@ ignore = "0.4.20"
 rayon = "1.7.0"
 tree-sitter = "0.20.9"
 similar = { version = "2.2.1", features = ["inline"] }
-tempfile = "3.5.0"
 serial_test = "2.0.0"
 
 [dev-dependencies]
