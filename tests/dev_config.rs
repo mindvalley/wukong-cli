@@ -1,11 +1,25 @@
 mod common;
 
-use std::env;
-
 use aion::*;
 use assert_fs::prelude::{FileTouch, FileWriteStr, PathChild};
 use httpmock::{Method::GET, MockServer};
+use serial_test::serial;
+use std::env;
 use wukong::services::vault::client::VaultClient;
+
+fn setup() -> (assert_fs::TempDir, assert_fs::TempDir) {
+    let wk_temp = assert_fs::TempDir::new().unwrap();
+    let elixir_temp = assert_fs::TempDir::new().unwrap();
+
+    env::set_current_dir(elixir_temp.path().to_str().unwrap()).unwrap();
+
+    (wk_temp, elixir_temp)
+}
+
+fn teardown(wk_temp: assert_fs::TempDir, elixir_temp: assert_fs::TempDir) {
+    wk_temp.close().unwrap();
+    elixir_temp.close().unwrap();
+}
 
 #[test]
 fn test_wukong_dev_config_help() {
@@ -22,7 +36,9 @@ fn test_wukong_dev_config_help() {
 }
 
 #[test]
+#[serial]
 fn test_wukong_dev_config_diff_success() {
+    let (wk_temp, elixir_temp) = setup();
     let server = MockServer::start();
 
     let secret_api_resp = r#"
@@ -69,7 +85,6 @@ fn test_wukong_dev_config_diff_success() {
             .body(secret_api_resp);
     });
 
-    let wk_temp = assert_fs::TempDir::new().unwrap();
     let wk_config_file = wk_temp.child("config.toml");
     wk_config_file.touch().unwrap();
 
@@ -100,7 +115,6 @@ fn test_wukong_dev_config_diff_success() {
         )
         .unwrap();
 
-    let elixir_temp = assert_fs::TempDir::new().unwrap();
     let dev_config_file = elixir_temp.child("config/dev.exs");
     dev_config_file.touch().unwrap();
     let dev_config_secret_file = elixir_temp.child("config/c.secret.exs");
@@ -150,8 +164,6 @@ config :academy, Academy.Repo,
         )
         .unwrap();
 
-    env::set_current_dir(elixir_temp.path().to_str().unwrap()).unwrap();
-
     let cmd = common::wukong_raw_command()
         .arg("dev")
         .arg("config")
@@ -168,12 +180,13 @@ config :academy, Academy.Repo,
     verify_token_mock.assert();
     secret_data_mock.assert();
 
-    wk_temp.close().unwrap();
-    elixir_temp.close().unwrap();
+    teardown(wk_temp, elixir_temp)
 }
 
 #[test]
+#[serial]
 fn test_wukong_dev_config_diff_when_secret_key_not_found_from_bunker() {
+    let (wk_temp, elixir_temp) = setup();
     let server = MockServer::start();
 
     let secret_api_resp = r#"
@@ -219,7 +232,6 @@ fn test_wukong_dev_config_diff_when_secret_key_not_found_from_bunker() {
             .body(secret_api_resp);
     });
 
-    let wk_temp = assert_fs::TempDir::new().unwrap();
     let wk_config_file = wk_temp.child("config.toml");
     wk_config_file.touch().unwrap();
 
@@ -250,7 +262,6 @@ fn test_wukong_dev_config_diff_when_secret_key_not_found_from_bunker() {
         )
         .unwrap();
 
-    let elixir_temp = assert_fs::TempDir::new().unwrap();
     let dev_config_file = elixir_temp.child("config/dev.exs");
     dev_config_file.touch().unwrap();
     let dev_config_secret_file = elixir_temp.child("config/c.secret.exs");
@@ -292,8 +303,6 @@ config :application, Application.Repo"#,
         )
         .unwrap();
 
-    env::set_current_dir(elixir_temp.path().to_str().unwrap()).unwrap();
-
     let cmd = common::wukong_raw_command()
         .arg("dev")
         .arg("config")
@@ -310,12 +319,13 @@ config :application, Application.Repo"#,
     verify_token_mock.assert();
     secret_data_mock.assert();
 
-    wk_temp.close().unwrap();
-    elixir_temp.close().unwrap();
+    teardown(wk_temp, elixir_temp)
 }
 
 #[test]
+#[serial]
 fn test_wukong_dev_config_diff_when_secret_file_not_found() {
+    let (wk_temp, elixir_temp) = setup();
     let server = MockServer::start();
 
     let secret_api_resp = r#"
@@ -362,7 +372,6 @@ fn test_wukong_dev_config_diff_when_secret_file_not_found() {
             .body(secret_api_resp);
     });
 
-    let wk_temp = assert_fs::TempDir::new().unwrap();
     let wk_config_file = wk_temp.child("config.toml");
     wk_config_file.touch().unwrap();
 
@@ -393,7 +402,6 @@ fn test_wukong_dev_config_diff_when_secret_file_not_found() {
         )
         .unwrap();
 
-    let elixir_temp = assert_fs::TempDir::new().unwrap();
     let dev_config_file = elixir_temp.child("config/dev.exs");
     dev_config_file.touch().unwrap();
 
@@ -425,8 +433,6 @@ fn test_wukong_dev_config_diff_when_secret_file_not_found() {
         )
         .unwrap();
 
-    env::set_current_dir(elixir_temp.path().to_str().unwrap()).unwrap();
-
     let cmd = common::wukong_raw_command()
         .arg("dev")
         .arg("config")
@@ -443,12 +449,13 @@ fn test_wukong_dev_config_diff_when_secret_file_not_found() {
     verify_token_mock.assert();
     secret_data_mock.assert();
 
-    wk_temp.close().unwrap();
-    elixir_temp.close().unwrap();
+    teardown(wk_temp, elixir_temp)
 }
 
 #[test]
+#[serial]
 fn test_wukong_dev_config_diff_when_no_changes_found() {
+    let (wk_temp, elixir_temp) = setup();
     let server = MockServer::start();
 
     let secret_api_resp = r#"
@@ -495,7 +502,6 @@ fn test_wukong_dev_config_diff_when_no_changes_found() {
             .body(secret_api_resp);
     });
 
-    let wk_temp = assert_fs::TempDir::new().unwrap();
     let wk_config_file = wk_temp.child("config.toml");
     wk_config_file.touch().unwrap();
 
@@ -526,7 +532,6 @@ fn test_wukong_dev_config_diff_when_no_changes_found() {
         )
         .unwrap();
 
-    let elixir_temp = assert_fs::TempDir::new().unwrap();
     let dev_config_file = elixir_temp.child("config/dev.exs");
     dev_config_file.touch().unwrap();
     let dev_config_secret_file = elixir_temp.child("config/c.secret.exs");
@@ -567,8 +572,6 @@ fn test_wukong_dev_config_diff_when_no_changes_found() {
 config :application, Application.Repo"#,
         )
         .unwrap();
-
-    env::set_current_dir(elixir_temp.path().to_str().unwrap()).unwrap();
 
     let cmd = common::wukong_raw_command()
         .arg("dev")
@@ -586,14 +589,12 @@ config :application, Application.Repo"#,
     verify_token_mock.assert();
     secret_data_mock.assert();
 
-    wk_temp.close().unwrap();
-    elixir_temp.close().unwrap();
+    teardown(wk_temp, elixir_temp)
 }
+
 #[test]
 fn test_wukong_dev_config_diff_when_config_not_found() {
-    let wk_temp = assert_fs::TempDir::new().unwrap();
-    let elixir_temp = assert_fs::TempDir::new().unwrap();
-    env::set_current_dir(elixir_temp.path().to_str().unwrap()).unwrap();
+    let (wk_temp, elixir_temp) = setup();
 
     let cmd = common::wukong_raw_command()
         .arg("dev")
@@ -606,6 +607,5 @@ fn test_wukong_dev_config_diff_when_config_not_found() {
 
     insta::assert_snapshot!(std::str::from_utf8(&output.stderr).unwrap());
 
-    wk_temp.close().unwrap();
-    elixir_temp.close().unwrap();
+    teardown(wk_temp, elixir_temp)
 }
