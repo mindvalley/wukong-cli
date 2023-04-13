@@ -1,0 +1,7 @@
+---
+source: tests/dev_config.rs
+expression: "std::str::from_utf8(&output.stdout).unwrap()"
+---
+[36mcomparing local config vs remote config...[39m
+The config file is already up to date with the Vault Bunker.
+
