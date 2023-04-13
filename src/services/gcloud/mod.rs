@@ -1,16 +1,16 @@
 #[path = "api"]
-mod google {
+pub mod google {
     #[path = ""]
     pub mod logging {
         #[path = "google.logging.r#type.rs"]
-        mod r#type;
+        pub mod r#type;
         #[path = "google.logging.v2.rs"]
         pub mod v2;
     }
     #[path = "google.api.rs"]
-    mod api;
+    pub mod api;
     #[path = "google.rpc.rs"]
-    mod rpc;
+    pub mod rpc;
 }
 
 use crate::error::GCloudError;
