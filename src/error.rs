@@ -9,6 +9,14 @@ pub enum CliError {
     Io(#[from] ::std::io::Error),
     #[error(transparent)]
     Base64(#[from] base64::DecodeError),
+    #[error("Error parsing \"{value}\"")]
+    ChronoParseError {
+        value: String,
+        #[source]
+        source: chrono::ParseError,
+    },
+    #[error(transparent)]
+    ParseIntError(#[from] std::num::ParseIntError),
     #[error(transparent)]
     ConfigError(#[from] ConfigError),
     #[error("Failed to discover OpenID Provider")]

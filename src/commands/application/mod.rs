@@ -40,9 +40,8 @@ pub enum ApplicationSubcommand {
         #[arg(long, short)]
         until: Option<String>,
         /// Limiting the number of log entries to return.  
-        /// By default it will return the last 500 lines.
-        #[arg(long)]
-        limit: Option<String>,
+        #[arg(long, default_value_t = 500)]
+        limit: i32,
     },
 }
 
