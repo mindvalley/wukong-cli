@@ -81,6 +81,7 @@ aion = "0.2.0"
 insta = { version = "1.28.0", features = ["filters"] }
 assert_cmd = "2.0.8"
 git2 = "0.16.1"
+serial_test = "2.0.0"
 
 [dependencies.tree-sitter-elixir]
 git = "https://github.com/elixir-lang/tree-sitter-elixir"

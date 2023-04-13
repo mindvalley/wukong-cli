@@ -134,13 +134,12 @@ pub fn filter_config_with_secret_annotations(
 mod test {
     use std::fs::File;
     use std::io::Write;
-    use tempfile::tempdir;
 
     use super::*;
 
     // #[test]
     // fn test_filter_config_with_secret_annotations() -> Result<(), Box<dyn std::error::Error>> {
-    //     let dir = tempdir()?;
+    //     let dir = assert_fs::TempDir::new().unwrap();
     //     let file1_path = dir.path().join("dev.exs");
     //     let file2_path = dir.path().join("dev2.exs");
 
@@ -178,7 +177,7 @@ mod test {
 
     #[test]
     fn test_get_local_config_as_string() -> Result<(), Box<dyn std::error::Error>> {
-        let dir = tempdir()?;
+        let dir = assert_fs::TempDir::new().unwrap();
         let subdir = dir.path().join("config");
         std::fs::create_dir_all(&subdir)?;
 

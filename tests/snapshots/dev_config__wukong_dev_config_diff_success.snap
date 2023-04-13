@@ -1,0 +1,27 @@
+---
+source: tests/dev_config.rs
+expression: "std::str::from_utf8(&output.stdout).unwrap()"
+---
+[36mcomparing local config vs remote config...[39m
+
+[2mconfig/dev.exs[0m
+    1    |+
+1   2    | use Mix.Config
+2   3    | 
+3        |-config :application, Application.Repo,
+    4    |+# Configure your database.
+    5    |+config :academy, Academy.Repo,
+4   6    |   adapter: Ecto.Adapters.Postgres,
+5        |-  username: System.get_env("DB_USER"),
+6        |-  password: System.get_env("DB_PASS"),
+7        |-  database: "application_dev",
+8        |-  hostname: "localhost",
+9        |-  pool_size: 100,
+10       |-  queue_target: 5
+    7    |+  username: "postgres",
+    8    |+  passwords: "",
+    9    |+  database: "academy_core_devss",
+    10   |+  pool_size: 10
+    11   |+            
+
+
