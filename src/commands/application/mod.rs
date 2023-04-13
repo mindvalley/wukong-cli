@@ -1,13 +1,12 @@
+pub mod info;
+mod logs;
+mod logs_demo;
+
+use self::{logs::handle_logs, logs_demo::handle_logs_demo};
+use super::{Context, State};
 use crate::error::CliError;
 use clap::{command, Args, Subcommand, ValueEnum};
 use info::handle_info;
-
-use self::logs_demo::handle_logs_demo;
-
-use super::{Context, State};
-
-pub mod info;
-mod logs_demo;
 
 #[derive(Debug, Args)]
 pub struct Application {
@@ -84,7 +83,14 @@ impl Application {
         match &self.subcommand {
             ApplicationSubcommand::Info => handle_info(context).await,
             ApplicationSubcommand::LogsDemo => handle_logs_demo(context).await,
-            ApplicationSubcommand::Logs { .. } => Ok(true),
+            ApplicationSubcommand::Logs {
+                namespace,
+                version,
+                errors,
+                since,
+                until,
+                limit,
+            } => handle_logs(context, namespace, version, errors, since, until, limit).await,
         }
     }
 }
