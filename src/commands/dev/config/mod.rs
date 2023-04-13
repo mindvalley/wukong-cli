@@ -22,7 +22,7 @@ pub enum ConfigSubcommand {
     Push,
     /// Show changes between the local configuration and the Bunker.
     Diff,
-    /// Pull the development config with secrets file from Bunker.
+    /// Pull the development config file from Bunker.
     Pull {
         /// The path to the project
         #[arg(default_value = ".")]
