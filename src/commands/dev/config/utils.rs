@@ -137,43 +137,55 @@ mod test {
 
     use super::*;
 
-    // #[test]
-    // fn test_filter_config_with_secret_annotations() -> Result<(), Box<dyn std::error::Error>> {
-    //     let dir = assert_fs::TempDir::new().unwrap();
-    //     let file1_path = dir.path().join("dev.exs");
-    //     let file2_path = dir.path().join("dev2.exs");
+    #[test]
+    fn test_filter_config_with_secret_annotations() -> Result<(), Box<dyn std::error::Error>> {
+        let dir = assert_fs::TempDir::new().unwrap();
+        let file1_path = dir.path().join("dev.exs");
+        let file2_path = dir.path().join("dev2.exs");
 
-    //     let mut file1 = File::create(&file1_path)?;
-    //     writeln!(
-    //         file1,
-    //         r#"# Import development secrets
-    //         # wukong.mindvalley.dev/config-secrets-location: vault:secret/wukong-cli/sandboxes#dev.secrets.exs
-    //         import_config("dev.secrets.exs")"#
-    //     )?;
+        let mut file1 = File::create(&file1_path)?;
+        writeln!(
+            file1,
+            r#"# Import development secrets
+            # wukong.mindvalley.dev/config-secrets-location: vault:secret/wukong-cli/sandboxes#dev.secrets.exs
+            import_config("dev.secrets.exs")"#
+        )?;
 
-    //     let mut file2 = File::create(&file2_path)?;
-    //     writeln!(file2, "Some other content")?;
+        let mut file2 = File::create(&file2_path)?;
+        writeln!(file2, "Some other content")?;
 
-    //     let available_files = vec![file1_path.clone(), file2_path.clone()];
-    //     let filtered_annotations = filter_config_with_secret_annotations(available_files)?;
+        let available_files = vec![file1_path.clone(), file2_path.clone()];
+        let filtered_annotations = filter_config_with_secret_annotations(available_files)?;
 
-    //     assert_eq!(filtered_annotations.len(), 1);
-    //     assert!(filtered_annotations.contains_key(&file1_path.to_string_lossy().to_string()));
+        assert_eq!(filtered_annotations.len(), 1);
 
-    //     let annotation = filtered_annotations
-    //         .get(&file1_path.to_string_lossy().to_string())
-    //         .unwrap();
-    //     assert_eq!(
-    //         annotation.key,
-    //         "wukong.mindvalley.dev/config-secrets-location"
-    //     );
-    //     assert_eq!(annotation.source, "vault");
-    //     assert_eq!(annotation.engine, "secret");
+        // Check the vector has file1_path
+        let has_file1_path = filtered_annotations
+            .iter()
+            .any(|(path, _)| path == &file1_path.to_string_lossy().to_string());
 
-    //     dir.close()?;
+        let does_not_have_file2_path = filtered_annotations
+            .iter()
+            .any(|(path, _)| path == &file2_path.to_string_lossy().to_string());
 
-    //     Ok(())
-    // }
+        assert!(has_file1_path);
+        assert!(!does_not_have_file2_path);
+
+        let (_, annotation)= filtered_annotations
+            .iter()
+            .find(|(path, _)| path == &file1_path.to_string_lossy().to_string()).unwrap();
+
+        assert_eq!(
+            annotation.key,
+            "wukong.mindvalley.dev/config-secrets-location"
+        );
+        assert_eq!(annotation.source, "vault");
+        assert_eq!(annotation.engine, "secret");
+
+        dir.close()?;
+
+        Ok(())
+    }
 
     #[test]
     fn test_get_local_config_as_string() -> Result<(), Box<dyn std::error::Error>> {
