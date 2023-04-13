@@ -171,9 +171,10 @@ mod test {
         assert!(has_file1_path);
         assert!(!does_not_have_file2_path);
 
-        let (_, annotation)= filtered_annotations
+        let (_, annotation) = filtered_annotations
             .iter()
-            .find(|(path, _)| path == &file1_path.to_string_lossy().to_string()).unwrap();
+            .find(|(path, _)| path == &file1_path.to_string_lossy().to_string())
+            .unwrap();
 
         assert_eq!(
             annotation.key,
