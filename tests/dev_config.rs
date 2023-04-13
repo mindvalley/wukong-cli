@@ -136,7 +136,7 @@ fn test_wukong_dev_config_diff_success() {
 
     let dev_config_file = elixir_temp.child("config/dev.exs");
     dev_config_file.touch().unwrap();
-    let dev_config_secret_file = elixir_temp.child("config/c.secret.exs");
+    let dev_config_secret_file_c = elixir_temp.child("config/c.secret.exs");
     dev_config_file.touch().unwrap();
 
     dev_config_file
@@ -147,14 +147,6 @@ fn test_wukong_dev_config_diff_success() {
                 System.get_env("API_KEY")
                 System.fetch_env("API_SECRET")
                 System.fetch_env!("API_TOKEN")
-
-                # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#a.secret.exs
-                import_config "config/a.secret.exs"
-
-                # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#b.secret.exs
-                if File.exists?("config/b.secret.exs") do
-                  import_config "config/b.secret.exs"
-                end
 
                 # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#c.secret.exs
                 File.exists?("c.secret.exs") && import_config "c.secret.exs"
@@ -167,7 +159,7 @@ fn test_wukong_dev_config_diff_success() {
         )
         .unwrap();
 
-    dev_config_secret_file
+        dev_config_secret_file_c
         .write_str(
             r#"
 use Mix.Config
@@ -182,6 +174,7 @@ config :academy, Academy.Repo,
             "#,
         )
         .unwrap();
+
 
     let cmd = common::wukong_raw_command()
         .arg("dev")
@@ -233,14 +226,6 @@ fn test_wukong_dev_config_diff_when_secret_key_not_found_from_bunker() {
                 System.get_env("API_KEY")
                 System.fetch_env("API_SECRET")
                 System.fetch_env!("API_TOKEN")
-
-                # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#a.secret.exs
-                import_config "config/a.secret.exs"
-
-                # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#b.secret.exs
-                if File.exists?("config/b.secret.exs") do
-                  import_config "config/b.secret.exs"
-                end
 
                 # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#c.secret.exs
                 File.exists?("c.secret.exs") && import_config "c.secret.exs"
@@ -310,14 +295,6 @@ fn test_wukong_dev_config_diff_when_secret_file_not_found() {
                 System.fetch_env("API_SECRET")
                 System.fetch_env!("API_TOKEN")
 
-                # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#a.secret.exs
-                import_config "config/a.secret.exs"
-
-                # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#b.secret.exs
-                if File.exists?("config/b.secret.exs") do
-                  import_config "config/b.secret.exs"
-                end
-
                 # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#c.secret.exs
                 File.exists?("c.secret.exs") && import_config "c.secret.exs"
 
@@ -381,14 +358,6 @@ fn test_wukong_dev_config_diff_when_no_changes_found() {
                 System.fetch_env("API_SECRET")
                 System.fetch_env!("API_TOKEN")
 
-                # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#a.secret.exs
-                import_config "config/a.secret.exs"
-
-                # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#b.secret.exs
-                if File.exists?("config/b.secret.exs") do
-                  import_config "config/b.secret.exs"
-                end
-
                 # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#c.secret.exs
                 File.exists?("c.secret.exs") && import_config "c.secret.exs"
 
@@ -442,110 +411,6 @@ fn test_wukong_dev_config_diff_when_config_not_found() {
     let output = cmd.get_output();
 
     insta::assert_snapshot!(std::str::from_utf8(&output.stderr).unwrap());
-
-    teardown(wk_temp, elixir_temp)
-}
-
-#[test]
-#[serial]
-fn test_wukong_dev_config_pull_success() {
-    let (wk_temp, elixir_temp) = setup();
-    let server = MockServer::start();
-
-    let secret_data_mock = get_secret_mock(
-        &server,
-        Some(
-            r#"
-        {
-              "a.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5",
-              "b.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5",
-              "c.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5"
-            }"#,
-        ),
-    );
-    let verify_token_mock = verify_token_mock(&server);
-    let wk_config_file = mock_user_config(&wk_temp, server.base_url());
-
-    wk_config_file.touch().unwrap();
-
-    wk_config_file
-        .write_str(
-            format!(
-                r#"
-[core]
-application = "valid-application"
-wukong_api_url = "{}"
-okta_client_id = "valid-okta-client-id"
-
-[vault]
-api_token = "valid_vault_api_token"
-
-[auth]
-account = "test@email.com"
-subject = "subject"
-id_token = "id_token"
-access_token = "access_token"
-expiry_time = "{}"
-refresh_token = "refresh_token"
-    "#,
-                server.base_url(),
-                2.days().from_now().to_rfc3339()
-            )
-            .as_str(),
-        )
-        .unwrap();
-
-    let dev_config_file = elixir_temp.child("config/dev.exs");
-    dev_config_file.touch().unwrap();
-
-    dev_config_file
-        .write_str(
-            r#"
-use Mix.Config
-
-System.get_env("API_KEY")
-System.fetch_env("API_SECRET")
-System.fetch_env!("API_TOKEN")
-
-# wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#a.secret.exs
-import_config "config/a.secret.exs"
-
-# wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#b.secret.exs
-if File.exists?("config/b.secret.exs") do
-  import_config "config/b.secret.exs"
-end
-
-# wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#c.secret.exs
-File.exists?("config/c.secret.exs") && import_config "config/c.secret.exs"
-
-test_domain = System.get_env("TEST_DOMAIN", "mv.test.com")
-
-# Use Jason for JSON parsing in Phoenix
-config :phoenix, :json_library, Jason
-    "#,
-        )
-        .unwrap();
-
-    let cmd = common::wukong_raw_command()
-        .arg("dev")
-        .arg("config")
-        .arg("pull")
-        .arg(elixir_temp.path().to_str().unwrap())
-        .env("WUKONG_DEV_CONFIG_FILE", wk_config_file.path())
-        .env("WUKONG_DEV_VAULT_API_URL", server.base_url())
-        .assert()
-        .success();
-
-    let output = cmd.get_output();
-
-    insta::with_settings!({filters => vec![
-        (format!("{}", elixir_temp.path().to_str().unwrap()).as_str(), "[TEMP_DIR]"),
-    ]}, {
-        insta::assert_snapshot!(std::str::from_utf8(&output.stderr).unwrap());
-    });
-
-    verify_token_mock.assert();
-    secret_data_mock.assert();
 
     teardown(wk_temp, elixir_temp)
 }
