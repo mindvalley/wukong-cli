@@ -159,7 +159,6 @@ mod test {
 
         assert_eq!(filtered_annotations.len(), 1);
 
-        // Check the vector has file1_path
         let has_file1_path = filtered_annotations
             .iter()
             .any(|(path, _)| path == &file1_path.to_string_lossy().to_string());
