@@ -4198,7 +4198,6 @@ dependencies = [
  "serial_test",
  "similar",
  "tabled",
- "tempfile",
  "thiserror",
  "time-humanize",
  "tokio",
