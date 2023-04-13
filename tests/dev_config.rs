@@ -159,7 +159,7 @@ fn test_wukong_dev_config_diff_success() {
         )
         .unwrap();
 
-        dev_config_secret_file_c
+    dev_config_secret_file_c
         .write_str(
             r#"
 use Mix.Config
@@ -174,7 +174,6 @@ config :academy, Academy.Repo,
             "#,
         )
         .unwrap();
-
 
     let cmd = common::wukong_raw_command()
         .arg("dev")
