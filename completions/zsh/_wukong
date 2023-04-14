@@ -499,31 +499,6 @@ By default, it'\''ll only report errors.
 '::path -- The path to the project:_files' \
 && ret=0
 ;;
-(config-synthesizer)
-_arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
-'(-v --verbose)*-q[Do not print log message]' \
-'(-v --verbose)*--quiet[Do not print log message]' \
-'-h[Print help]' \
-'--help[Print help]' \
-'::path -- The path to the project:_files' \
-&& ret=0
-;;
 (config)
 _arguments "${_arguments_options[@]}" \
 '-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
@@ -604,6 +579,31 @@ By default, it'\''ll only report errors.
 '--help[Print help]' \
 && ret=0
 ;;
+(pull)
+_arguments "${_arguments_options[@]}" \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'::path -- The path to the project:_files' \
+&& ret=0
+;;
 (help)
 _arguments "${_arguments_options[@]}" \
 ":: :_wukong__dev__config__help_commands" \
@@ -621,6 +621,10 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (diff)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(pull)
 _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
@@ -652,10 +656,6 @@ _arguments "${_arguments_options[@]}" \
 _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
-(config-synthesizer)
-_arguments "${_arguments_options[@]}" \
-&& ret=0
-;;
 (config)
 _arguments "${_arguments_options[@]}" \
 ":: :_wukong__dev__help__config_commands" \
@@ -673,6 +673,10 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (diff)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(pull)
 _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
@@ -992,10 +996,6 @@ _arguments "${_arguments_options[@]}" \
 _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
-(config-synthesizer)
-_arguments "${_arguments_options[@]}" \
-&& ret=0
-;;
 (config)
 _arguments "${_arguments_options[@]}" \
 ":: :_wukong__help__dev__config_commands" \
@@ -1013,6 +1013,10 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (diff)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(pull)
 _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
@@ -1143,6 +1147,7 @@ _wukong__dev__config_commands() {
     local commands; commands=(
 'push:Push the current configuration changes to the Bunker' \
 'diff:Show changes between the local configuration and the Bunker' \
+'pull:Pull the development config file from Bunker' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'wukong dev config commands' commands "$@"
@@ -1152,6 +1157,7 @@ _wukong__dev__help__config_commands() {
     local commands; commands=(
 'push:Push the current configuration changes to the Bunker' \
 'diff:Show changes between the local configuration and the Bunker' \
+'pull:Pull the development config file from Bunker' \
     )
     _describe -t commands 'wukong dev help config commands' commands "$@"
 }
@@ -1169,6 +1175,7 @@ _wukong__help__dev__config_commands() {
     local commands; commands=(
 'push:Push the current configuration changes to the Bunker' \
 'diff:Show changes between the local configuration and the Bunker' \
+'pull:Pull the development config file from Bunker' \
     )
     _describe -t commands 'wukong help dev config commands' commands "$@"
 }
@@ -1186,21 +1193,6 @@ _wukong__dev__help__config-lint_commands() {
 _wukong__help__dev__config-lint_commands() {
     local commands; commands=()
     _describe -t commands 'wukong help dev config-lint commands' commands "$@"
-}
-(( $+functions[_wukong__dev__config-synthesizer_commands] )) ||
-_wukong__dev__config-synthesizer_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong dev config-synthesizer commands' commands "$@"
-}
-(( $+functions[_wukong__dev__help__config-synthesizer_commands] )) ||
-_wukong__dev__help__config-synthesizer_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong dev help config-synthesizer commands' commands "$@"
-}
-(( $+functions[_wukong__help__dev__config-synthesizer_commands] )) ||
-_wukong__help__dev__config-synthesizer_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong help dev config-synthesizer commands' commands "$@"
 }
 (( $+functions[_wukong__deployment_commands] )) ||
 _wukong__deployment_commands() {
@@ -1240,7 +1232,6 @@ _wukong__pipeline__help__describe_commands() {
 _wukong__dev_commands() {
     local commands; commands=(
 'config-lint:Linting the config and show possible warnings, as well as suggestion how to fix the config file' \
-'config-synthesizer:Synthesize the development config with secrets file from Bunker' \
 'config:This command group contains the commands to interact with the config secrets with bunker' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
@@ -1250,7 +1241,6 @@ _wukong__dev_commands() {
 _wukong__help__dev_commands() {
     local commands; commands=(
 'config-lint:Linting the config and show possible warnings, as well as suggestion how to fix the config file' \
-'config-synthesizer:Synthesize the development config with secrets file from Bunker' \
 'config:This command group contains the commands to interact with the config secrets with bunker' \
     )
     _describe -t commands 'wukong help dev commands' commands "$@"
@@ -1353,6 +1343,7 @@ _wukong__dev__config__help_commands() {
     local commands; commands=(
 'push:Push the current configuration changes to the Bunker' \
 'diff:Show changes between the local configuration and the Bunker' \
+'pull:Pull the development config file from Bunker' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'wukong dev config help commands' commands "$@"
@@ -1366,7 +1357,6 @@ _wukong__dev__config__help__help_commands() {
 _wukong__dev__help_commands() {
     local commands; commands=(
 'config-lint:Linting the config and show possible warnings, as well as suggestion how to fix the config file' \
-'config-synthesizer:Synthesize the development config with secrets file from Bunker' \
 'config:This command group contains the commands to interact with the config secrets with bunker' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
@@ -1510,6 +1500,26 @@ _wukong__pipeline_commands() {
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'wukong pipeline commands' commands "$@"
+}
+(( $+functions[_wukong__dev__config__help__pull_commands] )) ||
+_wukong__dev__config__help__pull_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong dev config help pull commands' commands "$@"
+}
+(( $+functions[_wukong__dev__config__pull_commands] )) ||
+_wukong__dev__config__pull_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong dev config pull commands' commands "$@"
+}
+(( $+functions[_wukong__dev__help__config__pull_commands] )) ||
+_wukong__dev__help__config__pull_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong dev help config pull commands' commands "$@"
+}
+(( $+functions[_wukong__help__dev__config__pull_commands] )) ||
+_wukong__help__dev__config__pull_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help dev config pull commands' commands "$@"
 }
 (( $+functions[_wukong__dev__config__help__push_commands] )) ||
 _wukong__dev__config__help__push_commands() {
