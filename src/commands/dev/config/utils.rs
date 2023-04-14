@@ -34,9 +34,7 @@ pub async fn get_updated_configs(
             get_local_config_as_string(&vault_secret_annotation.destination_file, config_path)
                 .map_err(|error| {
                     debug!("Error: {:?}", error);
-                    CliError::DevConfigError(DevConfigError::ConfigSecretNotFound {
-                    destination_file: vault_secret_annotation.destination_file.clone(),
-                })
+                    CliError::DevConfigError(DevConfigError::ConfigSecretNotFound)
                 })?;
 
         // Get only one key from hashmap
