@@ -44,6 +44,13 @@ pub async fn get_updated_configs(
                 return Err(CliError::DevConfigError(
                     DevConfigError::InvalidSecretPath {
                         config_path: make_path_relative(config_path),
+                        secret_path: format!(
+                            "{}::{}/{}#{}",
+                            vault_secret_annotation.source,
+                            vault_secret_annotation.engine,
+                            vault_secret_annotation.secret_path.clone(),
+                            vault_secret_annotation.secret_name
+                        ),
                     },
                 ));
             }
