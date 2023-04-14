@@ -7,7 +7,6 @@ use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use log::debug;
 use owo_colors::OwoColorize;
 use std::{
-    collections::HashMap,
     env::current_dir,
     path::{Path, PathBuf},
 };
@@ -17,12 +16,12 @@ use super::diff::has_diff;
 pub async fn get_updated_configs(
     vault: &Vault,
     vault_token: &str,
-    config_files: &HashMap<String, VaultSecretAnnotation>,
-) -> Result<HashMap<String, (VaultSecretAnnotation, String, String)>, CliError> {
+    config_files: &Vec<(String, VaultSecretAnnotation)>,
+) -> Result<Vec<(VaultSecretAnnotation, String, String, String)>, CliError> {
     // Comparing local vs remote ....
     println!("{}", "comparing local config vs remote config...".cyan());
 
-    let mut updated_configs = HashMap::new();
+    let mut updated_configs = Vec::new();
 
     for config_file in config_files {
         let (config_path, vault_secret_annotation) = config_file;
@@ -45,20 +44,25 @@ pub async fn get_updated_configs(
                 return Err(CliError::DevConfigError(
                     DevConfigError::InvalidSecretPath {
                         config_path: make_path_relative(config_path),
+                        annotation: format!(
+                            "{}:{}/{}#{}",
+                            vault_secret_annotation.source,
+                            vault_secret_annotation.engine,
+                            vault_secret_annotation.secret_path.clone(),
+                            vault_secret_annotation.secret_name
+                        ),
                     },
                 ));
             }
         };
 
         if has_diff(remote_config, &local_config) {
-            updated_configs.insert(
+            updated_configs.push((
+                vault_secret_annotation.clone(),
+                remote_config.clone(),
+                local_config,
                 config_path.clone(),
-                (
-                    vault_secret_annotation.clone(),
-                    remote_config.clone(),
-                    local_config,
-                ),
-            );
+            ));
         }
     }
 
@@ -112,8 +116,8 @@ pub fn make_path_relative(path: &str) -> String {
 
 pub fn filter_config_with_secret_annotations(
     available_files: Vec<PathBuf>,
-) -> Result<HashMap<String, VaultSecretAnnotation>, CliError> {
-    let mut filtered_annotations: HashMap<String, VaultSecretAnnotation> = HashMap::new();
+) -> Result<Vec<(String, VaultSecretAnnotation)>, CliError> {
+    let mut filtered_annotations: Vec<(String, VaultSecretAnnotation)> = Vec::new();
 
     for file in available_files {
         let file_contents = std::fs::read_to_string(file.clone())?;
@@ -124,7 +128,7 @@ pub fn filter_config_with_secret_annotations(
                 && annotation.source == "vault"
                 && annotation.engine == "secret"
             {
-                filtered_annotations.insert(file.to_string_lossy().to_string(), annotation);
+                filtered_annotations.push((file.to_string_lossy().to_string(), annotation));
             }
         }
     }
@@ -161,11 +165,23 @@ mod test {
         let filtered_annotations = filter_config_with_secret_annotations(available_files)?;
 
         assert_eq!(filtered_annotations.len(), 1);
-        assert!(filtered_annotations.contains_key(&file1_path.to_string_lossy().to_string()));
 
-        let annotation = filtered_annotations
-            .get(&file1_path.to_string_lossy().to_string())
+        let has_file1_path = filtered_annotations
+            .iter()
+            .any(|(path, _)| path == &file1_path.to_string_lossy().to_string());
+
+        let does_not_have_file2_path = filtered_annotations
+            .iter()
+            .any(|(path, _)| path == &file2_path.to_string_lossy().to_string());
+
+        assert!(has_file1_path);
+        assert!(!does_not_have_file2_path);
+
+        let (_, annotation) = filtered_annotations
+            .iter()
+            .find(|(path, _)| path == &file1_path.to_string_lossy().to_string())
             .unwrap();
+
         assert_eq!(
             annotation.key,
             "wukong.mindvalley.dev/config-secrets-location"

@@ -57,7 +57,7 @@ pub async fn handle_config_push() -> Result<bool, CliError> {
             "{}",
             "There is only one config file to update...".bright_yellow()
         );
-        let (config_path, (annotation, _, _)) = updated_configs.iter().next().unwrap();
+        let (annotation, _, _, config_path) = updated_configs.first().unwrap();
 
         update_secrets(
             &vault,
@@ -129,13 +129,13 @@ async fn update_secrets(
 }
 
 async fn select_config(
-    available_config: &HashMap<String, (VaultSecretAnnotation, String, String)>,
+    available_config: &[(VaultSecretAnnotation, String, String, String)],
 ) -> (String, VaultSecretAnnotation) {
     let selection = Select::with_theme(&ColorfulTheme::default())
         .items(
             &available_config
                 .iter()
-                .map(|(config_path, (annotation, _, _))| {
+                .map(|(annotation, _, _, config_path)| {
                     let local_config_path =
                         get_local_config_path(config_path, &annotation.destination_file);
 
@@ -161,7 +161,7 @@ async fn select_config(
 
     return match selection {
         Some(index) => {
-            let (config_path, (annotation, _, _)) = available_config.iter().nth(index).unwrap();
+            let (annotation, _, _, config_path) = available_config.get(index).unwrap();
             (config_path.clone(), annotation.clone())
         }
         None => {

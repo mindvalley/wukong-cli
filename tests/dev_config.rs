@@ -136,7 +136,7 @@ fn test_wukong_dev_config_diff_success() {
 
     let dev_config_file = elixir_temp.child("config/dev.exs");
     dev_config_file.touch().unwrap();
-    let dev_config_secret_file = elixir_temp.child("config/c.secret.exs");
+    let dev_config_secret_file_c = elixir_temp.child("config/c.secret.exs");
     dev_config_file.touch().unwrap();
 
     dev_config_file
@@ -147,14 +147,6 @@ fn test_wukong_dev_config_diff_success() {
                 System.get_env("API_KEY")
                 System.fetch_env("API_SECRET")
                 System.fetch_env!("API_TOKEN")
-
-                # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#a.secret.exs
-                import_config "config/a.secret.exs"
-
-                # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#b.secret.exs
-                if File.exists?("config/b.secret.exs") do
-                  import_config "config/b.secret.exs"
-                end
 
                 # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#c.secret.exs
                 File.exists?("c.secret.exs") && import_config "c.secret.exs"
@@ -167,7 +159,7 @@ fn test_wukong_dev_config_diff_success() {
         )
         .unwrap();
 
-    dev_config_secret_file
+    dev_config_secret_file_c
         .write_str(
             r#"
 use Mix.Config
@@ -233,14 +225,6 @@ fn test_wukong_dev_config_diff_when_secret_key_not_found_from_bunker() {
                 System.get_env("API_KEY")
                 System.fetch_env("API_SECRET")
                 System.fetch_env!("API_TOKEN")
-
-                # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#a.secret.exs
-                import_config "config/a.secret.exs"
-
-                # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#b.secret.exs
-                if File.exists?("config/b.secret.exs") do
-                  import_config "config/b.secret.exs"
-                end
 
                 # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#c.secret.exs
                 File.exists?("c.secret.exs") && import_config "c.secret.exs"
@@ -310,14 +294,6 @@ fn test_wukong_dev_config_diff_when_secret_file_not_found() {
                 System.fetch_env("API_SECRET")
                 System.fetch_env!("API_TOKEN")
 
-                # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#a.secret.exs
-                import_config "config/a.secret.exs"
-
-                # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#b.secret.exs
-                if File.exists?("config/b.secret.exs") do
-                  import_config "config/b.secret.exs"
-                end
-
                 # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#c.secret.exs
                 File.exists?("c.secret.exs") && import_config "c.secret.exs"
 
@@ -380,14 +356,6 @@ fn test_wukong_dev_config_diff_when_no_changes_found() {
                 System.get_env("API_KEY")
                 System.fetch_env("API_SECRET")
                 System.fetch_env!("API_TOKEN")
-
-                # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#a.secret.exs
-                import_config "config/a.secret.exs"
-
-                # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#b.secret.exs
-                if File.exists?("config/b.secret.exs") do
-                  import_config "config/b.secret.exs"
-                end
 
                 # wukong.mindvalley.dev/config-secrets-location: vault:secret/mv/tech/app/dev#c.secret.exs
                 File.exists?("c.secret.exs") && import_config "c.secret.exs"
