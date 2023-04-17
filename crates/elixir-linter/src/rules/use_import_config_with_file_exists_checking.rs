@@ -157,15 +157,15 @@ if File.exists?("config/dev.exs") do
   import_config "config/dev.exs"
 end
 
-# invalid
+# valid
 if File.exists?("config/a.exs") do
-  import_config "config/b.exs"
+  import_config "a.exs"
 end
 
 # valid
 File.exists?("config/dev.exs") && import_config "config/dev.exs"
-# invalid
-File.exists?("config/a.exs") && import_config "config/b.exs"
+# valid
+File.exists?("config/a.exs") && import_config "a.exs"
 
 test_domain = System.get_env("TEST_DOMAIN", "mv.test.com")
 
@@ -182,7 +182,7 @@ config :phoenix, :json_library, Jason
         let rule = UseImportConfigWithFileExistsChecking::new(elixir_lang);
         let lint_result = rule.run(&parse_tree, source.to_string(), "config/dev.exs");
 
-        assert_eq!(lint_result.len(), 3);
+        assert_eq!(lint_result.len(), 5);
     }
 
     #[test]
