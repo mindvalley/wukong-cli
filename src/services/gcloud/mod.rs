@@ -1,3 +1,4 @@
+#[rustfmt::skip]
 #[path = "api"]
 pub mod google {
     #[path = ""]
