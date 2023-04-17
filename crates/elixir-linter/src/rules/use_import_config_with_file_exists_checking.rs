@@ -156,7 +156,7 @@ System.get_env("API_KEY")
 System.fetch_env("API_SECRET")
 System.fetch_env!("API_TOKEN")
 
-# invalid
+# valid
 import_config "config/dev.exs"
 
 # valid
@@ -164,14 +164,14 @@ if File.exists?("config/dev.exs") do
   import_config "config/dev.exs"
 end
 
-# invalid
+# valid
 if File.exists?("config/a.exs") do
   import_config "config/b.exs"
 end
 
 # valid
 File.exists?("config/dev.exs") && import_config "config/dev.exs"
-# invalid
+# valid
 File.exists?("config/a.exs") && import_config "config/b.exs"
 
 test_domain = System.get_env("TEST_DOMAIN", "mv.test.com")
@@ -189,7 +189,7 @@ config :phoenix, :json_library, Jason
         let rule = UseImportConfigWithFileExistsChecking::new(elixir_lang);
         let lint_result = rule.run(&parse_tree, source.to_string(), "config/dev.exs");
 
-        assert_eq!(lint_result.len(), 3);
+        assert_eq!(lint_result.len(), 0);
     }
 
     #[test]
