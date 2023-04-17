@@ -76,7 +76,6 @@ impl Rule for UseImportConfigWithFileExistsChecking {
             .query()
             .capture_index_for_name("match_with_binary_operator")
             .unwrap();
-        // let match_idx = self.query().capture_index_for_name("match").unwrap();
 
         all_matches
             .flat_map(|each| {
@@ -88,12 +87,10 @@ impl Rule for UseImportConfigWithFileExistsChecking {
                             || capture.index == match_with_binary_operator_idx
                     })
                     .filter(|capture| {
-                        // if capture.index == match_idx {
                         if let Some(parent) = capture.node.parent() {
                             println!("{:?}", parent.kind());
                             return parent.kind() == "source";
                         }
-                        // }
 
                         true
                     })
