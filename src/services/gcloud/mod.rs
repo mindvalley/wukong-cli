@@ -67,14 +67,14 @@ pub struct LogEntriesOptions {
     pub resource_names: Option<Vec<String>>,
 }
 
-impl Into<ListLogEntriesRequest> for LogEntriesOptions {
-    fn into(self) -> ListLogEntriesRequest {
+impl From<LogEntriesOptions> for ListLogEntriesRequest {
+    fn from(value: LogEntriesOptions) -> Self {
         ListLogEntriesRequest {
-            filter: self.filter.unwrap_or_default(),
-            page_size: self.page_size.unwrap_or_default(),
-            page_token: self.page_token.unwrap_or_default(),
-            order_by: self.order_by.unwrap_or_default(),
-            resource_names: self.resource_names.unwrap_or_default(),
+            filter: value.filter.unwrap_or_default(),
+            page_size: value.page_size.unwrap_or_default(),
+            page_token: value.page_token.unwrap_or_default(),
+            order_by: value.order_by.unwrap_or_default(),
+            resource_names: value.resource_names.unwrap_or_default(),
         }
     }
 }

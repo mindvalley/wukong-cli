@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use super::{ApplicationNamespace, ApplicationVersion};
 use crate::{
     commands::Context,
@@ -12,34 +10,100 @@ use chrono::{DateTime, Local};
 use log::debug;
 use once_cell::sync::Lazy;
 use regex::Regex;
-use serde_json::Value;
+use std::fmt::Display;
 
 impl Display for LogEntries {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Some(entries) = &self.entries {
             for entry in entries {
-                // time="2023-03-03T06:41:28Z" level=info msg="getRepoObjs stats" application=mv-stg-spinnaker-appconsole build_options_ms=0 helm_ms=0 plugins_ms=0 repo_ms=0 time_ms=195 unmarshal_ms=195 version_ms=0
                 write!(f, "time={} ", entry.timestamp.as_ref().unwrap())?;
-                write!(f, "level={} ", entry.severity)?;
-                write!(f, "msg={} ", entry.log_name)?;
+                write!(f, "level={} ", entry.severity().as_str_name())?;
                 match entry.payload.as_ref().unwrap() {
                     crate::services::gcloud::google::logging::v2::log_entry::Payload::ProtoPayload(payload) => {
-                        write!(f, "payload={:?}", payload)?;
+                        write!(f, "proto_payload={:?}", payload)?;
                     },
                     crate::services::gcloud::google::logging::v2::log_entry::Payload::TextPayload(payload) => {
-                        write!(f, "payload={:?}", payload)?;
+                        write!(f, "text_payload={:?}", payload)?;
                     },
                     crate::services::gcloud::google::logging::v2::log_entry::Payload::JsonPayload(payload) => {
-                     let v: Value = serde_json::from_reader(payload).unwrap();
-                        write!(f, "payload={:?}", payload.fields)?;
+                        let keys = payload.fields.keys().collect::<Vec<_>>();
+                        let value = keys
+                            .iter()
+                            .filter(|k| payload.fields.get(**k).is_some())
+                            .map(|k| {
+                                format!(
+                                    "{}: {}",
+                                    k,
+                                    display_prost_type_value_kind(
+                                        payload.fields.get(*k).unwrap().kind.clone()
+                                    )
+                                )
+                            })
+                            .collect::<Vec<_>>()
+                            .join(", ");
+
+                        write!(f, "json_payload={{ {value} }}")?;
                     },
                 };
+                write!(f, " }}")?;
                 writeln!(f)?;
-                // write!(f, "payload={} ", entry.payload.as_ref().unwrap_or_default().)?;
             }
         }
 
         Ok(())
+    }
+}
+
+fn display_prost_type_value_kind(kind: Option<prost_types::value::Kind>) -> String {
+    if let Some(kind) = kind {
+        match kind {
+            prost_types::value::Kind::NullValue(_) => "null".to_string(),
+            prost_types::value::Kind::NumberValue(value) => {
+                format!("{value}")
+            }
+            prost_types::value::Kind::StringValue(value) => format!("{:?}", value)
+                .replace('\"', r#"""#)
+                .replace("\\n", "")
+                .replace('\\', "")
+                .split(' ')
+                .filter(|s| !s.is_empty())
+                .collect::<Vec<_>>()
+                .join(" "),
+            prost_types::value::Kind::BoolValue(value) => {
+                format!("{value}")
+            }
+            prost_types::value::Kind::StructValue(value) => {
+                let keys = value.fields.keys().collect::<Vec<_>>();
+                let value = keys
+                    .iter()
+                    .filter(|k| value.fields.get(**k).is_some())
+                    .map(|k| {
+                        format!(
+                            "{}: {}",
+                            k,
+                            display_prost_type_value_kind(
+                                value.fields.get(*k).unwrap().kind.clone()
+                            )
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join(", ");
+
+                format!("{{ {value} }}")
+            }
+            prost_types::value::Kind::ListValue(value) => {
+                let values = value
+                    .values
+                    .iter()
+                    .map(|v| display_prost_type_value_kind(v.kind.clone()))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+
+                format!("[{values}]")
+            }
+        }
+    } else {
+        "null".to_string()
     }
 }
 
@@ -101,7 +165,7 @@ fn generate_filter(
     filter.push_str(" AND ");
 
     if let Some(since) = since {
-        filter.push_str(&format!("timestamp>=\"{}\"", get_timestamp(&since)?));
+        filter.push_str(&format!("timestamp>=\"{}\"", get_timestamp(since)?));
     } else {
         let one_hour_ago = (Local::now() - 1.hours()).to_rfc3339();
         filter.push_str(&format!("timestamp>=\"{one_hour_ago}\""));
@@ -112,7 +176,7 @@ fn generate_filter(
             filter.push_str(" AND ");
         }
 
-        filter.push_str(&format!("timestamp<=\"{}\"", get_timestamp(&until)?));
+        filter.push_str(&format!("timestamp<=\"{}\"", get_timestamp(until)?));
     }
 
     if *show_error_and_above {
@@ -127,20 +191,20 @@ fn generate_filter(
 }
 
 fn get_timestamp(timestamp: &String) -> Result<String, CliError> {
-    match DateTime::parse_from_rfc3339(&timestamp) {
+    match DateTime::parse_from_rfc3339(timestamp) {
         Ok(_) => Ok(timestamp.clone()),
         Err(e) => {
-            if TIMESTAMP_DAY_REGEX.is_match(&timestamp) {
+            if TIMESTAMP_DAY_REGEX.is_match(timestamp) {
                 let now = Local::now();
-                let num = timestamp.replace("d", "").parse::<i64>()?;
+                let num = timestamp.replace('d', "").parse::<i64>()?;
                 Ok((now - num.days()).to_rfc3339())
-            } else if TIMESTAMP_HOUR_REGEX.is_match(&timestamp) {
+            } else if TIMESTAMP_HOUR_REGEX.is_match(timestamp) {
                 let now = Local::now();
-                let num = timestamp.replace("h", "").parse::<i64>()?;
+                let num = timestamp.replace('h', "").parse::<i64>()?;
                 Ok((now - num.hours()).to_rfc3339())
-            } else if TIMESTAMP_MINUTE_REGEX.is_match(&timestamp) {
+            } else if TIMESTAMP_MINUTE_REGEX.is_match(timestamp) {
                 let now = Local::now();
-                let num = timestamp.replace("m", "").parse::<i64>()?;
+                let num = timestamp.replace('m', "").parse::<i64>()?;
                 Ok((now - num.minutes()).to_rfc3339())
             } else {
                 debug!("Error parsing timestamp: {}", &timestamp);
