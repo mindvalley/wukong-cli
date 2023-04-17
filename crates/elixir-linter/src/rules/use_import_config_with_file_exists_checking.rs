@@ -16,23 +16,33 @@ impl UseImportConfigWithFileExistsChecking {
             [
                 (do_block
                     (call
-                        target: (_) @file_checking
-                        (arguments (string (_)) @checked_file))
-                    (call 
+                        target: (identifier) @file_checking
+                        (arguments (string (_) @checked_file))
+                    )
+                    (call
                         target: (identifier) @identifier
-                        (arguments (string (_) )@import_file))) @match_with_do_block
-                        (#eq? @file_checking "File.exists?")
-                        (#match? @identifier "import_config|import_config!")
+                        (arguments (string (_) )@import_file))
+                ) @match_with_do_block
+                    (#eq? @file_checking "File.exists?")
+                    (#match? @identifier "import_config|import_config!")
 
-                (binary_operator 
-                    left: (call 
-                        target: (_) @file_checking 
-                            (arguments (string (_)) @checked_file))
-                    right: (call 
+                (binary_operator
+                    left: (call
+                        target: (identifier) @file_checking
+                        (arguments (string (_) @checked_file))
+                    )
+                    right: (call
                         target: (identifier) @identifier
-                            (arguments (string (_) )@import_file))) @match_with_binary_operator
-                        (#eq? @file_checking "File.exists?")
-                        (#match? @identifier "import_config|import_config!")
+                        (arguments (string (_) )@import_file))
+                ) @match_with_binary_operator
+                    (#eq? @file_checking "File.exists?")
+                    (#match? @identifier "import_config|import_config!")
+
+                (call
+                    target: (identifier) @identifier
+                    (arguments (string (_) )@import_file)
+                ) @match_without_file_exists
+                    (#match? @identifier "import_config|import_config!")
             ]
             "#,
         )
@@ -76,20 +86,25 @@ impl Rule for UseImportConfigWithFileExistsChecking {
             .query()
             .capture_index_for_name("match_with_binary_operator")
             .unwrap();
+        let match_idx = self
+            .query()
+            .capture_index_for_name("match_without_file_exists")
+            .unwrap();
 
         all_matches
             .flat_map(|each| {
                 each.captures
                     .iter()
                     .filter(|capture| {
-                        println!("{:?}", capture);
                         capture.index == match_with_do_block_idx
                             || capture.index == match_with_binary_operator_idx
+                            || capture.index == match_idx
                     })
                     .filter(|capture| {
-                        if let Some(parent) = capture.node.parent() {
-                            println!("{:?}", parent.kind());
-                            return parent.kind() == "source";
+                        if capture.index == match_idx {
+                            if let Some(parent) = capture.node.parent() {
+                                return parent.kind() == "source";
+                            }
                         }
 
                         true
@@ -141,7 +156,7 @@ System.get_env("API_KEY")
 System.fetch_env("API_SECRET")
 System.fetch_env!("API_TOKEN")
 
-# valid
+# invalid
 import_config "config/dev.exs"
 
 # valid
@@ -149,15 +164,15 @@ if File.exists?("config/dev.exs") do
   import_config "config/dev.exs"
 end
 
-# valid
+# invalid
 if File.exists?("config/a.exs") do
-  import_config "a.exs"
+  import_config "config/b.exs"
 end
 
 # valid
 File.exists?("config/dev.exs") && import_config "config/dev.exs"
-# valid
-File.exists?("config/a.exs") && import_config "a.exs"
+# invalid
+File.exists?("config/a.exs") && import_config "config/b.exs"
 
 test_domain = System.get_env("TEST_DOMAIN", "mv.test.com")
 
@@ -174,7 +189,7 @@ config :phoenix, :json_library, Jason
         let rule = UseImportConfigWithFileExistsChecking::new(elixir_lang);
         let lint_result = rule.run(&parse_tree, source.to_string(), "config/dev.exs");
 
-        assert_eq!(lint_result.len(), 0);
+        assert_eq!(lint_result.len(), 3);
     }
 
     #[test]
