@@ -34,6 +34,7 @@ impl UseImportConfigWithFileExistsChecking {
                         target: (identifier) @identifier
                             (arguments (string (_) )@import_file))) @match_with_binary_operator
                     (#eq? @file_checking "File.exists?")
+                    (#not-eq? @checked_file @import_file)
                     (#match? @identifier "import_config|import_config!"))
                 
                 ((call
