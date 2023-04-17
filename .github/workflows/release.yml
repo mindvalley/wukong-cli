@@ -71,8 +71,8 @@ jobs:
         if: contains(matrix.job.target, 'linux')
         shell: bash
         run: |
-          sudo apt-get -y update
-          sudo apt-get install -y protobuf-compiler
+          sudo apt -y update
+          sudo apt install -y protobuf-c-compiler
 
       - name: Install macOS packages
         if: contains(matrix.job.target, 'apple-darwin')
