@@ -84,19 +84,8 @@ jobs:
           components: rustfmt, clippy
           override: true
 
-      - name: Install Linux packages
-        if: contains(matrix.job.target, 'linux')
-        shell: bash
-        run: |
-          sudo apt -y update
-          sudo apt install -y protobuf-c-compiler
-
-      - name: Install macOS packages
-        if: contains(matrix.job.target, 'apple-darwin')
-        shell: bash
-        run: |
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          brew install protobuf
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
 
       - name: Extract crate information
         shell: bash
