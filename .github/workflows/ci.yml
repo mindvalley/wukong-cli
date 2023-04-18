@@ -90,7 +90,7 @@ jobs:
         run: |
           sudo apt -y update
           sudo apt install -y protobuf-compiler
-          echo "PROTOC=/usr/bin/protoc"
+          protoc --version
 
       - name: Install macOS packages
         if: contains(matrix.job.target, 'apple-darwin')
@@ -98,6 +98,7 @@ jobs:
         run: |
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           brew install protobuf
+          protoc --version
 
       - name: Extract crate information
         shell: bash
