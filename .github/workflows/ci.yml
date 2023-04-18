@@ -35,7 +35,7 @@ jobs:
         shell: bash
         run: |
           sudo apt -y update
-          sudo apt install -y protobuf-compiler
+          sudo apt install -y protobuf-compiler libprotobuf-dev
           protoc --version
 
       - name: Check clippy
