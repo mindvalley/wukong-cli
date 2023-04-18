@@ -37,7 +37,6 @@ jobs:
           sudo apt -y update
           sudo apt install -y protobuf-compiler
           protoc --version
-          echo "PROTOC=$(which protoc)" >> $GITHUB_ENV
 
       - name: Check clippy
         uses: actions-rs/cargo@v1
