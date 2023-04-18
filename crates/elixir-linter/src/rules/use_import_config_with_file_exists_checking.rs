@@ -14,35 +14,31 @@ impl UseImportConfigWithFileExistsChecking {
             lang,
             r#"
             [
+                ((call
+                    target: (identifier)
+                    (arguments (_)@function_call)
+
                 (do_block
                     (call
-                        target: (identifier) @file_checking
-                        (arguments (string (_) @checked_file))
-                    )
-                    (call
                         target: (identifier) @identifier
-                        (arguments (string (_) )@import_file))
+                    (arguments (string (_) )@import_file)))
                 ) @match_with_do_block
-                    (#eq? @file_checking "File.exists?")
-                    (#match? @identifier "import_config|import_config!")
+                    (#not-match? @function_call "File.exists?")
+                    (#match? @identifier "import_config|import_config!"))
 
-                (binary_operator
-                    left: (call
-                        target: (identifier) @file_checking
-                        (arguments (string (_) @checked_file))
-                    )
-                    right: (call
+                ((binary_operator 
+                    left: (_) @function_call
+                    right: (call 
                         target: (identifier) @identifier
-                        (arguments (string (_) )@import_file))
-                ) @match_with_binary_operator
-                    (#eq? @file_checking "File.exists?")
-                    (#match? @identifier "import_config|import_config!")
+                            (arguments (string (_) )@import_file))) @match_with_binary_operator
+                    (#not-match? @function_call "File.exists?")
+                    (#match? @identifier "import_config|import_config!"))
+                
+                ((call
+                    target: (identifier) @identifier 
+                    (arguments (string (_)))) @match
+                    (#match? @identifier "import_config|import_config!"))
 
-                (call
-                    target: (identifier) @identifier
-                    (arguments (string (_) )@import_file)
-                ) @match_without_file_exists
-                    (#match? @identifier "import_config|import_config!")
             ]
             "#,
         )
@@ -86,10 +82,7 @@ impl Rule for UseImportConfigWithFileExistsChecking {
             .query()
             .capture_index_for_name("match_with_binary_operator")
             .unwrap();
-        let match_idx = self
-            .query()
-            .capture_index_for_name("match_without_file_exists")
-            .unwrap();
+        let match_idx = self.query().capture_index_for_name("match").unwrap();
 
         all_matches
             .flat_map(|each| {
@@ -156,8 +149,10 @@ System.get_env("API_KEY")
 System.fetch_env("API_SECRET")
 System.fetch_env!("API_TOKEN")
 
-# valid
-import_config "config/dev.exs"
+# Invalid
+if true do
+  import_config "config/dev.exs"
+end
 
 # valid
 if File.exists?("config/dev.exs") do
@@ -165,14 +160,30 @@ if File.exists?("config/dev.exs") do
 end
 
 # valid
-if File.exists?("config/a.exs") do
-  import_config "config/b.exs"
+if is_true("dsfd") && File.exists?("config/dev.exs") do 
+ import_config "config/dev.exs"
 end
 
 # valid
 File.exists?("config/dev.exs") && import_config "config/dev.exs"
+
 # valid
 File.exists?("config/a.exs") && import_config "config/b.exs"
+
+# valid
+File.exists?("config/a.exs") && is_true("dsfd") && import_config "config/b.exs"
+
+# invalid
+is_true("dsfd") && is_true("dsfd") && import_config "config/b.exs"
+
+# invalid
+is_true("dsfd") && is_true("dsfd") && is_true("dsfd") && import_config "config/b.exs"
+
+# valid
+is_true("dsfd") && is_true("dsfd") && File.exists?("dsfd") && import_config "config/b.exs"
+
+# invalid
+is_true("tst") && import_config "config/b.exs"
 
 test_domain = System.get_env("TEST_DOMAIN", "mv.test.com")
 
@@ -189,7 +200,7 @@ config :phoenix, :json_library, Jason
         let rule = UseImportConfigWithFileExistsChecking::new(elixir_lang);
         let lint_result = rule.run(&parse_tree, source.to_string(), "config/dev.exs");
 
-        assert_eq!(lint_result.len(), 0);
+        assert_eq!(lint_result.len(), 4);
     }
 
     #[test]
