@@ -17,7 +17,6 @@ impl UseImportConfigWithFileExistsChecking {
                 ((call
                     target: (identifier)
                     (arguments (_)@function_call)
-
                 (do_block
                     (call
                         target: (identifier) @identifier
