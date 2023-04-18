@@ -96,9 +96,8 @@ jobs:
         if: contains(matrix.job.target, 'linux')
         shell: bash
         run: |
-          sudo apt -y update
-          sudo apt install -y protobuf-compiler libprotobuf-dev
-          protoc --version
+          https://github.com/protocolbuffers/protobuf/releases/download/v22.3/protoc-22.3-linux-x86_64.zip
+          unzip -o protoc-22.3-linux-x86_64.zip -d "/usr"
           which protoc
 
       - name: Install protoc for macOS
