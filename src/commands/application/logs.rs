@@ -2,6 +2,7 @@ use super::{ApplicationNamespace, ApplicationVersion};
 use crate::{
     commands::Context,
     error::CliError,
+    graphql::QueryClientBuilder,
     loader::new_spinner_progress_bar,
     services::gcloud::{GCloudClient, LogEntries, LogEntriesOptions},
 };
@@ -108,9 +109,9 @@ fn display_prost_type_value_kind(kind: Option<prost_types::value::Kind>) -> Stri
 }
 
 pub async fn handle_logs(
-    _context: Context,
-    _namespace: &ApplicationNamespace,
-    _version: &ApplicationVersion,
+    context: Context,
+    namespace: &ApplicationNamespace,
+    version: &ApplicationVersion,
     show_error_and_above: &bool,
     since: &Option<String>,
     until: &Option<String>,
@@ -123,31 +124,65 @@ pub async fn handle_logs(
 
     auth_progress_bar.finish_and_clear();
 
-    let filter = generate_filter(since, until, show_error_and_above)?;
-    let resource_names = get_resource_names_from_api().await?;
+    let application_progress_bar = new_spinner_progress_bar();
+    application_progress_bar.set_message("Fetching application details ... ");
 
-    let progress_bar = new_spinner_progress_bar();
-    progress_bar.set_message("Fetching log entries ... ");
+    // Calling API ...
+    let client = QueryClientBuilder::default()
+        .with_access_token(
+            context
+                .config
+                .auth
+                .ok_or(CliError::UnAuthenticated)?
+                .id_token,
+        )
+        .with_sub(context.state.sub)
+        .with_api_url(context.config.core.wukong_api_url)
+        .build()?;
 
-    let log = gcloud_client
-        .get_log_entries(LogEntriesOptions {
-            resource_names: Some(resource_names),
-            page_size: Some(*limit),
-            filter: Some(filter),
-            ..Default::default()
-        })
-        .await?;
+    let application_resp = client
+        .fetch_application_with_k8s_cluster(
+            &context.state.application.clone().unwrap(),
+            &namespace.to_string().to_lowercase(),
+            &version.to_string().to_lowercase(),
+        ) // SAFERY: the application is checked on the caller so it will always be Some(x) here
+        .await?
+        .data
+        .unwrap()
+        .application;
 
-    progress_bar.finish_and_clear();
+    if let Some(application_data) = application_resp {
+        if let Some(cluster) = application_data.k8s_cluster {
+            let filter = generate_filter(
+                &cluster.cluster_name,
+                &cluster.k8s_namespace,
+                since,
+                until,
+                show_error_and_above,
+            )?;
+            let resource_names = vec![format!("projects/{}", cluster.google_project_id)];
 
-    eprintln!("{log}");
-    // eprintln!("next_page_token {:?}", log.next_page_token);
+            application_progress_bar.finish_and_clear();
+
+            let progress_bar = new_spinner_progress_bar();
+            progress_bar.set_message("Fetching log entries ... ");
+
+            let log = gcloud_client
+                .get_log_entries(LogEntriesOptions {
+                    resource_names: Some(resource_names),
+                    page_size: Some(*limit),
+                    filter: Some(filter),
+                    ..Default::default()
+                })
+                .await?;
+
+            progress_bar.finish_and_clear();
+
+            eprintln!("{log}");
+        }
+    }
 
     Ok(true)
-}
-
-async fn get_resource_names_from_api() -> Result<Vec<String>, CliError> {
-    Ok(vec!["projects/mv-stg-applications-hub".to_string()])
 }
 
 static TIMESTAMP_DAY_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\d+d$").unwrap());
@@ -155,12 +190,14 @@ static TIMESTAMP_HOUR_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\d+h$").un
 static TIMESTAMP_MINUTE_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\d+m$").unwrap());
 
 fn generate_filter(
+    cluster_name: &str,
+    namespace_name: &str,
     since: &Option<String>,
     until: &Option<String>,
     show_error_and_above: &bool,
 ) -> Result<String, CliError> {
     let mut filter = String::new();
-    filter.push_str("resource.type=\"k8s_container\" AND resource.labels.cluster_name=\"mv-stg-apphub-use4-gke-01\" AND resource.labels.namespace_name=\"mv-platform\"");
+    filter.push_str(format!("resource.type=\"k8s_container\" AND resource.labels.cluster_name=\"{}\" AND resource.labels.namespace_name=\"{}\"", cluster_name, namespace_name).as_str());
 
     filter.push_str(" AND ");
 

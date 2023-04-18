@@ -4,7 +4,10 @@ pub mod deployment;
 pub mod pipeline;
 
 use self::{
-    application::{application_query, applications_query, ApplicationQuery, ApplicationsQuery},
+    application::{
+        application_query, application_with_k8s_cluster_query, applications_query,
+        ApplicationQuery, ApplicationWithK8sClusterQuery, ApplicationsQuery,
+    },
     changelog::{changelogs_query, ChangelogsQuery},
     deployment::{
         cd_pipeline_for_rollback_query, cd_pipeline_query, cd_pipelines_query, execute_cd_pipeline,
@@ -214,6 +217,16 @@ impl QueryClient {
         name: &str,
     ) -> Result<Response<application_query::ResponseData>, APIError> {
         ApplicationQuery::fetch(self, name).await
+    }
+
+    #[wukong_telemetry(api_event = "fetch_application_with_k8s_cluster")]
+    pub async fn fetch_application_with_k8s_cluster(
+        &self,
+        name: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<Response<application_with_k8s_cluster_query::ResponseData>, APIError> {
+        ApplicationWithK8sClusterQuery::fetch(self, name, namespace, version).await
     }
 
     #[wukong_telemetry(api_event = "fetch_cd_pipeline_list")]

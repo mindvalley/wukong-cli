@@ -35,6 +35,40 @@ impl ApplicationQuery {
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "src/graphql/schema.json",
+    query_path = "src/graphql/query/application_with_k8s_cluster.graphql",
+    response_derives = "Debug, Serialize, Deserialize"
+)]
+pub struct ApplicationWithK8sClusterQuery;
+
+impl ApplicationWithK8sClusterQuery {
+    pub(crate) async fn fetch(
+        client: &QueryClient,
+        name: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<Response<application_with_k8s_cluster_query::ResponseData>, APIError> {
+        let variables = application_with_k8s_cluster_query::Variables {
+            name: name.to_string(),
+            namespace: namespace.to_string(),
+            version: version.to_string(),
+        };
+
+        let response = client
+            .call_api::<ApplicationWithK8sClusterQuery>(variables, |_, error| {
+                Err(APIError::ResponseError {
+                    code: error.message.clone(),
+                    message: format!("{error}"),
+                })
+            })
+            .await?;
+
+        Ok(response)
+    }
+}
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/graphql/schema.json",
     query_path = "src/graphql/query/applications.graphql",
     response_derives = "Debug, Serialize, Deserialize"
 )]
