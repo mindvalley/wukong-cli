@@ -67,15 +67,16 @@ jobs:
           target: ${{ matrix.job.target }}
           components: rustfmt, clippy
 
-      - name: Install Linux packages
+      - name: Install protoc for Linux
         if: contains(matrix.job.target, 'linux')
         shell: bash
         run: |
           sudo apt -y update
           sudo apt install -y protobuf-compiler
           protoc --version
+          echo "PROTOC=$(which protoc)" >> $GITHUB_ENV
 
-      - name: Install macOS packages
+      - name: Install protoc for macOS
         if: contains(matrix.job.target, 'apple-darwin')
         shell: bash
         run: |
