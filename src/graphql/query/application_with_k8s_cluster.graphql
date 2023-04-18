@@ -1,0 +1,17 @@
+query ApplicationWithK8sClusterQuery(
+  $name: String!
+  $namespace: String!
+  $version: String!
+) {
+  application(name: $name) {
+    name
+    k8sCluster(namespace: $namespace, version: $version) {
+      clusterName
+      googleProjectId
+      k8sNamespace
+      namespace
+      podName
+      version
+    }
+  }
+}
