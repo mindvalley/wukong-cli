@@ -1,4 +1,5 @@
 mod diff;
+mod lint;
 mod pull;
 mod push;
 mod utils;
@@ -6,6 +7,7 @@ mod utils;
 use crate::error::CliError;
 use clap::{Args, Subcommand};
 use diff::handle_config_diff;
+use lint::handle_config_lint;
 use pull::handle_config_pull;
 use push::handle_config_push;
 use std::path::PathBuf;
@@ -28,6 +30,12 @@ pub enum ConfigSubcommand {
         #[arg(default_value = ".")]
         path: PathBuf,
     },
+    /// Linting the config and show possible warnings, as well as suggestion how to fix the config file.
+    Lint {
+        /// The path to the project
+        #[arg(default_value = ".")]
+        path: PathBuf,
+    },
 }
 
 impl Config {
@@ -36,6 +44,7 @@ impl Config {
             ConfigSubcommand::Push => handle_config_push().await,
             ConfigSubcommand::Diff => handle_config_diff().await,
             ConfigSubcommand::Pull { path } => handle_config_pull(path).await,
+            ConfigSubcommand::Lint { path } => handle_config_lint(path),
         }
     }
 }
