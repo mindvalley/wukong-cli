@@ -1,2 +1,0 @@
-[x86_64-unknown-linux-gnu]
-pre-build = ["apt update -y && apt install -y protobuf-compiler"]
