@@ -102,4 +102,4 @@ serial_test = "2.0.0"
 opt-level = 3
 
 [package.metadata.cross.target.x86_64-unknown-linux-gnu]
-pre-build = ["apt update -y && sudo curl -sSLO https://github.com/protocolbuffers/protobuf/releases/download/v22.3/protoc-22.3-linux-x86_64.zip && sudo unzip protoc-22.3-linux-x86_64.zip -d /usr"]
+pre-build = ["apt update -y && curl -sSLO https://github.com/protocolbuffers/protobuf/releases/download/v22.3/protoc-22.3-linux-x86_64.zip && unzip protoc-22.3-linux-x86_64.zip -d /usr"]
