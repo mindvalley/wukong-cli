@@ -68,13 +68,13 @@ jobs:
               name: "linux-x86",
               target: x86_64-unknown-linux-gnu,
               os: ubuntu-22.04,
-              use-cross: true,
+              use-cross: false,
             }
           - {
               name: "linux-x86-musl",
               target: x86_64-unknown-linux-musl,
               os: ubuntu-22.04,
-              use-cross: true,
+              use-cross: false,
             }
     name: ${{ matrix.job.name }} (${{ matrix.job.target }})
     runs-on: ${{ matrix.job.os }}
@@ -94,14 +94,14 @@ jobs:
           components: rustfmt, clippy
           override: true
 
-      # - name: Install protoc for Linux
-      #   if: contains(matrix.job.target, 'linux')
-      #   shell: bash
-      #   run: |
-      #     sudo apt -y update
-      #     sudo curl -sSLO https://github.com/protocolbuffers/protobuf/releases/download/v22.3/protoc-22.3-linux-x86_64.zip
-      #     sudo unzip protoc-22.3-linux-x86_64.zip -d /usr
-      #     which protoc
+      - name: Install protoc for Linux
+        if: contains(matrix.job.target, 'linux')
+        shell: bash
+        run: |
+          sudo apt -y update
+          sudo curl -sSLO https://github.com/protocolbuffers/protobuf/releases/download/v22.3/protoc-22.3-linux-x86_64.zip
+          sudo unzip protoc-22.3-linux-x86_64.zip -d /usr
+          which protoc
 
       - name: Install protoc for macOS
         if: contains(matrix.job.target, 'apple-darwin')
@@ -122,6 +122,6 @@ jobs:
       - name: Build Wukong CLI
         uses: actions-rs/cargo@v1
         with:
-          use-cross: ${{ matrix.job.use-cross }}
+          # use-cross: ${{ matrix.job.use-cross }}
           command: build
           args: --locked --features prod --release --target=${{ matrix.job.target }}
