@@ -94,14 +94,14 @@ jobs:
           components: rustfmt, clippy
           override: true
 
-      - name: Install protoc for Linux
-        if: contains(matrix.job.target, 'linux')
-        shell: bash
-        run: |
-          sudo apt -y update
-          sudo curl -sSLO https://github.com/protocolbuffers/protobuf/releases/download/v22.3/protoc-22.3-linux-x86_64.zip
-          sudo unzip protoc-22.3-linux-x86_64.zip -d /usr
-          which protoc
+      # - name: Install protoc for Linux
+      #   if: contains(matrix.job.target, 'linux')
+      #   shell: bash
+      #   run: |
+      #     sudo apt -y update
+      #     sudo curl -sSLO https://github.com/protocolbuffers/protobuf/releases/download/v22.3/protoc-22.3-linux-x86_64.zip
+      #     sudo unzip protoc-22.3-linux-x86_64.zip -d /usr
+      #     which protoc
 
       - name: Install protoc for macOS
         if: contains(matrix.job.target, 'apple-darwin')
