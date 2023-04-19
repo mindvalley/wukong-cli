@@ -1,9 +1,2 @@
-[target.x86_64-unknown-linux-gnu.env]
-passthrough = [
-    "WUKONG_HONEYCOMB_API_KEY",
-]
-
-[target.x86_64-unknown-linux-musl.env]
-passthrough = [
-    "WUKONG_HONEYCOMB_API_KEY",
-]
+[x86_64-unknown-linux-gnu]
+pre-build = ["apt update -y && apt install -y protobuf-compiler"]
