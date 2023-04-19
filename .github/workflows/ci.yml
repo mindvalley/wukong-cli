@@ -31,7 +31,6 @@ jobs:
           args: --all -- --check
 
       - name: Install protoc for Linux
-        if: contains(matrix.job.target, 'linux')
         shell: bash
         run: |
           sudo apt -y update
