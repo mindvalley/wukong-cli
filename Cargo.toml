@@ -80,6 +80,8 @@ prost-types = "0.11.8"
 yup-oauth2 = "8.1.1"
 hyper = "0.14.25"
 hyper-rustls = { version = "0.24.0", features = ["http2"] }
+tokio-stream = "0.1"
+async-stream = "0.3.5"
 
 [dependencies.tree-sitter-elixir]
 git = "https://github.com/elixir-lang/tree-sitter-elixir"

@@ -17,10 +17,11 @@ pub mod google {
 use crate::error::GCloudError;
 use chrono::Duration;
 use google::logging::v2::{
-    logging_service_v2_client::LoggingServiceV2Client, ListLogEntriesRequest,
+    logging_service_v2_client::LoggingServiceV2Client, ListLogEntriesRequest, TailLogEntriesRequest,
 };
 use std::{future::Future, pin::Pin};
-use tonic::{metadata::MetadataValue, transport::Channel, Request};
+use tokio_stream::StreamExt;
+use tonic::{metadata::MetadataValue, transport::Channel, IntoStreamingRequest, Request};
 use yup_oauth2::{
     authenticator_delegate::{DefaultInstalledFlowDelegate, InstalledFlowDelegate},
     ApplicationSecret, InstalledFlowAuthenticator, InstalledFlowReturnMethod,
@@ -200,5 +201,48 @@ impl GCloudClient {
             entries: Some(response.entries),
             next_page_token: Some(response.next_page_token),
         })
+    }
+
+    pub async fn get_tail_log_entries(&self) -> Result<(), GCloudError> {
+        let bearer_token = format!("Bearer {}", self.access_token);
+        let header_value: MetadataValue<_> = bearer_token.parse().unwrap();
+
+        let channel = Channel::from_static("https://logging.googleapis.com")
+            .connect()
+            .await
+            .unwrap();
+
+        let mut service =
+            LoggingServiceV2Client::with_interceptor(channel, move |mut req: Request<()>| {
+                req.metadata_mut()
+                    .insert("authorization", header_value.clone());
+                Ok(req)
+            });
+
+        // let stream = async_stream::stream! {
+        //     yield TailLogEntriesRequest {
+        //         resource_names: vec!["projects/mv-stg-applications-hub".to_string()],
+        //         ..Default::default()
+        //     };
+        // };
+
+        let stream = tokio_stream::iter([1]).map(|_| TailLogEntriesRequest {
+            resource_names: vec!["projects/mv-stg-applications-hub".to_string()],
+            ..Default::default()
+        });
+
+        let mut response = service.tail_log_entries(stream).await.unwrap().into_inner();
+        //
+        loop {
+            let received = response.message().await.unwrap();
+            println!("received message: `{:?}`", received);
+        }
+
+        // while let Some(received) = response.message().await.unwrap() {
+        //     // let received = received.unwrap();
+        //     println!("\treceived message: `{:?}`", received);
+        // }
+
+        Ok(())
     }
 }
