@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.0.7-rc2](https://github.com/mindvalley/wukong-cli/tree/0.0.7-rc2) (2023-04-20)
+
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/0.0.7-rc1...0.0.7-rc2)
+
+**Implemented enhancements:**
+
+- PXP-519: \[CLI\] Change the linter rule to accept any path declared in the File.exists/2 function [\#92](https://github.com/mindvalley/wukong-cli/pull/92) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-517: \[CLI\] Rename "dev config-lint" command to "dev config lint" [\#90](https://github.com/mindvalley/wukong-cli/pull/90) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-514: \[CLI\] Rename 'dev config-synthesizer' to 'dev config pull' [\#87](https://github.com/mindvalley/wukong-cli/pull/87) ([mfauzaan](https://github.com/mfauzaan))
+
+**Fixed bugs:**
+
+- PXP-516: \[CLI\] Fix multiple annotations support  [\#88](https://github.com/mindvalley/wukong-cli/pull/88) ([mfauzaan](https://github.com/mfauzaan))
+
+**Merged pull requests:**
+
+- Bump version before release [\#93](https://github.com/mindvalley/wukong-cli/pull/93) ([onimsha](https://github.com/onimsha))
+- chore\(deps\): bump h2 from 0.3.16 to 0.3.17 [\#89](https://github.com/mindvalley/wukong-cli/pull/89) ([dependabot[bot]](https://github.com/apps/dependabot))
+- PXP-515: \[CLI\] Develop the config secrets diff command [\#86](https://github.com/mindvalley/wukong-cli/pull/86) ([mfauzaan](https://github.com/mfauzaan))
+- Update CHANGELOG [\#84](https://github.com/mindvalley/wukong-cli/pull/84) ([onimsha](https://github.com/onimsha))
+- PXP-477: \[CLI\] Develop the config secrets push command [\#81](https://github.com/mindvalley/wukong-cli/pull/81) ([mfauzaan](https://github.com/mfauzaan))
+
 ## [0.0.7-rc1](https://github.com/mindvalley/wukong-cli/tree/0.0.7-rc1) (2023-04-06)
 
 [Full Changelog](https://github.com/mindvalley/wukong-cli/compare/0.0.6-rc1...0.0.7-rc1)
