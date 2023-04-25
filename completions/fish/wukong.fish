@@ -67,6 +67,8 @@ complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -s s -l since -d 'Show logs lines newer from relative duration, e.g 5m, 1h, 1d. Also accept datetime in RFC 3339 format' -r
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -s u -l until -d 'Show logs lines older than relative duration, e.g 30m, 2h, 2d. Also accept datetime in RFC 3339 format' -r
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -l limit -d 'Limiting the number of log entries to return' -r
+complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -s i -l include -d '(allow multiple flags) Logs lines to include' -r
+complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -s e -l exclude -d '(allow multiple flags) Logs lines to exclude' -r
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -l errors -d 'Only print out logs line with severity >= ERROR'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -s v -l verbose -d 'Use verbos output. More output per occurrence.
