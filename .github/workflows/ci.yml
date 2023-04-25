@@ -68,13 +68,13 @@ jobs:
               name: "linux-x86",
               target: x86_64-unknown-linux-gnu,
               os: ubuntu-22.04,
-              use-cross: false,
+              use-cross: true,
             }
           - {
               name: "linux-x86-musl",
               target: x86_64-unknown-linux-musl,
               os: ubuntu-22.04,
-              use-cross: false,
+              use-cross: true,
             }
     name: ${{ matrix.job.name }} (${{ matrix.job.target }})
     runs-on: ${{ matrix.job.os }}
