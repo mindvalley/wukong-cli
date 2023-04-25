@@ -85,7 +85,7 @@ hyper-rustls = { version = "0.24.0", features = ["http2"] }
 git = "https://github.com/elixir-lang/tree-sitter-elixir"
 
 [build-dependencies]
-tonic-build = "0.9.1"
+tonic-build = { version = "0.9.1", features = ["cleanup-markdown"] }
 
 [dev-dependencies]
 httpmock = "0.6.7"
@@ -102,22 +102,18 @@ serial_test = "2.0.0"
 opt-level = 3
 
 [package.metadata.cross.build.env]
-passthrough = [
-    "WUKONG_HONEYCOMB_API_KEY",
-    "OKTA_CLIENT_ID",
-    "WUKONG_API_URL"
-]
+passthrough = ["WUKONG_HONEYCOMB_API_KEY", "OKTA_CLIENT_ID", "WUKONG_API_URL"]
 
 [package.metadata.cross.target.x86_64-unknown-linux-gnu]
 pre-build = [
     "apt update -y && apt install -y unzip",
     "curl -sSLO https://github.com/protocolbuffers/protobuf/releases/download/v22.3/protoc-22.3-linux-x86_64.zip",
-    "unzip protoc-22.3-linux-x86_64.zip -d /usr"
+    "unzip protoc-22.3-linux-x86_64.zip -d /usr",
 ]
 
 [package.metadata.cross.target.x86_64-unknown-linux-musl]
 pre-build = [
     "apt update -y && apt install -y unzip",
     "curl -sSLO https://github.com/protocolbuffers/protobuf/releases/download/v22.3/protoc-22.3-linux-x86_64.zip",
-    "unzip protoc-22.3-linux-x86_64.zip -d /usr"
+    "unzip protoc-22.3-linux-x86_64.zip -d /usr",
 ]

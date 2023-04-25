@@ -4,10 +4,12 @@
 pub struct LogEntry {
     /// Required. The resource name of the log to which this log entry belongs:
     ///
-    ///      "projects/\[PROJECT_ID]/logs/[LOG_ID\]"
-    ///      "organizations/\[ORGANIZATION_ID]/logs/[LOG_ID\]"
-    ///      "billingAccounts/\[BILLING_ACCOUNT_ID]/logs/[LOG_ID\]"
-    ///      "folders/\[FOLDER_ID]/logs/[LOG_ID\]"
+    /// ```text
+    /// "projects/\[PROJECT_ID]/logs/[LOG_ID\]"
+    /// "organizations/\[ORGANIZATION_ID]/logs/[LOG_ID\]"
+    /// "billingAccounts/\[BILLING_ACCOUNT_ID]/logs/[LOG_ID\]"
+    /// "folders/\[FOLDER_ID]/logs/[LOG_ID\]"
+    /// ```
     ///
     /// A project number may be used in place of PROJECT_ID. The project number is
     /// translated to its corresponding PROJECT_ID internally and the `log_name`
@@ -138,8 +140,8 @@ pub mod log_entry {
         /// The following protocol buffer types are supported; user-defined types
         /// are not supported:
         ///
-        ///    "type.googleapis.com/google.cloud.audit.AuditLog"
-        ///    "type.googleapis.com/google.appengine.logging.v1.RequestLog"
+        /// "type.googleapis.com/google.cloud.audit.AuditLog"
+        /// "type.googleapis.com/google.appengine.logging.v1.RequestLog"
         #[prost(message, tag = "2")]
         ProtoPayload(::prost_types::Any),
         /// The log entry payload, represented as a Unicode string (UTF-8).
@@ -230,7 +232,7 @@ pub struct DeleteLogRequest {
     /// `"organizations/123/logs/cloudaudit.googleapis.com%2Factivity"`.
     ///
     /// For more information about log names, see
-    /// \[LogEntry][google.logging.v2.LogEntry\].
+    /// \\[LogEntry\]\[google.logging.v2.LogEntry\\].
     #[prost(string, tag = "1")]
     pub log_name: ::prost::alloc::string::String,
 }
@@ -248,8 +250,10 @@ pub struct WriteLogEntriesRequest {
     ///
     /// `\[LOG_ID\]` must be URL-encoded. For example:
     ///
-    ///      "projects/my-project-id/logs/syslog"
-    ///      "organizations/123/logs/cloudaudit.googleapis.com%2Factivity"
+    /// ```text
+    /// "projects/my-project-id/logs/syslog"
+    /// "organizations/123/logs/cloudaudit.googleapis.com%2Factivity"
+    /// ```
     ///
     /// The permission `logging.logEntries.create` is needed on each project,
     /// organization, billing account, or folder that is receiving new log
@@ -260,17 +264,19 @@ pub struct WriteLogEntriesRequest {
     /// Optional. A default monitored resource object that is assigned to all log
     /// entries in `entries` that do not specify a value for `resource`. Example:
     ///
-    ///      { "type": "gce_instance",
-    ///        "labels": {
-    ///          "zone": "us-central1-a", "instance_id": "00000000000000000000" }}
+    /// ```text
+    /// { "type": "gce_instance",
+    ///    "labels": {
+    ///      "zone": "us-central1-a", "instance_id": "00000000000000000000" }}
+    /// ```
     ///
-    /// See \[LogEntry][google.logging.v2.LogEntry\].
+    /// See \\[LogEntry\]\[google.logging.v2.LogEntry\\].
     #[prost(message, optional, tag = "2")]
     pub resource: ::core::option::Option<super::super::api::MonitoredResource>,
     /// Optional. Default labels that are added to the `labels` field of all log
     /// entries in `entries`. If a log entry already has a label with the same key
     /// as a label in this parameter, then the log entry's label is not changed.
-    /// See \[LogEntry][google.logging.v2.LogEntry\].
+    /// See \\[LogEntry\]\[google.logging.v2.LogEntry\\].
     #[prost(map = "string, string", tag = "3")]
     pub labels: ::std::collections::HashMap<
         ::prost::alloc::string::String,
@@ -281,7 +287,7 @@ pub struct WriteLogEntriesRequest {
     /// `log_name`, `resource`, and `labels` fields are copied into those log
     /// entries in this list that do not include values for their corresponding
     /// fields. For more information, see the
-    /// \[LogEntry][google.logging.v2.LogEntry\] type.
+    /// \\[LogEntry\]\[google.logging.v2.LogEntry\\] type.
     ///
     /// If the `timestamp` or `insert_id` fields are missing in log entries, then
     /// this method supplies the current time or a unique identifier, respectively.
@@ -339,17 +345,17 @@ pub struct ListLogEntriesRequest {
     /// Required. Names of one or more parent resources from which to
     /// retrieve log entries:
     ///
-    /// *  `projects/\[PROJECT_ID\]`
-    /// *  `organizations/\[ORGANIZATION_ID\]`
-    /// *  `billingAccounts/\[BILLING_ACCOUNT_ID\]`
-    /// *  `folders/\[FOLDER_ID\]`
+    /// * `projects/\[PROJECT_ID\]`
+    /// * `organizations/\[ORGANIZATION_ID\]`
+    /// * `billingAccounts/\[BILLING_ACCOUNT_ID\]`
+    /// * `folders/\[FOLDER_ID\]`
     ///
     /// May alternatively be one or more views:
     ///
-    ///   * `projects/\[PROJECT_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
-    ///   * `organizations/\[ORGANIZATION_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
-    ///   * `billingAccounts/\[BILLING_ACCOUNT_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
-    ///   * `folders/\[FOLDER_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
+    /// * `projects/\[PROJECT_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
+    /// * `organizations/\[ORGANIZATION_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
+    /// * `billingAccounts/\[BILLING_ACCOUNT_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
+    /// * `folders/\[FOLDER_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
     ///
     /// Projects listed in the `project_ids` field are added to this list.
     #[prost(string, repeated, tag = "8")]
@@ -443,10 +449,10 @@ pub struct ListMonitoredResourceDescriptorsResponse {
 pub struct ListLogsRequest {
     /// Required. The resource name that owns the logs:
     ///
-    /// *  `projects/\[PROJECT_ID\]`
-    /// *  `organizations/\[ORGANIZATION_ID\]`
-    /// *  `billingAccounts/\[BILLING_ACCOUNT_ID\]`
-    /// *  `folders/\[FOLDER_ID\]`
+    /// * `projects/\[PROJECT_ID\]`
+    /// * `organizations/\[ORGANIZATION_ID\]`
+    /// * `billingAccounts/\[BILLING_ACCOUNT_ID\]`
+    /// * `folders/\[FOLDER_ID\]`
     #[prost(string, tag = "1")]
     pub parent: ::prost::alloc::string::String,
     /// Optional. The maximum number of results to return from this request.
@@ -462,17 +468,17 @@ pub struct ListLogsRequest {
     pub page_token: ::prost::alloc::string::String,
     /// Optional. The resource name that owns the logs:
     ///
-    ///   * `projects/\[PROJECT_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
-    ///   * `organizations/\[ORGANIZATION_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
-    ///   * `billingAccounts/\[BILLING_ACCOUNT_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
-    ///   * `folders/\[FOLDER_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
+    /// * `projects/\[PROJECT_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
+    /// * `organizations/\[ORGANIZATION_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
+    /// * `billingAccounts/\[BILLING_ACCOUNT_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
+    /// * `folders/\[FOLDER_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
     ///
     /// To support legacy queries, it could also be:
     ///
-    /// *  `projects/\[PROJECT_ID\]`
-    /// *  `organizations/\[ORGANIZATION_ID\]`
-    /// *  `billingAccounts/\[BILLING_ACCOUNT_ID\]`
-    /// *  `folders/\[FOLDER_ID\]`
+    /// * `projects/\[PROJECT_ID\]`
+    /// * `organizations/\[ORGANIZATION_ID\]`
+    /// * `billingAccounts/\[BILLING_ACCOUNT_ID\]`
+    /// * `folders/\[FOLDER_ID\]`
     #[prost(string, repeated, tag = "8")]
     pub resource_names: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
@@ -497,17 +503,17 @@ pub struct ListLogsResponse {
 pub struct TailLogEntriesRequest {
     /// Required. Name of a parent resource from which to retrieve log entries:
     ///
-    /// *  `projects/\[PROJECT_ID\]`
-    /// *  `organizations/\[ORGANIZATION_ID\]`
-    /// *  `billingAccounts/\[BILLING_ACCOUNT_ID\]`
-    /// *  `folders/\[FOLDER_ID\]`
+    /// * `projects/\[PROJECT_ID\]`
+    /// * `organizations/\[ORGANIZATION_ID\]`
+    /// * `billingAccounts/\[BILLING_ACCOUNT_ID\]`
+    /// * `folders/\[FOLDER_ID\]`
     ///
     /// May alternatively be one or more views:
     ///
-    ///   * `projects/\[PROJECT_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
-    ///   * `organizations/\[ORGANIZATION_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
-    ///   * `billingAccounts/\[BILLING_ACCOUNT_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
-    ///   * `folders/\[FOLDER_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
+    /// * `projects/\[PROJECT_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
+    /// * `organizations/\[ORGANIZATION_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
+    /// * `billingAccounts/\[BILLING_ACCOUNT_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
+    /// * `folders/\[FOLDER_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]/views/[VIEW_ID\]`
     #[prost(string, repeated, tag = "1")]
     pub resource_names: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
     /// Optional. A filter that chooses which log entries to return.  See [Advanced
@@ -695,7 +701,7 @@ pub mod logging_service_v2_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
-        /// Deletes all the log entries in a log for the _Default Log Bucket. The log
+        /// Deletes all the log entries in a log for the \_Default Log Bucket. The log
         /// reappears if it receives new entries. Log entries written shortly before
         /// the delete operation might not be deleted. Entries received after the
         /// delete operation with a timestamp before the operation will be deleted.
