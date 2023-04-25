@@ -122,6 +122,6 @@ jobs:
       - name: Build Wukong CLI
         uses: actions-rs/cargo@v1
         with:
-          # use-cross: ${{ matrix.job.use-cross }}
+          use-cross: ${{ matrix.job.use-cross }}
           command: build
           args: --locked --features prod --release --target=${{ matrix.job.target }}
