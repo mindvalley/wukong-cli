@@ -42,6 +42,12 @@ pub enum ApplicationSubcommand {
         /// Limiting the number of log entries to return.  
         #[arg(long, default_value_t = 500)]
         limit: i32,
+        /// (allow multiple flags) Logs lines to include.
+        #[arg(long, short)]
+        include: Vec<String>,
+        /// (allow multiple flags) Logs lines to exclude.
+        #[arg(long, short)]
+        exclude: Vec<String>,
     },
 }
 
@@ -89,7 +95,14 @@ impl Application {
                 since,
                 until,
                 limit,
-            } => handle_logs(context, namespace, version, errors, since, until, limit).await,
+                include,
+                exclude,
+            } => {
+                handle_logs(
+                    context, namespace, version, errors, since, until, limit, include, exclude,
+                )
+                .await
+            }
         }
     }
 }
