@@ -18,6 +18,7 @@ impl Display for LogEntry {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "time={} ", self.timestamp.as_ref().unwrap())?;
         write!(f, "level={} ", self.severity().as_str_name())?;
+
         match self.payload.as_ref().unwrap() {
             crate::services::gcloud::google::logging::v2::log_entry::Payload::ProtoPayload(
                 payload,
@@ -51,7 +52,6 @@ impl Display for LogEntry {
                 write!(f, "json_payload={{ {value} }}")?;
             }
         };
-        write!(f, " }}")?;
         writeln!(f)?;
         Ok(())
     }
