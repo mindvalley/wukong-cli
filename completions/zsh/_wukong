@@ -159,6 +159,10 @@ _arguments "${_arguments_options[@]}" \
 '-u+[Show logs lines older than relative duration, e.g 30m, 2h, 2d. Also accept datetime in RFC 3339 format]:UNTIL: ' \
 '--until=[Show logs lines older than relative duration, e.g 30m, 2h, 2d. Also accept datetime in RFC 3339 format]:UNTIL: ' \
 '--limit=[Limiting the number of log entries to return]:LIMIT: ' \
+'*-i+[(allow multiple flags) Logs lines to include]:INCLUDE: ' \
+'*--include=[(allow multiple flags) Logs lines to include]:INCLUDE: ' \
+'*-e+[(allow multiple flags) Logs lines to exclude]:EXCLUDE: ' \
+'*--exclude=[(allow multiple flags) Logs lines to exclude]:EXCLUDE: ' \
 '-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '--errors[Only print out logs line with severity >= ERROR]' \

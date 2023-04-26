@@ -4,53 +4,55 @@ use crate::{
     error::CliError,
     graphql::QueryClientBuilder,
     loader::new_spinner_progress_bar,
-    services::gcloud::{GCloudClient, LogEntries, LogEntriesOptions},
+    services::gcloud::{google::logging::v2::LogEntry, GCloudClient, LogEntriesOptions},
 };
 use aion::*;
 use chrono::{DateTime, Local};
 use log::debug;
 use once_cell::sync::Lazy;
+use owo_colors::OwoColorize;
 use regex::Regex;
 use std::fmt::Display;
 
-impl Display for LogEntries {
+impl Display for LogEntry {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if let Some(entries) = &self.entries {
-            for entry in entries {
-                write!(f, "time={} ", entry.timestamp.as_ref().unwrap())?;
-                write!(f, "level={} ", entry.severity().as_str_name())?;
-                match entry.payload.as_ref().unwrap() {
-                    crate::services::gcloud::google::logging::v2::log_entry::Payload::ProtoPayload(payload) => {
-                        write!(f, "proto_payload={:?}", payload)?;
-                    },
-                    crate::services::gcloud::google::logging::v2::log_entry::Payload::TextPayload(payload) => {
-                        write!(f, "text_payload={:?}", payload)?;
-                    },
-                    crate::services::gcloud::google::logging::v2::log_entry::Payload::JsonPayload(payload) => {
-                        let keys = payload.fields.keys().collect::<Vec<_>>();
-                        let value = keys
-                            .iter()
-                            .filter(|k| payload.fields.get(**k).is_some())
-                            .map(|k| {
-                                format!(
-                                    "{}: {}",
-                                    k,
-                                    display_prost_type_value_kind(
-                                        payload.fields.get(*k).unwrap().kind.clone()
-                                    )
-                                )
-                            })
-                            .collect::<Vec<_>>()
-                            .join(", ");
-
-                        write!(f, "json_payload={{ {value} }}")?;
-                    },
-                };
-                write!(f, " }}")?;
-                writeln!(f)?;
+        write!(f, "time={} ", self.timestamp.as_ref().unwrap())?;
+        write!(f, "level={} ", self.severity().as_str_name())?;
+        match self.payload.as_ref().unwrap() {
+            crate::services::gcloud::google::logging::v2::log_entry::Payload::ProtoPayload(
+                payload,
+            ) => {
+                write!(f, "proto_payload={:?}", payload)?;
             }
-        }
+            crate::services::gcloud::google::logging::v2::log_entry::Payload::TextPayload(
+                payload,
+            ) => {
+                write!(f, "text_payload={:?}", payload)?;
+            }
+            crate::services::gcloud::google::logging::v2::log_entry::Payload::JsonPayload(
+                payload,
+            ) => {
+                let keys = payload.fields.keys().collect::<Vec<_>>();
+                let value = keys
+                    .iter()
+                    .filter(|k| payload.fields.get(**k).is_some())
+                    .map(|k| {
+                        format!(
+                            "{}: {}",
+                            k,
+                            display_prost_type_value_kind(
+                                payload.fields.get(*k).unwrap().kind.clone()
+                            )
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join(", ");
 
+                write!(f, "json_payload={{ {value} }}")?;
+            }
+        };
+        write!(f, " }}")?;
+        writeln!(f)?;
         Ok(())
     }
 }
@@ -116,6 +118,8 @@ pub async fn handle_logs(
     since: &Option<String>,
     until: &Option<String>,
     limit: &i32,
+    include: &Vec<String>,
+    exclude: &Vec<String>,
 ) -> Result<bool, CliError> {
     let auth_progress_bar = new_spinner_progress_bar();
     auth_progress_bar.set_message("Checking if you're authenticated to Google Cloud...");
@@ -178,8 +182,122 @@ pub async fn handle_logs(
 
             progress_bar.finish_and_clear();
 
-            eprintln!("{log}");
+            // do include and exclude filtering
+            let mut log_entries = log.entries.unwrap_or_default();
+
+            if include.is_empty() && exclude.is_empty() {
+                for entry in log_entries {
+                    eprintln!("{}", entry);
+                }
+                return Ok(true);
+            }
+
+            if !exclude.is_empty() {
+                let regexes = exclude
+                    .iter()
+                    .map(|each| Regex::new(&format!(r"(?i){}", each.trim())).unwrap())
+                    .collect::<Vec<_>>();
+
+                log_entries = log_entries
+                    .into_iter()
+                    .filter(|each| {
+                        for regex in &regexes {
+                            if regex.is_match(&each.to_string()) {
+                                return false;
+                            }
+                        }
+                        true
+                    })
+                    .collect::<Vec<_>>();
+            }
+
+            if !include.is_empty() {
+                let regexes = include
+                    .iter()
+                    .map(|each| Regex::new(&format!(r"(?i){}", each.trim())).unwrap())
+                    .collect::<Vec<_>>();
+
+                log_entries = log_entries
+                    .into_iter()
+                    .filter(|each| {
+                        for regex in &regexes {
+                            if regex.is_match(&each.to_string()) {
+                                return true;
+                            }
+                        }
+                        false
+                    })
+                    .collect::<Vec<_>>();
+
+                for each in log_entries {
+                    let mut output_string = each.to_string();
+
+                    let mut matches: Vec<(usize, usize)> = Vec::new();
+                    for regex in &regexes {
+                        for found in regex.find_iter(&output_string.clone()) {
+                            let start = found.start();
+                            let end = found.end();
+
+                            // merge the match if it overlaps with any existing match
+                            // to avoid highlighting issue
+                            let mut is_matched = false;
+                            for m in &mut matches {
+                                if m.0 <= start && m.1 >= end {
+                                    is_matched = true;
+                                    break;
+                                }
+
+                                if m.0 < start && start < m.1 && end > m.1 {
+                                    m.1 = end;
+                                    is_matched = true;
+                                    break;
+                                }
+                                if m.1 > end && end > m.0 && start < m.0 {
+                                    m.0 = start;
+                                    is_matched = true;
+                                    break;
+                                }
+                            }
+
+                            if !is_matched {
+                                matches.push((start, end));
+                            }
+                        }
+                    }
+
+                    // sort the matches so the output will be correct
+                    // since we are adding offset manually
+                    matches.sort_by(|a, b| a.0.cmp(&b.0));
+
+                    let mut count = 0;
+                    for m in matches {
+                        let offset = count * 10; // each color will add 10 bytes
+
+                        output_string.replace_range(
+                            (m.0 + offset)..(m.1 + offset),
+                            &format!(
+                                "{}",
+                                output_string[(m.0 + offset)..(m.1 + offset)]
+                                    .to_string()
+                                    .cyan()
+                            ),
+                        );
+
+                        count += 1;
+                    }
+
+                    eprintln!("{output_string}");
+                }
+
+                return Ok(true);
+            }
+
+            for entry in log_entries {
+                eprintln!("{entry}");
+            }
         }
+    } else {
+        eprintln!("The log is empty.");
     }
 
     Ok(true)

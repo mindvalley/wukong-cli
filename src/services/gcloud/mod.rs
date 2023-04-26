@@ -183,8 +183,10 @@ impl GCloudClient {
 
         let mut service =
             LoggingServiceV2Client::with_interceptor(channel, move |mut req: Request<()>| {
-                req.metadata_mut()
-                    .insert("authorization", header_value.clone());
+                let metadata_map = req.metadata_mut();
+                metadata_map.insert("authorization", header_value.clone());
+                metadata_map.insert("user-agent", "grpc-go/1.14".parse().unwrap());
+
                 Ok(req)
             });
 
