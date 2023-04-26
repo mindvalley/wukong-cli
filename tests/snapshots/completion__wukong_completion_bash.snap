@@ -391,7 +391,7 @@ _wukong() {
             return 0
             ;;
         wukong__application__logs)
-            opts="-s -u -i -e -a -v -q -h --namespace --version --errors --since --until --limit --include --exclude --application --verbose --quiet --help"
+            opts="-s -u -i -e -a -v -q -h --namespace --version --errors --since --until --limit --include --exclude --url-mode --application --verbose --quiet --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0

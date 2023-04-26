@@ -121,6 +121,7 @@ pub async fn handle_logs(
     limit: &i32,
     include: &Vec<String>,
     exclude: &Vec<String>,
+    url_mode: &bool,
 ) -> Result<bool, CliError> {
     let auth_progress_bar = new_spinner_progress_bar();
     auth_progress_bar.set_message("Checking if you're authenticated to Google Cloud...");
@@ -169,6 +170,21 @@ pub async fn handle_logs(
             let resource_names = vec![format!("projects/{}", cluster.google_project_id)];
 
             application_progress_bar.finish_and_clear();
+
+            // url mode only return the url
+            if *url_mode {
+                let url = url::Url::parse(&format!(
+                    "https://console.cloud.google.com/logs/query;query={}",
+                    filter
+                ))
+                .unwrap();
+                eprintln!(
+                    "URL: {}?project={}",
+                    url.to_string(),
+                    cluster.google_project_id
+                );
+                return Ok(true);
+            }
 
             let progress_bar = new_spinner_progress_bar();
             progress_bar.set_message("Fetching log entries ... ");

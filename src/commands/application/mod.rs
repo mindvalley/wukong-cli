@@ -45,6 +45,9 @@ pub enum ApplicationSubcommand {
         /// (allow multiple flags) Logs lines to exclude.
         #[arg(long, short)]
         exclude: Vec<String>,
+        /// Generate the URL to view the logs in browser.
+        #[arg(long)]
+        url_mode: bool,
     },
 }
 
@@ -93,9 +96,11 @@ impl Application {
                 limit,
                 include,
                 exclude,
+                url_mode,
             } => {
                 handle_logs(
                     context, namespace, version, errors, since, until, limit, include, exclude,
+                    url_mode,
                 )
                 .await
             }
