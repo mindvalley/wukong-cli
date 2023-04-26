@@ -48,9 +48,6 @@ _wukong() {
             wukong__application,logs)
                 cmd="wukong__application__logs"
                 ;;
-            wukong__application,logs-demo)
-                cmd="wukong__application__logs__demo"
-                ;;
             wukong__application__help,help)
                 cmd="wukong__application__help__help"
                 ;;
@@ -59,9 +56,6 @@ _wukong() {
                 ;;
             wukong__application__help,logs)
                 cmd="wukong__application__help__logs"
-                ;;
-            wukong__application__help,logs-demo)
-                cmd="wukong__application__help__logs__demo"
                 ;;
             wukong__config,get)
                 cmd="wukong__config__get"
@@ -198,9 +192,6 @@ _wukong() {
             wukong__help__application,logs)
                 cmd="wukong__help__application__logs"
                 ;;
-            wukong__help__application,logs-demo)
-                cmd="wukong__help__application__logs__demo"
-                ;;
             wukong__help__config,get)
                 cmd="wukong__help__config__get"
                 ;;
@@ -296,7 +287,7 @@ _wukong() {
             return 0
             ;;
         wukong__application)
-            opts="-a -v -q -h --application --verbose --quiet --help info logs-demo logs help"
+            opts="-a -v -q -h --application --verbose --quiet --help info logs help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -318,7 +309,7 @@ _wukong() {
             return 0
             ;;
         wukong__application__help)
-            opts="info logs-demo logs help"
+            opts="info logs help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -360,20 +351,6 @@ _wukong() {
             return 0
             ;;
         wukong__application__help__logs)
-            opts=""
-            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
-                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
-                return 0
-            fi
-            case "${prev}" in
-                *)
-                    COMPREPLY=()
-                    ;;
-            esac
-            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
-            return 0
-            ;;
-        wukong__application__help__logs__demo)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -460,28 +437,6 @@ _wukong() {
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0
                     ;;
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                *)
-                    COMPREPLY=()
-                    ;;
-            esac
-            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
-            return 0
-            ;;
-        wukong__application__logs__demo)
-            opts="-a -v -q -h --application --verbose --quiet --help"
-            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
-                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
-                return 0
-            fi
-            case "${prev}" in
                 --application)
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0
@@ -1184,7 +1139,7 @@ _wukong() {
             return 0
             ;;
         wukong__help__application)
-            opts="info logs-demo logs"
+            opts="info logs"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -1212,20 +1167,6 @@ _wukong() {
             return 0
             ;;
         wukong__help__application__logs)
-            opts=""
-            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
-                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
-                return 0
-            fi
-            case "${prev}" in
-                *)
-                    COMPREPLY=()
-                    ;;
-            esac
-            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
-            return 0
-            ;;
-        wukong__help__application__logs__demo)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )

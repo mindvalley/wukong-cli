@@ -1,8 +1,7 @@
 pub mod info;
 mod logs;
-mod logs_demo;
 
-use self::{logs::handle_logs, logs_demo::handle_logs_demo};
+use self::logs::handle_logs;
 use super::{Context, State};
 use crate::error::CliError;
 use clap::{command, Args, Subcommand, ValueEnum};
@@ -18,8 +17,6 @@ pub struct Application {
 pub enum ApplicationSubcommand {
     /// Show the application’s relevant informations
     Info,
-    /// Demo gcloud log
-    LogsDemo,
     /// Getting the logs of the applications from the Google Cloud Logging.
     Logs {
         /// (optional) The namespace to deploy to.
@@ -87,7 +84,6 @@ impl Application {
 
         match &self.subcommand {
             ApplicationSubcommand::Info => handle_info(context).await,
-            ApplicationSubcommand::LogsDemo => handle_logs_demo(context).await,
             ApplicationSubcommand::Logs {
                 namespace,
                 version,
