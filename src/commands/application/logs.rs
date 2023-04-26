@@ -8,7 +8,7 @@ use crate::{
 };
 use aion::*;
 use chrono::{DateTime, Local};
-use log::debug;
+use log::{debug, trace};
 use once_cell::sync::Lazy;
 use owo_colors::OwoColorize;
 use regex::Regex;
@@ -167,8 +167,10 @@ pub async fn handle_logs(
                 show_error_and_above,
             )?;
             let resource_names = vec![format!("projects/{}", cluster.google_project_id)];
-
             application_progress_bar.finish_and_clear();
+
+            trace!("filter: {}", filter);
+            trace!("resource_names: {:?}", resource_names);
 
             let progress_bar = new_spinner_progress_bar();
             progress_bar.set_message("Fetching log entries ... ");
