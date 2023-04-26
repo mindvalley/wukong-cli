@@ -110,6 +110,7 @@ fn display_prost_type_value_kind(kind: Option<prost_types::value::Kind>) -> Stri
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn handle_logs(
     context: Context,
     namespace: &ApplicationNamespace,
@@ -158,7 +159,7 @@ pub async fn handle_logs(
     if let Some(application_data) = application_resp {
         if let Some(cluster) = application_data.k8s_cluster {
             let filter = generate_filter(
-                &version,
+                version,
                 &cluster.cluster_name,
                 &cluster.k8s_namespace,
                 since,
@@ -270,9 +271,8 @@ pub async fn handle_logs(
                     // since we are adding offset manually
                     matches.sort_by(|a, b| a.0.cmp(&b.0));
 
-                    let mut count = 0;
-                    for m in matches {
-                        let offset = count * 10; // each color will add 10 bytes
+                    for (index, m) in matches.iter().enumerate() {
+                        let offset = index * 10; // each color will add 10 bytes
 
                         output_string.replace_range(
                             (m.0 + offset)..(m.1 + offset),
@@ -283,8 +283,6 @@ pub async fn handle_logs(
                                     .cyan()
                             ),
                         );
-
-                        count += 1;
                     }
 
                     eprintln!("{output_string}");
