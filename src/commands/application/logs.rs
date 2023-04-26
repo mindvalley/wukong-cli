@@ -147,8 +147,8 @@ pub async fn handle_logs(
     let application_resp = client
         .fetch_application_with_k8s_cluster(
             &context.state.application.clone().unwrap(),
-            &namespace.to_string().to_lowercase(),
-            &version.to_string().to_lowercase(),
+            &namespace.to_string(),
+            &version.to_string(),
         ) // SAFERY: the application is checked on the caller so it will always be Some(x) here
         .await?
         .data
@@ -158,6 +158,7 @@ pub async fn handle_logs(
     if let Some(application_data) = application_resp {
         if let Some(cluster) = application_data.k8s_cluster {
             let filter = generate_filter(
+                &version,
                 &cluster.cluster_name,
                 &cluster.k8s_namespace,
                 since,
@@ -308,6 +309,7 @@ static TIMESTAMP_HOUR_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\d+h$").un
 static TIMESTAMP_MINUTE_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\d+m$").unwrap());
 
 fn generate_filter(
+    version: &ApplicationVersion,
     cluster_name: &str,
     namespace_name: &str,
     since: &Option<String>,
@@ -341,6 +343,9 @@ fn generate_filter(
 
         filter.push_str("severity>=ERROR");
     }
+
+    filter.push_str(" AND ");
+    filter.push_str(&format!("resource.labels.pod_name:{}", version.to_string()));
 
     Ok(filter)
 }

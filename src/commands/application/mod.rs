@@ -57,8 +57,8 @@ pub enum ApplicationVersion {
 impl ToString for ApplicationVersion {
     fn to_string(&self) -> String {
         match self {
-            ApplicationVersion::Blue => "Blue".to_string(),
-            ApplicationVersion::Green => "Green".to_string(),
+            ApplicationVersion::Blue => "blue".to_string(),
+            ApplicationVersion::Green => "green".to_string(),
         }
     }
 }
@@ -72,8 +72,8 @@ pub enum ApplicationNamespace {
 impl ToString for ApplicationNamespace {
     fn to_string(&self) -> String {
         match self {
-            ApplicationNamespace::Prod => "Prod".to_string(),
-            ApplicationNamespace::Staging => "Staging".to_string(),
+            ApplicationNamespace::Prod => "prod".to_string(),
+            ApplicationNamespace::Staging => "staging".to_string(),
         }
     }
 }
