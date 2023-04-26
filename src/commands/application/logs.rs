@@ -187,7 +187,7 @@ pub async fn handle_logs(
 
             if include.is_empty() && exclude.is_empty() {
                 for entry in log_entries {
-                    println!("{}", entry);
+                    eprintln!("{}", entry);
                 }
                 return Ok(true);
             }
@@ -239,6 +239,7 @@ pub async fn handle_logs(
                             let end = found.end();
 
                             // merge the match if it overlaps with any existing match
+                            // to avoid highlighting issue
                             let mut is_matched = false;
                             for m in &mut matches {
                                 if m.0 <= start && m.1 >= end {
