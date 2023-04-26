@@ -234,8 +234,6 @@ pub async fn handle_logs(
 
                     let mut matches: Vec<(usize, usize)> = Vec::new();
                     for regex in &regexes {
-                        // let regex = Regex::new(&format!(r"(?i){}", inc.trim())).unwrap();
-
                         for found in regex.find_iter(&output_string.clone()) {
                             let start = found.start();
                             let end = found.end();
