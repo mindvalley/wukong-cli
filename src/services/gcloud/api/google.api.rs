@@ -521,7 +521,7 @@ pub struct Publishing {
     /// long-running operation pattern.
     #[prost(message, repeated, tag = "2")]
     pub method_settings: ::prost::alloc::vec::Vec<MethodSettings>,
-    /// Link to a place that API users can report issues.  Example:
+    /// Link to a *public* URI where users can report issues.  Example:
     /// <https://issuetracker.google.com/issues/new?component=190865&template=1161103>
     #[prost(string, tag = "101")]
     pub new_issue_uri: ::prost::alloc::string::String,
@@ -764,6 +764,12 @@ pub enum ClientLibraryOrganization {
     Photos = 3,
     /// Street View Org.
     StreetView = 4,
+    /// Shopping Org.
+    Shopping = 5,
+    /// Geo Org.
+    Geo = 6,
+    /// Generative AI - <https://developers.generativeai.google>
+    GenerativeAi = 7,
 }
 impl ClientLibraryOrganization {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -779,6 +785,9 @@ impl ClientLibraryOrganization {
             ClientLibraryOrganization::Ads => "ADS",
             ClientLibraryOrganization::Photos => "PHOTOS",
             ClientLibraryOrganization::StreetView => "STREET_VIEW",
+            ClientLibraryOrganization::Shopping => "SHOPPING",
+            ClientLibraryOrganization::Geo => "GEO",
+            ClientLibraryOrganization::GenerativeAi => "GENERATIVE_AI",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
@@ -789,6 +798,9 @@ impl ClientLibraryOrganization {
             "ADS" => Some(Self::Ads),
             "PHOTOS" => Some(Self::Photos),
             "STREET_VIEW" => Some(Self::StreetView),
+            "SHOPPING" => Some(Self::Shopping),
+            "GEO" => Some(Self::Geo),
+            "GENERATIVE_AI" => Some(Self::GenerativeAi),
             _ => None,
         }
     }
