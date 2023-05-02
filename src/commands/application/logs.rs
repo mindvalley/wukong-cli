@@ -169,7 +169,7 @@ pub async fn handle_logs(
             )?;
             let resource_names = vec![format!("projects/{}", cluster.google_project_id)];
             application_progress_bar.finish_and_clear();
-            
+
             trace!("filter: {}", filter);
             trace!("resource_names: {:?}", resource_names);
 
@@ -181,7 +181,7 @@ pub async fn handle_logs(
                 ))
                 .unwrap();
                 eprintln!(
-                    "URL: {}?project={}",
+                    "Copy and paste the 🔗 below to your browser:\n{}?project={}",
                     url.to_string(),
                     cluster.google_project_id
                 );
