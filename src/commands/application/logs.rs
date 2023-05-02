@@ -126,6 +126,7 @@ pub async fn handle_logs(
     auth_progress_bar.set_message("Checking if you're authenticated to Google Cloud...");
 
     let gcloud_client = GCloudClient::new().await;
+    gcloud_client.get_tail_log_entries().await?;
 
     auth_progress_bar.finish_and_clear();
 
@@ -168,6 +169,8 @@ pub async fn handle_logs(
             )?;
             let resource_names = vec![format!("projects/{}", cluster.google_project_id)];
             application_progress_bar.finish_and_clear();
+
+            println!("resource_names: {:?}", resource_names);
 
             trace!("filter: {}", filter);
             trace!("resource_names: {:?}", resource_names);

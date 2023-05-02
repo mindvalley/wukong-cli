@@ -75,17 +75,24 @@ similar = { version = "2.2.1", features = ["inline"] }
 # Google cloud client
 google-logging2 = "5.0.2"
 prost = "0.11.8"
-tonic = { version = "0.9.1", features = ["tls", "tls-webpki-roots"] }
+# tonic = { version = "0.9.1", features = ["tls", "tls-webpki-roots"] }
+tonic = { git = "https://github.com/hyperium/tonic.git", branch = "master", features = [
+    "tls",
+    "tls-webpki-roots",
+] }
 prost-types = "0.11.8"
 yup-oauth2 = "8.1.1"
 hyper = "0.14.25"
 hyper-rustls = { version = "0.24.0", features = ["http2"] }
+tokio-stream = "0.1.14"
+futures = "0.3.28"
 
 [dependencies.tree-sitter-elixir]
 git = "https://github.com/elixir-lang/tree-sitter-elixir"
 
 [build-dependencies]
-tonic-build = { version = "0.9.1", features = ["cleanup-markdown"] }
+# tonic-build = { version = "0.9.1", features = ["cleanup-markdown"] }
+tonic-build = { git = "https://github.com/hyperium/tonic.git", branch = "master" }
 
 [dev-dependencies]
 httpmock = "0.6.7"
