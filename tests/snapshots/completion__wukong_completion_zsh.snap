@@ -146,6 +146,7 @@ _arguments "${_arguments_options[@]}" \
 '-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '--errors[Only print out logs line with severity >= ERROR]' \
+'--url-mode[Generate the URL to view the logs in browser]' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
