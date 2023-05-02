@@ -182,8 +182,7 @@ pub async fn handle_logs(
                 .unwrap();
                 eprintln!(
                     "Copy and paste the 🔗 below to your browser:\n{}?project={}",
-                    url.to_string(),
-                    cluster.google_project_id
+                    url, cluster.google_project_id
                 );
                 return Ok(true);
             }
