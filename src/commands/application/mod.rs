@@ -1,5 +1,6 @@
 pub mod info;
 mod logs;
+pub mod instances;
 
 use self::logs::handle_logs;
 use super::{Context, State};
@@ -49,6 +50,8 @@ pub enum ApplicationSubcommand {
         #[arg(long)]
         url_mode: bool,
     },
+    /// Listing the currently running Elixir instances, normally under a GKE Pod.
+    Instances(instances::Instances),
 }
 
 #[derive(Debug, ValueEnum, Clone)]
@@ -104,6 +107,7 @@ impl Application {
                 )
                 .await
             }
+            ApplicationSubcommand::Instances(instances) => instances.handle_command().await,
         }
     }
 }
