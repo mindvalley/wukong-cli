@@ -1,10 +1,11 @@
 use crate::error::CliError;
-use clap::{command, Args, Subcommand};
+use clap::{command, Args, Subcommand, ValueEnum};
 use info::handle_info;
 
 use super::{Context, State};
 
 pub mod info;
+pub mod instances;
 
 #[derive(Debug, Args)]
 pub struct Application {
@@ -16,6 +17,23 @@ pub struct Application {
 pub enum ApplicationSubcommand {
     /// Show the application’s relevant informations
     Info,
+    /// Listing the currently running Elixir instances, normally under a GKE Pod.
+    Instances(instances::Instances),
+}
+
+#[derive(Debug, ValueEnum, Clone)]
+pub enum ApplicationNamespace {
+    Prod,
+    Staging,
+}
+
+impl ToString for ApplicationNamespace {
+    fn to_string(&self) -> String {
+        match self {
+            ApplicationNamespace::Prod => "prod".to_string(),
+            ApplicationNamespace::Staging => "staging".to_string(),
+        }
+    }
 }
 
 impl Application {
@@ -24,6 +42,7 @@ impl Application {
 
         match &self.subcommand {
             ApplicationSubcommand::Info => handle_info(context).await,
+            ApplicationSubcommand::Instances(instances) => instances.handle_command().await,
         }
     }
 }
