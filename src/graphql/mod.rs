@@ -1,6 +1,7 @@
 pub mod application;
 pub mod changelog;
 pub mod deployment;
+pub mod kubernetes;
 pub mod pipeline;
 
 use self::{
@@ -13,6 +14,7 @@ use self::{
         cd_pipeline_for_rollback_query, cd_pipeline_query, cd_pipelines_query, execute_cd_pipeline,
         CdPipelineForRollbackQuery, CdPipelineQuery, CdPipelinesQuery, ExecuteCdPipeline,
     },
+    kubernetes::{kubernetes_pods_query, KubernetesPodsQuery},
     pipeline::{
         ci_status_query, multi_branch_pipeline_query, pipeline_query, pipelines_query,
         CiStatusQuery, MultiBranchPipelineQuery, PipelineQuery, PipelinesQuery,
@@ -288,6 +290,14 @@ impl QueryClient {
         build_artifact_name: &str,
     ) -> Result<Response<changelogs_query::ResponseData>, APIError> {
         ChangelogsQuery::fetch(self, application, namespace, version, build_artifact_name).await
+    }
+
+    #[wukong_telemetry(api_event = "fetch_kubernetes_pods")]
+    pub async fn fetch_kubernetes_pods(
+        &self,
+        namespace: &str,
+    ) -> Result<Response<kubernetes_pods_query::ResponseData>, APIError> {
+        KubernetesPodsQuery::fetch(self, namespace).await
     }
 }
 

@@ -107,7 +107,7 @@ impl Application {
                 )
                 .await
             }
-            ApplicationSubcommand::Instances(instances) => instances.handle_command().await,
+            ApplicationSubcommand::Instances(instances) => instances.handle_command(context).await,
         }
     }
 }
