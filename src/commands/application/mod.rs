@@ -42,7 +42,7 @@ impl Application {
 
         match &self.subcommand {
             ApplicationSubcommand::Info => handle_info(context).await,
-            ApplicationSubcommand::Instances(instances) => instances.handle_command().await,
+            ApplicationSubcommand::Instances(instances) => instances.handle_command(context).await,
         }
     }
 }

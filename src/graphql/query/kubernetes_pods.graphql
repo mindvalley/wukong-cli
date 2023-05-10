@@ -1,0 +1,6 @@
+query KubernetesPodsQuery($namespace: String!) {
+  kubernetesPods(namespace: $namespace) {
+    name
+    hostIp
+  }
+}
