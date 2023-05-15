@@ -214,15 +214,13 @@ mod test {
         another_dev_config_file.touch().unwrap();
 
         let files = get_dev_config_files(&temp.to_path_buf());
+        let files_names = files
+            .iter()
+            .map(|f| f.to_string_lossy())
+            .collect::<Vec<_>>();
         assert_eq!(files.len(), 2);
-        assert_eq!(
-            files[0].to_string_lossy(),
-            another_dev_config_file.path().to_string_lossy()
-        );
-        assert_eq!(
-            files[1].to_string_lossy(),
-            dev_config_file.path().to_string_lossy()
-        );
+        assert!(files_names.contains(&dev_config_file.path().to_string_lossy()));
+        assert!(files_names.contains(&another_dev_config_file.path().to_string_lossy()));
 
         temp.close().unwrap();
     }

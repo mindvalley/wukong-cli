@@ -8,6 +8,7 @@ mod loader;
 mod logger;
 pub mod output;
 pub mod services {
+    pub mod gcloud;
     pub mod vault;
 }
 mod telemetry;

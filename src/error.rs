@@ -9,6 +9,14 @@ pub enum CliError {
     Io(#[from] ::std::io::Error),
     #[error(transparent)]
     Base64(#[from] base64::DecodeError),
+    #[error("Error parsing \"{value}\"")]
+    ChronoParseError {
+        value: String,
+        #[source]
+        source: chrono::ParseError,
+    },
+    #[error(transparent)]
+    ParseIntError(#[from] std::num::ParseIntError),
     #[error(transparent)]
     ConfigError(#[from] ConfigError),
     #[error("Failed to discover OpenID Provider")]
@@ -25,30 +33,8 @@ pub enum CliError {
     VaultError(#[from] VaultError),
     #[error(transparent)]
     DevConfigError(#[from] DevConfigError),
-}
-
-#[derive(Debug, ThisError)]
-pub enum VaultError {
     #[error(transparent)]
-    ReqwestError(#[from] reqwest::Error),
-    #[error("API Response Error: {message}")]
-    ResponseError { code: String, message: String },
-    #[error("Invalid credentials. Please try again.")]
-    AuthenticationFailed,
-    #[error("You are un-initialised.")]
-    UnInitialised,
-    #[error(transparent)]
-    Io(#[from] ::std::io::Error),
-    #[error("Secret not found.")]
-    SecretNotFound,
-    #[error("API token not found.")]
-    ApiTokenNotFound,
-    #[error("Invalid API token.")]
-    ApiTokenInvalid,
-    #[error("Permission denied.")]
-    PermissionDenied,
-    #[error(transparent)]
-    ConfigError(#[from] ConfigError),
+    GCloudError(#[from] GCloudError),
 }
 
 #[derive(Debug, ThisError)]
@@ -114,6 +100,40 @@ pub enum DeploymentError {
         version: String,
         application: String,
     },
+}
+
+// Vault Service Error
+#[derive(Debug, ThisError)]
+pub enum VaultError {
+    #[error(transparent)]
+    ReqwestError(#[from] reqwest::Error),
+    #[error("API Response Error: {message}")]
+    ResponseError { code: String, message: String },
+    #[error("Invalid credentials. Please try again.")]
+    AuthenticationFailed,
+    #[error("You are un-initialised.")]
+    UnInitialised,
+    #[error(transparent)]
+    Io(#[from] ::std::io::Error),
+    #[error("Secret not found.")]
+    SecretNotFound,
+    #[error("API token not found.")]
+    ApiTokenNotFound,
+    #[error("Invalid API token.")]
+    ApiTokenInvalid,
+    #[error("Permission denied.")]
+    PermissionDenied,
+    #[error(transparent)]
+    ConfigError(#[from] ConfigError),
+}
+
+// GCloud Service Error
+#[derive(Debug, ThisError)]
+pub enum GCloudError {
+    #[error(transparent)]
+    Io(#[from] ::std::io::Error),
+    #[error(transparent)]
+    GoogleLogging2Error(#[from] google_logging2::Error),
 }
 
 impl CliError {
