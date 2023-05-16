@@ -27,8 +27,8 @@ impl KubernetesPodsQuery {
             .call_api::<Self>(variables, |_, error| {
                 if error.message == "Unauthorized" {
                     return Err(APIError::ResponseError {
-                        code: error.message,
-                        message: format!("Unauthorized"),
+                        code: error.message.clone(),
+                        message: error.message,
                     });
                 }
 
