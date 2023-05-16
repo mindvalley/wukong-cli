@@ -110,24 +110,6 @@ refresh_token = "refresh_token"
 fn test_wukong_application_instances_list_failed_if_not_authorized() {
     let server = MockServer::start();
 
-    let kubernetes_pods_api_resp = r#"
-{
-  "data": {
-    "kubernetesPods": [
-      {
-        "hostIp": "10.0.128.11",
-        "name": "the-blue-1",
-        "ready": true
-      },
-      {
-        "hostIp": null,
-        "name": "the-blue-2",
-        "ready": false
-      }
-    ]
-  }
-}"#;
-
     let is_authorized_api_resp = r#"
 {
   "data": {
@@ -140,12 +122,6 @@ fn test_wukong_application_instances_list_failed_if_not_authorized() {
         then.status(200)
             .header("content-type", "application/json; charset=UTF-8")
             .body(is_authorized_api_resp);
-    });
-    let kubernetes_pods_mock = server.mock(|when, then| {
-        when.method(POST).path("/").body_contains("kubernetesPods");
-        then.status(200)
-            .header("content-type", "application/json; charset=UTF-8")
-            .body(kubernetes_pods_api_resp);
     });
 
     let temp = assert_fs::TempDir::new().unwrap();
@@ -189,7 +165,6 @@ refresh_token = "refresh_token"
     insta::assert_snapshot!(std::str::from_utf8(&output.stderr).unwrap());
 
     is_authorized_mock.assert();
-    kubernetes_pods_mock.assert();
 
     temp.close().unwrap();
 }
