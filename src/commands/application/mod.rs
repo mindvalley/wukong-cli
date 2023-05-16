@@ -50,7 +50,7 @@ pub enum ApplicationSubcommand {
         #[arg(long)]
         url_mode: bool,
     },
-    /// Listing the currently running Elixir instances, normally under a GKE Pod.
+    /// This command group contains the commands to interact with an application’s instances
     Instances(instances::Instances),
 }
 
