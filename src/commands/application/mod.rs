@@ -84,21 +84,6 @@ impl ToString for ApplicationNamespace {
     }
 }
 
-#[derive(Debug, ValueEnum, Clone)]
-pub enum ApplicationVersion {
-    Green,
-    Blue,
-}
-
-impl ToString for ApplicationVersion {
-    fn to_string(&self) -> String {
-        match self {
-            ApplicationVersion::Green => "green".to_string(),
-            ApplicationVersion::Blue => "blue".to_string(),
-        }
-    }
-}
-
 impl Application {
     pub async fn handle_command(&self, state: State) -> Result<bool, CliError> {
         let context = Context::from_state(state).await?;
