@@ -1,12 +1,13 @@
 ---
-source: tests/application.rs
+source: tests/application_instances.rs
 expression: "std::str::from_utf8(&output.stdout).unwrap()"
 ---
-This command group contains the commands to interact with an application’s configurations
+Listing the currently running Elixir instances, normally under a GKE Pod
 
-Usage: wukong application [OPTIONS] <COMMAND>
+Usage: wukong application instances [OPTIONS] <COMMAND>
 
 Commands:
+  connect  Start the interactive session to connect to the remote Elixir instance
   info  Show the application’s relevant informations
   logs  Getting the logs of the applications from the Google Cloud Logging
   help  Print this message or the help of the given subcommand(s)

@@ -1,0 +1,13 @@
+---
+source: tests/application_instances.rs
+expression: "std::str::from_utf8(&output.stdout).unwrap()"
+---
+┌───────────────┬─────────────┬────────────────┐
+│ INSTANCE-NAME │ INSTANCE-IP │ INSTANCE-READY │
+├───────────────┼─────────────┼────────────────┤
+│ the-blue-1    │ 10.0.128.11 │ true           │
+├───────────────┼─────────────┼────────────────┤
+│ the-blue-2    │             │ false          │
+└───────────────┴─────────────┴────────────────┘
+
+
