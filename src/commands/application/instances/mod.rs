@@ -1,11 +1,13 @@
+use self::{connect::handle_connect, list::handle_list};
 use crate::{
     commands::{application::ApplicationNamespace, Context},
     error::CliError,
 };
 use clap::{Args, Subcommand};
 
-use self::list::handle_list;
+use super::ApplicationVersion;
 
+mod connect;
 mod list;
 
 #[derive(Debug, Args)]
@@ -23,6 +25,10 @@ pub enum InstancesSubcommand {
         /// (optional) The namespace to list the running instances.
         #[arg(long, value_enum, default_value_t=ApplicationNamespace::Prod)]
         namespace: ApplicationNamespace,
+
+        /// (optional) The version of the application to filter the returning running instances.
+        #[arg(long, value_enum, default_value_t=ApplicationVersion::Green)]
+        version: ApplicationVersion,
     },
     /// Start the interactive session to connect to the remote Elixir instance.
     ///
@@ -41,10 +47,10 @@ pub enum InstancesSubcommand {
 impl Instances {
     pub async fn handle_command(&self, context: Context) -> Result<bool, CliError> {
         match &self.subcommand {
-            InstancesSubcommand::List { namespace } => {
-                handle_list(context, &namespace.to_string()).await
+            InstancesSubcommand::List { namespace, version } => {
+                handle_list(context, &namespace.to_string(), &version.to_string()).await
             }
-            InstancesSubcommand::Connect { name } => todo!(),
+            InstancesSubcommand::Connect { name } => handle_connect(context, name).await,
         }
     }
 }

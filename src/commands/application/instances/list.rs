@@ -1,13 +1,12 @@
 use crate::{
     commands::Context,
     error::CliError,
-    graphql::QueryClientBuilder,
+    graphql::{QueryClient, QueryClientBuilder},
     loader::new_spinner_progress_bar,
     output::{colored_println, table::TableOutput},
 };
 use serde::{Deserialize, Serialize};
 use tabled::Tabled;
-use tokio::time::sleep;
 
 #[derive(Tabled, Serialize, Deserialize, Debug)]
 struct Instance {
@@ -15,25 +14,17 @@ struct Instance {
     name: String,
     #[tabled(rename = "INSTANCE-IP")]
     ip: String,
+    #[tabled(rename = "INSTANCE-READY")]
+    ready: bool,
 }
 
-pub async fn handle_list(context: Context, namespace: &str) -> Result<bool, CliError> {
+pub async fn handle_list(
+    context: Context,
+    namespace: &str,
+    version: &str,
+) -> Result<bool, CliError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Checking your permission to connect to the remote instance...");
-    if has_permission().await {
-        progress_bar.finish_and_clear();
-        eprintln!("Checking your permission to connect to the remote instance...✅");
-    } else {
-        progress_bar.finish_and_clear();
-        eprintln!("You don't have permission to connect to this instance.");
-        eprintln!("Please check with your team manager to get approval first.");
-        todo!();
-    }
-
-    let fetching_progress_bar = new_spinner_progress_bar();
-    fetching_progress_bar.set_message(
-        "Listing running instances of the application mv-wukong-ci-mock on namespace production...",
-    );
 
     // Calling API ...
     let client = QueryClientBuilder::default()
@@ -48,8 +39,26 @@ pub async fn handle_list(context: Context, namespace: &str) -> Result<bool, CliE
         .with_api_url(context.config.core.wukong_api_url)
         .build()?;
 
+    let application = &context.config.core.application;
+
+    if has_permission(&client, application, namespace, version).await? {
+        progress_bar.finish_and_clear();
+        eprintln!("Checking your permission to connect to the remote instance...✅");
+    } else {
+        progress_bar.finish_and_clear();
+        eprintln!("You don't have permission to connect to this instance.");
+        eprintln!("Please check with your team manager to get approval first.");
+
+        return Ok(false);
+    }
+
+    let fetching_progress_bar = new_spinner_progress_bar();
+    fetching_progress_bar.set_message(
+        "Listing running instances of the application mv-wukong-ci-mock on namespace production...",
+    );
+
     let k8s_pods = client
-        .fetch_kubernetes_pods(namespace)
+        .fetch_kubernetes_pods(application, namespace, version)
         .await?
         .data
         .unwrap()
@@ -59,7 +68,8 @@ pub async fn handle_list(context: Context, namespace: &str) -> Result<bool, CliE
         .into_iter()
         .map(|pod| Instance {
             name: pod.name,
-            ip: pod.host_ip,
+            ip: pod.host_ip.unwrap_or_default(),
+            ready: pod.ready,
         })
         .collect();
 
@@ -77,21 +87,16 @@ pub async fn handle_list(context: Context, namespace: &str) -> Result<bool, CliE
     Ok(true)
 }
 
-async fn has_permission() -> bool {
-    sleep(std::time::Duration::from_secs(2)).await;
-    true
-}
-
-async fn fetch_instances() -> Result<Vec<Instance>, CliError> {
-    sleep(std::time::Duration::from_secs(2)).await;
-    Ok(vec![
-        Instance {
-            name: "mv-wukong-ci-mock-blue-12c9d447c2-aaaa".to_string(),
-            ip: "12.1.2.111".to_string(),
-        },
-        Instance {
-            name: "mv-wukong-ci-mock-green-72bdd799bf-bbbb".to_string(),
-            ip: "12.1.3.112".to_string(),
-        },
-    ])
+async fn has_permission(
+    client: &QueryClient,
+    application: &str,
+    namespace: &str,
+    version: &str,
+) -> Result<bool, CliError> {
+    Ok(client
+        .fetch_is_authorized(application, namespace, version)
+        .await?
+        .data
+        .unwrap()
+        .is_authorized)
 }

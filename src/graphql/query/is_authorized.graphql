@@ -1,15 +1,11 @@
-query KubernetesPodsQuery(
+query IsAuthorizedQuery(
   $application: String!
   $namespace: String!
   $version: String!
 ) {
-  kubernetesPods(
+  isAuthorized(
     application: $application
     namespace: $namespace
     version: $version
-  ) {
-    name
-    hostIp
-    ready
-  }
+  )
 }

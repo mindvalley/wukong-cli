@@ -11,7 +11,9 @@ use self::{
         cd_pipeline_for_rollback_query, cd_pipeline_query, cd_pipelines_query, execute_cd_pipeline,
         CdPipelineForRollbackQuery, CdPipelineQuery, CdPipelinesQuery, ExecuteCdPipeline,
     },
-    kubernetes::{kubernetes_pods_query, KubernetesPodsQuery},
+    kubernetes::{
+        is_authorized_query, kubernetes_pods_query, IsAuthorizedQuery, KubernetesPodsQuery,
+    },
     pipeline::{
         ci_status_query, multi_branch_pipeline_query, pipeline_query, pipelines_query,
         CiStatusQuery, MultiBranchPipelineQuery, PipelineQuery, PipelinesQuery,
@@ -282,9 +284,21 @@ impl QueryClient {
     #[wukong_telemetry(api_event = "fetch_kubernetes_pods")]
     pub async fn fetch_kubernetes_pods(
         &self,
+        application: &str,
         namespace: &str,
+        version: &str,
     ) -> Result<Response<kubernetes_pods_query::ResponseData>, APIError> {
-        KubernetesPodsQuery::fetch(self, namespace).await
+        KubernetesPodsQuery::fetch(self, application, namespace, version).await
+    }
+
+    #[wukong_telemetry(api_event = "fetch_is_authorized")]
+    pub async fn fetch_is_authorized(
+        &self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<Response<is_authorized_query::ResponseData>, APIError> {
+        IsAuthorizedQuery::fetch(self, application, namespace, version).await
     }
 }
 
