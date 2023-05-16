@@ -17,7 +17,7 @@ pub struct Application {
 pub enum ApplicationSubcommand {
     /// Show the application’s relevant informations
     Info,
-    /// Listing the currently running Elixir instances, normally under a GKE Pod.
+    /// This command group contains the commands to interact with an application’s instances
     Instances(instances::Instances),
 }
 
