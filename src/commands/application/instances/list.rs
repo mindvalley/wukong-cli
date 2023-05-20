@@ -67,7 +67,7 @@ pub async fn handle_list(
     let instances: Vec<Instance> = k8s_pods
         .into_iter()
         .map(|pod| Instance {
-            name: pod.name,
+            name: format!("{}@{}/{}", version, namespace, pod.name),
             ip: pod.host_ip.unwrap_or_default(),
             ready: pod.ready,
         })
@@ -75,7 +75,10 @@ pub async fn handle_list(
 
     fetching_progress_bar.finish_and_clear();
 
-    eprintln!("Listing running instances of the application mv-wukong-ci-mock on namespace production...✅");
+    eprintln!(
+        "Listing running instances of the application {} on namespace production...✅",
+        application
+    );
     let instances_table = TableOutput {
         title: None,
         header: None,
