@@ -15,7 +15,8 @@ use self::{
         CdPipelineForRollbackQuery, CdPipelineQuery, CdPipelinesQuery, ExecuteCdPipeline,
     },
     kubernetes::{
-        is_authorized_query, kubernetes_pods_query, IsAuthorizedQuery, KubernetesPodsQuery,
+        deploy_livebook, destroy_livebook, kubernetes_pods_query, watch_livebook, DeployLivebook,
+        DestroyLivebook, KubernetesPodsQuery, WatchLivebook,
     },
     pipeline::{
         ci_status_query, multi_branch_pipeline_query, pipeline_query, pipelines_query,
@@ -304,14 +305,46 @@ impl QueryClient {
         KubernetesPodsQuery::fetch(self, application, namespace, version).await
     }
 
-    #[wukong_telemetry(api_event = "fetch_is_authorized")]
-    pub async fn fetch_is_authorized(
+    // #[wukong_telemetry(api_event = "fetch_is_authorized")]
+    // pub async fn fetch_is_authorized(
+    //     &self,
+    //     application: &str,
+    //     namespace: &str,
+    //     version: &str,
+    // ) -> Result<Response<is_authorized_query::ResponseData>, APIError> {
+    //     IsAuthorizedQuery::fetch(self, application, namespace, version).await
+    // }
+
+    #[wukong_telemetry(api_event = "deploy_livebook")]
+    pub async fn deploy_livebook(
         &self,
         application: &str,
         namespace: &str,
         version: &str,
-    ) -> Result<Response<is_authorized_query::ResponseData>, APIError> {
-        IsAuthorizedQuery::fetch(self, application, namespace, version).await
+        port: i64,
+    ) -> Result<Response<deploy_livebook::ResponseData>, APIError> {
+        DeployLivebook::mutate(self, application, namespace, version, port).await
+    }
+
+    #[wukong_telemetry(api_event = "watch_livebook")]
+    pub async fn watch_livebook(
+        &self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+        name: &str,
+    ) -> Result<Response<watch_livebook::ResponseData>, APIError> {
+        WatchLivebook::subscribe(self, application, namespace, version, name).await
+    }
+
+    #[wukong_telemetry(api_event = "destroy_livebook")]
+    pub async fn destroy_livebook(
+        &self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<Response<destroy_livebook::ResponseData>, APIError> {
+        DestroyLivebook::mutate(self, application, namespace, version).await
     }
 }
 
