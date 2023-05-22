@@ -1,0 +1,25 @@
+mutation DeployLivebook(
+  $application: String!
+  $namespace: String!
+  $version: String!
+  $port: Int!
+) {
+  deployLivebook(
+    application: $application
+    namespace: $namespace
+    version: $version
+    port: $port
+  ) {
+    createdAt
+    deletedAt
+    hostIp
+    labels
+    name
+    namespace
+    password
+    podState
+    ready
+    restartCount
+    url
+  }
+}
