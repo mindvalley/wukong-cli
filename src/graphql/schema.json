@@ -6,6 +6,28 @@
           "args": [
             {
               "defaultValue": null,
+              "description": null,
+              "name": "reason",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "description": "Marks an element of a GraphQL schema as no longer supported.",
+          "locations": [
+            "ARGUMENT_DEFINITION",
+            "ENUM_VALUE",
+            "FIELD_DEFINITION",
+            "INPUT_FIELD_DEFINITION"
+          ],
+          "name": "deprecated"
+        },
+        {
+          "args": [
+            {
+              "defaultValue": null,
               "description": "Included when true.",
               "name": "if",
               "type": {
@@ -59,7 +81,9 @@
       "queryType": {
         "name": "RootQueryType"
       },
-      "subscriptionType": null,
+      "subscriptionType": {
+        "name": "RootSubscriptionType"
+      },
       "types": [
         {
           "description": "Represents a directive",
@@ -1700,7 +1724,7 @@
           "possibleTypes": null
         },
         {
-          "description": "The `Int` scalar type represents non-fractional signed whole numeric values.\nInt can represent values between `-(2^53 - 1)` and `2^53 - 1` since it is\nrepresented in JSON as double-precision floating point numbers specified\nby [IEEE 754](http://en.wikipedia.org/wiki/IEEE_floating_point).",
+          "description": "The `Int` scalar type represents non-fractional signed whole numeric\nvalues. It is NOT compliant with the GraphQl spec, it can represent\nvalues between `-(2^53 - 1)` and `2^53 - 1` as specified by\n[IEEE 754](https://en.wikipedia.org/wiki/IEEE_754).\nIt is kept here for backwards compatibility, prefer using\nthe SpecCompliantInt.",
           "enumValues": null,
           "fields": null,
           "inputFields": null,
@@ -1952,7 +1976,7 @@
               "isDeprecated": false,
               "name": "labels",
               "type": {
-                "kind": "NON_NULL",
+                "kind": "LIST",
                 "name": null,
                 "ofType": {
                   "kind": "SCALAR",
@@ -1998,6 +2022,18 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
+              "name": "password",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
               "name": "podState",
               "type": {
                 "kind": "SCALAR",
@@ -2035,6 +2071,18 @@
                   "name": "Int",
                   "ofType": null
                 }
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "url",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
               }
             }
           ],
@@ -2208,6 +2256,130 @@
           "description": null,
           "enumValues": null,
           "fields": [
+            {
+              "args": [
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "application",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "namespace",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "port",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "Int",
+                      "ofType": null
+                    }
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "version",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                }
+              ],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "deployLivebook",
+              "type": {
+                "kind": "OBJECT",
+                "name": "KubernetesPod",
+                "ofType": null
+              }
+            },
+            {
+              "args": [
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "application",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "namespace",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "version",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                }
+              ],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "destroyLivebook",
+              "type": {
+                "kind": "OBJECT",
+                "name": "KubernetesPod",
+                "ofType": null
+              }
+            },
             {
               "args": [
                 {
@@ -2708,65 +2880,6 @@
                 {
                   "defaultValue": null,
                   "description": null,
-                  "name": "application",
-                  "type": {
-                    "kind": "NON_NULL",
-                    "name": null,
-                    "ofType": {
-                      "kind": "SCALAR",
-                      "name": "String",
-                      "ofType": null
-                    }
-                  }
-                },
-                {
-                  "defaultValue": null,
-                  "description": null,
-                  "name": "namespace",
-                  "type": {
-                    "kind": "NON_NULL",
-                    "name": null,
-                    "ofType": {
-                      "kind": "SCALAR",
-                      "name": "String",
-                      "ofType": null
-                    }
-                  }
-                },
-                {
-                  "defaultValue": null,
-                  "description": null,
-                  "name": "version",
-                  "type": {
-                    "kind": "NON_NULL",
-                    "name": null,
-                    "ofType": {
-                      "kind": "SCALAR",
-                      "name": "String",
-                      "ofType": null
-                    }
-                  }
-                }
-              ],
-              "deprecationReason": null,
-              "description": null,
-              "isDeprecated": false,
-              "name": "isAuthorized",
-              "type": {
-                "kind": "NON_NULL",
-                "name": null,
-                "ofType": {
-                  "kind": "SCALAR",
-                  "name": "Boolean",
-                  "ofType": null
-                }
-              }
-            },
-            {
-              "args": [
-                {
-                  "defaultValue": null,
-                  "description": null,
                   "name": "name",
                   "type": {
                     "kind": "NON_NULL",
@@ -2960,6 +3073,86 @@
           "interfaces": null,
           "kind": "SCALAR",
           "name": "String",
+          "possibleTypes": null
+        },
+        {
+          "description": null,
+          "enumValues": null,
+          "fields": [
+            {
+              "args": [
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "application",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "name",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "namespace",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "version",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                }
+              ],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "watchLivebook",
+              "type": {
+                "kind": "OBJECT",
+                "name": "KubernetesPod",
+                "ofType": null
+              }
+            }
+          ],
+          "inputFields": null,
+          "interfaces": [],
+          "kind": "OBJECT",
+          "name": "RootSubscriptionType",
           "possibleTypes": null
         }
       ]

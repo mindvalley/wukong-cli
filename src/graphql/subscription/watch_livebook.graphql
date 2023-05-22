@@ -1,0 +1,25 @@
+subscription WatchLivebook(
+  $application: String!
+  $name: String!
+  $namespace: String!
+  $version: String!
+) {
+  watchLivebook(
+    application: $application
+    name: $name
+    namespace: $namespace
+    version: $version
+  ) {
+    createdAt
+    deletedAt
+    hostIp
+    labels
+    name
+    namespace
+    password
+    podState
+    ready
+    restartCount
+    url
+  }
+}

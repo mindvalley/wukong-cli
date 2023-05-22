@@ -1,0 +1,23 @@
+mutation DestroyLivebook(
+  $application: String!
+  $namespace: String!
+  $version: String!
+) {
+  destroyLivebook(
+    application: $application
+    namespace: $namespace
+    version: $version
+  ) {
+    createdAt
+    deletedAt
+    hostIp
+    labels
+    name
+    namespace
+    password
+    podState
+    ready
+    restartCount
+    url
+  }
+}

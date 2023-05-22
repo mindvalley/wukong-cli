@@ -1,14 +1,21 @@
-mutation ExecuteCdPipeline($application: String!, $buildNumber: Int!, $namespace:
-String!, $version: String!, $changelogs: String, $sendToSlack: Boolean!,
-$buildArtifactName: String) {
+mutation ExecuteCdPipeline(
+  $application: String!
+  $buildNumber: Int!
+  $namespace: String!
+  $version: String!
+  $changelogs: String
+  $sendToSlack: Boolean!
+  $buildArtifactName: String
+) {
   executeCdPipeline(
-    application: $application, 
-    buildNumber: $buildNumber,
-    buildArtifactName: $buildArtifactName,
-    namespace: $namespace, 
+    application: $application
+    buildNumber: $buildNumber
+    buildArtifactName: $buildArtifactName
+    namespace: $namespace
     version: $version
-    changelogs: $changelogs,
-    sendToSlack: $sendToSlack) {
+    changelogs: $changelogs
+    sendToSlack: $sendToSlack
+  ) {
     url
   }
 }
