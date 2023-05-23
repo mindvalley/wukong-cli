@@ -5,6 +5,7 @@ use crate::{
     loader::new_spinner_progress_bar,
     output::{colored_println, table::TableOutput},
 };
+use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 use tabled::Tabled;
 
@@ -53,9 +54,10 @@ pub async fn handle_list(
     }
 
     let fetching_progress_bar = new_spinner_progress_bar();
-    fetching_progress_bar.set_message(
-        "Listing running instances of the application mv-wukong-ci-mock on namespace production...",
-    );
+    fetching_progress_bar.set_message(format!(
+        "Listing running instances of the application {}...",
+        application.bright_green()
+    ));
 
     let k8s_pods = client
         .fetch_kubernetes_pods(application, namespace, version)
@@ -76,8 +78,8 @@ pub async fn handle_list(
     fetching_progress_bar.finish_and_clear();
 
     eprintln!(
-        "Listing running instances of the application {} on namespace production...✅",
-        application
+        "Listing running instances of the application {}...✅",
+        application.bright_green()
     );
     let instances_table = TableOutput {
         title: None,
