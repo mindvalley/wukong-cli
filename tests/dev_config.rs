@@ -568,6 +568,7 @@ config :phoenix, :json_library, Jason
             r#"
 use Mix.Config
 
+System.get_env("API_KEY")
 System.fetch_env("API_SECRET")
 System.fetch_env!("API_TOKEN")
 
