@@ -40,9 +40,9 @@ pub async fn handle_list(
         .with_api_url(context.config.core.wukong_api_url)
         .build()?;
 
-    let application = &context.config.core.application;
+    let application = context.state.application.unwrap();
 
-    if has_permission(&client, application, namespace, version).await? {
+    if has_permission(&client, &application, namespace, version).await? {
         progress_bar.finish_and_clear();
         eprintln!("Checking your permission to connect to the remote instance...✅");
     } else {
@@ -60,7 +60,7 @@ pub async fn handle_list(
     ));
 
     let k8s_pods = client
-        .fetch_kubernetes_pods(application, namespace, version)
+        .fetch_kubernetes_pods(&application, namespace, version)
         .await?
         .data
         .unwrap()
