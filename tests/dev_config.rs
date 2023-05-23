@@ -520,7 +520,7 @@ config :phoenix, :json_library, Jason
 
 #[test]
 #[serial]
-fn test_wukong_dev_config_lint_success() {
+fn test_wukong_dev_config_lint_on_main_config_success() {
     let wk_temp = assert_fs::TempDir::new().unwrap();
     let main_config_file = wk_temp.child("config/config.exs");
     main_config_file.touch().unwrap();
@@ -560,6 +560,30 @@ config :phoenix, :json_library, Jason
         )
         .unwrap();
 
+    let cmd = common::wukong_raw_command()
+        .arg("dev")
+        .arg("config")
+        .arg("lint")
+        .arg(wk_temp.path().to_str().unwrap())
+        .assert()
+        .failure();
+
+    let output = cmd.get_output();
+
+    insta::with_settings!({filters => vec![
+        (format!("{}", wk_temp.path().to_str().unwrap()).as_str(), "[TEMP_DIR]"),
+        (r"\d+(.\d+)ms|\d+(.\d+)s", "[DURATION]"),
+    ]}, {
+        insta::assert_snapshot!(std::str::from_utf8(&output.stderr).unwrap());
+    });
+
+    wk_temp.close().unwrap();
+}
+
+#[test]
+#[serial]
+fn test_wukong_dev_config_lint_on_dev_config_success() {
+    let wk_temp = assert_fs::TempDir::new().unwrap();
     let dev_config_file = wk_temp.child("config/dev.exs");
     dev_config_file.touch().unwrap();
 
