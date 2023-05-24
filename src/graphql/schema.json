@@ -1962,10 +1962,10 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
-              "name": "hostIp",
+              "name": "hasLivebook",
               "type": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "Boolean",
                 "ofType": null
               }
             },
@@ -2023,6 +2023,18 @@
               "description": null,
               "isDeprecated": false,
               "name": "password",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "podIp",
               "type": {
                 "kind": "SCALAR",
                 "name": "String",
@@ -2262,6 +2274,20 @@
                   "defaultValue": null,
                   "description": null,
                   "name": "application",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "name",
                   "type": {
                     "kind": "NON_NULL",
                     "name": null,

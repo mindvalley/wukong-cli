@@ -12,7 +12,7 @@ mutation DeployLivebook(
   ) {
     createdAt
     deletedAt
-    hostIp
+    podIp
     labels
     name
     namespace
