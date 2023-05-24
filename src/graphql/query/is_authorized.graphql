@@ -1,0 +1,11 @@
+query IsAuthorizedQuery(
+  $application: String!
+  $namespace: String!
+  $version: String!
+) {
+  isAuthorized(
+    application: $application
+    namespace: $namespace
+    version: $version
+  )
+}

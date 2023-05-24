@@ -1,4 +1,5 @@
 pub mod info;
+pub mod instances;
 mod logs;
 
 use self::logs::handle_logs;
@@ -49,6 +50,8 @@ pub enum ApplicationSubcommand {
         #[arg(long)]
         url_mode: bool,
     },
+    /// This command group contains the commands to interact with an application’s instances
+    Instances(instances::Instances),
 }
 
 #[derive(Debug, ValueEnum, Clone)]
@@ -104,6 +107,7 @@ impl Application {
                 )
                 .await
             }
+            ApplicationSubcommand::Instances(instances) => instances.handle_command(context).await,
         }
     }
 }

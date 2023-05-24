@@ -1,0 +1,15 @@
+query KubernetesPodsQuery(
+  $application: String!
+  $namespace: String!
+  $version: String!
+) {
+  kubernetesPods(
+    application: $application
+    namespace: $namespace
+    version: $version
+  ) {
+    name
+    hostIp
+    ready
+  }
+}
