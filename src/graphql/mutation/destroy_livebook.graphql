@@ -10,7 +10,7 @@ mutation DestroyLivebook(
   ) {
     createdAt
     deletedAt
-    hostIp
+    podIp
     labels
     name
     namespace

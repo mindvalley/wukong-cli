@@ -43,39 +43,39 @@ impl KubernetesPodsQuery {
     }
 }
 
-// #[derive(GraphQLQuery)]
-// #[graphql(
-//     schema_path = "src/graphql/schema.json",
-//     query_path = "src/graphql/query/is_authorized.graphql",
-//     response_derives = "Debug, Serialize, Deserialize"
-// )]
-// pub struct IsAuthorizedQuery;
-//
-// impl IsAuthorizedQuery {
-//     pub(crate) async fn fetch(
-//         client: &QueryClient,
-//         application: &str,
-//         namespace: &str,
-//         version: &str,
-//     ) -> Result<Response<is_authorized_query::ResponseData>, APIError> {
-//         let variables = is_authorized_query::Variables {
-//             application: application.to_string(),
-//             namespace: namespace.to_string(),
-//             version: version.to_string(),
-//         };
-//
-//         let response = client
-//             .call_api::<Self>(variables, |_, error| {
-//                 Err(APIError::ResponseError {
-//                     code: error.message.clone(),
-//                     message: format!("{error}"),
-//                 })
-//             })
-//             .await?;
-//
-//         Ok(response)
-//     }
-// }
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/graphql/schema.json",
+    query_path = "src/graphql/query/is_authorized.graphql",
+    response_derives = "Debug, Serialize, Deserialize"
+)]
+pub struct IsAuthorizedQuery;
+
+impl IsAuthorizedQuery {
+    pub(crate) async fn fetch(
+        client: &QueryClient,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<Response<is_authorized_query::ResponseData>, APIError> {
+        let variables = is_authorized_query::Variables {
+            application: application.to_string(),
+            namespace: namespace.to_string(),
+            version: version.to_string(),
+        };
+
+        let response = client
+            .call_api::<Self>(variables, |_, error| {
+                Err(APIError::ResponseError {
+                    code: error.message.clone(),
+                    message: format!("{error}"),
+                })
+            })
+            .await?;
+
+        Ok(response)
+    }
+}
 
 #[derive(GraphQLQuery)]
 #[graphql(

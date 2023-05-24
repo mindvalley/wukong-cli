@@ -12,7 +12,7 @@ subscription WatchLivebook(
   ) {
     createdAt
     deletedAt
-    hostIp
+    podIp
     labels
     name
     namespace

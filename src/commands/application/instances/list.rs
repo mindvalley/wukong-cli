@@ -70,7 +70,7 @@ pub async fn handle_list(
         .into_iter()
         .map(|pod| Instance {
             name: format!("{}@{}/{}", version, namespace, pod.name),
-            ip: pod.host_ip.unwrap_or_default(),
+            ip: pod.pod_ip.unwrap_or_default(),
             ready: pod.ready,
         })
         .collect();

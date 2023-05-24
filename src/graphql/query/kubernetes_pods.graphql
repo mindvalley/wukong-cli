@@ -9,7 +9,7 @@ query KubernetesPodsQuery(
     version: $version
   ) {
     name
-    hostIp
+    podIp
     ready
   }
 }

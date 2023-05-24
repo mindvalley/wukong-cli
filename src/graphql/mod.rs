@@ -15,8 +15,9 @@ use self::{
         CdPipelineForRollbackQuery, CdPipelineQuery, CdPipelinesQuery, ExecuteCdPipeline,
     },
     kubernetes::{
-        deploy_livebook, destroy_livebook, kubernetes_pods_query, watch_livebook, DeployLivebook,
-        DestroyLivebook, KubernetesPodsQuery, WatchLivebook,
+        deploy_livebook, destroy_livebook, is_authorized_query, kubernetes_pods_query,
+        watch_livebook, DeployLivebook, DestroyLivebook, IsAuthorizedQuery, KubernetesPodsQuery,
+        WatchLivebook,
     },
     pipeline::{
         ci_status_query, multi_branch_pipeline_query, pipeline_query, pipelines_query,
@@ -305,15 +306,15 @@ impl QueryClient {
         KubernetesPodsQuery::fetch(self, application, namespace, version).await
     }
 
-    // #[wukong_telemetry(api_event = "fetch_is_authorized")]
-    // pub async fn fetch_is_authorized(
-    //     &self,
-    //     application: &str,
-    //     namespace: &str,
-    //     version: &str,
-    // ) -> Result<Response<is_authorized_query::ResponseData>, APIError> {
-    //     IsAuthorizedQuery::fetch(self, application, namespace, version).await
-    // }
+    #[wukong_telemetry(api_event = "fetch_is_authorized")]
+    pub async fn fetch_is_authorized(
+        &self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<Response<is_authorized_query::ResponseData>, APIError> {
+        IsAuthorizedQuery::fetch(self, application, namespace, version).await
+    }
 
     #[wukong_telemetry(api_event = "deploy_livebook")]
     pub async fn deploy_livebook(
