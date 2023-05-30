@@ -131,8 +131,9 @@ impl VaultClient {
 
         let response = self
             .client
-            .post(url)
+            .patch(url)
             .header("X-Vault-Token", api_token)
+            .header("Content-Type", "application/merge-patch+json")
             .json(&secret_data)
             .send()
             .await?;

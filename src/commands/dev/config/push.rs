@@ -83,18 +83,19 @@ async fn update_secrets(
     let local_config_string =
         get_local_config_as_string(&vault_secret_annotation.destination_file, config_path)?;
 
-    let mut secrets = vault
-        .get_secrets(vault_token, &vault_secret_annotation.secret_path)
-        .await?
-        .data;
-
-    let remote_config = secrets.get(&vault_secret_annotation.secret_name).unwrap();
+    let remote_config = vault
+        .get_secret(
+            vault_token,
+            &vault_secret_annotation.secret_path,
+            &vault_secret_annotation.secret_name,
+        )
+        .await?;
 
     let local_config_path =
         get_local_config_path(config_path, &vault_secret_annotation.destination_file);
 
     print_diff(
-        remote_config,
+        &remote_config,
         &local_config_string,
         &local_config_path.to_string_lossy(),
     );
@@ -104,16 +105,8 @@ async fn update_secrets(
         .default(false)
         .interact()?;
 
-    // Update one key from secrets:
-    secrets.insert(
-        vault_secret_annotation.secret_name.clone(),
-        local_config_string,
-    );
-
-    let secrets_ref: HashMap<&str, &str> = secrets
-        .iter()
-        .map(|(k, v)| (k.as_str(), v.as_str()))
-        .collect();
+    let mut secrets_ref: HashMap<&str, &str> = HashMap::new();
+    secrets_ref.insert(&vault_secret_annotation.secret_name, &local_config_string);
 
     if agree_to_update {
         vault
