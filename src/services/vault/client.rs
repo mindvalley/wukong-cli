@@ -313,7 +313,7 @@ mod tests {
             }"#;
 
         let mock_server = server.mock(|when, then| {
-            when.method(POST)
+            when.method("PATCH")
                 .path_contains(VaultClient::UPDATE_SECRET)
                 .body(format!(r#"{{"data":{{"{}":"{}"}}}}"#, "test", "test4"))
                 .header("X-Vault-Token", api_token);
