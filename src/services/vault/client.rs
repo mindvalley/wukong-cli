@@ -46,6 +46,7 @@ pub struct VaultClient {
 
 impl VaultClient {
     pub const LOGIN: &str = "/v1/auth/okta/login";
+    pub const RENEW_TOKEN: &str = "/v1/auth/token/renew-self";
     pub const VERIFY_TOKEN: &str = "/v1/auth/token/lookup-self";
     pub const FETCH_SECRETS: &str = "/v1/secret/data";
     pub const UPDATE_SECRET: &str = "/v1/secret/data";
@@ -81,6 +82,24 @@ impl VaultClient {
             .client
             .post(url)
             .form(&[("password", password)])
+            .send()
+            .await?;
+
+        Ok(response)
+    }
+
+    pub async fn renew_token(
+        &self,
+        api_token: &str,
+        extend_duration: Option<&str>,
+    ) -> Result<reqwest::Response, reqwest::Error> {
+        let url = format!("{}{}", self.base_url, Self::RENEW_TOKEN);
+
+        let response = self
+            .client
+            .post(url)
+            .header("X-Vault-Token", api_token)
+            .form(&[("increment", extend_duration.unwrap_or("1h"))])
             .send()
             .await?;
 
