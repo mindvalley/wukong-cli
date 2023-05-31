@@ -1,4 +1,4 @@
-use self::list::handle_list;
+use self::{connect::handle_connect, list::handle_list};
 use crate::{
     commands::{application::ApplicationNamespace, Context},
     error::CliError,
@@ -46,7 +46,9 @@ impl Instances {
             InstancesSubcommand::List { namespace, version } => {
                 handle_list(context, &namespace.to_string(), &version.to_string()).await
             }
-            InstancesSubcommand::Connect { name, port } => todo!(),
+            InstancesSubcommand::Connect { name, port } => {
+                handle_connect(context, name, port).await
+            }
         }
     }
 }

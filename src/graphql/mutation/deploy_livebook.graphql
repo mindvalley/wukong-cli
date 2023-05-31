@@ -2,12 +2,14 @@ mutation DeployLivebook(
   $application: String!
   $namespace: String!
   $version: String!
+  $name: String!
   $port: Int!
 ) {
   deployLivebook(
     application: $application
     namespace: $namespace
     version: $version
+    name: $name
     port: $port
   ) {
     createdAt

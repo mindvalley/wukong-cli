@@ -11,5 +11,6 @@ query KubernetesPodsQuery(
     name
     podIp
     ready
+    labels
   }
 }
