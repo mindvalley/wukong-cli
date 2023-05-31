@@ -92,7 +92,7 @@ impl QueryClientBuilder {
     pub fn build(self) -> Result<QueryClient, APIError> {
         let mut headers = header::HeaderMap::new();
 
-        if let Some(token) = self.access_token {
+        if let Some(token) = self.access_token.as_ref() {
             let auth_value = format!("Bearer {}", token);
             headers.insert(
                 header::AUTHORIZATION,
@@ -106,6 +106,7 @@ impl QueryClientBuilder {
 
         Ok(QueryClient {
             reqwest_client: client,
+            access_token: self.access_token,
             api_url: self.api_url,
             sub: self.sub,
         })
@@ -114,6 +115,7 @@ impl QueryClientBuilder {
 
 pub struct QueryClient {
     reqwest_client: reqwest::Client,
+    access_token: Option<String>,
     api_url: String,
     // for telemetry usage
     sub: Option<String>,
@@ -362,7 +364,6 @@ impl QueryClient {
     pub async fn subscribe_watch_livebook(
         &self,
         variables: watch_livebook::Variables,
-        token: &str,
     ) -> Result<
         (
             AsyncWebsocketClient<GraphQLClient, Message>,
@@ -370,13 +371,11 @@ impl QueryClient {
         ),
         APIError,
     > {
-        self.subscribe_graphql::<WatchLivebook>(token, variables)
-            .await
+        self.subscribe_graphql::<WatchLivebook>(variables).await
     }
 
     async fn subscribe_graphql<T: GraphQLQuery + Send + Sync + Unpin + 'static>(
         &self,
-        token: &str,
         variables: T::Variables,
     ) -> Result<
         (
@@ -389,9 +388,9 @@ impl QueryClient {
         <T as GraphQLQuery>::Variables: Send + Sync + Unpin,
         <T as GraphQLQuery>::ResponseData: std::fmt::Debug,
     {
-        let bearer = format!("Bearer {token}");
+        let bearer = format!("Bearer {}", self.access_token.clone().unwrap_or_default());
 
-        let mut request = format!("ws://localhost:4000/api/graphql-ws")
+        let mut request = "ws://localhost:4000/api/graphql-ws"
             .into_client_request()
             .unwrap();
 

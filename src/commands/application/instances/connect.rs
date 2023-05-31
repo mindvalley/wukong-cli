@@ -5,6 +5,7 @@ use crate::{
     loader::new_spinner_progress_bar,
 };
 use futures::StreamExt;
+use log::debug;
 use tokio::time::sleep;
 
 pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<bool, CliError> {
@@ -13,22 +14,20 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Checking your permission to connect to the remote instance...");
 
-    let token = context
+    let auth_config = context
         .config
         .auth
         .as_ref()
-        .ok_or(CliError::UnAuthenticated)?
-        .id_token
-        .clone();
+        .ok_or(CliError::UnAuthenticated)?;
 
     let client = QueryClientBuilder::default()
-        .with_access_token(token.clone())
+        .with_access_token(auth_config.id_token.clone())
         .with_sub(context.state.sub)
         .with_api_url(context.config.core.wukong_api_url)
         .build()?;
 
     let application = context.state.application.unwrap();
-    // Calling API ...
+
     if !has_permission(&client, &application, &namespace, &version)
         .await
         .unwrap()
@@ -55,19 +54,11 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
         .unwrap()
         .kubernetes_pods;
 
-    let user_email = context
-        .config
-        .auth
-        .ok_or(CliError::UnAuthenticated)?
-        .account
-        .clone()
-        .replace("@", "-")
-        .replace(".", "-");
+    let user_email = auth_config.account.clone().replace(['@', '.'], "-");
 
     let has_existing_livebook_pod = k8s_pods
         .into_iter()
-        .find(|pod| pod.labels.contains(&user_email))
-        .is_some();
+        .any(|pod| pod.labels.contains(&user_email));
 
     if has_existing_livebook_pod {
         preparing_progress_bar.set_message("Found a provisioned Livebook instance belonging to you, re-creating your remote instance...");
@@ -77,6 +68,8 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
             .await
             .unwrap();
 
+        // wait 5 seconds for the pod to be destroyed, otherwise it will failed when deploying new
+        // livebook on the next step
         sleep(std::time::Duration::from_secs(5)).await;
     }
 
@@ -101,22 +94,21 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
             name: new_instance.name.to_string(),
         };
 
-        let (_client, mut stream) = client
-            .subscribe_watch_livebook(variables, &token)
-            .await
-            .unwrap();
+        let (_client, mut stream) = client.subscribe_watch_livebook(variables).await.unwrap();
 
-        while let Some(Ok(log)) = stream.next().await {
-            if log.data.unwrap().watch_livebook.unwrap().ready {
+        while let Some(Ok(resp)) = stream.next().await {
+            debug!("{:?}", resp);
+            if resp.data.unwrap().watch_livebook.unwrap().ready {
                 break;
             }
         }
         preparing_progress_bar.finish_and_clear();
 
-        eprintln!("Your livebook instance is ready ! Use the following details to access");
-
+        eprintln!();
+        eprintln!("Your livebook instance is ready! Use the following details to access:");
         eprintln!("URL: {}", new_instance.url.unwrap_or_default());
         eprintln!("Password: {}", new_instance.password.unwrap_or_default());
+        eprintln!();
     }
     let running_progress_bar = new_spinner_progress_bar();
     running_progress_bar
@@ -126,11 +118,11 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
 
     tokio::spawn(async move {
         tokio::signal::ctrl_c().await.unwrap();
-        running_progress_bar.finish_and_clear();
         tx.send(()).expect("Could not send signal on channel.")
     });
 
     rx.await.expect("Could not receive from channel.");
+    running_progress_bar.finish_and_clear();
     let exiting_progress_bar = new_spinner_progress_bar();
     exiting_progress_bar.set_message("You're exiting from your remote session. Cleaning up...");
 
@@ -146,8 +138,8 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
 }
 
 fn parse_name(name: &str) -> Result<(String, String, String), CliError> {
-    if let Some((instance_info, instance_name)) = name.split_once("/") {
-        if let Some((version, namespace)) = instance_info.split_once("@") {
+    if let Some((instance_info, instance_name)) = name.split_once('/') {
+        if let Some((version, namespace)) = instance_info.split_once('@') {
             return Ok((
                 namespace.to_string(),
                 version.to_string(),
@@ -156,7 +148,9 @@ fn parse_name(name: &str) -> Result<(String, String, String), CliError> {
         }
     }
 
-    todo!()
+    Err(CliError::InvalidInput {
+        value: name.to_string(),
+    })
 }
 
 async fn has_permission(
@@ -171,4 +165,26 @@ async fn has_permission(
         .data
         .unwrap()
         .is_authorized)
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_parse_name_success() {
+        let (namespace, version, instance_name) = parse_name("green@prod/wukong-abc").unwrap();
+
+        assert_eq!(namespace, "prod");
+        assert_eq!(version, "green");
+        assert_eq!(instance_name, "wukong-abc");
+    }
+
+    #[test]
+    fn test_parse_name_failed() {
+        match parse_name("green-prod/wukong-abc") {
+            Ok(_) => panic!("the test should be failed"),
+            Err(_) => assert!(true),
+        }
+    }
 }

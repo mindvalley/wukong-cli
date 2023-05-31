@@ -20,17 +20,17 @@ _wukong() {
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -53,17 +53,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -77,17 +77,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -109,17 +109,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -146,17 +146,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -170,17 +170,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -204,21 +204,48 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help (see more with '\''--help'\'')]' \
 '--help[Print help (see more with '\''--help'\'')]' \
+&& ret=0
+;;
+(connect)
+_arguments "${_arguments_options[@]}" \
+'-p+[(optional) The port for livebook instance]:PORT: ' \
+'--port=[(optional) The port for livebook instance]:PORT: ' \
+'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
+'*-v[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.
+
+By default, it'\''ll only report errors.
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'-h[Print help]' \
+'--help[Print help]' \
+':name -- The instance name to connect to:' \
 && ret=0
 ;;
 (help)
@@ -234,6 +261,10 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-application-instances-help-command-$line[1]:"
         case $line[1] in
             (list)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(connect)
 _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
@@ -285,6 +316,10 @@ _arguments "${_arguments_options[@]}" \
 _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
+(connect)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
         esac
     ;;
 esac
@@ -308,17 +343,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -340,17 +375,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -364,17 +399,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -391,17 +426,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -451,17 +486,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -483,17 +518,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -510,17 +545,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -536,17 +571,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -596,17 +631,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -628,17 +663,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -660,17 +695,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -684,17 +719,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -708,17 +743,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -733,17 +768,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -854,17 +889,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -886,17 +921,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -910,17 +945,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -936,17 +971,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -997,17 +1032,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -1021,17 +1056,17 @@ _arguments "${_arguments_options[@]}" \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
-`-v` show warnings
-`-vv` show info
-`-vvv` show debug
-`-vvvv` show trace]' \
+\`-v\` show warnings
+\`-vv\` show info
+\`-vvv\` show debug
+\`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
@@ -1088,6 +1123,10 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-help-application-instances-command-$line[1]:"
         case $line[1] in
             (list)
+_arguments "${_arguments_options[@]}" \
+&& ret=0
+;;
+(connect)
 _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
@@ -1361,6 +1400,26 @@ _wukong__help__dev__config_commands() {
     )
     _describe -t commands 'wukong help dev config commands' commands "$@"
 }
+(( $+functions[_wukong__application__help__instances__connect_commands] )) ||
+_wukong__application__help__instances__connect_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong application help instances connect commands' commands "$@"
+}
+(( $+functions[_wukong__application__instances__connect_commands] )) ||
+_wukong__application__instances__connect_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong application instances connect commands' commands "$@"
+}
+(( $+functions[_wukong__application__instances__help__connect_commands] )) ||
+_wukong__application__instances__help__connect_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong application instances help connect commands' commands "$@"
+}
+(( $+functions[_wukong__help__application__instances__connect_commands] )) ||
+_wukong__help__application__instances__connect_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help application instances connect commands' commands "$@"
+}
 (( $+functions[_wukong__deployment_commands] )) ||
 _wukong__deployment_commands() {
     local commands; commands=(
@@ -1479,6 +1538,7 @@ _wukong__application__help__help_commands() {
 _wukong__application__instances__help_commands() {
     local commands; commands=(
 'list:Listing the currently running Elixir instances, normally under a GKE Pod' \
+'connect:Start the interactive session to connect to the remote Elixir instance' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'wukong application instances help commands' commands "$@"
@@ -1611,6 +1671,7 @@ _wukong__init_commands() {
 _wukong__application__help__instances_commands() {
     local commands; commands=(
 'list:Listing the currently running Elixir instances, normally under a GKE Pod' \
+'connect:Start the interactive session to connect to the remote Elixir instance' \
     )
     _describe -t commands 'wukong application help instances commands' commands "$@"
 }
@@ -1618,6 +1679,7 @@ _wukong__application__help__instances_commands() {
 _wukong__application__instances_commands() {
     local commands; commands=(
 'list:Listing the currently running Elixir instances, normally under a GKE Pod' \
+'connect:Start the interactive session to connect to the remote Elixir instance' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'wukong application instances commands' commands "$@"
@@ -1626,6 +1688,7 @@ _wukong__application__instances_commands() {
 _wukong__help__application__instances_commands() {
     local commands; commands=(
 'list:Listing the currently running Elixir instances, normally under a GKE Pod' \
+'connect:Start the interactive session to connect to the remote Elixir instance' \
     )
     _describe -t commands 'wukong help application instances commands' commands "$@"
 }

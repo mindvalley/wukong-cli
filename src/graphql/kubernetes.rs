@@ -1,12 +1,6 @@
 use super::QueryClient;
 use crate::error::APIError;
-use async_tungstenite::tungstenite::{client::IntoClientRequest, Message};
-use futures::StreamExt;
 use graphql_client::{GraphQLQuery, Response};
-use graphql_ws_client::{
-    graphql::{GraphQLClient, StreamingOperation},
-    AsyncWebsocketClient, GraphQLClientClientBuilder, SubscriptionStream,
-};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -176,84 +170,6 @@ impl DestroyLivebook {
     response_derives = "Debug, Serialize, Deserialize, Clone"
 )]
 pub struct WatchLivebook;
-
-// impl WatchLivebook {
-//     pub(crate) async fn subscribe(
-//         client: &QueryClient,
-//         application: &str,
-//         namespace: &str,
-//         version: &str,
-//         name: &str,
-//     ) -> Result<
-//         (
-//             AsyncWebsocketClient<GraphQLClient, Message>,
-//             SubscriptionStream<GraphQLClient, StreamingOperation<WatchLivebook>>,
-//         ),
-//         APIError,
-//     > {
-//         let variables = watch_livebook::Variables {
-//             application: application.to_string(),
-//             namespace: namespace.to_string(),
-//             version: version.to_string(),
-//             name: name.to_string(),
-//         };
-//
-//         // let response = client
-//         //     .call_api::<Self>(variables, |_, error| {
-//         //         if error.message == "Unauthorized" {
-//         //             return Err(APIError::ResponseError {
-//         //                 code: error.message.clone(),
-//         //                 message: error.message,
-//         //             });
-//         //         }
-//         //
-//         //         Err(APIError::ResponseError {
-//         //             code: error.message.clone(),
-//         //             message: format!("{error}"),
-//         //         })
-//         //     })
-//         //     .await?;
-//         //
-//         // Ok(response)
-//
-//         // let configs = Configs::new()?;
-//         //     let Some(token) = configs.root_config.user.token.clone() else {
-//         //   bail!("Unauthorized. Please login with `railway login`")
-//         // };
-//
-//         let token = "token";
-//         let bearer = format!("Bearer {token}");
-//         // let hostname = configs.get_host();
-//         let mut request = format!("wss://localhost:4000/api")
-//             .into_client_request()
-//             .unwrap();
-//
-//         // request.headers_mut().insert(
-//         //     "Sec-WebSocket-Protocol",
-//         //     HeaderValue::from_str("graphql-transport-ws").unwrap(),
-//         // );
-//         // request
-//         //     .headers_mut()
-//         //     .insert("Authorization", HeaderValue::from_str(&bearer)?);
-//
-//         let (connection, _) = async_tungstenite::tokio::connect_async(request)
-//             .await
-//             .unwrap();
-//
-//         let (sink, stream) = connection.split::<Message>();
-//
-//         let mut client = GraphQLClientClientBuilder::new()
-//             .build(stream, sink, TokioSpawner::current())
-//             .await
-//             .unwrap();
-//         let stream = client
-//             .streaming_operation(StreamingOperation::<WatchLivebook>::new(variables))
-//             .await
-//             .unwrap();
-//
-//         Ok((client, stream))
-//     }
-// }
 
 #[cfg(test)]
 mod test {

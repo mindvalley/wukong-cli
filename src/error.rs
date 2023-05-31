@@ -15,6 +15,8 @@ pub enum CliError {
         #[source]
         source: chrono::ParseError,
     },
+    #[error("Invalid input: \"{value}\"")]
+    InvalidInput { value: String },
     #[error(transparent)]
     ParseIntError(#[from] std::num::ParseIntError),
     #[error(transparent)]
