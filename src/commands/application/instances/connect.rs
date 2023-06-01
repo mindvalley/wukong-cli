@@ -6,6 +6,7 @@ use crate::{
 };
 use futures::StreamExt;
 use log::debug;
+use owo_colors::OwoColorize;
 use tokio::time::sleep;
 
 pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<bool, CliError> {
@@ -105,9 +106,12 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
         preparing_progress_bar.finish_and_clear();
 
         eprintln!();
-        eprintln!("Your livebook instance is ready! Use the following details to access:");
-        eprintln!("URL: {}", new_instance.url.unwrap_or_default());
-        eprintln!("Password: {}", new_instance.password.unwrap_or_default());
+        eprintln!("✅ Your livebook instance is ready! Use the following details to access:\n");
+        eprintln!("URL 🔗: {}", new_instance.url.unwrap_or_default().cyan());
+        eprintln!(
+            "Password 🔑: {}",
+            new_instance.password.unwrap_or_default().yellow()
+        );
         eprintln!();
     }
     let running_progress_bar = new_spinner_progress_bar();
