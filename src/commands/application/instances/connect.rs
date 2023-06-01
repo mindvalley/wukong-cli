@@ -104,10 +104,28 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
             }
         }
         preparing_progress_bar.finish_and_clear();
+        eprintln!("Provisioning your livebook instance...✅");
+
+        let connection_test_progress_bar = new_spinner_progress_bar();
+        connection_test_progress_bar
+            .set_message("Testing connectivity to your livebook instance...");
+
+        let url = new_instance.url.unwrap_or_default();
+
+        for _ in 0..3 {
+            let rs = reqwest::get(&url).await.unwrap();
+            if rs.status().is_success() {
+                break;
+            }
+            sleep(std::time::Duration::from_secs(5)).await;
+        }
+
+        connection_test_progress_bar.finish_and_clear();
+        eprintln!("Testing connectivity to your livebook instance...✅");
 
         eprintln!();
         eprintln!("✅ Your livebook instance is ready! Use the following details to access:\n");
-        eprintln!("URL 🔗: {}", new_instance.url.unwrap_or_default().cyan());
+        eprintln!("URL 🔗: {}", url.cyan());
         eprintln!(
             "Password 🔑: {}",
             new_instance.password.unwrap_or_default().yellow()

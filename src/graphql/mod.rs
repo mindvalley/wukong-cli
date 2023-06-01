@@ -390,8 +390,14 @@ impl QueryClient {
     {
         let bearer = format!("Bearer {}", self.access_token.clone().unwrap_or_default());
 
+        #[cfg(not(feature = "prod"))]
+        let websocket_api_url = self.api_url.clone().replace("http://", "ws://");
+        #[cfg(feature = "prod")]
+        let websocket_api_url = self.api_url.clone().replace("https://", "wss://");
+
         let mut request = format!(
-            "ws://localhost:4000/api/graphql-ws?authorization={}",
+            "{}/graphql-ws?authorization={}",
+            websocket_api_url,
             urlencoding::encode(&bearer)
         )
         .into_client_request()?;
