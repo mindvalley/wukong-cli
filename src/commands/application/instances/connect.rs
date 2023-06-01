@@ -112,15 +112,31 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
 
         let url = new_instance.url.unwrap_or_default();
 
+        let mut connection_test_success = false;
         for _ in 0..3 {
             let rs = reqwest::get(&url).await.unwrap();
             if rs.status().is_success() || rs.status().is_redirection() {
+                connection_test_success = true;
                 break;
             }
             sleep(std::time::Duration::from_secs(5)).await;
         }
 
         connection_test_progress_bar.finish_and_clear();
+        if !connection_test_success {
+            eprintln!("Testing connectivity to your livebook instance...❌");
+
+            let destroy_progress_bar = new_spinner_progress_bar();
+            destroy_progress_bar.set_message("Destroying the livebook instances...");
+            let _destroyed = client
+                .destroy_livebook(&application, &namespace, &version)
+                .await
+                .unwrap();
+            destroy_progress_bar.finish_and_clear();
+            eprintln!("The session has been terminated.");
+            return Ok(false);
+        }
+
         eprintln!("Testing connectivity to your livebook instance...✅");
 
         eprintln!();
