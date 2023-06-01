@@ -114,7 +114,7 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
 
         for _ in 0..3 {
             let rs = reqwest::get(&url).await.unwrap();
-            if rs.status().is_success() {
+            if rs.status().is_success() || rs.status().is_redirection() {
                 break;
             }
             sleep(std::time::Duration::from_secs(5)).await;
