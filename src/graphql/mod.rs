@@ -390,34 +390,29 @@ impl QueryClient {
     {
         let bearer = format!("Bearer {}", self.access_token.clone().unwrap_or_default());
 
-        let mut request = "ws://localhost:4000/api/graphql-ws"
-            .into_client_request()
-            .unwrap();
+        let mut request = format!(
+            "ws://localhost:4000/api/graphql-ws?authorization={}",
+            urlencoding::encode(&bearer)
+        )
+        .into_client_request()?;
 
         request.headers_mut().append(
             "Sec-WebSocket-Protocol",
             HeaderValue::from_str("graphql-transport-ws").unwrap(),
         );
-        request
-            .headers_mut()
-            .append("authorization", HeaderValue::from_str(&bearer).unwrap());
 
-        let (connection, _response) = async_tungstenite::tokio::connect_async(request)
-            .await
-            .unwrap();
+        let (connection, _response) = async_tungstenite::tokio::connect_async(request).await?;
 
         let (sink, stream) = connection.split::<Message>();
 
         let mut client = GraphQLClientClientBuilder::new()
             .payload(json!({}))
             .build(stream, sink, TokioSpawner::current())
-            .await
-            .unwrap();
+            .await?;
 
         let stream = client
             .streaming_operation(StreamingOperation::<T>::new(variables))
-            .await
-            .unwrap();
+            .await?;
 
         Ok((client, stream))
     }

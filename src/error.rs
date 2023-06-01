@@ -51,6 +51,10 @@ pub enum APIError {
     ChangelogComparingSameBuild,
     #[error("Request to {domain} timed out.")]
     Timeout { domain: String },
+    #[error(transparent)]
+    WebsocketError(#[from] async_tungstenite::tungstenite::Error),
+    #[error(transparent)]
+    GraphqlWSError(#[from] graphql_ws_client::Error),
 }
 
 #[derive(Debug, ThisError)]
