@@ -7,6 +7,7 @@ use crate::loader::new_spinner_progress_bar;
 use crate::output::colored_println;
 use crate::services::vault::client::FetchSecrets;
 use crate::Config as CLIConfig;
+use chrono::{DateTime, Duration, Local};
 use dialoguer::theme::ColorfulTheme;
 use log::debug;
 use reqwest::StatusCode;
@@ -43,7 +44,14 @@ impl Vault {
         };
 
         match self.is_valid_token(&token).await {
-            Ok(_) => Ok(token),
+            Ok(_) => {
+                // Extend the token:
+                debug!("Extending the token expiration time");
+                let test = self.vault_client.renew_token(&token, None).await?;
+                debug!("renew token: {:?}", test);
+
+                Ok(token)
+            }
             Err(VaultError::PermissionDenied) => {
                 token = self.handle_login().await?;
                 Ok(token)
@@ -82,8 +90,11 @@ impl Vault {
         if response.status().is_success() {
             let data = response.json::<Login>().await?;
 
+            let expiry_time = self.calculate_expiry_time(data.auth.lease_duration);
+
             config_with_path.config.vault = Some(VaultConfig {
                 api_token: data.auth.client_token.clone(),
+                expiry_time: Some(expiry_time),
             });
 
             config_with_path.config.save(&config_with_path.path)?;
@@ -95,6 +106,13 @@ impl Vault {
             self.handle_error(response).await?;
             unreachable!()
         }
+    }
+
+    fn calculate_expiry_time(&self, lease_duration: i64) -> String {
+        let current_time: DateTime<Local> = Local::now();
+        let expiry_time = current_time + Duration::seconds(lease_duration);
+
+        expiry_time.to_rfc3339()
     }
 
     pub async fn get_secret(

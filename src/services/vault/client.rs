@@ -4,6 +4,7 @@ use std::collections::HashMap;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Auth {
     pub client_token: String,
+    pub lease_duration: i64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
