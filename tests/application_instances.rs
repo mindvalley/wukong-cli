@@ -29,12 +29,14 @@ fn test_wukong_application_instances_list_success() {
       {
         "hostIp": "10.0.128.11",
         "name": "the-blue-1",
-        "ready": true
+        "ready": true,
+        "labels": ["label1", "label2"]
       },
       {
         "hostIp": null,
         "name": "the-blue-2",
-        "ready": false
+        "ready": false,
+        "labels": ["label1", "label2"]
       }
     ]
   }

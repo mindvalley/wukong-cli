@@ -77,6 +77,100 @@ impl IsAuthorizedQuery {
     }
 }
 
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/graphql/schema.json",
+    query_path = "src/graphql/mutation/deploy_livebook.graphql",
+    response_derives = "Debug, Serialize, Deserialize"
+)]
+pub struct DeployLivebook;
+
+impl DeployLivebook {
+    pub(crate) async fn mutate(
+        client: &QueryClient,
+        application: &str,
+        namespace: &str,
+        version: &str,
+        name: &str,
+        port: i64,
+    ) -> Result<Response<deploy_livebook::ResponseData>, APIError> {
+        let variables = deploy_livebook::Variables {
+            application: application.to_string(),
+            namespace: namespace.to_string(),
+            version: version.to_string(),
+            name: name.to_string(),
+            port,
+        };
+
+        let response = client
+            .call_api::<Self>(variables, |_, error| {
+                if error.message == "Unauthorized" {
+                    return Err(APIError::ResponseError {
+                        code: error.message.clone(),
+                        message: error.message,
+                    });
+                }
+
+                Err(APIError::ResponseError {
+                    code: error.message.clone(),
+                    message: format!("{error}"),
+                })
+            })
+            .await?;
+
+        Ok(response)
+    }
+}
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/graphql/schema.json",
+    query_path = "src/graphql/mutation/destroy_livebook.graphql",
+    response_derives = "Debug, Serialize, Deserialize"
+)]
+pub struct DestroyLivebook;
+
+impl DestroyLivebook {
+    pub(crate) async fn mutate(
+        client: &QueryClient,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<Response<destroy_livebook::ResponseData>, APIError> {
+        let variables = destroy_livebook::Variables {
+            application: application.to_string(),
+            namespace: namespace.to_string(),
+            version: version.to_string(),
+        };
+
+        let response = client
+            .call_api::<Self>(variables, |_, error| {
+                if error.message == "Unauthorized" {
+                    return Err(APIError::ResponseError {
+                        code: error.message.clone(),
+                        message: error.message,
+                    });
+                }
+
+                Err(APIError::ResponseError {
+                    code: error.message.clone(),
+                    message: format!("{error}"),
+                })
+            })
+            .await?;
+
+        Ok(response)
+    }
+}
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/graphql/schema.json",
+    query_path = "src/graphql/subscription/watch_livebook.graphql",
+    response_derives = "Debug, Serialize, Deserialize, Clone"
+)]
+pub struct WatchLivebook;
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -99,12 +193,14 @@ mod test {
       {
         "hostIp": "10.0.128.11",
         "name": "the-blue-1",
-        "ready": true
+        "ready": true,
+        "labels": ["label1", "label2"]
       },
       {
         "hostIp": null,
         "name": "the-blue-2",
-        "ready": false
+        "ready": false,
+        "labels": ["label1", "label2"]
       }
     ]
   }

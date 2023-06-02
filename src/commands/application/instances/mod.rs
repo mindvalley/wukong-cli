@@ -1,4 +1,4 @@
-use self::list::handle_list;
+use self::{connect::handle_connect, list::handle_list};
 use crate::{
     commands::{application::ApplicationNamespace, Context},
     error::CliError,
@@ -7,6 +7,7 @@ use clap::{Args, Subcommand};
 
 use super::ApplicationVersion;
 
+mod connect;
 mod list;
 
 #[derive(Debug, Args)]
@@ -29,6 +30,14 @@ pub enum InstancesSubcommand {
         #[arg(long, value_enum, default_value_t=ApplicationVersion::Green)]
         version: ApplicationVersion,
     },
+    /// Start the interactive session to connect to the remote Elixir instance.
+    Connect {
+        /// The instance name to connect to.
+        name: String,
+        /// (optional) The port for livebook instance.
+        #[arg(long, short, default_value_t = 8080)]
+        port: u16,
+    },
 }
 
 impl Instances {
@@ -36,6 +45,9 @@ impl Instances {
         match &self.subcommand {
             InstancesSubcommand::List { namespace, version } => {
                 handle_list(context, &namespace.to_string(), &version.to_string()).await
+            }
+            InstancesSubcommand::Connect { name, port } => {
+                handle_connect(context, name, port).await
             }
         }
     }

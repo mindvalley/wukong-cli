@@ -7,8 +7,9 @@ This command group contains the commands to interact with an application’s ins
 Usage: wukong application instances [OPTIONS] <COMMAND>
 
 Commands:
-  list  Listing the currently running Elixir instances, normally under a GKE Pod
-  help  Print this message or the help of the given subcommand(s)
+  list     Listing the currently running Elixir instances, normally under a GKE Pod
+  connect  Start the interactive session to connect to the remote Elixir instance
+  help     Print this message or the help of the given subcommand(s)
 
 Options:
   -a, --application <APPLICATION>  Override the application name that the CLI will perform the

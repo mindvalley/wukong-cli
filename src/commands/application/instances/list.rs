@@ -17,6 +17,8 @@ struct Instance {
     ip: String,
     #[tabled(rename = "INSTANCE-READY")]
     ready: bool,
+    #[tabled(rename = "IS_LIVEBOOK_INSTANCE")]
+    is_livebook: bool,
 }
 
 pub async fn handle_list(
@@ -42,16 +44,16 @@ pub async fn handle_list(
 
     let application = context.state.application.unwrap();
 
-    if has_permission(&client, &application, namespace, version).await? {
-        progress_bar.finish_and_clear();
-        eprintln!("Checking your permission to connect to the remote instance...✅");
-    } else {
+    if !has_permission(&client, &application, namespace, version).await? {
         progress_bar.finish_and_clear();
         eprintln!("You don't have permission to connect to this instance.");
         eprintln!("Please check with your team manager to get approval first.");
 
         return Ok(false);
     }
+
+    progress_bar.finish_and_clear();
+    eprintln!("Checking your permission to connect to the remote instance...✅");
 
     let fetching_progress_bar = new_spinner_progress_bar();
     fetching_progress_bar.set_message(format!(
@@ -70,8 +72,9 @@ pub async fn handle_list(
         .into_iter()
         .map(|pod| Instance {
             name: format!("{}@{}/{}", version, namespace, pod.name),
-            ip: pod.host_ip.unwrap_or_default(),
+            ip: pod.pod_ip.unwrap_or_default(),
             ready: pod.ready,
+            is_livebook: pod.labels.contains(&"livebook".to_string()),
         })
         .collect();
 

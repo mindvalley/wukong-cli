@@ -1,16 +1,23 @@
-query KubernetesPodsQuery(
+mutation DestroyLivebook(
   $application: String!
   $namespace: String!
   $version: String!
 ) {
-  kubernetesPods(
+  destroyLivebook(
     application: $application
     namespace: $namespace
     version: $version
   ) {
-    name
+    createdAt
+    deletedAt
     podIp
-    ready
     labels
+    name
+    namespace
+    password
+    podState
+    ready
+    restartCount
+    url
   }
 }

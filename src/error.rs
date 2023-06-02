@@ -15,6 +15,8 @@ pub enum CliError {
         #[source]
         source: chrono::ParseError,
     },
+    #[error("Invalid input: \"{value}\"")]
+    InvalidInput { value: String },
     #[error(transparent)]
     ParseIntError(#[from] std::num::ParseIntError),
     #[error(transparent)]
@@ -43,12 +45,18 @@ pub enum APIError {
     ReqwestError(#[from] reqwest::Error),
     #[error("API Response Error: {message}")]
     ResponseError { code: String, message: String },
-    #[error("You are un-authenticated.")]
+    #[error("API Error: You are un-authenticated.")]
     UnAuthenticated,
+    #[error("API Error: You are un-authorized.")]
+    UnAuthorized,
     #[error("The selected build number is the same as the current deployed version. So there is no changelog.")]
     ChangelogComparingSameBuild,
-    #[error("Request to {domain} timed out.")]
+    #[error("API Error: Request to {domain} timed out.")]
     Timeout { domain: String },
+    #[error(transparent)]
+    WebsocketError(#[from] async_tungstenite::tungstenite::Error),
+    #[error(transparent)]
+    GraphqlWSError(#[from] graphql_ws_client::Error),
 }
 
 #[derive(Debug, ThisError)]
@@ -178,6 +186,9 @@ If none of the above steps work for you, please contact the following people on 
                 )),
                 APIError::UnAuthenticated => Some(
                     "Run \"wukong login\" to authenticate with your okta account.".to_string()
+                ),
+                APIError::UnAuthorized => Some(
+                    "Your token might be invalid/expired. Run \"wukong login\" to authenticate with your okta account.".to_string()
                 ),
                 _ => None,
             },
