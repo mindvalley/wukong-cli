@@ -1,6 +1,6 @@
 use crate::{
     commands::Context,
-    error::CliError,
+    error::{APIError, CliError},
     graphql::{kubernetes::watch_livebook, QueryClient, QueryClientBuilder},
     loader::new_spinner_progress_bar,
 };
@@ -95,7 +95,7 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
             name: new_instance.name.to_string(),
         };
 
-        let (_client, mut stream) = client.subscribe_watch_livebook(variables).await.unwrap();
+        let (_client, mut stream) = client.subscribe_watch_livebook(variables).await?;
 
         while let Some(Ok(resp)) = stream.next().await {
             debug!("{:?}", resp);
@@ -114,7 +114,7 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
 
         let mut connection_test_success = false;
         for _ in 0..3 {
-            let rs = reqwest::get(&url).await.unwrap();
+            let rs = reqwest::get(&url).await.map_err(APIError::ReqwestError)?;
             if rs.status().is_success() || rs.status().is_redirection() {
                 connection_test_success = true;
                 break;

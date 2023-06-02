@@ -29,6 +29,7 @@ use crate::{
     telemetry::{self, TelemetryData, TelemetryEvent},
 };
 use graphql_client::{GraphQLQuery, QueryBody, Response};
+use hyper::StatusCode;
 use log::debug;
 use reqwest::header;
 use serde_json::json;
@@ -407,7 +408,17 @@ impl QueryClient {
             HeaderValue::from_str("graphql-transport-ws").unwrap(),
         );
 
-        let (connection, _response) = async_tungstenite::tokio::connect_async(request).await?;
+        let (connection, _response) = async_tungstenite::tokio::connect_async(request)
+            .await
+            .map_err(|err| match err {
+                async_tungstenite::tungstenite::Error::Http(http_err)
+                    if http_err.status() == StatusCode::UNAUTHORIZED
+                        || http_err.status() == StatusCode::FORBIDDEN =>
+                {
+                    APIError::UnAuthorized
+                }
+                err => APIError::WebsocketError(err),
+            })?;
 
         let (sink, stream) = connection.split::<Message>();
 
