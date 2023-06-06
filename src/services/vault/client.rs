@@ -182,7 +182,8 @@ mod tests {
         let api_resp = r#"
             {
               "auth": {
-                "client_token": "test_token"
+                "client_token": "test_token",
+                "lease_duration": 0
                 }
             }"#;
 
