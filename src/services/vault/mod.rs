@@ -77,18 +77,15 @@ impl Vault {
                         .renew_token(&vault_config.api_token, None)
                         .await?;
 
+                    debug!("renew token: {:?}", response);
+
                     if response.status().is_success() {
                         let data = response.json::<Renew>().await?;
 
                         let expiry_time = self.calculate_expiry_time(data.auth.lease_duration);
 
                         config_with_path.config.vault = Some(VaultConfig {
-                            api_token: config_with_path
-                                .config
-                                .vault
-                                .api_token
-                                .clone()
-                                .expect("Vault api_token should be set"),
+                            api_token: config_with_path.config.vault.unwrap().api_token,
                             expiry_time: Some(expiry_time),
                         });
 
@@ -96,7 +93,6 @@ impl Vault {
                     }
 
                     progress_bar.finish_and_clear();
-                    debug!("renew token: {:?}", response);
                 }
             } else {
                 debug!("Failed to parse expiry_time: {}", expiry_time_str);

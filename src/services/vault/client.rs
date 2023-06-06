@@ -105,7 +105,7 @@ impl VaultClient {
             .client
             .post(url)
             .header("X-Vault-Token", api_token)
-            .form(&[("increment", extend_duration.unwrap_or("1h"))])
+            .form(&[("increment", extend_duration.unwrap_or("24h"))])
             .send()
             .await?;
 
