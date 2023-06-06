@@ -134,30 +134,24 @@ pub async fn handle_config_pull(path: &Path) -> Result<bool, CliError> {
         )),
     })??;
 
-    let wukong_toml_files = get_wukong_toml_file(&path);
-
-    let wukong_toml_file_extractor = WukongTomlExtractor {};
-    let wk_toml_extracted: Vec<(PathBuf, Vec<SecretInfo>)> = wukong_toml_files
-        .iter()
-        .map(|file| (file.clone(), wukong_toml_file_extractor.extract(&file)))
-        .collect();
-
     let available_files = get_dev_config_files(&path);
+
+    let mut extracted_infos = vec![];
+
+    for file in available_files {
+        let wukong_toml_file_extractor = WukongTomlExtractor {};
+        let elixir_annotation_extractor = ElixirAnnotationExtractor {};
+
+        if file.to_string_lossy().contains(".wukong.toml") {
+            extracted_infos.push((file.clone(), wukong_toml_file_extractor.extract(&file)));
+        } else {
+            extracted_infos.push((file.clone(), elixir_annotation_extractor.extract(&file)));
+        }
+    }
 
     let vault = Vault::new();
     let vault_token = vault.get_token_or_login().await?;
     let mut has_error = false;
-
-    let elixir_annotation_extractor = ElixirAnnotationExtractor {};
-    let elixir_extracted: Vec<(PathBuf, Vec<SecretInfo>)> = available_files
-        .iter()
-        .map(|file| (file.clone(), elixir_annotation_extractor.extract(&file)))
-        .collect();
-
-    let extracted_infos = wk_toml_extracted
-        .into_iter()
-        .chain(elixir_extracted)
-        .collect::<Vec<(PathBuf, Vec<SecretInfo>)>>();
 
     let mut secrets_cache: HashMap<String, FetchSecretsData> = HashMap::new();
     for info in extracted_infos {
@@ -292,18 +286,6 @@ pub async fn handle_config_pull(path: &Path) -> Result<bool, CliError> {
 fn get_dev_config_files(path: &Path) -> Vec<PathBuf> {
     let mut overrides = OverrideBuilder::new(path);
     overrides.add("**/config/dev.exs").unwrap();
-
-    WalkBuilder::new(path)
-        .overrides(overrides.build().unwrap())
-        .build()
-        .flatten()
-        .filter(|e| e.path().is_file())
-        .map(|e| e.path().to_path_buf())
-        .collect()
-}
-
-fn get_wukong_toml_file(path: &Path) -> Vec<PathBuf> {
-    let mut overrides = OverrideBuilder::new(path);
     overrides.add("**/.wukong.toml").unwrap();
 
     WalkBuilder::new(path)
