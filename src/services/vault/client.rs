@@ -8,6 +8,11 @@ pub struct Auth {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct Renew {
+    pub auth: Auth,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Login {
     pub auth: Auth,
 }

@@ -1,12 +1,12 @@
 pub mod client;
 
 use self::client::{FetchSecretsData, Login, VaultClient};
-use crate::config::VaultConfig;
 use crate::error::VaultError;
 use crate::loader::new_spinner_progress_bar;
 use crate::output::colored_println;
 use crate::services::vault::client::FetchSecrets;
 use crate::Config as CLIConfig;
+use crate::{config::VaultConfig, services::vault::client::Renew};
 use chrono::{DateTime, Duration, Local};
 use dialoguer::theme::ColorfulTheme;
 use log::debug;
@@ -37,30 +37,76 @@ impl Vault {
     }
 
     pub async fn get_token_or_login(&self) -> Result<String, VaultError> {
-        let mut token = match self.get_token().await {
-            Ok(token) => token,
+        let vault_config = match self.get_vault_config().await {
+            Ok(config) => config,
             Err(VaultError::ApiTokenNotFound) => self.handle_login().await?,
             Err(err) => return Err(err),
         };
 
-        match self.is_valid_token(&token).await {
+        match self.is_valid_token(&vault_config.api_token).await {
             Ok(_) => {
-                // Extend the token:
-                debug!("Extending the token expiration time");
-                let test = self.vault_client.renew_token(&token, None).await?;
-                debug!("renew token: {:?}", test);
-
-                Ok(token)
+                self.renew_token(vault_config.clone()).await?;
+                Ok(vault_config.api_token)
             }
             Err(VaultError::PermissionDenied) => {
-                token = self.handle_login().await?;
-                Ok(token)
+                let vault_config = self.handle_login().await?;
+                Ok(vault_config.api_token)
             }
             Err(err) => Err(err),
         }
     }
 
-    pub async fn handle_login(&self) -> Result<String, VaultError> {
+    async fn renew_token(&self, vault_config: VaultConfig) -> Result<(), VaultError> {
+        if let Some(expiry_time_str) = &vault_config.expiry_time {
+            let current_time: DateTime<Local> = Local::now();
+
+            if let Ok(expiry_time) = DateTime::parse_from_rfc3339(expiry_time_str) {
+                let remaining_duration = expiry_time.signed_duration_since(current_time);
+
+                if remaining_duration < Duration::hours(1) {
+                    let mut config_with_path = CLIConfig::get_config_with_path()?;
+
+                    debug!("Extending the token expiration time");
+                    let progress_bar = new_spinner_progress_bar();
+                    progress_bar.set_message(
+                        "Authenticating the user... You may need to check your device for an MFA notification.",
+                    );
+
+                    let response = self
+                        .vault_client
+                        .renew_token(&vault_config.api_token, None)
+                        .await?;
+
+                    if response.status().is_success() {
+                        let data = response.json::<Renew>().await?;
+
+                        let expiry_time = self.calculate_expiry_time(data.auth.lease_duration);
+
+                        config_with_path.config.vault = Some(VaultConfig {
+                            api_token: config_with_path
+                                .config
+                                .vault
+                                .api_token
+                                .clone()
+                                .expect("Vault api_token should be set"),
+                            expiry_time: Some(expiry_time),
+                        });
+
+                        config_with_path.config.save(&config_with_path.path)?;
+                    }
+
+                    progress_bar.finish_and_clear();
+                    debug!("renew token: {:?}", response);
+                }
+            } else {
+                debug!("Failed to parse expiry_time: {}", expiry_time_str);
+            }
+        }
+
+        Ok(())
+    }
+
+    pub async fn handle_login(&self) -> Result<VaultConfig, VaultError> {
         let mut config_with_path = CLIConfig::get_config_with_path()?;
 
         let email = match &config_with_path.config.auth {
@@ -101,7 +147,10 @@ impl Vault {
 
             colored_println!("You are now logged in as {}.\n", email);
 
-            Ok(data.auth.client_token)
+            Ok(config_with_path
+                .config
+                .vault
+                .expect("Vault config should be set"))
         } else {
             self.handle_error(response).await?;
             unreachable!()
@@ -173,18 +222,25 @@ impl Vault {
         Ok(true)
     }
 
-    async fn get_token(&self) -> Result<String, VaultError> {
-        debug!("Getting token ...");
+    async fn get_vault_config(&self) -> Result<VaultConfig, VaultError> {
+        debug!("Getting config...");
 
         let config_with_path = CLIConfig::get_config_with_path()?;
-        let api_token = match &config_with_path.config.vault {
-            Some(vault_config) => vault_config.api_token.clone(),
+
+        let vault_config = match &config_with_path.config.vault {
+            Some(vault_config) => {
+                if vault_config.api_token.is_empty() {
+                    return Err(VaultError::ApiTokenNotFound);
+                }
+
+                vault_config
+            }
             None => {
                 return Err(VaultError::ApiTokenNotFound);
             }
         };
 
-        Ok(api_token)
+        Ok(vault_config.clone())
     }
 
     async fn is_valid_token(&self, api_token: &str) -> Result<bool, VaultError> {
