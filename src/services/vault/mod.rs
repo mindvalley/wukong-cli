@@ -135,7 +135,7 @@ impl Vault {
             let expiry_time = self.calculate_expiry_time(data.auth.lease_duration);
 
             config_with_path.config.vault = Some(VaultConfig {
-                api_token: data.auth.client_token.clone(),
+                api_token: data.auth.client_token,
                 expiry_time: Some(expiry_time),
             });
 
