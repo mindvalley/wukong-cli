@@ -360,4 +360,38 @@ mod tests {
         let response = response.unwrap();
         assert_eq!(response.status(), 200);
     }
+
+    #[tokio::test]
+    async fn test_renew_token() {
+        let server = MockServer::start();
+
+        let api_token = "test_token";
+        let api_resp = r#"
+            {
+              "auth": {
+                "client_token": "test_token",
+                "lease_duration": 0
+                }
+            }"#;
+
+        let mock_server = server.mock(|when, then| {
+            when.method(POST)
+                .path_contains(VaultClient::RENEW_TOKEN)
+                .body(format!("increment={}", "24h"))
+                .header("X-Vault-Token", api_token);
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+
+        let vault_client = VaultClient::new().with_base_url(server.base_url());
+
+        let response = vault_client.renew_token(api_token, None).await;
+
+        mock_server.assert();
+        assert!(response.is_ok());
+
+        let response = response.unwrap();
+        assert_eq!(response.status(), 200);
+    }
 }
