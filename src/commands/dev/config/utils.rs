@@ -38,10 +38,11 @@ pub async fn get_updated_configs<'a>(
 
                     eprintln!(
                         "'{}' not found.",
-                        get_local_config_path(&info.destination_file, config_path)
-                            .to_string_lossy()
-                            .to_string()
-                            .cyan()
+                        make_path_relative(
+                            &get_local_config_path(&info.destination_file, config_path)
+                                .to_string_lossy()
+                        )
+                        .cyan()
                     );
                     continue;
                 }
