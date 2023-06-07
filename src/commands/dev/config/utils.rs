@@ -1,7 +1,9 @@
 use crate::{
     error::{CliError, DevConfigError},
     services::vault::Vault,
-    utils::annotations::{read_vault_annotation, VaultSecretAnnotation},
+    utils::secret_extractors::{
+        ElixirConfigExtractor, SecretExtractor, SecretInfo, WKTomlConfigExtractor,
+    },
 };
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use log::debug;
@@ -13,56 +15,55 @@ use std::{
 
 use super::diff::has_diff;
 
-pub async fn get_updated_configs(
+pub async fn get_updated_configs<'a>(
     vault: &Vault,
     vault_token: &str,
-    config_files: &Vec<(String, VaultSecretAnnotation)>,
-) -> Result<Vec<(VaultSecretAnnotation, String, String, String)>, CliError> {
+    config_files: &'a Vec<(String, Vec<SecretInfo>)>,
+) -> Result<Vec<(&'a SecretInfo, String, String, String)>, CliError> {
     // Comparing local vs remote ....
     println!("{}", "comparing local config vs remote config...".cyan());
 
     let mut updated_configs = Vec::new();
 
     for config_file in config_files {
-        let (config_path, vault_secret_annotation) = config_file;
-        let remote_secrets = vault
-            .get_secrets(vault_token, &vault_secret_annotation.secret_path)
-            .await?
-            .data;
+        let (config_path, secret_infos) = config_file;
+        for info in secret_infos {
+            let remote_secrets = vault.get_secrets(vault_token, &info.src).await?.data;
 
-        let local_config =
-            get_local_config_as_string(&vault_secret_annotation.destination_file, config_path)
+            let local_config = get_local_config_as_string(&info.destination_file, config_path)
                 .map_err(|error| {
                     debug!("Error: {:?}", error);
                     CliError::DevConfigError(DevConfigError::ConfigSecretNotFound)
                 })?;
 
-        // Get only one key from hashmap
-        let remote_config = match remote_secrets.get(&vault_secret_annotation.secret_name) {
-            Some(config) => config,
-            None => {
-                return Err(CliError::DevConfigError(
-                    DevConfigError::InvalidSecretPath {
-                        config_path: make_path_relative(config_path),
-                        annotation: format!(
-                            "{}:{}/{}#{}",
-                            vault_secret_annotation.source,
-                            vault_secret_annotation.engine,
-                            vault_secret_annotation.secret_path.clone(),
-                            vault_secret_annotation.secret_name
-                        ),
-                    },
+            // Get only one key from hashmap
+            let remote_config = match remote_secrets.get(&info.name) {
+                Some(config) => config,
+                None => {
+                    // return Err(CliError::DevConfigError(
+                    //     DevConfigError::InvalidSecretPath {
+                    //         config_path: make_path_relative(config_path),
+                    //         annotation: format!(
+                    //             "{}:{}/{}#{}",
+                    //             vault_secret_annotation.source,
+                    //             vault_secret_annotation.engine,
+                    //             vault_secret_annotation.secret_path.clone(),
+                    //             vault_secret_annotation.secret_name
+                    //         ),
+                    //     },
+                    // ));
+                    todo!()
+                }
+            };
+
+            if has_diff(remote_config, &local_config) {
+                updated_configs.push((
+                    info,
+                    remote_config.clone(),
+                    local_config,
+                    config_path.clone(),
                 ));
             }
-        };
-
-        if has_diff(remote_config, &local_config) {
-            updated_configs.push((
-                vault_secret_annotation.clone(),
-                remote_config.clone(),
-                local_config,
-                config_path.clone(),
-            ));
         }
     }
 
@@ -71,8 +72,7 @@ pub async fn get_updated_configs(
 
 pub fn get_local_config_path(destination_file: &str, config_path: &str) -> PathBuf {
     let path = PathBuf::from(config_path);
-    let dir_path = path.parent().unwrap();
-    dir_path.join(destination_file)
+    path.parent().unwrap().join(destination_file)
 }
 
 pub fn get_local_config_as_string(
@@ -85,11 +85,12 @@ pub fn get_local_config_as_string(
     Ok(local_config)
 }
 
-pub fn get_dev_config_files() -> Result<Vec<PathBuf>, CliError> {
-    let current_path = current_dir()?;
+pub fn get_secret_config_files(current_path: Option<PathBuf>) -> Result<Vec<PathBuf>, CliError> {
+    let current_path = current_path.unwrap_or(current_dir()?);
 
     let mut overrides = OverrideBuilder::new(current_path.clone());
     overrides.add("**/config/dev.exs").unwrap();
+    overrides.add("**/.wukong.toml").unwrap();
 
     let config_files = WalkBuilder::new(current_path)
         .overrides(overrides.build().unwrap())
@@ -114,26 +115,30 @@ pub fn make_path_relative(path: &str) -> String {
         .unwrap()
 }
 
-pub fn filter_config_with_secret_annotations(
-    available_files: Vec<PathBuf>,
-) -> Result<Vec<(String, VaultSecretAnnotation)>, CliError> {
-    let mut filtered_annotations: Vec<(String, VaultSecretAnnotation)> = Vec::new();
+pub fn extract_secret_infos(secret_config_files: Vec<PathBuf>) -> Vec<(String, Vec<SecretInfo>)> {
+    let mut extracted_infos = Vec::new();
 
-    for file in available_files {
-        let file_contents = std::fs::read_to_string(file.clone())?;
-        let annotations = read_vault_annotation(&file_contents);
-
-        for annotation in annotations {
-            if annotation.key == "wukong.mindvalley.dev/config-secrets-location"
-                && annotation.source == "vault"
-                && annotation.engine == "secret"
-            {
-                filtered_annotations.push((file.to_string_lossy().to_string(), annotation));
+    for file in secret_config_files {
+        match file.to_string_lossy() {
+            x if x.contains(".wukong.toml") => {
+                extracted_infos.push((
+                    file.to_string_lossy().to_string(),
+                    WKTomlConfigExtractor::extract(&file),
+                ));
+            }
+            x if x.contains("dev.exs") => {
+                extracted_infos.push((
+                    file.to_string_lossy().to_string(),
+                    ElixirConfigExtractor::extract(&file),
+                ));
+            }
+            x => {
+                debug!("Ignoring file: {}", x);
             }
         }
     }
 
-    Ok(filtered_annotations)
+    extracted_infos
 }
 
 // Test:

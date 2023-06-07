@@ -1,5 +1,3 @@
-use log::debug;
-
 use crate::utils::annotations::read_vault_annotation;
 
 use super::{SecretExtractor, SecretInfo};
@@ -11,20 +9,14 @@ impl SecretExtractor for ElixirConfigExtractor {
         let src = std::fs::read_to_string(file).unwrap();
         let annotations = read_vault_annotation(&src);
 
-        let mut extracted = vec![];
+        let mut extracted = Vec::new();
 
         if !annotations.is_empty() {
             for annotation in annotations {
-                if annotation.key == "wukong.mindvalley.dev/config-secrets-location" {
-                    if annotation.source != "vault" {
-                        debug!("Invalid source: {}", annotation.source);
-                        continue;
-                    }
-                    if annotation.engine != "secret" {
-                        debug!("Invalid engine: {}", annotation.engine);
-                        continue;
-                    }
-
+                if annotation.key == "wukong.mindvalley.dev/config-secrets-location"
+                    && annotation.source == "vault"
+                    && annotation.engine == "secret"
+                {
                     extracted.push(SecretInfo {
                         provider: "bunker".to_string(),
                         kind: "elixir_config".to_string(),

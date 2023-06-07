@@ -1,19 +1,13 @@
+use crate::commands::dev::config::utils::get_local_config_path;
 use crate::services::vault::client::FetchSecretsData;
-use crate::{
-    error::CliError,
-    services::vault::Vault,
-    utils::secret_extractors::{ElixirConfigExtractor, SecretExtractor, WKTomlConfigExtractor},
-};
-use ignore::{overrides::OverrideBuilder, WalkBuilder};
+use crate::{error::CliError, services::vault::Vault};
 use log::debug;
 use owo_colors::OwoColorize;
 use std::collections::HashMap;
 use std::io::{prelude::*, ErrorKind};
-use std::{
-    env::current_dir,
-    fs::File,
-    path::{Path, PathBuf},
-};
+use std::{env::current_dir, fs::File, path::Path};
+
+use super::utils::{extract_secret_infos, get_secret_config_files};
 
 pub async fn handle_config_pull(path: &Path) -> Result<bool, CliError> {
     let path = path.try_exists().map(|value| match value {
@@ -30,22 +24,8 @@ pub async fn handle_config_pull(path: &Path) -> Result<bool, CliError> {
         )),
     })??;
 
-    let available_files = get_secret_config_files(&path);
-    let mut extracted_infos = vec![];
-
-    for file in available_files {
-        match file.to_string_lossy() {
-            x if x.contains(".wukong.toml") => {
-                extracted_infos.push((file.clone(), WKTomlConfigExtractor::extract(&file)));
-            }
-            x if x.contains("dev.exs") => {
-                extracted_infos.push((file.clone(), ElixirConfigExtractor::extract(&file)));
-            }
-            x => {
-                debug!("Ignoring file: {}", x);
-            }
-        }
-    }
+    let secret_config_files = get_secret_config_files(Some(path))?;
+    let extracted_infos = extract_secret_infos(secret_config_files);
 
     let vault = Vault::new();
     let vault_token = vault.get_token_or_login().await?;
@@ -54,17 +34,13 @@ pub async fn handle_config_pull(path: &Path) -> Result<bool, CliError> {
     let mut secrets_cache: HashMap<String, FetchSecretsData> = HashMap::new();
     for info in extracted_infos {
         eprintln!();
-        eprintln!(
-            "🔍 {} annotation(s) found in {}",
-            info.1.len(),
-            info.0.to_string_lossy()
-        );
+        eprintln!("🔍 {} annotation(s) found in {}", info.1.len(), info.0);
 
         for annotation in info.1 {
             let source_path = annotation.src.clone();
             let destination_path = annotation.destination_file.clone();
 
-            let file_path = info.0.parent().unwrap().join(destination_path.clone());
+            let file_path = get_local_config_path(&destination_path, &info.0);
 
             // cache the secrets so we don't call vault api multiple times for the same
             // path
@@ -181,19 +157,19 @@ pub async fn handle_config_pull(path: &Path) -> Result<bool, CliError> {
     }
 }
 
-fn get_secret_config_files(path: &Path) -> Vec<PathBuf> {
-    let mut overrides = OverrideBuilder::new(path);
-    overrides.add("**/config/dev.exs").unwrap();
-    overrides.add("**/.wukong.toml").unwrap();
-
-    WalkBuilder::new(path)
-        .overrides(overrides.build().unwrap())
-        .build()
-        .flatten()
-        .filter(|e| e.path().is_file())
-        .map(|e| e.path().to_path_buf())
-        .collect()
-}
+// fn get_secret_config_files(path: &Path) -> Vec<PathBuf> {
+//     let mut overrides = OverrideBuilder::new(path);
+//     overrides.add("**/config/dev.exs").unwrap();
+//     overrides.add("**/.wukong.toml").unwrap();
+//
+//     WalkBuilder::new(path)
+//         .overrides(overrides.build().unwrap())
+//         .build()
+//         .flatten()
+//         .filter(|e| e.path().is_file())
+//         .map(|e| e.path().to_path_buf())
+//         .collect()
+// }
 
 #[cfg(test)]
 mod test {
@@ -215,7 +191,7 @@ mod test {
         let another_dev_config_file = temp.child("app/config/dev.exs");
         another_dev_config_file.touch().unwrap();
 
-        let files = get_secret_config_files(&temp.to_path_buf());
+        let files = get_secret_config_files(&temp.to_path_buf()).unwrap();
         let files_names = files
             .iter()
             .map(|f| f.to_string_lossy())
