@@ -3,6 +3,23 @@ use toml::Value;
 use super::{SecretExtractor, SecretInfo};
 use std::path::Path;
 
+// at /a/b/c/.wukong.toml
+// [secrets.dotenv]
+// provider = "bunker"
+// kind = "generic"
+// src = "vault:secret/wukong-cli/development#dotenv"
+// dst = ".env"
+//
+// Extract to
+// SecretInfo {
+//     key: "dotenv",
+//     provider: "bunker",
+//     kind: "generic",
+//     src: "wukong-cli/development",
+//     dst: ".env",
+//     name: "dotenv",
+//     annotated_file: /a/b/c/.wukong.toml
+// }
 pub struct WKTomlConfigExtractor;
 
 impl SecretExtractor for WKTomlConfigExtractor {
@@ -71,5 +88,61 @@ impl SecretExtractor for WKTomlConfigExtractor {
         }
 
         extracted
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::fs::File;
+    use std::io::Write;
+
+    #[test]
+    fn test_wk_toml_config_extractor() {
+        let dir = assert_fs::TempDir::new().unwrap();
+        let dev_config_path = dir.path().join("dev.exs");
+
+        let mut dev_config = File::create(&dev_config_path).unwrap();
+        writeln!(
+            dev_config,
+            r#"
+[[secrets]]
+
+[secrets.dotenv]
+provider = "bunker"
+kind = "generic"
+src = "vault:secret/wukong-cli/development#dotenv"
+dst = ".env"
+
+[secrets.kubeconfig]
+provider = "bunker"
+kind = "generic"
+src = "vault:secret/wukong-cli/development#kubeconfig"
+dst = "priv/files/kubeconfig"
+            "#
+        )
+        .unwrap();
+
+        let secret_infos = WKTomlConfigExtractor::extract(&dev_config_path);
+
+        assert_eq!(secret_infos.len(), 2);
+
+        assert_eq!(secret_infos[0].key, "dotenv");
+        assert_eq!(secret_infos[0].name, "dotenv");
+        assert_eq!(secret_infos[0].src, "wukong-cli/development");
+        assert_eq!(secret_infos[0].destination_file, ".env");
+        assert_eq!(secret_infos[0].provider, "bunker");
+        assert_eq!(secret_infos[0].kind, "generic");
+        assert_eq!(secret_infos[0].annotated_file, dev_config_path);
+
+        assert_eq!(secret_infos[1].key, "kubeconfig");
+        assert_eq!(secret_infos[1].name, "kubeconfig");
+        assert_eq!(secret_infos[1].src, "wukong-cli/development");
+        assert_eq!(secret_infos[1].destination_file, "priv/files/kubeconfig");
+        assert_eq!(secret_infos[1].provider, "bunker");
+        assert_eq!(secret_infos[1].kind, "generic");
+        assert_eq!(secret_infos[1].annotated_file, dev_config_path);
+
+        dir.close().unwrap();
     }
 }

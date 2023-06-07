@@ -46,7 +46,8 @@ fn get_secret_mock<'a>(server: &'a MockServer, custom_data: Option<&'a str>) -> 
     let data = custom_data.unwrap_or_else(|| r#"
         {
           "b.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5",
-          "c.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5"
+          "c.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5",
+          "dotenv": "test=true"
         }"#);
 
     let secret_api_resp = format!(
@@ -174,6 +175,26 @@ config :academy, Academy.Repo,
             "#,
         )
         .unwrap();
+
+    let wukong_toml_config_file = elixir_temp.child(".wukong.toml");
+    wukong_toml_config_file.touch().unwrap();
+    wukong_toml_config_file
+        .write_str(
+            r#"
+[[secrets]]
+
+[secrets.dotenv]
+provider = "bunker"
+kind = "generic"
+src = "vault:secret/mv/tech/app/dev#dotenv"
+dst = ".env"
+    "#,
+        )
+        .unwrap();
+
+    let created_env_file = elixir_temp.child(".env");
+    created_env_file.touch().unwrap();
+    created_env_file.write_str("test=false").unwrap();
 
     let cmd = common::wukong_raw_command()
         .arg("dev")
@@ -312,11 +333,16 @@ fn test_wukong_dev_config_diff_when_secret_file_not_found() {
         .env("WUKONG_DEV_CONFIG_FILE", wk_config_file.path())
         .env("WUKONG_DEV_VAULT_API_URL", server.base_url())
         .assert()
-        .failure();
+        .success();
 
     let output = cmd.get_output();
 
-    insta::assert_snapshot!(std::str::from_utf8(&output.stderr).unwrap());
+    insta::with_settings!({filters => vec![
+        (format!("{}", wk_temp.path().to_str().unwrap()).as_str(), "[TEMP_DIR]"),
+        (format!("{}", elixir_temp.path().to_str().unwrap()).as_str(), "[TEMP_DIR]"),
+    ]}, {
+        insta::assert_snapshot!(std::str::from_utf8(&output.stderr).unwrap());
+    });
 
     verify_token_mock.assert();
     secret_data_mock.assert();
@@ -427,7 +453,8 @@ fn test_wukong_dev_config_pull_success() {
         {
               "a.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5",
               "b.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5",
-              "c.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5"
+              "c.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5",
+              "dotenv": "test=true"
             }"#,
         ),
     );
@@ -490,6 +517,23 @@ test_domain = System.get_env("TEST_DOMAIN", "mv.test.com")
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
+    "#,
+        )
+        .unwrap();
+
+    let wukong_toml_config_file = elixir_temp.child(".wukong.toml");
+    wukong_toml_config_file.touch().unwrap();
+
+    wukong_toml_config_file
+        .write_str(
+            r#"
+[[secrets]]
+
+[secrets.dotenv]
+provider = "bunker"
+kind = "generic"
+src = "vault:secret/mv/tech/app/dev#dotenv"
+dst = ".env"
     "#,
         )
         .unwrap();
