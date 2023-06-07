@@ -23,7 +23,16 @@ impl SecretExtractor for WKTomlConfigExtractor {
                     for key in secret_table.keys() {
                         let secret_data = secret_table.get(key).unwrap();
 
+                        let provider = secret_data["provider"].as_str().unwrap().to_string();
+                        let kind = secret_data["kind"].as_str().unwrap().to_string();
                         let source = secret_data["src"].as_str().unwrap().to_string();
+
+                        // we are ignoring configs if provider is not "bunker" and kind is not
+                        // "generic" for now
+                        if provider != "bunker" || kind != "generic" {
+                            continue;
+                        }
+
                         let value_part = source.split('#').collect::<Vec<&str>>();
                         if value_part.len() != 2 {
                             continue;
@@ -39,13 +48,18 @@ impl SecretExtractor for WKTomlConfigExtractor {
 
                         let splited_engine_and_path =
                             path_with_engine.split('/').collect::<Vec<&str>>();
-                        let (_engine, path) = splited_engine_and_path.split_at(1);
+                        let (engine, path) = splited_engine_and_path.split_at(1);
+
+                        if (splited_source_and_path[0] != "vault") || (engine[0] != "secret") {
+                            continue;
+                        }
 
                         let src = path.join("/");
 
                         extracted.push(SecretInfo {
-                            provider: secret_data["provider"].as_str().unwrap().to_string(),
-                            kind: secret_data["kind"].as_str().unwrap().to_string(),
+                            key: key.to_string(),
+                            provider,
+                            kind,
                             src,
                             destination_file: secret_data["dst"].as_str().unwrap().to_string(),
                             name: secret_name,

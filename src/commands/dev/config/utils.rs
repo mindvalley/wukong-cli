@@ -30,29 +30,33 @@ pub async fn get_updated_configs<'a>(
         for info in secret_infos {
             let remote_secrets = vault.get_secrets(vault_token, &info.src).await?.data;
 
-            let local_config = get_local_config_as_string(&info.destination_file, config_path)
-                .map_err(|error| {
+            let local_config = match get_local_config_as_string(&info.destination_file, config_path)
+            {
+                Ok(config) => config,
+                Err(error) => {
                     debug!("Error: {:?}", error);
-                    CliError::DevConfigError(DevConfigError::ConfigSecretNotFound)
-                })?;
+
+                    eprintln!(
+                        "'{}' not found.",
+                        get_local_config_path(&info.destination_file, config_path)
+                            .to_string_lossy()
+                            .to_string()
+                            .cyan()
+                    );
+                    continue;
+                }
+            };
 
             // Get only one key from hashmap
             let remote_config = match remote_secrets.get(&info.name) {
                 Some(config) => config,
                 None => {
-                    // return Err(CliError::DevConfigError(
-                    //     DevConfigError::InvalidSecretPath {
-                    //         config_path: make_path_relative(config_path),
-                    //         annotation: format!(
-                    //             "{}:{}/{}#{}",
-                    //             vault_secret_annotation.source,
-                    //             vault_secret_annotation.engine,
-                    //             vault_secret_annotation.secret_path.clone(),
-                    //             vault_secret_annotation.secret_name
-                    //         ),
-                    //     },
-                    // ));
-                    todo!()
+                    return Err(CliError::DevConfigError(
+                        DevConfigError::InvalidSecretPath {
+                            config_path: make_path_relative(config_path),
+                            annotation: info.key.to_string(),
+                        },
+                    ));
                 }
             };
 
@@ -150,10 +154,11 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_filter_config_with_secret_annotations() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_extract_secret_infos() -> Result<(), Box<dyn std::error::Error>> {
         let dir = assert_fs::TempDir::new().unwrap();
         let file1_path = dir.path().join("dev.exs");
         let file2_path = dir.path().join("dev2.exs");
+        let file3_path = dir.path().join(".wukong.toml");
 
         let mut file1 = File::create(&file1_path)?;
         writeln!(
@@ -166,33 +171,52 @@ mod test {
         let mut file2 = File::create(&file2_path)?;
         writeln!(file2, "Some other content")?;
 
-        let available_files = vec![file1_path.clone(), file2_path.clone()];
-        let filtered_annotations = filter_config_with_secret_annotations(available_files)?;
+        let mut file3 = File::create(&file3_path)?;
+        writeln!(
+            file3,
+            r#"# Import development secrets
+[[secrets]]
 
-        assert_eq!(filtered_annotations.len(), 1);
+[secrets.dotenv]
+provider = "bunker"
+kind = "generic"
+src = "vault:secret/wukong-cli/development#dotenv"
+dst = ".env" 
+"#
+        )?;
 
-        let has_file1_path = filtered_annotations
+        let available_files = vec![file1_path.clone(), file2_path.clone(), file3_path.clone()];
+        let secret_infos = extract_secret_infos(available_files);
+
+        assert_eq!(secret_infos.len(), 2);
+
+        let has_file1_path = secret_infos
             .iter()
             .any(|(path, _)| path == &file1_path.to_string_lossy().to_string());
 
-        let does_not_have_file2_path = filtered_annotations
+        let does_not_have_file2_path = secret_infos
             .iter()
             .any(|(path, _)| path == &file2_path.to_string_lossy().to_string());
 
+        let has_file3_path = secret_infos
+            .iter()
+            .any(|(path, _)| path == &file3_path.to_string_lossy().to_string());
+
         assert!(has_file1_path);
         assert!(!does_not_have_file2_path);
+        assert!(has_file3_path);
 
-        let (_, annotation) = filtered_annotations
+        let (_, infos) = secret_infos
             .iter()
             .find(|(path, _)| path == &file1_path.to_string_lossy().to_string())
             .unwrap();
 
         assert_eq!(
-            annotation.key,
-            "wukong.mindvalley.dev/config-secrets-location"
+            infos[0].key,
+            "vault:secret/wukong-cli/sandboxes#dev.secrets.exs"
         );
-        assert_eq!(annotation.source, "vault");
-        assert_eq!(annotation.engine, "secret");
+        assert_eq!(infos[0].name, "dev.secrets.exs");
+        assert_eq!(infos[0].src, "wukong-cli/sandboxes");
 
         dir.close()?;
 

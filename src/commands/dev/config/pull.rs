@@ -191,7 +191,7 @@ mod test {
         let another_dev_config_file = temp.child("app/config/dev.exs");
         another_dev_config_file.touch().unwrap();
 
-        let files = get_secret_config_files(&temp.to_path_buf()).unwrap();
+        let files = get_secret_config_files(Some(temp.to_path_buf())).unwrap();
         let files_names = files
             .iter()
             .map(|f| f.to_string_lossy())

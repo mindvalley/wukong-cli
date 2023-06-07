@@ -33,6 +33,7 @@ pub use wk_toml_config::WKTomlConfigExtractor;
 //
 
 pub struct SecretInfo {
+    pub key: String,
     // Provider, such as "bunker"
     pub provider: String,
     // Kind, such as "elixir_config" or "generic"

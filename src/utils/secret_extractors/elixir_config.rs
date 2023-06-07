@@ -18,6 +18,7 @@ impl SecretExtractor for ElixirConfigExtractor {
                     && annotation.engine == "secret"
                 {
                     extracted.push(SecretInfo {
+                        key: annotation.raw,
                         provider: "bunker".to_string(),
                         kind: "elixir_config".to_string(),
                         src: annotation.secret_path.clone(),
@@ -27,8 +28,6 @@ impl SecretExtractor for ElixirConfigExtractor {
                     });
                 }
             }
-        } else {
-            eprintln!("🔍 No annotation found in {}", file.to_string_lossy());
         }
 
         extracted

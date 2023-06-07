@@ -113,12 +113,8 @@ async fn select_config<'a>(
                         get_local_config_path(config_path, &secret_info.destination_file);
 
                     format!(
-                        "{:<50}{}::{}/{}#{}",
+                        "{:<50}vault:secret/{}#{}",
                         make_path_relative(&local_config_path.to_string_lossy()),
-                        // annotation.source,
-                        // annotation.engine,
-                        "",
-                        "",
                         secret_info.src,
                         secret_info.name,
                     )

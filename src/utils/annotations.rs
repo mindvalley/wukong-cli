@@ -19,6 +19,7 @@ pub struct VaultSecretAnnotation {
     pub secret_path: String,
     pub secret_name: String,
     pub destination_file: String,
+    pub raw: String,
 }
 
 pub fn read_vault_annotation(src: &str) -> Vec<VaultSecretAnnotation> {
@@ -126,6 +127,7 @@ pub fn read_vault_annotation(src: &str) -> Vec<VaultSecretAnnotation> {
                 .unwrap()
                 .trim()
                 .to_string(),
+            raw: value,
         });
     }
 
