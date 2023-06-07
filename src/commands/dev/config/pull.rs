@@ -1,5 +1,9 @@
 use crate::services::vault::client::FetchSecretsData;
-use crate::{error::CliError, services::vault::Vault, utils::annotations::read_vault_annotation};
+use crate::{
+    error::CliError,
+    services::vault::Vault,
+    utils::secret_extractors::{ElixirConfigExtractor, SecretExtractor, WKTomlConfigExtractor},
+};
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use log::debug;
 use owo_colors::OwoColorize;
@@ -10,114 +14,6 @@ use std::{
     fs::File,
     path::{Path, PathBuf},
 };
-use toml::Value;
-
-struct SecretInfo {
-    provider: String,
-    kind: String,
-    src: String,
-    destination_file: String,
-    name: String,
-    annotated_file: PathBuf,
-}
-
-trait Extractor {
-    fn extract(&self, file: &PathBuf) -> Vec<SecretInfo>;
-}
-
-struct WukongTomlExtractor;
-impl Extractor for WukongTomlExtractor {
-    fn extract(&self, file: &PathBuf) -> Vec<SecretInfo> {
-        let toml_string = std::fs::read_to_string(file).expect("Failed to read config file");
-
-        // Parse the TOML string
-        let parsed_toml: Value = toml::from_str(&toml_string).expect("Failed to parse TOML");
-
-        // Access values from the parsed TOML
-        let secrets = parsed_toml.get("secrets").expect("secrets not found");
-
-        let mut extracted = vec![];
-
-        if let Some(secrets_array) = secrets.as_array() {
-            for secret in secrets_array {
-                if let Some(secret_table) = secret.as_table() {
-                    for key in secret_table.keys() {
-                        let secret_data = secret_table.get(key).unwrap();
-
-                        let source = secret_data["src"].as_str().unwrap().to_string();
-                        let value_part = source.split('#').collect::<Vec<&str>>();
-                        if value_part.len() != 2 {
-                            continue;
-                        }
-                        let source = value_part[0].to_string();
-                        let secret_name = value_part[1].to_string();
-
-                        let splited_source_and_path = source.split(':').collect::<Vec<&str>>();
-                        if splited_source_and_path.len() != 2 {
-                            continue;
-                        }
-                        let path_with_engine = splited_source_and_path[1].to_string();
-
-                        let splited_engine_and_path =
-                            path_with_engine.split('/').collect::<Vec<&str>>();
-                        let (_engine, path) = splited_engine_and_path.split_at(1);
-
-                        let src = path.join("/");
-
-                        extracted.push(SecretInfo {
-                            provider: secret_data["provider"].as_str().unwrap().to_string(),
-                            kind: secret_data["kind"].as_str().unwrap().to_string(),
-                            src,
-                            destination_file: secret_data["dst"].as_str().unwrap().to_string(),
-                            name: secret_name,
-                            annotated_file: file.clone(),
-                        });
-                    }
-                }
-            }
-        }
-
-        extracted
-    }
-}
-
-struct ElixirAnnotationExtractor;
-impl Extractor for ElixirAnnotationExtractor {
-    fn extract(&self, file: &PathBuf) -> Vec<SecretInfo> {
-        let src = std::fs::read_to_string(file.clone()).unwrap();
-        let annotations = read_vault_annotation(&src);
-
-        let mut extracted = vec![];
-
-        if !annotations.is_empty() {
-            for annotation in annotations {
-                if annotation.key == "wukong.mindvalley.dev/config-secrets-location" {
-                    if annotation.source != "vault" {
-                        debug!("Invalid source: {}", annotation.source);
-                        continue;
-                    }
-                    if annotation.engine != "secret" {
-                        debug!("Invalid engine: {}", annotation.engine);
-                        continue;
-                    }
-
-                    extracted.push(SecretInfo {
-                        provider: "bunker".to_string(),
-                        kind: "elixir_config".to_string(),
-                        src: annotation.secret_path.clone(),
-                        destination_file: annotation.destination_file.clone(),
-                        name: annotation.secret_name.clone(),
-                        annotated_file: file.clone(),
-                    });
-                }
-            }
-        } else {
-            eprintln!("🔍 No annotation found in {}", file.to_string_lossy());
-        }
-
-        extracted
-    }
-}
 
 pub async fn handle_config_pull(path: &Path) -> Result<bool, CliError> {
     let path = path.try_exists().map(|value| match value {
@@ -139,13 +35,10 @@ pub async fn handle_config_pull(path: &Path) -> Result<bool, CliError> {
     let mut extracted_infos = vec![];
 
     for file in available_files {
-        let wukong_toml_file_extractor = WukongTomlExtractor {};
-        let elixir_annotation_extractor = ElixirAnnotationExtractor {};
-
         if file.to_string_lossy().contains(".wukong.toml") {
-            extracted_infos.push((file.clone(), wukong_toml_file_extractor.extract(&file)));
+            extracted_infos.push((file.clone(), WKTomlConfigExtractor::extract(&file)));
         } else {
-            extracted_infos.push((file.clone(), elixir_annotation_extractor.extract(&file)));
+            extracted_infos.push((file.clone(), ElixirConfigExtractor::extract(&file)));
         }
     }
 
