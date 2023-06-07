@@ -30,15 +30,20 @@ pub async fn handle_config_pull(path: &Path) -> Result<bool, CliError> {
         )),
     })??;
 
-    let available_files = get_dev_config_files(&path);
-
+    let available_files = get_secret_config_files(&path);
     let mut extracted_infos = vec![];
 
     for file in available_files {
-        if file.to_string_lossy().contains(".wukong.toml") {
-            extracted_infos.push((file.clone(), WKTomlConfigExtractor::extract(&file)));
-        } else {
-            extracted_infos.push((file.clone(), ElixirConfigExtractor::extract(&file)));
+        match file.to_string_lossy() {
+            x if x.contains(".wukong.toml") => {
+                extracted_infos.push((file.clone(), WKTomlConfigExtractor::extract(&file)));
+            }
+            x if x.contains("dev.exs") => {
+                extracted_infos.push((file.clone(), ElixirConfigExtractor::extract(&file)));
+            }
+            x => {
+                debug!("Ignoring file: {}", x);
+            }
         }
     }
 
@@ -176,7 +181,7 @@ pub async fn handle_config_pull(path: &Path) -> Result<bool, CliError> {
     }
 }
 
-fn get_dev_config_files(path: &Path) -> Vec<PathBuf> {
+fn get_secret_config_files(path: &Path) -> Vec<PathBuf> {
     let mut overrides = OverrideBuilder::new(path);
     overrides.add("**/config/dev.exs").unwrap();
     overrides.add("**/.wukong.toml").unwrap();
@@ -210,7 +215,7 @@ mod test {
         let another_dev_config_file = temp.child("app/config/dev.exs");
         another_dev_config_file.touch().unwrap();
 
-        let files = get_dev_config_files(&temp.to_path_buf());
+        let files = get_secret_config_files(&temp.to_path_buf());
         let files_names = files
             .iter()
             .map(|f| f.to_string_lossy())
