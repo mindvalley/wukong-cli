@@ -210,7 +210,7 @@ dst = ".env"
     insta::assert_snapshot!(std::str::from_utf8(&output.stdout).unwrap());
 
     verify_token_mock.assert();
-    secret_data_mock.assert();
+    secret_data_mock.assert_hits(2);
 
     teardown(wk_temp, elixir_temp)
 }
