@@ -118,7 +118,7 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
         let url = new_instance.url.unwrap_or_default();
 
         let mut connection_test_success = false;
-        for i in 0..3 {
+        for i in 0..20 {
             match reqwest::get(&url).await {
                 Ok(rs) => {
                     if rs.status().is_success() || rs.status().is_redirection() {
@@ -131,7 +131,7 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
                 }
             }
 
-            if i < 2 {
+            if i < 19 {
                 debug!("wait for 5 seconds and test again.");
                 sleep(std::time::Duration::from_secs(5)).await;
             }
