@@ -1,6 +1,6 @@
 use crate::{
     commands::Context,
-    error::{APIError, CliError},
+    error::CliError,
     graphql::{kubernetes::watch_livebook, QueryClient, QueryClientBuilder},
     loader::new_spinner_progress_bar,
 };
@@ -64,6 +64,7 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
     if has_existing_livebook_pod {
         preparing_progress_bar.set_message("Found a provisioned Livebook instance belonging to you, re-creating your remote instance...");
 
+        debug!("Destroying the exisiting livebook instance.");
         let _destroyed = client
             .destroy_livebook(&application, &namespace, &version)
             .await
@@ -72,8 +73,11 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
         // wait 5 seconds for the pod to be destroyed, otherwise it will failed when deploying new
         // livebook on the next step
         sleep(std::time::Duration::from_secs(5)).await;
+
+        debug!("Destroyed the exisiting livebook instance.");
     }
 
+    debug!("Deploying a new livebook instance.");
     let new_instance = client
         .deploy_livebook(
             &application,
@@ -95,6 +99,7 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
             name: new_instance.name.to_string(),
         };
 
+        debug!("Start watching to the new livebook instance.");
         let (_client, mut stream) = client.subscribe_watch_livebook(variables).await?;
 
         while let Some(Ok(resp)) = stream.next().await {
@@ -113,13 +118,23 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
         let url = new_instance.url.unwrap_or_default();
 
         let mut connection_test_success = false;
-        for _ in 0..3 {
-            let rs = reqwest::get(&url).await.map_err(APIError::ReqwestError)?;
-            if rs.status().is_success() || rs.status().is_redirection() {
-                connection_test_success = true;
-                break;
+        for i in 0..3 {
+            match reqwest::get(&url).await {
+                Ok(rs) => {
+                    if rs.status().is_success() || rs.status().is_redirection() {
+                        connection_test_success = true;
+                        break;
+                    }
+                }
+                Err(err) => {
+                    debug!("{:?}", err);
+                }
             }
-            sleep(std::time::Duration::from_secs(5)).await;
+
+            if i < 2 {
+                debug!("wait for 5 seconds and test again.");
+                sleep(std::time::Duration::from_secs(5)).await;
+            }
         }
 
         connection_test_progress_bar.finish_and_clear();
