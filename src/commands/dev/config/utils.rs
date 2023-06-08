@@ -152,7 +152,40 @@ mod test {
     use std::fs::File;
     use std::io::Write;
 
+    use assert_fs::prelude::{FileTouch, PathChild};
+
     use super::*;
+
+    #[test]
+    fn test_secret_config_files() {
+        // four files:
+        // temp/config/dev.exs
+        // temp/config/prod.exs
+        // temp/app/config/dev.exs
+        // temp/.wukong.toml
+
+        let temp = assert_fs::TempDir::new().unwrap();
+        let dev_config_file = temp.child("config/dev.exs");
+        dev_config_file.touch().unwrap();
+        let prod_config_file = temp.child("config/prod.exs");
+        prod_config_file.touch().unwrap();
+        let another_dev_config_file = temp.child("app/config/dev.exs");
+        another_dev_config_file.touch().unwrap();
+        let wukong_toml_file = temp.child(".wukong.toml");
+        wukong_toml_file.touch().unwrap();
+
+        let files = get_secret_config_files(Some(temp.to_path_buf())).unwrap();
+        let files_names = files
+            .iter()
+            .map(|f| f.to_string_lossy())
+            .collect::<Vec<_>>();
+        assert_eq!(files.len(), 3);
+        assert!(files_names.contains(&dev_config_file.path().to_string_lossy()));
+        assert!(files_names.contains(&another_dev_config_file.path().to_string_lossy()));
+        assert!(files_names.contains(&wukong_toml_file.path().to_string_lossy()));
+
+        temp.close().unwrap();
+    }
 
     #[test]
     fn test_extract_secret_infos() -> Result<(), Box<dyn std::error::Error>> {
