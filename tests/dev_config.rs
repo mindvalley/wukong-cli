@@ -91,6 +91,7 @@ fn mock_user_config(wk_temp: &assert_fs::TempDir, server_url: String) -> ChildPa
 
                     [vault]
                     api_token = "valid_vault_api_token"
+                    expiry_time = "2027-06-09T08:51:19.032792+00:00"
 
                     [auth]
                     account = "test@email.com"
@@ -447,6 +448,7 @@ okta_client_id = "valid-okta-client-id"
 
 [vault]
 api_token = "valid_vault_api_token"
+expiry_time = "2027-06-09T08:51:19.032792+00:00"
 
 [auth]
 account = "test@email.com"
