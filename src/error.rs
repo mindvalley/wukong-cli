@@ -201,6 +201,18 @@ If none of the above steps work for you, please contact the following people on 
                 )),
                 _ => None,
             },
+            CliError::VaultError(VaultError::ConfigError(error)) => match error {
+                    ConfigError::NotFound { .. } => Some(String::from(
+                        "Run \"wukong init\" to initialise Wukong's configuration.",
+                    )),
+                    ConfigError::PermissionDenied { path, .. } => Some(format!(
+                        "Run \"chmod +rw {path}\" to provide read and write permissions."
+                    )),
+                    ConfigError::BadTomlData(_) => Some(
+                        "Check if your config.toml file is in valid TOML format.\nThis usually happen when the config file is accidentally modified or there is a breaking change to the cli config in the new version.\nYou may want to run \"wukong init\" to re-initialise configuration again.".to_string()
+                    ),
+                    _ => None,
+                },
             _ => None,
         }
     }
