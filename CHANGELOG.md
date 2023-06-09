@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.0](https://github.com/mindvalley/wukong-cli/tree/1.0.0) (2023-06-02)
+
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/0.0.7-rc2...1.0.0)
+
+**Merged pull requests:**
+
+- Bump version to 1.0.0 [\#102](https://github.com/mindvalley/wukong-cli/pull/102) ([onimsha](https://github.com/onimsha))
+- PXP-511: \[CLI\] Develop the connect-instance command [\#101](https://github.com/mindvalley/wukong-cli/pull/101) ([jk-gan](https://github.com/jk-gan))
+- PXP-530: \[CLI\] Support PATCH API for updating secrets in Bunker [\#100](https://github.com/mindvalley/wukong-cli/pull/100) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-510: \[CLI\] Develop the list-instances command [\#99](https://github.com/mindvalley/wukong-cli/pull/99) ([jk-gan](https://github.com/jk-gan))
+- PXP-503: \[CLI\] Implement the url-mode flag [\#97](https://github.com/mindvalley/wukong-cli/pull/97) ([jk-gan](https://github.com/jk-gan))
+- PXP-501: \[CLI\] Implement the include & exclude flags [\#96](https://github.com/mindvalley/wukong-cli/pull/96) ([jk-gan](https://github.com/jk-gan))
+- Add a guide for using the Vault integration feature [\#95](https://github.com/mindvalley/wukong-cli/pull/95) ([onimsha](https://github.com/onimsha))
+- Update changelogs [\#94](https://github.com/mindvalley/wukong-cli/pull/94) ([onimsha](https://github.com/onimsha))
+- PXP-500: \[CLI\] Implement the logs command [\#91](https://github.com/mindvalley/wukong-cli/pull/91) ([jk-gan](https://github.com/jk-gan))
+
 ## [0.0.7-rc2](https://github.com/mindvalley/wukong-cli/tree/0.0.7-rc2) (2023-04-20)
 
 [Full Changelog](https://github.com/mindvalley/wukong-cli/compare/0.0.7-rc1...0.0.7-rc2)
