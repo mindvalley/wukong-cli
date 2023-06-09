@@ -36,12 +36,51 @@ impl SecretExtractor for WKTomlConfigExtractor {
             if let Some(secrets_array) = secrets.as_array() {
                 for secret in secrets_array {
                     if let Some(secret_table) = secret.as_table() {
-                        for key in secret_table.keys() {
-                            let secret_data = secret_table.get(key).unwrap();
-
-                            let provider = secret_data["provider"].as_str().unwrap().to_string();
-                            let kind = secret_data["kind"].as_str().unwrap().to_string();
-                            let source = secret_data["src"].as_str().unwrap().to_string();
+                        for (key, value) in secret_table.iter() {
+                            let provider = match value.get("provider") {
+                                Some(v) => v.as_str().unwrap().to_string(),
+                                None => {
+                                    eprintln!(
+                                        "⚠️  [wukong_toml] The {} not found under {} table. It will be ignored.",
+                                        "provider".cyan(),
+                                        key.cyan()
+                                    );
+                                    continue;
+                                }
+                            };
+                            let kind = match value.get("kind") {
+                                Some(v) => v.as_str().unwrap().to_string(),
+                                None => {
+                                    eprintln!(
+                                        "⚠️  [wukong_toml] The {} not found under {} table. It will be ignored.",
+                                        "kind".cyan(),
+                                        key.cyan()
+                                    );
+                                    continue;
+                                }
+                            };
+                            let source = match value.get("src") {
+                                Some(v) => v.as_str().unwrap().to_string(),
+                                None => {
+                                    eprintln!(
+                                        "⚠️  [wukong_toml] The {} not found under {} table. It will be ignored.",
+                                        "src".cyan(),
+                                        key.cyan()
+                                    );
+                                    continue;
+                                }
+                            };
+                            let destination_file = match value.get("dst") {
+                                Some(v) => v.as_str().unwrap().to_string(),
+                                None => {
+                                    eprintln!(
+                                        "⚠️  [wukong_toml] The {} not found under {} table. It will be ignored.",
+                                        "dst".cyan(),
+                                        key.cyan()
+                                    );
+                                    continue;
+                                }
+                            };
 
                             // we are ignoring configs if provider is not "bunker" and kind is not
                             // "generic" for now
@@ -70,14 +109,13 @@ impl SecretExtractor for WKTomlConfigExtractor {
                                 continue;
                             }
 
-                            let destination_file = secret_data["dst"].as_str().unwrap().to_string();
                             if (destination_file.starts_with("~/"))
-                                || (destination_file.starts_with("/"))
+                                || (destination_file.starts_with('/'))
                             {
                                 eprintln!(
-                                "⚠️  The dst {} is not under the project directory. It will be ignored.",
+                                "⚠️  [wukong_toml] The destination {} is not under the project directory. It will be ignored.",
                                 destination_file.cyan()
-                            );
+                                );
                                 continue;
                             }
 
