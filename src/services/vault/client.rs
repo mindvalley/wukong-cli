@@ -4,6 +4,12 @@ use std::collections::HashMap;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Auth {
     pub client_token: String,
+    pub lease_duration: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Renew {
+    pub auth: Auth,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -46,6 +52,7 @@ pub struct VaultClient {
 
 impl VaultClient {
     pub const LOGIN: &str = "/v1/auth/okta/login";
+    pub const RENEW_TOKEN: &str = "/v1/auth/token/renew-self";
     pub const VERIFY_TOKEN: &str = "/v1/auth/token/lookup-self";
     pub const FETCH_SECRETS: &str = "/v1/secret/data";
     pub const UPDATE_SECRET: &str = "/v1/secret/data";
@@ -81,6 +88,24 @@ impl VaultClient {
             .client
             .post(url)
             .form(&[("password", password)])
+            .send()
+            .await?;
+
+        Ok(response)
+    }
+
+    pub async fn renew_token(
+        &self,
+        api_token: &str,
+        extend_duration: Option<&str>,
+    ) -> Result<reqwest::Response, reqwest::Error> {
+        let url = format!("{}{}", self.base_url, Self::RENEW_TOKEN);
+
+        let response = self
+            .client
+            .post(url)
+            .header("X-Vault-Token", api_token)
+            .form(&[("increment", extend_duration.unwrap_or("24h"))])
             .send()
             .await?;
 
@@ -157,7 +182,8 @@ mod tests {
         let api_resp = r#"
             {
               "auth": {
-                "client_token": "test_token"
+                "client_token": "test_token",
+                "lease_duration": 0
                 }
             }"#;
 
@@ -327,6 +353,40 @@ mod tests {
         let response = vault_client
             .update_secret(api_token, path, &update_data)
             .await;
+
+        mock_server.assert();
+        assert!(response.is_ok());
+
+        let response = response.unwrap();
+        assert_eq!(response.status(), 200);
+    }
+
+    #[tokio::test]
+    async fn test_renew_token() {
+        let server = MockServer::start();
+
+        let api_token = "test_token";
+        let api_resp = r#"
+            {
+              "auth": {
+                "client_token": "test_token",
+                "lease_duration": 0
+                }
+            }"#;
+
+        let mock_server = server.mock(|when, then| {
+            when.method(POST)
+                .path_contains(VaultClient::RENEW_TOKEN)
+                .body(format!("increment={}", "24h"))
+                .header("X-Vault-Token", api_token);
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+
+        let vault_client = VaultClient::new().with_base_url(server.base_url());
+
+        let response = vault_client.renew_token(api_token, None).await;
 
         mock_server.assert();
         assert!(response.is_ok());

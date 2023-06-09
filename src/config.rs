@@ -68,6 +68,7 @@ pub struct CoreConfig {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct VaultConfig {
     pub api_token: String,
+    pub expiry_time: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
