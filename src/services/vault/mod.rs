@@ -1,7 +1,7 @@
 pub mod client;
 
 use self::client::{FetchSecretsData, Login, VaultClient};
-use crate::error::{ConfigError, VaultError};
+use crate::error::VaultError;
 use crate::loader::new_spinner_progress_bar;
 use crate::output::colored_println;
 use crate::services::vault::client::FetchSecrets;
@@ -40,7 +40,7 @@ impl Vault {
         let vault_config = match self.get_vault_config().await {
             Ok(config) => config,
             Err(VaultError::ApiTokenNotFound) => self.handle_login().await?,
-            Err(err) => return Err(err.into()),
+            Err(err) => return Err(err),
         };
 
         match self.is_valid_token(&vault_config.api_token).await {

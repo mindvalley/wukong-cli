@@ -190,8 +190,7 @@ If none of the above steps work for you, please contact the following people on 
                 )),
                 _ => None,
             },
-            CliError::VaultError(error) => match error {
-                VaultError::ConfigError(error) => match error {
+            CliError::VaultError(VaultError::ConfigError(error)) => match error {
                     ConfigError::NotFound { .. } => Some(String::from(
                         "Run \"wukong init\" to initialise Wukong's configuration.",
                     )),
@@ -203,8 +202,6 @@ If none of the above steps work for you, please contact the following people on 
                     ),
                     _ => None,
                 },
-                _ => None,
-            },
             _ => None,
         }
     }
