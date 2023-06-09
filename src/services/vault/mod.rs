@@ -1,7 +1,7 @@
 pub mod client;
 
 use self::client::{FetchSecretsData, Login, VaultClient};
-use crate::error::VaultError;
+use crate::error::{ConfigError, VaultError};
 use crate::loader::new_spinner_progress_bar;
 use crate::output::colored_println;
 use crate::services::vault::client::FetchSecrets;
@@ -40,7 +40,7 @@ impl Vault {
         let vault_config = match self.get_vault_config().await {
             Ok(config) => config,
             Err(VaultError::ApiTokenNotFound) => self.handle_login().await?,
-            Err(err) => return Err(err),
+            Err(err) => return Err(err.into()),
         };
 
         match self.is_valid_token(&vault_config.api_token).await {
@@ -57,46 +57,44 @@ impl Vault {
     }
 
     async fn renew_token(&self, vault_config: VaultConfig) -> Result<(), VaultError> {
-        if let Some(expiry_time_str) = &vault_config.expiry_time {
-            let current_time: DateTime<Local> = Local::now();
+        let current_time: DateTime<Local> = Local::now();
 
-            if let Ok(expiry_time) = DateTime::parse_from_rfc3339(expiry_time_str) {
-                let remaining_duration = expiry_time.signed_duration_since(current_time);
+        if let Ok(expiry_time) = DateTime::parse_from_rfc3339(&vault_config.expiry_time) {
+            let remaining_duration = expiry_time.signed_duration_since(current_time);
 
-                if remaining_duration < Duration::hours(1) {
-                    let mut config_with_path = CLIConfig::get_config_with_path()?;
+            if remaining_duration < Duration::hours(1) {
+                let mut config_with_path = CLIConfig::get_config_with_path()?;
 
-                    debug!("Extending the token expiration time");
-                    let progress_bar = new_spinner_progress_bar();
-                    progress_bar.set_message(
+                debug!("Extending the token expiration time");
+                let progress_bar = new_spinner_progress_bar();
+                progress_bar.set_message(
                         "Authenticating the user... You may need to check your device for an MFA notification.",
                     );
 
-                    let response = self
-                        .vault_client
-                        .renew_token(&vault_config.api_token, None)
-                        .await?;
+                let response = self
+                    .vault_client
+                    .renew_token(&vault_config.api_token, None)
+                    .await?;
 
-                    debug!("renew token: {:?}", response);
+                debug!("renew token: {:?}", response);
 
-                    if response.status().is_success() {
-                        let data = response.json::<Renew>().await?;
+                if response.status().is_success() {
+                    let data = response.json::<Renew>().await?;
 
-                        let expiry_time = self.calculate_expiry_time(data.auth.lease_duration);
+                    let expiry_time = self.calculate_expiry_time(data.auth.lease_duration);
 
-                        config_with_path.config.vault = Some(VaultConfig {
-                            api_token: config_with_path.config.vault.unwrap().api_token,
-                            expiry_time: Some(expiry_time),
-                        });
+                    config_with_path.config.vault = Some(VaultConfig {
+                        api_token: config_with_path.config.vault.unwrap().api_token,
+                        expiry_time,
+                    });
 
-                        config_with_path.config.save(&config_with_path.path)?;
-                    }
-
-                    progress_bar.finish_and_clear();
+                    config_with_path.config.save(&config_with_path.path)?;
                 }
-            } else {
-                debug!("Failed to parse expiry_time: {}", expiry_time_str);
+
+                progress_bar.finish_and_clear();
             }
+        } else {
+            debug!("Failed to parse expiry_time: {}", &vault_config.expiry_time);
         }
 
         Ok(())
@@ -136,7 +134,7 @@ impl Vault {
 
             config_with_path.config.vault = Some(VaultConfig {
                 api_token: data.auth.client_token,
-                expiry_time: Some(expiry_time),
+                expiry_time,
             });
 
             config_with_path.config.save(&config_with_path.path)?;
