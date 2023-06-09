@@ -135,15 +135,6 @@ impl Auth {
         stream.write_all(response.as_bytes()).unwrap();
 
         // Exchange the code with a token.
-        // let token_response = client
-        //     .exchange_code(code)
-        //     .set_pkce_verifier(pkce_verifier)
-        //     .request_async(async_http_client)
-        //     .await
-        //     .map_err(|_err| CliError::AuthError {
-        //         message: "Failed to contact token endpoint",
-        //     })?;
-
         let token_response = client
             .exchange_code(code)
             .set_pkce_verifier(pkce_verifier)
