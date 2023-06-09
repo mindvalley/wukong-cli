@@ -1,7 +1,8 @@
-use toml::Value;
-
 use super::{SecretExtractor, SecretInfo};
+use crate::error::ExtractError;
+use owo_colors::OwoColorize;
 use std::path::Path;
+use toml::Value;
 
 // at /a/b/c/.wukong.toml
 // [secrets.dotenv]
@@ -23,71 +24,81 @@ use std::path::Path;
 pub struct WKTomlConfigExtractor;
 
 impl SecretExtractor for WKTomlConfigExtractor {
-    fn extract(file: &Path) -> Vec<SecretInfo> {
-        let toml_string = std::fs::read_to_string(file).expect("Failed to read config file");
+    fn extract(file: &Path) -> Result<Vec<SecretInfo>, ExtractError> {
+        let toml_string = std::fs::read_to_string(file).expect("Failed to read toml file");
 
         // Parse the TOML string
-        let parsed_toml: Value = toml::from_str(&toml_string).expect("Failed to parse TOML");
+        let parsed_toml: Value = toml::from_str(&toml_string)?;
 
         // Access values from the parsed TOML
-        let secrets = parsed_toml.get("secrets").expect("secrets not found");
+        let mut extracted = Vec::new();
+        if let Some(secrets) = parsed_toml.get("secrets") {
+            if let Some(secrets_array) = secrets.as_array() {
+                for secret in secrets_array {
+                    if let Some(secret_table) = secret.as_table() {
+                        for key in secret_table.keys() {
+                            let secret_data = secret_table.get(key).unwrap();
 
-        let mut extracted = vec![];
+                            let provider = secret_data["provider"].as_str().unwrap().to_string();
+                            let kind = secret_data["kind"].as_str().unwrap().to_string();
+                            let source = secret_data["src"].as_str().unwrap().to_string();
 
-        if let Some(secrets_array) = secrets.as_array() {
-            for secret in secrets_array {
-                if let Some(secret_table) = secret.as_table() {
-                    for key in secret_table.keys() {
-                        let secret_data = secret_table.get(key).unwrap();
+                            // we are ignoring configs if provider is not "bunker" and kind is not
+                            // "generic" for now
+                            if provider != "bunker" || kind != "generic" {
+                                continue;
+                            }
 
-                        let provider = secret_data["provider"].as_str().unwrap().to_string();
-                        let kind = secret_data["kind"].as_str().unwrap().to_string();
-                        let source = secret_data["src"].as_str().unwrap().to_string();
+                            let value_part = source.split('#').collect::<Vec<&str>>();
+                            if value_part.len() != 2 {
+                                continue;
+                            }
+                            let source = value_part[0].to_string();
+                            let secret_name = value_part[1].to_string();
 
-                        // we are ignoring configs if provider is not "bunker" and kind is not
-                        // "generic" for now
-                        if provider != "bunker" || kind != "generic" {
-                            continue;
+                            let splited_source_and_path = source.split(':').collect::<Vec<&str>>();
+                            if splited_source_and_path.len() != 2 {
+                                continue;
+                            }
+                            let path_with_engine = splited_source_and_path[1].to_string();
+
+                            let splited_engine_and_path =
+                                path_with_engine.split('/').collect::<Vec<&str>>();
+                            let (engine, path) = splited_engine_and_path.split_at(1);
+
+                            if (splited_source_and_path[0] != "vault") || (engine[0] != "secret") {
+                                continue;
+                            }
+
+                            let destination_file = secret_data["dst"].as_str().unwrap().to_string();
+                            if (destination_file.starts_with("~/"))
+                                || (destination_file.starts_with("/"))
+                            {
+                                eprintln!(
+                                "⚠️  The dst {} is not under the project directory. It will be ignored.",
+                                destination_file.cyan()
+                            );
+                                continue;
+                            }
+
+                            let src = path.join("/");
+
+                            extracted.push(SecretInfo {
+                                key: key.to_string(),
+                                provider,
+                                kind,
+                                src,
+                                destination_file,
+                                name: secret_name,
+                                annotated_file: file.to_path_buf(),
+                            });
                         }
-
-                        let value_part = source.split('#').collect::<Vec<&str>>();
-                        if value_part.len() != 2 {
-                            continue;
-                        }
-                        let source = value_part[0].to_string();
-                        let secret_name = value_part[1].to_string();
-
-                        let splited_source_and_path = source.split(':').collect::<Vec<&str>>();
-                        if splited_source_and_path.len() != 2 {
-                            continue;
-                        }
-                        let path_with_engine = splited_source_and_path[1].to_string();
-
-                        let splited_engine_and_path =
-                            path_with_engine.split('/').collect::<Vec<&str>>();
-                        let (engine, path) = splited_engine_and_path.split_at(1);
-
-                        if (splited_source_and_path[0] != "vault") || (engine[0] != "secret") {
-                            continue;
-                        }
-
-                        let src = path.join("/");
-
-                        extracted.push(SecretInfo {
-                            key: key.to_string(),
-                            provider,
-                            kind,
-                            src,
-                            destination_file: secret_data["dst"].as_str().unwrap().to_string(),
-                            name: secret_name,
-                            annotated_file: file.to_path_buf(),
-                        });
                     }
                 }
             }
         }
 
-        extracted
+        Ok(extracted)
     }
 }
 
@@ -123,7 +134,7 @@ dst = "priv/files/kubeconfig"
         )
         .unwrap();
 
-        let secret_infos = WKTomlConfigExtractor::extract(&dev_config_path);
+        let secret_infos = WKTomlConfigExtractor::extract(&dev_config_path).unwrap();
 
         assert_eq!(secret_infos.len(), 2);
 

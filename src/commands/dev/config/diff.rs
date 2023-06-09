@@ -16,7 +16,7 @@ pub async fn handle_config_diff() -> Result<bool, CliError> {
     progress_bar.set_message("🔍 Finding config with annotation");
 
     let secret_config_files = get_secret_config_files(None)?;
-    let extracted_infos = extract_secret_infos(secret_config_files);
+    let extracted_infos = extract_secret_infos(secret_config_files)?;
 
     progress_bar.finish_and_clear();
 

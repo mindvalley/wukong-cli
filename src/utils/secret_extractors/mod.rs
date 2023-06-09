@@ -6,6 +6,8 @@ mod wk_toml_config;
 pub use elixir_config::ElixirConfigExtractor;
 pub use wk_toml_config::WKTomlConfigExtractor;
 
+use crate::error::ExtractError;
+
 //
 //  ┌────────────────────────────────────────────────────┐                   ┌──────────────────────┐
 //  │                                                    │                   │                      │
@@ -48,5 +50,5 @@ pub struct SecretInfo {
 }
 
 pub trait SecretExtractor {
-    fn extract(file: &Path) -> Vec<SecretInfo>;
+    fn extract(file: &Path) -> Result<Vec<SecretInfo>, ExtractError>;
 }

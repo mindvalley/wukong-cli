@@ -37,6 +37,8 @@ pub enum CliError {
     DevConfigError(#[from] DevConfigError),
     #[error(transparent)]
     GCloudError(#[from] GCloudError),
+    #[error(transparent)]
+    ExtractError(#[from] ExtractError),
 }
 
 #[derive(Debug, ThisError)]
@@ -142,6 +144,13 @@ pub enum GCloudError {
     Io(#[from] ::std::io::Error),
     #[error(transparent)]
     GoogleLogging2Error(#[from] google_logging2::Error),
+}
+
+// Secret Extractor Error
+#[derive(Debug, ThisError)]
+pub enum ExtractError {
+    #[error("Bad TOML data.")]
+    BadTomlData(#[from] toml::de::Error),
 }
 
 impl CliError {

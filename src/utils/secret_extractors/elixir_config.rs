@@ -1,4 +1,4 @@
-use crate::utils::annotations::read_vault_annotation;
+use crate::{error::ExtractError, utils::annotations::read_vault_annotation};
 
 use super::{SecretExtractor, SecretInfo};
 use std::path::Path;
@@ -19,7 +19,7 @@ use std::path::Path;
 // }
 pub struct ElixirConfigExtractor;
 impl SecretExtractor for ElixirConfigExtractor {
-    fn extract(file: &Path) -> Vec<SecretInfo> {
+    fn extract(file: &Path) -> Result<Vec<SecretInfo>, ExtractError> {
         let src = std::fs::read_to_string(file).unwrap();
         let annotations = read_vault_annotation(&src);
 
@@ -44,7 +44,7 @@ impl SecretExtractor for ElixirConfigExtractor {
             }
         }
 
-        extracted
+        Ok(extracted)
     }
 }
 
@@ -70,7 +70,7 @@ mod test {
             import_config("app/dev.secrets.exs")"#
         ).unwrap();
 
-        let secret_infos = ElixirConfigExtractor::extract(&dev_config_path);
+        let secret_infos = ElixirConfigExtractor::extract(&dev_config_path).unwrap();
 
         assert_eq!(secret_infos.len(), 2);
 

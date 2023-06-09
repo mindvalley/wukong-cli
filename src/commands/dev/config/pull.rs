@@ -25,7 +25,7 @@ pub async fn handle_config_pull(path: &Path) -> Result<bool, CliError> {
     })??;
 
     let secret_config_files = get_secret_config_files(Some(path))?;
-    let extracted_infos = extract_secret_infos(secret_config_files);
+    let extracted_infos = extract_secret_infos(secret_config_files)?;
 
     let vault = Vault::new();
     let vault_token = vault.get_token_or_login().await?;

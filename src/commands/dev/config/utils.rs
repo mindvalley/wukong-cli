@@ -1,5 +1,5 @@
 use crate::{
-    error::{CliError, DevConfigError},
+    error::{CliError, DevConfigError, ExtractError},
     services::vault::Vault,
     utils::secret_extractors::{
         ElixirConfigExtractor, SecretExtractor, SecretInfo, WKTomlConfigExtractor,
@@ -120,7 +120,9 @@ pub fn make_path_relative(path: &str) -> String {
         .unwrap()
 }
 
-pub fn extract_secret_infos(secret_config_files: Vec<PathBuf>) -> Vec<(String, Vec<SecretInfo>)> {
+pub fn extract_secret_infos(
+    secret_config_files: Vec<PathBuf>,
+) -> Result<Vec<(String, Vec<SecretInfo>)>, ExtractError> {
     let mut extracted_infos = Vec::new();
 
     for file in secret_config_files {
@@ -128,13 +130,13 @@ pub fn extract_secret_infos(secret_config_files: Vec<PathBuf>) -> Vec<(String, V
             x if x.contains(".wukong.toml") => {
                 extracted_infos.push((
                     file.to_string_lossy().to_string(),
-                    WKTomlConfigExtractor::extract(&file),
+                    WKTomlConfigExtractor::extract(&file)?,
                 ));
             }
             x if x.contains("dev.exs") => {
                 extracted_infos.push((
                     file.to_string_lossy().to_string(),
-                    ElixirConfigExtractor::extract(&file),
+                    ElixirConfigExtractor::extract(&file)?,
                 ));
             }
             x => {
@@ -143,7 +145,7 @@ pub fn extract_secret_infos(secret_config_files: Vec<PathBuf>) -> Vec<(String, V
         }
     }
 
-    extracted_infos
+    Ok(extracted_infos)
 }
 
 // Test:
@@ -220,7 +222,7 @@ dst = ".env"
         )?;
 
         let available_files = vec![file1_path.clone(), file2_path.clone(), file3_path.clone()];
-        let secret_infos = extract_secret_infos(available_files);
+        let secret_infos = extract_secret_infos(available_files).unwrap();
 
         assert_eq!(secret_infos.len(), 2);
 
