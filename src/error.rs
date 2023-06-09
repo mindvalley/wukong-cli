@@ -211,8 +211,7 @@ If none of the above steps work for you, please contact the following people on 
                 )),
                 _ => None,
             },
-            CliError::AuthError(AuthError::RefreshTokenExpired { .. }) => 
-                Some("Your refresh token is expired. Run \"wukong login\" to authenticate again.".to_string()),
+            CliError::AuthError(AuthError::RefreshTokenExpired { .. }) => Some("Your refresh token is expired. Run \"wukong login\" to authenticate again.".to_string()),
             _ => None,
         }
     }
