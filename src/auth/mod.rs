@@ -1,6 +1,5 @@
-use crate::error::CliError;
+use crate::error::AuthError;
 use chrono::{Duration, Utc};
-use log::debug;
 use openidconnect::{
     core::{
         CoreClient, CoreIdTokenClaims, CoreIdTokenVerifier, CoreProviderMetadata, CoreResponseType,
@@ -49,7 +48,7 @@ impl Auth {
         }
     }
 
-    pub async fn login(&self) -> Result<AuthInfo, CliError> {
+    pub async fn login(&self) -> Result<AuthInfo, AuthError> {
         let okta_client_id = ClientId::new(self.api_key.clone());
 
         let issuer_url =
@@ -58,7 +57,7 @@ impl Auth {
         // Fetch Okta's OpenID Connect discovery document.
         let provider_metadata = CoreProviderMetadata::discover_async(issuer_url, async_http_client)
             .await
-            .map_err(|_err| CliError::OpenIDDiscoveryError)?;
+            .map_err(|_err| AuthError::OpenIDDiscoveryError)?;
 
         // Set up the config for the Okta OAuth2 process.
         let client = CoreClient::from_provider_metadata(provider_metadata, okta_client_id, None)
@@ -141,8 +140,25 @@ impl Auth {
             .set_pkce_verifier(pkce_verifier)
             .request_async(async_http_client)
             .await
-            .map_err(|_err| CliError::AuthError {
-                message: "Failed to contact token endpoint",
+            .map_err(|err| match err {
+                openidconnect::RequestTokenError::ServerResponse(error) => {
+                    let error_description = error.to_string();
+                    if error.error().to_string() == "invalid_grant"
+                        && error_description.contains("refresh token")
+                        && error_description.contains("expired")
+                    {
+                        AuthError::RefreshTokenExpired {
+                            message: error_description,
+                        }
+                    } else {
+                        AuthError::OpenIDConnectError {
+                            message: "Failed to contact token endpoint".to_string(),
+                        }
+                    }
+                }
+                _ => AuthError::OpenIDConnectError {
+                    message: "Failed to contact token endpoint".to_string(),
+                },
             })?;
 
         let id_token_verifier: CoreIdTokenVerifier = client.id_token_verifier();
@@ -164,8 +180,8 @@ impl Auth {
 
         let id_token_claims: &CoreIdTokenClaims = id_token
             .claims(&id_token_verifier, &nonce)
-            .map_err(|_err| CliError::AuthError {
-                message: "Failed to verify ID token",
+            .map_err(|_err| AuthError::OpenIDConnectError {
+                message: "Failed to verify ID token".to_string(),
             })?;
 
         // Verify the access token hash to ensure that the access token hasn't been substituted for
@@ -205,7 +221,7 @@ impl Auth {
     pub async fn refresh_tokens(
         &self,
         refresh_token: &RefreshToken,
-    ) -> Result<TokenInfo, CliError> {
+    ) -> Result<TokenInfo, AuthError> {
         let okta_client_id = ClientId::new(self.api_key.clone());
 
         let issuer_url =
@@ -214,7 +230,7 @@ impl Auth {
         // Fetch Okta's OpenID Connect discovery document.
         let provider_metadata = CoreProviderMetadata::discover_async(issuer_url, async_http_client)
             .await
-            .map_err(|_err| CliError::OpenIDDiscoveryError)?;
+            .map_err(|_err| AuthError::OpenIDDiscoveryError)?;
 
         // Set up the config for the Okta OAuth2 process.
         let client = CoreClient::from_provider_metadata(provider_metadata, okta_client_id, None)
@@ -227,11 +243,25 @@ impl Auth {
             .exchange_refresh_token(refresh_token)
             .request_async(async_http_client)
             .await
-            .map_err(|err| {
-                debug!("Error when refreshing token: {:?}", err);
-                CliError::AuthError {
-                    message: "Failed to contact token endpoint",
+            .map_err(|err| match err {
+                openidconnect::RequestTokenError::ServerResponse(error) => {
+                    let error_description = error.to_string();
+                    if error.error().to_string() == "invalid_grant"
+                        && error_description.contains("refresh token")
+                        && error_description.contains("expired")
+                    {
+                        AuthError::RefreshTokenExpired {
+                            message: error_description,
+                        }
+                    } else {
+                        AuthError::OpenIDConnectError {
+                            message: "Failed to contact token endpoint".to_string(),
+                        }
+                    }
                 }
+                _ => AuthError::OpenIDConnectError {
+                    message: "Failed to contact token endpoint".to_string(),
+                },
             })?;
 
         let id_token = token_response

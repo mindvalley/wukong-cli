@@ -7,6 +7,7 @@ pub mod init;
 pub mod login;
 pub mod pipeline;
 
+use aion::*;
 use chrono::{DateTime, Local};
 use clap::{command, crate_version, Parser, Subcommand};
 use clap_complete::Shell;
@@ -45,12 +46,13 @@ impl Context {
         let auth_config = config.auth.as_ref().ok_or(CliError::UnAuthenticated)?;
 
         // check access token expiry
-        let local: DateTime<Local> = Local::now();
+        let current_time: DateTime<Local> = Local::now();
         let expiry = DateTime::parse_from_rfc3339(&auth_config.expiry_time)
             .unwrap()
             .with_timezone(&Local);
+        let remaining_duration = expiry.signed_duration_since(current_time);
 
-        if local >= expiry {
+        if remaining_duration < 5.minutes() {
             debug!("Access token expired. Refreshing tokens...");
 
             let new_tokens = Auth::new(&config.core.okta_client_id)

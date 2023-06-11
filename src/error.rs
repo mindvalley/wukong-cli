@@ -27,8 +27,8 @@ pub enum CliError {
     UnAuthenticated,
     #[error("You are un-initialised.")]
     UnInitialised,
-    #[error("{message}")]
-    AuthError { message: &'static str },
+    #[error(transparent)]
+    AuthError(#[from] AuthError),
     #[error(transparent)]
     DeploymentError(#[from] DeploymentError),
     #[error(transparent)]
@@ -37,6 +37,16 @@ pub enum CliError {
     DevConfigError(#[from] DevConfigError),
     #[error(transparent)]
     GCloudError(#[from] GCloudError),
+}
+
+#[derive(Debug, ThisError)]
+pub enum AuthError {
+    #[error("Refresh token expired: {message}")]
+    RefreshTokenExpired { message: String },
+    #[error("OpenID Connect Error: {message}")]
+    OpenIDConnectError { message: String },
+    #[error("Failed to discover OpenID Provider")]
+    OpenIDDiscoveryError,
 }
 
 #[derive(Debug, ThisError)]
@@ -201,6 +211,7 @@ If none of the above steps work for you, please contact the following people on 
                 )),
                 _ => None,
             },
+            CliError::AuthError(AuthError::RefreshTokenExpired { .. }) => Some("Your refresh token is expired. Run \"wukong login\" to authenticate again.".to_string()),
             CliError::VaultError(VaultError::ConfigError(error)) => match error {
                     ConfigError::NotFound { .. } => Some(String::from(
                         "Run \"wukong init\" to initialise Wukong's configuration.",

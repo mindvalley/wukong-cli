@@ -1,10 +1,12 @@
 use crate::{
     auth::Auth,
     config::{AuthConfig, Config, CONFIG_FILE},
-    error::{CliError, ConfigError},
+    error::{AuthError, CliError, ConfigError},
     graphql::QueryClientBuilder,
+    loader::new_spinner_progress_bar,
     output::colored_println,
 };
+use aion::*;
 use chrono::{DateTime, Local};
 use dialoguer::{theme::ColorfulTheme, Select};
 use log::debug;
@@ -38,51 +40,59 @@ pub async fn handle_init() -> Result<bool, CliError> {
 
     // "Log in with a new account" is selected
     let mut new_config = if selection == login_selections.len() - 1 {
-        let mut config = Config::default();
-
-        let auth_info = Auth::new(&config.core.okta_client_id).login().await?;
-
-        // we don't really care about the exisiting config (id_token, refresh_token, account)
-        // if the user choose to log in with a new account
-        config.auth = Some(AuthConfig {
-            account: auth_info.account.clone(),
-            subject: auth_info.subject.clone(),
-            id_token: auth_info.id_token,
-            access_token: auth_info.access_token,
-            expiry_time: auth_info.expiry_time,
-            refresh_token: auth_info.refresh_token,
-        });
-
-        colored_println!("You are logged in as: {}.\n", auth_info.account);
-        config
+        let config = Config::default();
+        login_and_create_config(config).await?
     } else {
         // check access token expiry
         let mut current_config = config.clone();
         let auth_config = current_config.auth.as_ref().unwrap();
 
-        let local: DateTime<Local> = Local::now();
+        let current_time: DateTime<Local> = Local::now();
         let expiry = DateTime::parse_from_rfc3339(&auth_config.expiry_time)
             .unwrap()
             .with_timezone(&Local);
+        let remaining_duration = expiry.signed_duration_since(current_time);
 
-        if local >= expiry {
+        if remaining_duration < 5.minutes() {
             debug!("Access token expired. Refreshing tokens...");
 
-            let new_tokens = Auth::new(&config.core.okta_client_id)
+            let refresh_token_loader = new_spinner_progress_bar();
+            refresh_token_loader.set_message("Refreshing tokens...");
+
+            let updated_config = match Auth::new(&config.core.okta_client_id)
                 .refresh_tokens(&RefreshToken::new(auth_config.refresh_token.clone()))
-                .await?;
+                .await
+            {
+                Ok(new_tokens) => {
+                    current_config.auth = Some(AuthConfig {
+                        account: auth_config.account.clone(),
+                        subject: auth_config.subject.clone(),
+                        id_token: new_tokens.id_token.clone(),
+                        access_token: new_tokens.access_token.clone(),
+                        expiry_time: new_tokens.expiry_time,
+                        refresh_token: new_tokens.refresh_token,
+                    });
 
-            current_config.auth = Some(AuthConfig {
-                account: auth_config.account.clone(),
-                subject: auth_config.subject.clone(),
-                id_token: new_tokens.id_token.clone(),
-                access_token: new_tokens.access_token.clone(),
-                expiry_time: new_tokens.expiry_time,
-                refresh_token: new_tokens.refresh_token,
-            });
+                    refresh_token_loader.finish_and_clear();
+
+                    current_config
+                }
+                Err(err) => {
+                    refresh_token_loader.finish_and_clear();
+                    match err {
+                        AuthError::RefreshTokenExpired { .. } => {
+                            eprintln!("The refresh token is expired. You have to login again.");
+                            login_and_create_config(current_config).await?
+                        }
+                        err => return Err(err.into()),
+                    }
+                }
+            };
+
+            current_config = updated_config;
+        } else {
+            colored_println!("You are logged in as: {}.\n", login_selections[selection]);
         }
-
-        colored_println!("You are logged in as: {}.\n", login_selections[selection]);
 
         current_config
     };
@@ -90,6 +100,8 @@ pub async fn handle_init() -> Result<bool, CliError> {
     // SAFETY: The auth must not be None here
     let auth_config = new_config.auth.as_ref().unwrap();
 
+    let fetch_loader = new_spinner_progress_bar();
+    fetch_loader.set_message("Fetching application list...");
     // Calling API ...
     let client = QueryClientBuilder::default()
         .with_access_token(auth_config.id_token.clone())
@@ -106,6 +118,7 @@ pub async fn handle_init() -> Result<bool, CliError> {
         .iter()
         .map(|application| application.name.clone())
         .collect();
+    fetch_loader.finish_and_clear();
 
     let application_selection = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Please select the application")
@@ -143,4 +156,23 @@ Some things to try next:
     }
 
     Ok(true)
+}
+
+async fn login_and_create_config(mut config: Config) -> Result<Config, CliError> {
+    let auth_info = Auth::new(&config.core.okta_client_id).login().await?;
+
+    // we don't really care about the exisiting config (id_token, refresh_token, account)
+    // if the user choose to log in with a new account
+    config.auth = Some(AuthConfig {
+        account: auth_info.account.clone(),
+        subject: auth_info.subject.clone(),
+        id_token: auth_info.id_token,
+        access_token: auth_info.access_token,
+        expiry_time: auth_info.expiry_time,
+        refresh_token: auth_info.refresh_token,
+    });
+
+    colored_println!("You are logged in as: {}.\n", auth_info.account);
+
+    Ok(config)
 }
