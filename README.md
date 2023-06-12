@@ -41,7 +41,8 @@ The Wukong CLI is a set of tools to manages Mindvalley DevOps resources. Its goa
 
 ## GUIDES  
 
-* [How to use the Vault integration with Elixir projects](guides/elixir_working_with_secrets_in_bunker.md)
+* [How to use the Vault integration with Elixir projects](guides/elixir_working_with_secrets_in_bunker.md).  
+* [How to use the Vault integration with arbitrary secrets](guides/working_with_generic_secrets_in_bunker.md).  
 
 ## Get Started for Development
 
