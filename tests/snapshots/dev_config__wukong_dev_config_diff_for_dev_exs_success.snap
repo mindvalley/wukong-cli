@@ -2,13 +2,7 @@
 source: tests/dev_config.rs
 expression: "std::str::from_utf8(&output.stdout).unwrap()"
 ---
-[93mThere are (2) config files found![39m
 [36mcomparing local config vs remote config...[39m
-
-[2m.wukong.toml[0m
-1        |-test=true
-    1    |+test=false
-
 
 [2mconfig/dev.exs[0m
     1    |+

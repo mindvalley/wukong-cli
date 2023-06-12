@@ -1,6 +1,6 @@
 use crate::error::DevConfigError;
 use crate::loader::new_spinner_progress_bar;
-use crate::utils::annotations::VaultSecretAnnotation;
+use crate::utils::secret_extractors::SecretInfo;
 use crate::{error::CliError, services::vault::Vault};
 use dialoguer::Confirm;
 use dialoguer::{theme::ColorfulTheme, Select};
@@ -9,40 +9,34 @@ use std::collections::HashMap;
 
 use super::diff::print_diff;
 use super::utils::{
-    filter_config_with_secret_annotations, get_dev_config_files, get_local_config_as_string,
-    get_local_config_path, get_updated_configs, make_path_relative,
+    extract_secret_infos, get_local_config_as_string, get_local_config_path,
+    get_secret_config_files, get_updated_configs, make_path_relative,
 };
 
 pub async fn handle_config_push() -> Result<bool, CliError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("🔍 Finding config with annotation");
 
-    let dev_config_files = get_dev_config_files()?;
-    let dev_config_with_secret_annotations =
-        filter_config_with_secret_annotations(dev_config_files)?;
+    let secret_config_files = get_secret_config_files(None)?;
+    let extracted_infos = extract_secret_infos(secret_config_files)?;
 
     progress_bar.finish_and_clear();
 
-    if dev_config_with_secret_annotations.is_empty() {
+    if extracted_infos.is_empty() {
         return Err(CliError::DevConfigError(DevConfigError::ConfigNotFound));
     }
 
-    if dev_config_with_secret_annotations.len() != 1 {
+    if extracted_infos.len() != 1 {
         println!(
             "{}",
-            format!(
-                "There are ({}) config files found!",
-                dev_config_with_secret_annotations.len()
-            )
-            .bright_yellow()
+            format!("There are ({}) config files found!", extracted_infos.len()).bright_yellow()
         );
     }
 
     let vault = Vault::new();
     let vault_token = vault.get_token_or_login().await?;
 
-    let updated_configs =
-        get_updated_configs(&vault, &vault_token, &dev_config_with_secret_annotations).await?;
+    let updated_configs = get_updated_configs(&vault, &vault_token, &extracted_infos).await?;
 
     if updated_configs.is_empty() {
         println!(
@@ -59,12 +53,7 @@ pub async fn handle_config_push() -> Result<bool, CliError> {
         );
         let (annotation, _, _, config_path) = updated_configs.first().unwrap();
 
-        update_secrets(
-            &vault,
-            &vault_token,
-            &(config_path.clone(), annotation.clone()),
-        )
-        .await?;
+        update_secrets(&vault, &vault_token, &(config_path.clone(), annotation)).await?;
     } else {
         let config_to_update = select_config(&updated_configs).await;
         update_secrets(&vault, &vault_token, &config_to_update).await?;
@@ -76,23 +65,18 @@ pub async fn handle_config_push() -> Result<bool, CliError> {
 async fn update_secrets(
     vault: &Vault,
     vault_token: &str,
-    config_to_update: &(String, VaultSecretAnnotation),
+    config_to_update: &(String, &SecretInfo),
 ) -> Result<(), CliError> {
-    let (config_path, vault_secret_annotation) = config_to_update;
+    let (config_path, secret_info) = config_to_update;
 
     let local_config_string =
-        get_local_config_as_string(&vault_secret_annotation.destination_file, config_path)?;
+        get_local_config_as_string(&secret_info.destination_file, config_path)?;
 
     let remote_config = vault
-        .get_secret(
-            vault_token,
-            &vault_secret_annotation.secret_path,
-            &vault_secret_annotation.secret_name,
-        )
+        .get_secret(vault_token, &secret_info.src, &secret_info.name)
         .await?;
 
-    let local_config_path =
-        get_local_config_path(config_path, &vault_secret_annotation.destination_file);
+    let local_config_path = get_local_config_path(config_path, &secret_info.destination_file);
 
     print_diff(
         &remote_config,
@@ -106,39 +90,33 @@ async fn update_secrets(
         .interact()?;
 
     let mut secrets_ref: HashMap<&str, &str> = HashMap::new();
-    secrets_ref.insert(&vault_secret_annotation.secret_name, &local_config_string);
+    secrets_ref.insert(&secret_info.name, &local_config_string);
 
     if agree_to_update {
         vault
-            .update_secret(
-                vault_token,
-                &vault_secret_annotation.secret_path,
-                &secrets_ref,
-            )
+            .update_secret(vault_token, &secret_info.src, &secrets_ref)
             .await?;
     }
 
     Ok(())
 }
 
-async fn select_config(
-    available_config: &[(VaultSecretAnnotation, String, String, String)],
-) -> (String, VaultSecretAnnotation) {
+async fn select_config<'a>(
+    available_config: &[(&'a SecretInfo, String, String, String)],
+) -> (String, &'a SecretInfo) {
     let selection = Select::with_theme(&ColorfulTheme::default())
         .items(
             &available_config
                 .iter()
-                .map(|(annotation, _, _, config_path)| {
+                .map(|(secret_info, _, _, config_path)| {
                     let local_config_path =
-                        get_local_config_path(config_path, &annotation.destination_file);
+                        get_local_config_path(config_path, &secret_info.destination_file);
 
                     format!(
-                        "{:<50}{}::{}/{}#{}",
+                        "{:<50}vault:secret/{}#{}",
                         make_path_relative(&local_config_path.to_string_lossy()),
-                        annotation.source,
-                        annotation.engine,
-                        annotation.secret_path,
-                        annotation.secret_name,
+                        secret_info.src,
+                        secret_info.name,
                     )
                 })
                 .collect::<Vec<String>>(),
@@ -154,8 +132,8 @@ async fn select_config(
 
     return match selection {
         Some(index) => {
-            let (annotation, _, _, config_path) = available_config.get(index).unwrap();
-            (config_path.clone(), annotation.clone())
+            let (secret_info, _, _, config_path) = available_config.get(index).unwrap();
+            (config_path.clone(), secret_info)
         }
         None => {
             println!("No selection made, exiting...");

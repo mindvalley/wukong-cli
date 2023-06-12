@@ -7,40 +7,34 @@ use owo_colors::OwoColorize;
 use similar::{ChangeTag, TextDiff};
 
 use super::utils::{
-    filter_config_with_secret_annotations, get_dev_config_files, get_local_config_path,
-    get_updated_configs, make_path_relative,
+    extract_secret_infos, get_local_config_path, get_secret_config_files, get_updated_configs,
+    make_path_relative,
 };
 
 pub async fn handle_config_diff() -> Result<bool, CliError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("🔍 Finding config with annotation");
 
-    let dev_config_files = get_dev_config_files()?;
-    let dev_config_with_secret_annotations =
-        filter_config_with_secret_annotations(dev_config_files)?;
+    let secret_config_files = get_secret_config_files(None)?;
+    let extracted_infos = extract_secret_infos(secret_config_files)?;
 
     progress_bar.finish_and_clear();
 
-    if dev_config_with_secret_annotations.is_empty() {
+    if extracted_infos.is_empty() {
         return Err(CliError::DevConfigError(DevConfigError::ConfigNotFound));
     }
 
-    if dev_config_with_secret_annotations.len() != 1 {
+    if extracted_infos.len() != 1 {
         println!(
             "{}",
-            format!(
-                "There are ({}) config files found!",
-                dev_config_with_secret_annotations.len()
-            )
-            .bright_yellow()
+            format!("There are ({}) config files found!", extracted_infos.len()).bright_yellow()
         );
     }
 
     let vault = Vault::new();
     let vault_token = vault.get_token_or_login().await?;
 
-    let updated_configs =
-        get_updated_configs(&vault, &vault_token, &dev_config_with_secret_annotations).await?;
+    let updated_configs = get_updated_configs(&vault, &vault_token, &extracted_infos).await?;
 
     if updated_configs.is_empty() {
         println!("The config file is already up to date with the Vault Bunker.");

@@ -46,7 +46,8 @@ fn get_secret_mock<'a>(server: &'a MockServer, custom_data: Option<&'a str>) -> 
     let data = custom_data.unwrap_or_else(|| r#"
         {
           "b.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5",
-          "c.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5"
+          "c.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5",
+          "dotenv": "test=true"
         }"#);
 
     let secret_api_resp = format!(
@@ -127,7 +128,56 @@ fn test_wukong_dev_config_help() {
 
 #[test]
 #[serial]
-fn test_wukong_dev_config_diff_success() {
+fn test_wukong_dev_config_diff_for_wukong_toml_success() {
+    let (wk_temp, elixir_temp) = setup();
+    let server = MockServer::start();
+
+    let verify_token_mock = verify_token_mock(&server);
+    let secret_data_mock = get_secret_mock(&server, None);
+    let wk_config_file = mock_user_config(&wk_temp, server.base_url());
+
+    let wukong_toml_config_file = elixir_temp.child(".wukong.toml");
+    wukong_toml_config_file.touch().unwrap();
+    wukong_toml_config_file
+        .write_str(
+            r#"
+[[secrets]]
+
+[secrets.dotenv]
+provider = "bunker"
+kind = "generic"
+src = "vault:secret/mv/tech/app/dev#dotenv"
+dst = ".env"
+    "#,
+        )
+        .unwrap();
+
+    let created_env_file = elixir_temp.child(".env");
+    created_env_file.touch().unwrap();
+    created_env_file.write_str("test=false").unwrap();
+
+    let cmd = common::wukong_raw_command()
+        .arg("dev")
+        .arg("config")
+        .arg("diff")
+        .env("WUKONG_DEV_CONFIG_FILE", wk_config_file.path())
+        .env("WUKONG_DEV_VAULT_API_URL", server.base_url())
+        .assert()
+        .success();
+
+    let output = cmd.get_output();
+
+    insta::assert_snapshot!(std::str::from_utf8(&output.stdout).unwrap());
+
+    verify_token_mock.assert();
+    secret_data_mock.assert();
+
+    teardown(wk_temp, elixir_temp)
+}
+
+#[test]
+#[serial]
+fn test_wukong_dev_config_diff_for_dev_exs_success() {
     let (wk_temp, elixir_temp) = setup();
     let server = MockServer::start();
 
@@ -313,11 +363,16 @@ fn test_wukong_dev_config_diff_when_secret_file_not_found() {
         .env("WUKONG_DEV_CONFIG_FILE", wk_config_file.path())
         .env("WUKONG_DEV_VAULT_API_URL", server.base_url())
         .assert()
-        .failure();
+        .success();
 
     let output = cmd.get_output();
 
-    insta::assert_snapshot!(std::str::from_utf8(&output.stderr).unwrap());
+    insta::with_settings!({filters => vec![
+        (format!("{}", wk_temp.path().to_str().unwrap()).as_str(), "[TEMP_DIR]"),
+        (format!("{}", elixir_temp.path().to_str().unwrap()).as_str(), "[TEMP_DIR]"),
+    ]}, {
+        insta::assert_snapshot!(std::str::from_utf8(&output.stderr).unwrap());
+    });
 
     verify_token_mock.assert();
     secret_data_mock.assert();
@@ -417,7 +472,96 @@ fn test_wukong_dev_config_diff_when_config_not_found() {
 
 #[test]
 #[serial]
-fn test_wukong_dev_config_pull_success() {
+fn test_wukong_dev_config_pull_for_wukong_toml_success() {
+    let (wk_temp, elixir_temp) = setup();
+    let server = MockServer::start();
+
+    let secret_data_mock = get_secret_mock(
+        &server,
+        Some(
+            r#"
+            {
+              "dotenv": "test=true"
+            }"#,
+        ),
+    );
+    let verify_token_mock = verify_token_mock(&server);
+    let wk_config_file = mock_user_config(&wk_temp, server.base_url());
+
+    wk_config_file.touch().unwrap();
+
+    wk_config_file
+        .write_str(
+            format!(
+                r#"
+[core]
+application = "valid-application"
+wukong_api_url = "{}"
+okta_client_id = "valid-okta-client-id"
+
+[vault]
+api_token = "valid_vault_api_token"
+expiry_time = "2027-06-09T08:51:19.032792+00:00"
+
+[auth]
+account = "test@email.com"
+subject = "subject"
+id_token = "id_token"
+access_token = "access_token"
+expiry_time = "{}"
+refresh_token = "refresh_token"
+    "#,
+                server.base_url(),
+                2.days().from_now().to_rfc3339()
+            )
+            .as_str(),
+        )
+        .unwrap();
+
+    let wukong_toml_config_file = elixir_temp.child(".wukong.toml");
+    wukong_toml_config_file.touch().unwrap();
+
+    wukong_toml_config_file
+        .write_str(
+            r#"
+[[secrets]]
+
+[secrets.dotenv]
+provider = "bunker"
+kind = "generic"
+src = "vault:secret/mv/tech/app/dev#dotenv"
+dst = ".env"
+    "#,
+        )
+        .unwrap();
+
+    let cmd = common::wukong_raw_command()
+        .arg("dev")
+        .arg("config")
+        .arg("pull")
+        .arg(elixir_temp.path().to_str().unwrap())
+        .env("WUKONG_DEV_CONFIG_FILE", wk_config_file.path())
+        .env("WUKONG_DEV_VAULT_API_URL", server.base_url())
+        .assert()
+        .success();
+
+    let output = cmd.get_output();
+
+    insta::with_settings!({filters => vec![
+        (format!("{}", elixir_temp.path().to_str().unwrap()).as_str(), "[TEMP_DIR]"),
+    ]}, {
+        insta::assert_snapshot!(std::str::from_utf8(&output.stderr).unwrap());
+    });
+
+    verify_token_mock.assert();
+    secret_data_mock.assert();
+
+    teardown(wk_temp, elixir_temp)
+}
+
+#[test]
+#[serial]
+fn test_wukong_dev_config_pull_for_dev_exs_success() {
     let (wk_temp, elixir_temp) = setup();
     let server = MockServer::start();
 
