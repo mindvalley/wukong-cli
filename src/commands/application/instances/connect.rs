@@ -167,14 +167,8 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
     running_progress_bar
         .set_message("Your livebook instance is running. Press Ctrl-C to terminate...");
 
-    let (tx, rx) = tokio::sync::oneshot::channel();
+    tokio::signal::ctrl_c().await.unwrap();
 
-    tokio::spawn(async move {
-        tokio::signal::ctrl_c().await.unwrap();
-        tx.send(()).expect("Could not send signal on channel.")
-    });
-
-    rx.await.expect("Could not receive from channel.");
     running_progress_bar.finish_and_clear();
     let exiting_progress_bar = new_spinner_progress_bar();
     exiting_progress_bar.set_message("You're exiting from your remote session. Cleaning up...");
