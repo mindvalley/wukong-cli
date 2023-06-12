@@ -30,12 +30,13 @@ use yup_oauth2::{
 /// we use the existing `DefaultInstalledFlowDelegate::present_user_url` method as a fallback for
 /// when the browser did not open for example, the user still see's the URL.
 async fn browser_user_url(url: &str, need_code: bool) -> Result<String, String> {
-    if webbrowser::open(url).is_ok() {
+    let url = format!("{}&prompt=consent", url);
+    if webbrowser::open(&url).is_ok() {
         println!("Your browser has been opened to visit:\n\n\t{url}\n");
         Ok(String::new())
     } else {
         let def_delegate = DefaultInstalledFlowDelegate;
-        def_delegate.present_user_url(url, need_code).await
+        def_delegate.present_user_url(&url, need_code).await
     }
 }
 
