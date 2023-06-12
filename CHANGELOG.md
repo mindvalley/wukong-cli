@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.1](https://github.com/mindvalley/wukong-cli/tree/1.0.1) (2023-06-12)
+
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/1.0.0...1.0.1)
+
+**Implemented enhancements:**
+
+- PXP-531: \[CLI\] Support Generic secrets  [\#104](https://github.com/mindvalley/wukong-cli/pull/104) ([jk-gan](https://github.com/jk-gan))
+
+**Merged pull requests:**
+
+- Bump version to 1.0.1 [\#108](https://github.com/mindvalley/wukong-cli/pull/108) ([onimsha](https://github.com/onimsha))
+- PXP-547: \[CLI\] The cli is not working when the refresh token is expired. [\#107](https://github.com/mindvalley/wukong-cli/pull/107) ([jk-gan](https://github.com/jk-gan))
+- Update CHANGELOG [\#106](https://github.com/mindvalley/wukong-cli/pull/106) ([onimsha](https://github.com/onimsha))
+- Fix the reqwest error to stop the retrying during connection check [\#105](https://github.com/mindvalley/wukong-cli/pull/105) ([jk-gan](https://github.com/jk-gan))
+- PXP-538: Renew auth token [\#103](https://github.com/mindvalley/wukong-cli/pull/103) ([mfauzaan](https://github.com/mfauzaan))
+
 ## [1.0.0](https://github.com/mindvalley/wukong-cli/tree/1.0.0) (2023-06-02)
 
 [Full Changelog](https://github.com/mindvalley/wukong-cli/compare/0.0.7-rc2...1.0.0)
