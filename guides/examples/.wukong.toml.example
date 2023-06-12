@@ -1,0 +1,13 @@
+[[secrets]]
+
+[secrets.dotenv]
+provider = "bunker"
+kind = "generic"
+src = "vault:secret/wukong-cli/development#dotenv"
+dst = ".env"
+
+[secrets.kubeconfig]
+provider = "bunker"
+kind = "generic"
+src = "vault:secret/wukong-cli/development#kubeconfig"
+dst = "priv/files/kubeconfig"

@@ -86,7 +86,7 @@ If you see some errors at this step, for example `Secret Not Found`, it maybe of
 * You did not create the secrets file in Bunker yet.  
 * You did not have proper permission to access the secrets file in Bunker.  
 
-In this case, make sure you are able to see the secrets in the Bunker by visiting https://bunker.mindvalley.dev:8200. If the problem persists, do let us know by sending us a message to Slack channel #wukong-cli-testers.  
+In this case, make sure you are able to see the secrets in the Bunker by visiting https://bunker.mindvalley.dev:8200. If the problem persists, do let us know by sending us a message to Slack channel #wukong-dev-team.  
 
 ## Pusing the secrets.  
 
