@@ -9,7 +9,7 @@ use wukong::{output::error::ErrorOutput, run};
 async fn main() {
     setup_panic!();
 
-    // make sure that the cursor re-appears when interrupting
+    // TODO: make sure that the cursor re-appears when interrupting
     // tokio::spawn(async move {
     //     tokio::signal::ctrl_c().await.unwrap();
     //     let term = dialoguer::console::Term::stdout();
