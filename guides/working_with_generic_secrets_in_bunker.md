@@ -27,7 +27,7 @@ It's important to know that you may not have permission to create the secret in 
 ## Create the .wukong.toml    
 
 To allow the Wukong CLI to be able to detect and pull the secrets file for you, you need to put a `.wukong.toml` config file in the top-level of your working folder. 
-You can find an example of the file in the [example](guides/examples) folder. Let's assume you want to pull a secret from Bunker to the `.env` file on your working directory.
+You can find an example of the file in the [example](examples) folder. Let's assume you want to pull a secret from Bunker to the `.env` file on your working directory.
 
 ```toml
 [[secrets]]
