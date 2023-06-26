@@ -1,0 +1,11 @@
+/Users/jk-gan/Developer/Work/Mindvalley/wukong-cli/crates/wukong_telemetry_macro/target/debug/deps/proc_macro2-1b2d9e60dfd614b0.rmeta: /Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/lib.rs /Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/marker.rs /Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/parse.rs /Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/rcvec.rs /Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/detection.rs /Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/fallback.rs /Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/wrapper.rs
+
+/Users/jk-gan/Developer/Work/Mindvalley/wukong-cli/crates/wukong_telemetry_macro/target/debug/deps/proc_macro2-1b2d9e60dfd614b0.d: /Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/lib.rs /Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/marker.rs /Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/parse.rs /Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/rcvec.rs /Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/detection.rs /Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/fallback.rs /Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/wrapper.rs
+
+/Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/lib.rs:
+/Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/marker.rs:
+/Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/parse.rs:
+/Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/rcvec.rs:
+/Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/detection.rs:
+/Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/fallback.rs:
+/Users/jk-gan/.cargo/registry/src/github.com-1ecc6299db9ec823/proc-macro2-1.0.47/src/wrapper.rs:

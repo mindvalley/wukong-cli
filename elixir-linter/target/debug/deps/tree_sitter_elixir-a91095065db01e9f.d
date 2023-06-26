@@ -1,0 +1,8 @@
+/Users/jk-gan/Developer/Work/Mindvalley/wukong-cli/crates/elixir-linter/target/debug/deps/tree_sitter_elixir-a91095065db01e9f.rmeta: /Users/jk-gan/.cargo/git/checkouts/tree-sitter-elixir-0e690e8e3a4ae87e/b20eaa7/bindings/rust/lib.rs /Users/jk-gan/.cargo/git/checkouts/tree-sitter-elixir-0e690e8e3a4ae87e/b20eaa7/bindings/rust/../../src/node-types.json /Users/jk-gan/.cargo/git/checkouts/tree-sitter-elixir-0e690e8e3a4ae87e/b20eaa7/bindings/rust/../../queries/highlights.scm /Users/jk-gan/.cargo/git/checkouts/tree-sitter-elixir-0e690e8e3a4ae87e/b20eaa7/bindings/rust/../../queries/tags.scm
+
+/Users/jk-gan/Developer/Work/Mindvalley/wukong-cli/crates/elixir-linter/target/debug/deps/tree_sitter_elixir-a91095065db01e9f.d: /Users/jk-gan/.cargo/git/checkouts/tree-sitter-elixir-0e690e8e3a4ae87e/b20eaa7/bindings/rust/lib.rs /Users/jk-gan/.cargo/git/checkouts/tree-sitter-elixir-0e690e8e3a4ae87e/b20eaa7/bindings/rust/../../src/node-types.json /Users/jk-gan/.cargo/git/checkouts/tree-sitter-elixir-0e690e8e3a4ae87e/b20eaa7/bindings/rust/../../queries/highlights.scm /Users/jk-gan/.cargo/git/checkouts/tree-sitter-elixir-0e690e8e3a4ae87e/b20eaa7/bindings/rust/../../queries/tags.scm
+
+/Users/jk-gan/.cargo/git/checkouts/tree-sitter-elixir-0e690e8e3a4ae87e/b20eaa7/bindings/rust/lib.rs:
+/Users/jk-gan/.cargo/git/checkouts/tree-sitter-elixir-0e690e8e3a4ae87e/b20eaa7/bindings/rust/../../src/node-types.json:
+/Users/jk-gan/.cargo/git/checkouts/tree-sitter-elixir-0e690e8e3a4ae87e/b20eaa7/bindings/rust/../../queries/highlights.scm:
+/Users/jk-gan/.cargo/git/checkouts/tree-sitter-elixir-0e690e8e3a4ae87e/b20eaa7/bindings/rust/../../queries/tags.scm:

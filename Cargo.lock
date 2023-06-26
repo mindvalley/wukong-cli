@@ -86,6 +86,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ansi-str"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1cf4578926a981ab0ca955dc023541d19de37112bc24c1a197bd806d3d86ad1d"
+dependencies = [
+ "ansitok",
+]
+
+[[package]]
 name = "ansitok"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1086,7 +1095,16 @@ version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca3aa72a6f96ea37bbc5aa912f6788242832f75369bdfdadcb0e38423f100059"
 dependencies = [
- "dirs-sys",
+ "dirs-sys 0.3.7",
+]
+
+[[package]]
+name = "dirs"
+version = "5.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "44c45a9d03d6676652bcb5e724c7e988de1acad23a711b5217ab9cbecbec2225"
+dependencies = [
+ "dirs-sys 0.4.1",
 ]
 
 [[package]]
@@ -1108,6 +1126,18 @@ dependencies = [
  "libc",
  "redox_users",
  "winapi",
+]
+
+[[package]]
+name = "dirs-sys"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "520f05a5cbd335fae5a99ff7a6ab8627577660ee5cfd6a94a6a929b52ff0321c"
+dependencies = [
+ "libc",
+ "option-ext",
+ "redox_users",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -1403,12 +1433,6 @@ dependencies = [
  "openssl-sys",
  "url 2.4.0",
 ]
-
-[[package]]
-name = "glob"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
 name = "globset"
@@ -2522,6 +2546,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "option-ext"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"
+
+[[package]]
 name = "ordered-float"
 version = "2.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2559,7 +2589,20 @@ version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1526bb6aa9f10ec339fb10360f22c57edf81d5678d0278e93bc12a47ffbe4b01"
 dependencies = [
- "ansi-str",
+ "ansi-str 0.5.0",
+ "ansitok",
+ "bytecount",
+ "fnv",
+ "unicode-width",
+]
+
+[[package]]
+name = "papergrid"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ae7891b22598926e4398790c8fe6447930c72a67d36d983a49d6ce682ce83290"
+dependencies = [
+ "ansi-str 0.8.0",
  "ansitok",
  "bytecount",
  "fnv",
@@ -3643,9 +3686,22 @@ version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56c3ee73732ffceaea7b8f6b719ce3bb17f253fa27461ffeaf568ebd0cdb4b85"
 dependencies = [
- "ansi-str",
- "papergrid",
- "tabled_derive",
+ "ansi-str 0.5.0",
+ "papergrid 0.7.1",
+ "tabled_derive 0.5.0",
+ "unicode-width",
+]
+
+[[package]]
+name = "tabled"
+version = "0.12.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ce69a5028cd9576063ec1f48edb2c75339fd835e6094ef3e05b3a079bf594a6"
+dependencies = [
+ "ansi-str 0.8.0",
+ "ansitok",
+ "papergrid 0.9.1",
+ "tabled_derive 0.6.0",
  "unicode-width",
 ]
 
@@ -3654,6 +3710,19 @@ name = "tabled_derive"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "beca1b4eaceb4f2755df858b88d9b9315b7ccfd1ffd0d7a48a52602301f01a57"
+dependencies = [
+ "heck",
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "tabled_derive"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "99f688a08b54f4f02f0a3c382aefdb7884d3d69609f785bd253dc033243e3fe4"
 dependencies = [
  "heck",
  "proc-macro-error",
@@ -4653,6 +4722,36 @@ dependencies = [
 name = "wukong"
 version = "1.0.3"
 dependencies = [
+ "clap 4.3.8",
+ "clap-verbosity-flag",
+ "clap_complete",
+ "dialoguer",
+ "dirs 5.0.1",
+ "indicatif",
+ "log",
+ "once_cell",
+ "owo-colors",
+ "serde",
+ "tabled 0.12.2",
+ "thiserror",
+ "tokio",
+ "toml",
+ "wukong-sdk",
+]
+
+[[package]]
+name = "wukong-next"
+version = "2.0.0-dev"
+dependencies = [
+ "log",
+ "tokio",
+ "wukong-sdk",
+]
+
+[[package]]
+name = "wukong-sdk"
+version = "1.0.1"
+dependencies = [
  "aion",
  "anyhow",
  "assert_cmd",
@@ -4665,7 +4764,7 @@ dependencies = [
  "clap_complete",
  "criterion",
  "dialoguer",
- "dirs",
+ "dirs 4.0.0",
  "edit",
  "elixir_linter",
  "git2",
@@ -4694,7 +4793,7 @@ dependencies = [
  "serde_json",
  "serial_test",
  "similar",
- "tabled",
+ "tabled 0.10.0",
  "thiserror",
  "time-humanize",
  "tokio",
