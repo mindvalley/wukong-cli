@@ -12,9 +12,9 @@ static WUKONG_API_URL: &str = "http://localhost:4000/api";
 #[cfg(not(feature = "prod"))]
 static OKTA_CLIENT_ID: &str = "0oakfxaegyAV5JDD5357";
 
-#[cfg(all(feature = "prod"))]
+#[cfg(feature = "prod")]
 static WUKONG_API_URL: &str = "https://wukong-api-proxy.mindvalley.dev/api";
-#[cfg(all(feature = "prod"))]
+#[cfg(feature = "prod")]
 static OKTA_CLIENT_ID: &str = "0oakfxaegyAV5JDD5357";
 
 /// The default path to the CLI configuration file.
@@ -28,7 +28,7 @@ static OKTA_CLIENT_ID: &str = "0oakfxaegyAV5JDD5357";
 ///
 /// [Lazy]: https://docs.rs/once_cell/latest/once_cell/sync/struct.Lazy.html
 pub static CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
-    #[cfg(all(feature = "prod"))]
+    #[cfg(feature = "prod")]
     return dirs::home_dir().map(|mut path| {
         path.extend([".config", "wukong", "config.toml"]);
         path.to_str().unwrap().to_string()
@@ -104,23 +104,18 @@ impl Default for Config {
     }
 }
 
-// impl WKConfig for Config {
-//     fn api_url(&self) -> String {
-//         todo!()
-//     }
-//
-//     fn access_token(&self) -> Option<String> {
-//         todo!()
-//     }
-// }
-
 impl Config {
+    /// Load a configuration from default path.
+    ///
+    /// # Errors
+    ///
+    /// This function may return typical file I/O errors.
     pub fn load_from_default_path() -> Result<Self, ConfigError> {
-        let config_file = CONFIG_FILE
-            .as_ref()
-            .expect("Unable to identify user's home directory");
-
-        Config::load_from_path(config_file)
+        Self::load_from_path(
+            CONFIG_FILE
+                .as_ref()
+                .expect("Unable to identify user's home directory"),
+        )
     }
 
     /// Load a configuration from file.
@@ -147,14 +142,6 @@ impl Config {
         Ok(config)
     }
 
-    pub fn save_to_default_path(&self) -> Result<(), ConfigError> {
-        let config_file = CONFIG_FILE
-            .as_ref()
-            .expect("Unable to identify user's home directory");
-
-        self.save_to_path(config_file)
-    }
-
     /// Save a configuration to file.
     ///
     /// If the file's directory does not exist, it will be created. If the file
@@ -174,6 +161,14 @@ impl Config {
         file.write_all(&serialized.into_bytes())?;
 
         Ok(())
+    }
+
+    pub fn save_to_default_path(&self) -> Result<(), ConfigError> {
+        self.save_to_path(
+            CONFIG_FILE
+                .as_ref()
+                .expect("Unable to identify user's home directory"),
+        )
     }
 
     pub fn get_config_with_path() -> Result<ConfigWithPath, ConfigError> {

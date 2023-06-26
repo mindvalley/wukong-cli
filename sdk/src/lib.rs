@@ -17,8 +17,12 @@ mod utils;
 use app::App;
 use auth::Auth;
 use config::{Config, CONFIG_FILE};
-use error::{APIError, AuthError, CliError};
-use graphql::{applications_query, ApplicationsQuery, GQLClient};
+use error::{APIError, AuthError, WKError};
+use graphql::{
+    applications_query, pipeline_query,
+    pipelines_query::{self, PipelinesQueryPipelines},
+    ApplicationsQuery, GQLClient, PipelinesQuery,
+};
 use graphql_client::{GraphQLQuery, Response};
 use hyper::header;
 use openidconnect::RefreshToken;
