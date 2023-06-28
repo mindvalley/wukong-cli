@@ -49,6 +49,11 @@ is an annotation. It will tell the Wukong CLI where to look for the secrets in t
 # wukong.mindvalley.dev/config-secrets-location: vault:secret/connect/development#dev.secrets.exs
 ```
 
+**PLEASE DO NOT COPY & PASTE THE BELOW SNIPPET AS IT IS.**
+**WHILE THIS WORKS FOR MOST OF THE CASE, YOU NEED TO CHECK THE**
+**(RELATIVE) PATH TO YOUR CONFIG FOLDER, OTHERWISE THE CONDITIONAL**
+**STATEMENT WON'T WORK PROPERLY.**
+
 Next is this snippet.
 ```elixir
 if File.exists?("config/dev.secrets.exs") do
