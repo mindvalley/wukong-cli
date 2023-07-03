@@ -153,6 +153,14 @@ impl Config {
         Ok(config)
     }
 
+    pub fn save_to_exisiting_file(&self) -> Result<(), ConfigError> {
+        let config_file = CONFIG_FILE
+            .as_ref()
+            .expect("Unable to identify user's home directory");
+
+        self.save_to_path(config_file)
+    }
+
     /// Save a configuration to file.
     ///
     /// If the file's directory does not exist, it will be created. If the file
