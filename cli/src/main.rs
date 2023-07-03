@@ -18,7 +18,7 @@ use wukong_sdk::output::error::ErrorOutput;
 
 #[tokio::main]
 async fn main() {
-    // setup_panic!();
+    setup_panic!();
 
     // TODO: make sure that the cursor re-appears when interrupting
     // tokio::spawn(async move {

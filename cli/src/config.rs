@@ -6,6 +6,7 @@ use std::{
     io::{self, Write},
     path::Path,
 };
+use wukong_sdk::WKConfig;
 
 #[cfg(not(feature = "prod"))]
 static WUKONG_API_URL: &str = "http://localhost:4000/api";
@@ -101,6 +102,16 @@ impl Default for Config {
             auth: None,
             vault: None,
         }
+    }
+}
+
+impl WKConfig for Config {
+    fn api_url(&self) -> String {
+        todo!()
+    }
+
+    fn access_token(&self) -> Option<String> {
+        todo!()
     }
 }
 

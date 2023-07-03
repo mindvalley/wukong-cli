@@ -6,14 +6,12 @@ use crate::{
     loader::new_spinner,
     output::colored_println,
     // output::colored_println,
-    utils::compare_with_current_time,
+    utils::{compare_with_current_time, wukong_sdk::FromWKCliConfig},
 };
 use aion::*;
 use dialoguer::{theme::ColorfulTheme, Select};
 use log::debug;
-use wukong_sdk::{
-    error::AuthError, graphql::applications_query, OktaAuthenticator, WKClient, WKConfig,
-};
+use wukong_sdk::{error::AuthError, OktaAuthenticator, WKClient};
 
 pub async fn handle_init() -> Result<bool, WKCliError> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
@@ -96,19 +94,13 @@ pub async fn handle_init() -> Result<bool, WKCliError> {
         current_config
     };
 
-    // SAFETY: The auth must not be None here
-    let auth_config = new_config.auth.as_ref().unwrap();
-
     let fetch_loader = new_spinner();
     fetch_loader.set_message("Fetching application list...");
 
-    let wk_client = WKClient::new(WKConfig {
-        api_url: config.core.wukong_api_url,
-        access_token: Some(auth_config.id_token.clone()),
-    });
+    let wk_client = WKClient::from_cli_config(&new_config);
 
     let applications_data: Vec<String> = wk_client
-        .fetch_applications(applications_query::Variables)
+        .fetch_applications()
         .await?
         .applications
         .iter()

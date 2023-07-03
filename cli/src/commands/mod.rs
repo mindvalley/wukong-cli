@@ -3,11 +3,22 @@ use clap::{command, crate_version, Parser, Subcommand};
 use clap_verbosity_flag::{LogLevel, Verbosity};
 use log::debug;
 
-use crate::{commands::init::handle_init, error::WKCliError};
+use crate::{
+    commands::{init::handle_init, login::handle_login},
+    config::Config,
+    error::WKCliError,
+};
 
 mod config;
+mod deployment;
 mod init;
+mod login;
 mod pipeline;
+
+#[derive(Debug, Default)]
+pub struct Context {
+    current_application: String,
+}
 
 /// A Swiss-army Knife CLI For Mindvalley Developers
 #[derive(Debug, Parser)]
@@ -56,17 +67,17 @@ pub enum CommandGroup {
     Init,
     // /// This command group contains the commands to interact with an application’s configurations
     // Application(application::Application),
-    // /// This command group contains the commands to view & interact with an application’s pipeline
-    // Pipeline(pipeline::Pipeline),
+    /// This command group contains the commands to view & interact with an application’s pipeline
+    Pipeline(pipeline::Pipeline),
     // /// This command group contains the commands to view and interact with the
-    // /// Continuous Delivery pipeline of an application.
-    // Deployment(deployment::Deployment),
+    /// Continuous Delivery pipeline of an application.
+    Deployment(deployment::Deployment),
     // /// This command group contains the commands to interact with the local development environment.
     // Dev(dev::Dev),
     /// This command group contains the commands to view & interact with Wukong's configurations
     Config(config::Config),
-    // /// Login to start using wukong command
-    // Login,
+    /// Login to start using wukong command
+    Login,
     // /// Generate wukong cli completions for your shell to stdout
     // Completion {
     //     #[arg(value_enum)]
@@ -76,15 +87,26 @@ pub enum CommandGroup {
 
 impl ClapApp {
     pub async fn execute(&self) -> Result<bool, WKCliError> {
+        let mut context = Context::default();
+
+        // overwritten by --application flag
+        context.current_application = match self.application {
+            Some(ref application) => application.clone(),
+            None => {
+                let config = Config::load_from_default_path()?;
+                config.core.application
+            }
+        };
+
         debug!("current cli version: {}", crate_version!());
 
         match &self.command_group {
             CommandGroup::Init => handle_init().await,
             // CommandGroup::Completion { shell } => handle_completion(*shell),
-            // CommandGroup::Login => handle_login().await,
+            CommandGroup::Login => handle_login().await,
             // CommandGroup::Application(application) => application.handle_command(state).await,
-            // CommandGroup::Pipeline(pipeline) => pipeline.handle_command(state).await,
-            // CommandGroup::Deployment(deployment) => deployment.handle_command(state).await,
+            CommandGroup::Pipeline(pipeline) => pipeline.handle_command(context).await,
+            CommandGroup::Deployment(deployment) => deployment.handle_command(context).await,
             CommandGroup::Config(config) => config.handle_command(),
             // CommandGroup::Dev(dev) => dev.handle_command().await,
         }

@@ -29,6 +29,7 @@ use crate::{
     config::{AuthConfig, Config},
     error::{APIError, CliError},
     telemetry::{self, TelemetryData, TelemetryEvent},
+    WKClient,
 };
 use aion::*;
 use chrono::{DateTime, Local};
