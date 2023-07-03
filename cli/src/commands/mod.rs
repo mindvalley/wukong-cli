@@ -1,10 +1,11 @@
 use clap::{command, crate_version, Parser, Subcommand};
-use clap_complete::Shell;
+// use clap_complete::Shell;
 use clap_verbosity_flag::{LogLevel, Verbosity};
 use log::debug;
 
 use crate::{commands::init::handle_init, error::WKCliError};
 
+mod config;
 mod init;
 mod pipeline;
 
@@ -62,8 +63,8 @@ pub enum CommandGroup {
     // Deployment(deployment::Deployment),
     // /// This command group contains the commands to interact with the local development environment.
     // Dev(dev::Dev),
-    // /// This command group contains the commands to view & interact with Wukong's configurations
-    // Config(config::Config),
+    /// This command group contains the commands to view & interact with Wukong's configurations
+    Config(config::Config),
     // /// Login to start using wukong command
     // Login,
     // /// Generate wukong cli completions for your shell to stdout
@@ -84,7 +85,7 @@ impl ClapApp {
             // CommandGroup::Application(application) => application.handle_command(state).await,
             // CommandGroup::Pipeline(pipeline) => pipeline.handle_command(state).await,
             // CommandGroup::Deployment(deployment) => deployment.handle_command(state).await,
-            // CommandGroup::Config(config) => config.handle_command(),
+            CommandGroup::Config(config) => config.handle_command(),
             // CommandGroup::Dev(dev) => dev.handle_command().await,
         }
     }

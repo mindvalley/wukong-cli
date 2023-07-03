@@ -172,7 +172,7 @@ pub async fn handle_init() -> Result<bool, WKCliError> {
 
     if let Some(ref config_file) = *CONFIG_FILE {
         new_config
-            .save(config_file)
+            .save_to_path(config_file)
             .expect("Config file save failed");
     }
 

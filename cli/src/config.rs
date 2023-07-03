@@ -147,6 +147,14 @@ impl Config {
         Ok(config)
     }
 
+    pub fn save_to_exisiting_file(&self) -> Result<(), ConfigError> {
+        let config_file = CONFIG_FILE
+            .as_ref()
+            .expect("Unable to identify user's home directory");
+
+        self.save_to_path(config_file)
+    }
+
     /// Save a configuration to file.
     ///
     /// If the file's directory does not exist, it will be created. If the file
@@ -155,7 +163,7 @@ impl Config {
     /// # Errors
     ///
     /// This function may return typical file I/O errors.
-    pub fn save(&self, path: &str) -> Result<(), ConfigError> {
+    pub fn save_to_path(&self, path: &str) -> Result<(), ConfigError> {
         let config_file_path = Path::new(path);
         let serialized = toml::to_string(self).map_err(ConfigError::SerializeTomlError)?;
 
@@ -194,7 +202,7 @@ mod test {
         let config = Config::default();
 
         // 1. save the config file
-        config.save(path).unwrap();
+        config.save_to_path(path).unwrap();
 
         // 2. load the config file
         let saved_config = Config::load_from_path(path).unwrap();
