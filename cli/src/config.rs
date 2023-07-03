@@ -6,6 +6,7 @@ use std::{
     io::{self, Write},
     path::Path,
 };
+use wukong_sdk::WKConfig;
 
 #[cfg(not(feature = "prod"))]
 static WUKONG_API_URL: &str = "http://localhost:4000/api";
@@ -104,13 +105,30 @@ impl Default for Config {
     }
 }
 
+impl WKConfig for Config {
+    fn api_url(&self) -> String {
+        todo!()
+    }
+
+    fn access_token(&self) -> Option<String> {
+        todo!()
+    }
+}
+
 impl Config {
+    pub fn load() -> Result<Self, ConfigError> {
+        let config_file = CONFIG_FILE
+            .as_ref()
+            .expect("Unable to identify user's home directory");
+
+        Config::load_from_path(config_file)
+    }
     /// Load a configuration from file.
     ///
     /// # Errors
     ///
     /// This function may return typical file I/O errors.
-    pub fn load(path: &'static str) -> Result<Self, ConfigError> {
+    pub fn load_from_path(path: &'static str) -> Result<Self, ConfigError> {
         let config_file_path = Path::new(path);
 
         let content = std::fs::read_to_string(
@@ -155,7 +173,7 @@ impl Config {
             .as_ref()
             .expect("Unable to identify user's home directory");
 
-        let config = Config::load(config_file)?;
+        let config = Config::load_from_path(config_file)?;
 
         let config_with_path = ConfigWithPath {
             config,
@@ -179,7 +197,7 @@ mod test {
         config.save(path).unwrap();
 
         // 2. load the config file
-        let saved_config = Config::load(path).unwrap();
+        let saved_config = Config::load_from_path(path).unwrap();
 
         assert_eq!(saved_config.core.application, config.core.application);
 
@@ -190,7 +208,7 @@ mod test {
     #[test]
     fn load_non_exist_file() {
         let path = "./non/exist/path";
-        let result = Config::load(path);
+        let result = Config::load_from_path(path);
 
         assert!(result.is_err());
         assert!(matches!(result, Err(ConfigError::NotFound { .. })));

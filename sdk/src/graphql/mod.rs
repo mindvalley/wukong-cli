@@ -4,7 +4,7 @@ pub mod deployment;
 pub mod kubernetes;
 pub mod pipeline;
 
-use self::{
+pub use self::{
     application::{
         application_query, application_with_k8s_cluster_query, applications_query,
         ApplicationQuery, ApplicationWithK8sClusterQuery, ApplicationsQuery,
@@ -29,6 +29,7 @@ use crate::{
     config::{AuthConfig, Config},
     error::{APIError, CliError},
     telemetry::{self, TelemetryData, TelemetryEvent},
+    WKClient,
 };
 use aion::*;
 use chrono::{DateTime, Local};
@@ -475,4 +476,32 @@ fn check_retry_and_auth_error(error: &graphql_client::Error) -> Option<APIError>
     } else {
         return None;
     }
+}
+
+pub async fn post_graphql<Q, U>(
+    client: &reqwest::Client,
+    // client: &WKClient,
+    url: U,
+    variables: Q::Variables,
+) -> Result<Q::ResponseData, APIError>
+where
+    Q: GraphQLQuery,
+    U: reqwest::IntoUrl,
+{
+    let body = Q::build_query(variables);
+    let res: Response<Q::ResponseData> = client.post(url).json(&body).send().await?.json().await?;
+
+    todo!()
+    // if let Some(errors) = res.errors {
+    //     if errors[0].message.to_lowercase().contains("not authorized") {
+    //         // Handle unauthorized errors in a custom way
+    //         Err(RailwayError::Unauthorized)
+    //     } else {
+    //         Err(RailwayError::GraphQLError(errors[0].message.clone()))
+    //     }
+    // } else if let Some(data) = res.data {
+    //     Ok(data)
+    // } else {
+    //     Err(RailwayError::MissingResponseData)
+    // }
 }

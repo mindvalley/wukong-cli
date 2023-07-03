@@ -1,5 +1,6 @@
 use owo_colors::OwoColorize;
 use thiserror::Error as ThisError;
+use wukong_sdk::error::APIError;
 
 #[derive(Debug, ThisError)]
 pub enum WKCliError {
@@ -51,26 +52,26 @@ pub enum AuthError {
     OpenIDDiscoveryError,
 }
 
-#[derive(Debug, ThisError)]
-pub enum APIError {
-    // #[error(transparent)]
-    // ReqwestError(#[from] reqwest::Error),
-    #[error("API Response Error: {message}")]
-    ResponseError { code: String, message: String },
-    #[error("API Error: You are un-authenticated.")]
-    UnAuthenticated,
-    #[error("API Error: You are un-authorized.")]
-    UnAuthorized,
-    #[error("The selected build number is the same as the current deployed version. So there is no changelog.")]
-    ChangelogComparingSameBuild,
-    #[error("API Error: Request to {domain} timed out.")]
-    Timeout { domain: String },
-    // #[error(transparent)]
-    // WebsocketError(#[from] async_tungstenite::tungstenite::Error),
-    // #[error(transparent)]
-    // GraphqlWSError(#[from] graphql_ws_client::Error),
-}
-
+// #[derive(Debug, ThisError)]
+// pub enum APIError {
+//     // #[error(transparent)]
+//     // ReqwestError(#[from] reqwest::Error),
+//     #[error("API Response Error: {message}")]
+//     ResponseError { code: String, message: String },
+//     #[error("API Error: You are un-authenticated.")]
+//     UnAuthenticated,
+//     #[error("API Error: You are un-authorized.")]
+//     UnAuthorized,
+//     #[error("The selected build number is the same as the current deployed version. So there is no changelog.")]
+//     ChangelogComparingSameBuild,
+//     #[error("API Error: Request to {domain} timed out.")]
+//     Timeout { domain: String },
+//     // #[error(transparent)]
+//     // WebsocketError(#[from] async_tungstenite::tungstenite::Error),
+//     // #[error(transparent)]
+//     // GraphqlWSError(#[from] graphql_ws_client::Error),
+// }
+//
 #[derive(Debug, ThisError)]
 pub enum DevConfigError {
     #[error("No config files found!")]
