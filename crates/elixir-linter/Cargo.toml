@@ -13,3 +13,4 @@ tree-sitter = "0.20.9"
 
 [dependencies.tree-sitter-elixir]
 git = "https://github.com/elixir-lang/tree-sitter-elixir"
+tag = "v0.1.0"
