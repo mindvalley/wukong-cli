@@ -143,9 +143,32 @@ impl WKClient {
     }
 }
 
-pub trait WKConfig {
-    fn api_url(&self) -> String;
-    fn access_token(&self) -> Option<String>;
+impl OktaAuthenticatorBuilder {
+    #[must_use]
+    pub fn with_okta_id(mut self, okta_id: &str) -> Self {
+        self.okta_id = okta_id.to_string();
+        self
+    }
+
+    pub fn with_callback_url(mut self, callback_url: &str) -> Self {
+        self.callback_url = callback_url.to_string();
+        self
+    }
+
+    pub fn build(self) -> OktaAuthenticator {
+        OktaAuthenticator {
+            okta_id: self.okta_id,
+            callback_url: self.callback_url,
+        }
+    }
+}
+
+pub struct GoogleAuthenticator {}
+pub struct VaultAuthenticator {}
+
+pub struct WKConfig {
+    pub api_url: String,
+    pub access_token: Option<String>,
 }
 
 pub struct WKClient {
@@ -154,10 +177,10 @@ pub struct WKClient {
 }
 
 impl WKClient {
-    pub fn new(config: &impl WKConfig) -> Self {
+    pub fn new(config: WKConfig) -> Self {
         Self {
-            api_url: config.api_url(),
-            access_token: config.access_token(),
+            api_url: config.api_url,
+            access_token: config.access_token,
         }
     }
 
@@ -165,49 +188,15 @@ impl WKClient {
         &self,
         variables: applications_query::Variables,
     ) -> Result<applications_query::ResponseData, APIError> {
-        let mut headers = header::HeaderMap::new();
+        let gql_client = GQLClient::with_authorization(
+            &self
+                .access_token
+                .as_ref()
+                .ok_or(APIError::UnAuthenticated)?,
+        )?;
 
-        if let Some(token) = self.access_token.as_ref() {
-            let auth_value = format!("Bearer {}", token);
-            headers.insert(
-                header::AUTHORIZATION,
-                header::HeaderValue::from_str(&auth_value).unwrap(),
-            );
-        }
-
-        let client = reqwest::Client::builder()
-            .default_headers(headers)
-            .build()?;
-
-        Self::post_graphql::<ApplicationsQuery, _>(&client, &self.api_url, variables).await
-    }
-
-    async fn post_graphql<Q, U>(
-        client: &reqwest::Client,
-        // client: &WKClient,
-        url: U,
-        variables: Q::Variables,
-    ) -> Result<Q::ResponseData, APIError>
-    where
-        Q: GraphQLQuery,
-        U: reqwest::IntoUrl,
-    {
-        let body = Q::build_query(variables);
-        let res: Response<Q::ResponseData> =
-            client.post(url).json(&body).send().await?.json().await?;
-
-        todo!()
-        // if let Some(errors) = res.errors {
-        //     if errors[0].message.to_lowercase().contains("not authorized") {
-        //         // Handle unauthorized errors in a custom way
-        //         Err(RailwayError::Unauthorized)
-        //     } else {
-        //         Err(RailwayError::GraphQLError(errors[0].message.clone()))
-        //     }
-        // } else if let Some(data) = res.data {
-        //     Ok(data)
-        // } else {
-        //     Err(RailwayError::MissingResponseData)
-        // }
+        gql_client
+            .post_graphql::<ApplicationsQuery, _>(&self.api_url, variables)
+            .await
     }
 }

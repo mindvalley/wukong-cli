@@ -105,15 +105,15 @@ impl Default for Config {
     }
 }
 
-impl WKConfig for Config {
-    fn api_url(&self) -> String {
-        todo!()
-    }
-
-    fn access_token(&self) -> Option<String> {
-        todo!()
-    }
-}
+// impl WKConfig for Config {
+//     fn api_url(&self) -> String {
+//         todo!()
+//     }
+//
+//     fn access_token(&self) -> Option<String> {
+//         todo!()
+//     }
+// }
 
 impl Config {
     /// Load a configuration from default path.
@@ -153,7 +153,7 @@ impl Config {
         Ok(config)
     }
 
-    pub fn save_to_exisiting_file(&self) -> Result<(), ConfigError> {
+    pub fn save_to_default_path(&self) -> Result<(), ConfigError> {
         let config_file = CONFIG_FILE
             .as_ref()
             .expect("Unable to identify user's home directory");
