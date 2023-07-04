@@ -54,7 +54,15 @@ impl OktaAuthenticator {
     }
 
     pub async fn login(&self) -> Result<OktaAuthResponse, AuthError> {
-        todo!()
+        let resp = Auth::new(&self.okta_id).login().await?;
+        Ok(OktaAuthResponse {
+            account: resp.account,
+            subject: resp.subject,
+            id_token: resp.id_token,
+            access_token: resp.access_token,
+            refresh_token: resp.refresh_token,
+            expiry_time: resp.expiry_time,
+        })
     }
 
     pub async fn refresh_tokens(
@@ -64,7 +72,6 @@ impl OktaAuthenticator {
         let resp = Auth::new(&self.okta_id)
             .refresh_tokens(&RefreshToken::new(refresh_token))
             .await?;
-
         Ok(OktaRefreshTokensResponse {
             id_token: resp.id_token,
             access_token: resp.access_token,

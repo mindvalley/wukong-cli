@@ -511,7 +511,6 @@ impl GQLClient {
 
     pub async fn post_graphql<Q, U>(
         &self,
-        // client: &WKClient,
         url: U,
         variables: Q::Variables,
     ) -> Result<Q::ResponseData, APIError>

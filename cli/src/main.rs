@@ -6,6 +6,8 @@ mod config;
 mod error;
 mod loader;
 mod logger;
+mod output;
+mod utils;
 
 use app::App;
 use error::WKCliError;
