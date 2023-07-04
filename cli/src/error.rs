@@ -1,6 +1,6 @@
 use owo_colors::OwoColorize;
 use thiserror::Error as ThisError;
-use wukong_sdk::error::APIError;
+use wukong_sdk::error::{APIError, AuthError};
 
 #[derive(Debug, ThisError)]
 pub enum WKCliError {
@@ -42,15 +42,15 @@ pub enum WKCliError {
     ExtractError(#[from] ExtractError),
 }
 
-#[derive(Debug, ThisError)]
-pub enum AuthError {
-    #[error("Refresh token expired: {message}")]
-    RefreshTokenExpired { message: String },
-    #[error("OpenID Connect Error: {message}")]
-    OpenIDConnectError { message: String },
-    #[error("Failed to discover OpenID Provider")]
-    OpenIDDiscoveryError,
-}
+// #[derive(Debug, ThisError)]
+// pub enum AuthError {
+//     #[error("Refresh token expired: {message}")]
+//     RefreshTokenExpired { message: String },
+//     #[error("OpenID Connect Error: {message}")]
+//     OpenIDConnectError { message: String },
+//     #[error("Failed to discover OpenID Provider")]
+//     OpenIDDiscoveryError,
+// }
 
 // #[derive(Debug, ThisError)]
 // pub enum APIError {

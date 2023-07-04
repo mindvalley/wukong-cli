@@ -4,7 +4,7 @@ use crate::{
 };
 
 pub fn handle_list() -> Result<bool, WKCliError> {
-    let config = CliConfig::load()?;
+    let config = CliConfig::load_default_path()?;
 
     println!(
         "{}",

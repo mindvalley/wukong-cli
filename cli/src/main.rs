@@ -29,6 +29,7 @@ async fn main() {
     match run().await {
         Err(error) => {
             // error!("{}", ErrorOutput(error));
+            println!("Error: {}", error);
             process::exit(1);
         }
         Ok(false) => {

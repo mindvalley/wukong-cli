@@ -74,6 +74,8 @@ pub enum APIError {
     AuthError(#[from] AuthError),
     #[error(transparent)]
     ConfigError(#[from] ConfigError),
+    #[error("Failed to get data from GraphQL response.")]
+    MissingResponseData,
 }
 
 #[derive(Debug, ThisError)]

@@ -11,12 +11,12 @@ use chrono::{DateTime, Local};
 use dialoguer::{theme::ColorfulTheme, Select};
 use log::debug;
 use openidconnect::RefreshToken;
-use wukong_sdk::{graphql::applications_query, WKClient};
+use wukong_sdk::{graphql::applications_query, OktaAuthenticator, WKClient, WKConfig};
 
 pub async fn handle_init() -> Result<bool, WKCliError> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
 
-    let config = match Config::load() {
+    let config = match Config::load_default_path() {
         Ok(config) => config,
         Err(error) => match error {
             // create new config if the config file not found or the config format is invalid
@@ -24,18 +24,6 @@ pub async fn handle_init() -> Result<bool, WKCliError> {
             error => return Err(error.into()),
         },
     };
-
-    // let config_file = CONFIG_FILE
-    //     .as_ref()
-    //     .expect("Unable to identify user's home directory");
-    //
-    // let config = match Config::load(config_file) {
-    //     Ok(config) => config,
-    //     Err(error) => match error {
-    //         ConfigError::NotFound { .. } | ConfigError::BadTomlData(_) => Config::default(),
-    //         error => return Err(error.into()),
-    //     },
-    // };
 
     let mut login_selections = vec!["Log in with a new account"];
     if let Some(ref auth_config) = config.auth {
@@ -64,46 +52,51 @@ pub async fn handle_init() -> Result<bool, WKCliError> {
             .with_timezone(&Local);
         let remaining_duration = expiry.signed_duration_since(current_time);
 
-        // if remaining_duration < 5.minutes() {
-        //     debug!("Access token expired. Refreshing tokens...");
-        //
-        //     let refresh_token_loader = new_spinner();
-        //     refresh_token_loader.set_message("Refreshing tokens...");
-        //
-        //     let updated_config = match Auth::new(&config.core.okta_client_id)
-        //         .refresh_tokens(&RefreshToken::new(auth_config.refresh_token.clone()))
-        //         .await
-        //     {
-        //         Ok(new_tokens) => {
-        //             current_config.auth = Some(AuthConfig {
-        //                 account: auth_config.account.clone(),
-        //                 subject: auth_config.subject.clone(),
-        //                 id_token: new_tokens.id_token.clone(),
-        //                 access_token: new_tokens.access_token.clone(),
-        //                 expiry_time: new_tokens.expiry_time,
-        //                 refresh_token: new_tokens.refresh_token,
-        //             });
-        //
-        //             refresh_token_loader.finish_and_clear();
-        //
-        //             current_config
-        //         }
-        //         Err(err) => {
-        //             refresh_token_loader.finish_and_clear();
-        //             match err {
-        //                 AuthError::RefreshTokenExpired { .. } => {
-        //                     eprintln!("The refresh token is expired. You have to login again.");
-        //                     login_and_create_config(current_config).await?
-        //                 }
-        //                 err => return Err(err.into()),
-        //             }
-        //         }
-        //     };
-        //
-        //     current_config = updated_config;
-        // } else {
-        // colored_println!("You are logged in as: {}.\n", login_selections[selection]);
-        // }
+        if remaining_duration < 5.minutes() {
+            debug!("Access token expired. Refreshing tokens...");
+
+            let refresh_token_loader = new_spinner();
+            refresh_token_loader.set_message("Refreshing tokens...");
+
+            let okta_authenticator = OktaAuthenticator::builder()
+                // .with_okta_id(&config.core.okta_client_id)
+                .with_callback_url("http://localhost:6758/login/callback")
+                .build();
+
+            let updated_config = match okta_authenticator
+                .refresh_tokens(auth_config.refresh_token.clone())
+                .await
+            {
+                Ok(new_tokens) => {
+                    current_config.auth = Some(AuthConfig {
+                        account: auth_config.account.clone(),
+                        subject: auth_config.subject.clone(),
+                        id_token: new_tokens.id_token.clone(),
+                        access_token: new_tokens.access_token.clone(),
+                        expiry_time: new_tokens.expiry_time,
+                        refresh_token: new_tokens.refresh_token,
+                    });
+
+                    refresh_token_loader.finish_and_clear();
+
+                    current_config
+                }
+                Err(err) => {
+                    refresh_token_loader.finish_and_clear();
+                    match err {
+                        AuthError::RefreshTokenExpired { .. } => {
+                            eprintln!("The refresh token is expired. You have to login again.");
+                            login_and_create_config(current_config).await?
+                        }
+                        err => return Err(err.into()),
+                    }
+                }
+            };
+
+            current_config = updated_config;
+        } else {
+            // colored_println!("You are logged in as: {}.\n", login_selections[selection]);
+        }
 
         current_config
     };
@@ -114,7 +107,11 @@ pub async fn handle_init() -> Result<bool, WKCliError> {
     let fetch_loader = new_spinner();
     fetch_loader.set_message("Fetching application list...");
 
-    let wk_client = WKClient::new(&config);
+    let wk_client = WKClient::new(WKConfig {
+        api_url: config.core.wukong_api_url,
+        access_token: Some(auth_config.access_token.clone()),
+    });
+
     let applications_data: Vec<String> = wk_client
         .fetch_applications(applications_query::Variables)
         .await?
@@ -140,6 +137,7 @@ pub async fn handle_init() -> Result<bool, WKCliError> {
     //     .map(|application| application.name.clone())
     //     .collect();
     fetch_loader.finish_and_clear();
+    println!("applications: {:?}", applications_data);
 
     let application_selection = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Please select the application")

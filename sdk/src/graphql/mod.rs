@@ -478,30 +478,72 @@ fn check_retry_and_auth_error(error: &graphql_client::Error) -> Option<APIError>
     }
 }
 
-pub async fn post_graphql<Q, U>(
-    client: &reqwest::Client,
-    // client: &WKClient,
-    url: U,
-    variables: Q::Variables,
-) -> Result<Q::ResponseData, APIError>
-where
-    Q: GraphQLQuery,
-    U: reqwest::IntoUrl,
-{
-    let body = Q::build_query(variables);
-    let res: Response<Q::ResponseData> = client.post(url).json(&body).send().await?.json().await?;
+pub struct GQLClient {
+    inner: reqwest::Client,
+}
 
-    todo!()
-    // if let Some(errors) = res.errors {
-    //     if errors[0].message.to_lowercase().contains("not authorized") {
-    //         // Handle unauthorized errors in a custom way
-    //         Err(RailwayError::Unauthorized)
-    //     } else {
-    //         Err(RailwayError::GraphQLError(errors[0].message.clone()))
-    //     }
-    // } else if let Some(data) = res.data {
-    //     Ok(data)
-    // } else {
-    //     Err(RailwayError::MissingResponseData)
-    // }
+impl GQLClient {
+    pub fn with_authorization(token: &str) -> Result<Self, APIError> {
+        let mut headers = header::HeaderMap::new();
+
+        let auth_value = format!("Bearer {}", token);
+        headers.insert(
+            header::AUTHORIZATION,
+            header::HeaderValue::from_str(&auth_value).unwrap(),
+        );
+
+        let reqwest_client = reqwest::Client::builder()
+            .default_headers(headers)
+            .build()?;
+
+        Ok(Self {
+            inner: reqwest_client,
+        })
+    }
+
+    pub fn without_authorization() -> Result<Self, APIError> {
+        let reqwest_client = reqwest::Client::builder().build()?;
+
+        Ok(Self {
+            inner: reqwest_client,
+        })
+    }
+
+    pub async fn post_graphql<Q, U>(
+        &self,
+        // client: &WKClient,
+        url: U,
+        variables: Q::Variables,
+    ) -> Result<Q::ResponseData, APIError>
+    where
+        Q: GraphQLQuery,
+        U: reqwest::IntoUrl,
+    {
+        let body = Q::build_query(variables);
+        let res: Response<Q::ResponseData> = self
+            .inner
+            .post(url)
+            .json(&body)
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        if let Some(errors) = res.errors {
+            if errors[0].message.to_lowercase().contains("unauthenticated") {
+                return Err(APIError::UnAuthenticated);
+            } else {
+                return Err(APIError::ResponseError {
+                    code: errors[0].message.clone(),
+                    message: "".to_string(),
+                });
+            }
+        }
+
+        if let Some(data) = res.data {
+            Ok(data)
+        } else {
+            Err(APIError::MissingResponseData)
+        }
+    }
 }
