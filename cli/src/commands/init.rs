@@ -82,7 +82,8 @@ pub async fn handle_init() -> Result<bool, WKCliError> {
                     match err {
                         AuthError::RefreshTokenExpired { .. } => {
                             eprintln!("The refresh token is expired. You have to login again.");
-                            login_and_create_config(current_config).await?
+                            // login_and_create_config(current_config).await?
+                            todo!()
                         }
                         err => return Err(err.into()),
                     }
