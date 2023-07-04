@@ -1,7 +1,7 @@
 use crate::{
     // auth::Auth,
     config::{AuthConfig, Config, CONFIG_FILE},
-    error::{AuthError, ConfigError, WKCliError},
+    error::{ConfigError, WKCliError},
     // graphql::QueryClientBuilder,
     loader::new_spinner,
     // output::colored_println,
@@ -11,7 +11,9 @@ use chrono::{DateTime, Local};
 use dialoguer::{theme::ColorfulTheme, Select};
 use log::debug;
 use openidconnect::RefreshToken;
-use wukong_sdk::{graphql::applications_query, OktaAuthenticator, WKClient, WKConfig};
+use wukong_sdk::{
+    error::AuthError, graphql::applications_query, OktaAuthenticator, WKClient, WKConfig,
+};
 
 pub async fn handle_init() -> Result<bool, WKCliError> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
@@ -86,7 +88,8 @@ pub async fn handle_init() -> Result<bool, WKCliError> {
                     match err {
                         AuthError::RefreshTokenExpired { .. } => {
                             eprintln!("The refresh token is expired. You have to login again.");
-                            login_and_create_config(current_config).await?
+                            // login_and_create_config(current_config).await?
+                            todo!()
                         }
                         err => return Err(err.into()),
                     }

@@ -39,6 +39,12 @@ pub struct OktaAuthResponse {
     pub refresh_token: String,
     pub expiry_time: String,
 }
+pub struct OktaRefreshTokensResponse {
+    pub id_token: String,
+    pub access_token: String,
+    pub refresh_token: String,
+    pub expiry_time: String,
+}
 impl OktaAuthenticator {
     pub fn builder() -> OktaAuthenticatorBuilder {
         OktaAuthenticatorBuilder {
@@ -47,21 +53,23 @@ impl OktaAuthenticator {
         }
     }
 
+    pub async fn login(&self) -> Result<OktaAuthResponse, AuthError> {
+        todo!()
+    }
+
     pub async fn refresh_tokens(
         &self,
         refresh_token: String,
-    ) -> Result<OktaAuthResponse, AuthError> {
+    ) -> Result<OktaRefreshTokensResponse, AuthError> {
         let resp = Auth::new(&self.okta_id)
             .refresh_tokens(&RefreshToken::new(refresh_token))
             .await?;
 
-        Ok(OktaAuthResponse {
-            account: todo!(),
-            subject: todo!(),
-            id_token: todo!(),
-            access_token: todo!(),
-            refresh_token,
-            expiry_time: todo!(),
+        Ok(OktaRefreshTokensResponse {
+            id_token: resp.id_token,
+            access_token: resp.access_token,
+            refresh_token: resp.refresh_token,
+            expiry_time: resp.expiry_time,
         })
     }
 }
