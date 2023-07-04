@@ -48,9 +48,6 @@ pub async fn handle_init() -> Result<bool, WKCliError> {
         if remaining_duration < 5.minutes() {
             debug!("Access token expired. Refreshing tokens...");
 
-        if remaining_duration < 5.minutes() {
-            debug!("Access token expired. Refreshing tokens...");
-
             let refresh_token_loader = new_spinner();
             refresh_token_loader.set_message("Refreshing tokens...");
 
@@ -82,8 +79,7 @@ pub async fn handle_init() -> Result<bool, WKCliError> {
                     match err {
                         AuthError::RefreshTokenExpired { .. } => {
                             eprintln!("The refresh token is expired. You have to login again.");
-                            // login_and_create_config(current_config).await?
-                            todo!()
+                            login_and_create_config(current_config).await?
                         }
                         err => return Err(err.into()),
                     }
@@ -112,7 +108,6 @@ pub async fn handle_init() -> Result<bool, WKCliError> {
         .collect();
 
     fetch_loader.finish_and_clear();
-    println!("applications: {:?}", applications_data);
 
     let application_selection = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Please select the application")
