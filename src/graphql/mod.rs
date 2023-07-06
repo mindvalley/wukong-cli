@@ -16,8 +16,8 @@ use self::{
     },
     kubernetes::{
         deploy_livebook, destroy_livebook, is_authorized_query, kubernetes_pods_query,
-        watch_livebook, DeployLivebook, DestroyLivebook, IsAuthorizedQuery, KubernetesPodsQuery,
-        WatchLivebook,
+        livebook_resource_query, watch_livebook, DeployLivebook, DestroyLivebook,
+        IsAuthorizedQuery, KubernetesPodsQuery, LivebookResourceQuery, WatchLivebook,
     },
     pipeline::{
         ci_status_query, multi_branch_pipeline_query, pipeline_query, pipelines_query,
@@ -359,6 +359,16 @@ impl QueryClient {
         port: i64,
     ) -> Result<Response<deploy_livebook::ResponseData>, APIError> {
         DeployLivebook::mutate(self, application, namespace, version, name, port).await
+    }
+
+    pub async fn livebook_resource(
+        &self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<Response<livebook_resource_query::ResponseData>, APIError> {
+        println!("fetch livebook resource");
+        LivebookResourceQuery::fetch(self, application, namespace, version).await
     }
 
     #[wukong_telemetry(api_event = "watch_livebook")]

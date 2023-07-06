@@ -57,6 +57,9 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
 
     let user_email = auth_config.account.clone().replace(['@', '.'], "-");
 
+    println!("k8s pods: {:#?}", k8s_pods);
+
+    // FIXME: we need to check under the same pod
     let has_existing_livebook_pod = k8s_pods
         .into_iter()
         .any(|pod| pod.labels.contains(&user_email));
@@ -67,14 +70,37 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
         debug!("Destroying the exisiting livebook instance.");
         let _destroyed = client
             .destroy_livebook(&application, &namespace, &version)
-            .await
-            .unwrap();
+            .await?;
 
-        // wait 5 seconds for the pod to be destroyed, otherwise it will failed when deploying new
-        // livebook on the next step
-        sleep(std::time::Duration::from_secs(5)).await;
+        let mut livebook_resource = client
+            .livebook_resource(&application, &namespace, &version)
+            .await?
+            .data
+            .unwrap()
+            .livebook_resource;
 
-        debug!("Destroyed the exisiting livebook instance.");
+        while livebook_resource.is_some() {
+            println!("livebook resource: {:#?}", livebook_resource);
+            sleep(std::time::Duration::from_secs(3)).await;
+
+            livebook_resource = client
+                .livebook_resource(&application, &namespace, &version)
+                .await?
+                .data
+                .unwrap()
+                .livebook_resource;
+        }
+
+        // // wait 5 seconds for the pod to be destroyed, otherwise it will failed when deploying new
+        // // livebook on the next step
+        // sleep(std::time::Duration::from_secs(5)).await;
+        //
+        // debug!("Destroyed the exisiting livebook instance.");
+        //
+        // let livebook_resource = client
+        //     .livebook_resource(&application, &namespace, &version)
+        //     .await?;
+        // println!("livebook resource: {:?}", livebook_resource);
     }
 
     debug!("Deploying a new livebook instance.");
@@ -92,22 +118,46 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
         .deploy_livebook;
 
     if let Some(new_instance) = new_instance {
-        let variables = watch_livebook::Variables {
-            application: application.to_string(),
-            namespace: namespace.to_string(),
-            version: version.to_string(),
-            name: new_instance.name.to_string(),
-        };
+        let mut livebook_resource = client
+            .livebook_resource(&application, &namespace, &version)
+            .await?
+            .data
+            .unwrap()
+            .livebook_resource;
 
-        debug!("Start watching to the new livebook instance.");
-        let (_client, mut stream) = client.subscribe_watch_livebook(variables).await?;
+        while livebook_resource.is_none()
+            || (livebook_resource.is_some()
+                && (livebook_resource.as_ref().unwrap().pod.status != "ok"
+                    || livebook_resource.as_ref().unwrap().issuer.status != "ok"
+                    || livebook_resource.as_ref().unwrap().ingress.status != "ok"
+                    || livebook_resource.as_ref().unwrap().service.status != "ok"))
+        {
+            println!("livebook resource: {:#?}", livebook_resource);
+            sleep(std::time::Duration::from_secs(3)).await;
 
-        while let Some(Ok(resp)) = stream.next().await {
-            debug!("{:?}", resp);
-            if resp.data.unwrap().watch_livebook.unwrap().ready {
-                break;
-            }
+            livebook_resource = client
+                .livebook_resource(&application, &namespace, &version)
+                .await?
+                .data
+                .unwrap()
+                .livebook_resource;
         }
+        // let variables = watch_livebook::Variables {
+        //     application: application.to_string(),
+        //     namespace: namespace.to_string(),
+        //     version: version.to_string(),
+        //     name: new_instance.name.to_string(),
+        // };
+        //
+        // debug!("Start watching to the new livebook instance.");
+        // let (_client, mut stream) = client.subscribe_watch_livebook(variables).await?;
+        //
+        // while let Some(Ok(resp)) = stream.next().await {
+        //     debug!("{:?}", resp);
+        //     if resp.data.unwrap().watch_livebook.unwrap().ready {
+        //         break;
+        //     }
+        // }
         preparing_progress_bar.finish_and_clear();
         eprintln!("Provisioning your livebook instance...✅");
 
