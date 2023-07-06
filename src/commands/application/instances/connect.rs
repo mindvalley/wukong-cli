@@ -141,10 +141,10 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
             println!("livebook resource: {:#?}", livebook_resource);
 
             if livebook_resource.is_some()
-                && (livebook_resource.as_ref().unwrap().pod.status != "ok"
-                    && livebook_resource.as_ref().unwrap().issuer.status != "ok"
-                    && livebook_resource.as_ref().unwrap().ingress.status != "ok"
-                    && livebook_resource.as_ref().unwrap().service.status != "ok")
+                && (livebook_resource.as_ref().unwrap().pod.status == "ok"
+                    && livebook_resource.as_ref().unwrap().issuer.status == "ok"
+                    && livebook_resource.as_ref().unwrap().ingress.status == "ok"
+                    && livebook_resource.as_ref().unwrap().service.status == "ok")
             {
                 break;
             }
