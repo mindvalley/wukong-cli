@@ -68,27 +68,38 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
         preparing_progress_bar.set_message("Found a provisioned Livebook instance belonging to you, re-creating your remote instance...");
 
         debug!("Destroying the exisiting livebook instance.");
-        let _destroyed = client
+        match client
             .destroy_livebook(&application, &namespace, &version)
-            .await?;
+            .await
+        {
+            Ok(_) => {}
+            Err(err) => match &err {
+                crate::error::APIError::ResponseError { code, message } => {
+                    if !message.contains("pod_not_found") && !code.contains("pod_not_found") {
+                        return Err(err.into());
+                    }
+                }
+                _ => return Err(err.into()),
+            },
+        }
 
-        let mut livebook_resource = client
-            .livebook_resource(&application, &namespace, &version)
-            .await?
-            .data
-            .unwrap()
-            .livebook_resource;
-
-        while livebook_resource.is_some() {
-            println!("livebook resource: {:#?}", livebook_resource);
+        loop {
             sleep(std::time::Duration::from_secs(3)).await;
 
-            livebook_resource = client
+            let livebook_resource = client
                 .livebook_resource(&application, &namespace, &version)
                 .await?
                 .data
                 .unwrap()
                 .livebook_resource;
+
+            println!("livebook resource: {:#?}", livebook_resource);
+
+            if livebook_resource.is_none() {
+                break;
+            }
+
+            println!("requerying ...");
         }
 
         // // wait 5 seconds for the pod to be destroyed, otherwise it will failed when deploying new
@@ -118,30 +129,29 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
         .deploy_livebook;
 
     if let Some(new_instance) = new_instance {
-        let mut livebook_resource = client
-            .livebook_resource(&application, &namespace, &version)
-            .await?
-            .data
-            .unwrap()
-            .livebook_resource;
-
-        while livebook_resource.is_none()
-            || (livebook_resource.is_some()
-                && (livebook_resource.as_ref().unwrap().pod.status != "ok"
-                    || livebook_resource.as_ref().unwrap().issuer.status != "ok"
-                    || livebook_resource.as_ref().unwrap().ingress.status != "ok"
-                    || livebook_resource.as_ref().unwrap().service.status != "ok"))
-        {
-            println!("livebook resource: {:#?}", livebook_resource);
+        loop {
             sleep(std::time::Duration::from_secs(3)).await;
-
-            livebook_resource = client
+            let livebook_resource = client
                 .livebook_resource(&application, &namespace, &version)
                 .await?
                 .data
                 .unwrap()
                 .livebook_resource;
+
+            println!("livebook resource: {:#?}", livebook_resource);
+
+            if livebook_resource.is_some()
+                && (livebook_resource.as_ref().unwrap().pod.status != "ok"
+                    && livebook_resource.as_ref().unwrap().issuer.status != "ok"
+                    && livebook_resource.as_ref().unwrap().ingress.status != "ok"
+                    && livebook_resource.as_ref().unwrap().service.status != "ok")
+            {
+                break;
+            }
+
+            println!("requerying ...");
         }
+
         // let variables = watch_livebook::Variables {
         //     application: application.to_string(),
         //     namespace: namespace.to_string(),
