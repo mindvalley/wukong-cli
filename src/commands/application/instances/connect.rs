@@ -239,24 +239,25 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
             new_instance.password.unwrap_or_default().yellow()
         );
         eprintln!();
+
+        let running_progress_bar = new_spinner_progress_bar();
+        running_progress_bar
+            .set_message("Your livebook instance is running. Press Ctrl-C to terminate...");
+
+        tokio::signal::ctrl_c().await.unwrap();
+
+        running_progress_bar.finish_and_clear();
+        let exiting_progress_bar = new_spinner_progress_bar();
+        exiting_progress_bar.set_message("You're exiting from your remote session. Cleaning up...");
+
+        let _destroyed = client
+            .destroy_livebook(&application, &namespace, &version)
+            .await
+            .unwrap();
+
+        exiting_progress_bar.finish_and_clear();
+        eprintln!("Cleanup provisioned resources...✅");
     }
-    let running_progress_bar = new_spinner_progress_bar();
-    running_progress_bar
-        .set_message("Your livebook instance is running. Press Ctrl-C to terminate...");
-
-    tokio::signal::ctrl_c().await.unwrap();
-
-    running_progress_bar.finish_and_clear();
-    let exiting_progress_bar = new_spinner_progress_bar();
-    exiting_progress_bar.set_message("You're exiting from your remote session. Cleaning up...");
-
-    let _destroyed = client
-        .destroy_livebook(&application, &namespace, &version)
-        .await
-        .unwrap();
-
-    exiting_progress_bar.finish_and_clear();
-    eprintln!("Cleanup provisioned resources...✅");
 
     Ok(true)
 }
