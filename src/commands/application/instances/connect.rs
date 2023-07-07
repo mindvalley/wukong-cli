@@ -7,6 +7,9 @@ use log::debug;
 use owo_colors::OwoColorize;
 use tokio::time::sleep;
 
+const RETRY_WAIT_TIME_IN_SEC: u64 = 3;
+const MAX_CHECKING_RETRY: u64 = 20;
+
 struct Status {
     pod: bool,
     issuer: bool,
@@ -91,8 +94,8 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
             },
         }
 
-        loop {
-            sleep(std::time::Duration::from_secs(3)).await;
+        for _ in 0..MAX_CHECKING_RETRY {
+            sleep(std::time::Duration::from_secs(RETRY_WAIT_TIME_IN_SEC)).await;
 
             let livebook_resource = client
                 .livebook_resource(&application, &namespace, &version)
@@ -136,8 +139,8 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
             service: false,
         };
 
-        loop {
-            sleep(std::time::Duration::from_secs(3)).await;
+        for _ in 0..MAX_CHECKING_RETRY {
+            sleep(std::time::Duration::from_secs(RETRY_WAIT_TIME_IN_SEC)).await;
             let livebook_resource = client
                 .livebook_resource(&application, &namespace, &version)
                 .await?
