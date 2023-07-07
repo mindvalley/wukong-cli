@@ -7,8 +7,9 @@ use log::debug;
 use owo_colors::OwoColorize;
 use tokio::time::sleep;
 
+// 2 mins timeout
 const RETRY_WAIT_TIME_IN_SEC: u64 = 3;
-const MAX_CHECKING_RETRY: u64 = 30;
+const MAX_CHECKING_RETRY: u64 = 40;
 
 struct Status {
     pod: bool,
