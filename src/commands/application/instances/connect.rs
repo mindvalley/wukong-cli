@@ -94,7 +94,7 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
             },
         }
 
-        for _ in 0..MAX_CHECKING_RETRY {
+        for i in 0..MAX_CHECKING_RETRY {
             sleep(std::time::Duration::from_secs(RETRY_WAIT_TIME_IN_SEC)).await;
 
             let livebook_resource = client
@@ -106,6 +106,10 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
 
             if livebook_resource.is_none() {
                 break;
+            }
+
+            if i == MAX_CHECKING_RETRY - 1 {
+                return Err(CliError::Timeout);
             }
         }
     }
@@ -139,7 +143,7 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
             service: false,
         };
 
-        for _ in 0..MAX_CHECKING_RETRY {
+        for i in 0..MAX_CHECKING_RETRY {
             sleep(std::time::Duration::from_secs(RETRY_WAIT_TIME_IN_SEC)).await;
             let livebook_resource = client
                 .livebook_resource(&application, &namespace, &version)
@@ -169,6 +173,10 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
                 if status.pod && status.issuer && status.ingress && status.service {
                     m.clear().unwrap();
                     break;
+                }
+
+                if i == MAX_CHECKING_RETRY - 1 {
+                    return Err(CliError::Timeout);
                 }
             }
         }

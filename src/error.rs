@@ -39,6 +39,8 @@ pub enum CliError {
     GCloudError(#[from] GCloudError),
     #[error(transparent)]
     ExtractError(#[from] ExtractError),
+    #[error("Operation timeout")]
+    Timeout,
 }
 
 #[derive(Debug, ThisError)]
