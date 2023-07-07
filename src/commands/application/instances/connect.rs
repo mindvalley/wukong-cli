@@ -1,5 +1,8 @@
 use crate::{
-    commands::Context, error::CliError, graphql::QueryClient, graphql::QueryClientBuilder,
+    commands::Context,
+    error::CliError,
+    graphql::QueryClientBuilder,
+    graphql::{kubernetes::deploy_livebook::DeployLivebookDeployLivebook, QueryClient},
     loader::new_spinner_progress_bar,
 };
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
@@ -116,18 +119,38 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
     }
 
     debug!("Deploying a new livebook instance.");
-    let new_instance = client
-        .deploy_livebook(
-            &application,
-            &namespace,
-            &version,
-            &instance_name,
-            *port as i64,
-        )
-        .await?
-        .data
-        .unwrap()
-        .deploy_livebook;
+    // handle random time out error, so we retry up to 3 times
+    let mut new_instance: Option<DeployLivebookDeployLivebook> = None;
+    const MAX_TIMEOUT_RETRY: u32 = 3;
+    for i in 0..MAX_TIMEOUT_RETRY {
+        let resp = client
+            .deploy_livebook(
+                &application,
+                &namespace,
+                &version,
+                &instance_name,
+                *port as i64,
+            )
+            .await;
+
+        if let Err(err) = resp {
+            match &err {
+                crate::error::APIError::ResponseError { code, message: _ } => {
+                    if !code.contains("k8s_operation_timed_out") || i == MAX_TIMEOUT_RETRY - 1 {
+                        return Err(err.into());
+                    }
+
+                    sleep(std::time::Duration::from_secs(RETRY_WAIT_TIME_IN_SEC)).await;
+                }
+                _ => {
+                    return Err(err.into());
+                }
+            }
+        } else {
+            new_instance = resp.unwrap().data.unwrap().deploy_livebook;
+            break;
+        }
+    }
 
     preparing_progress_bar.finish();
 
