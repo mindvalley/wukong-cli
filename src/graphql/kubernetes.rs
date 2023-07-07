@@ -197,14 +197,6 @@ impl LivebookResourceQuery {
     }
 }
 
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "src/graphql/schema.json",
-    query_path = "src/graphql/subscription/watch_livebook.graphql",
-    response_derives = "Debug, Serialize, Deserialize, Clone"
-)]
-pub struct WatchLivebook;
-
 #[cfg(test)]
 mod test {
     use super::*;

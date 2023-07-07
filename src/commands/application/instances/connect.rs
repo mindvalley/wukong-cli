@@ -1,18 +1,28 @@
 use crate::{
-    commands::Context,
-    error::CliError,
-    graphql::{kubernetes::watch_livebook, QueryClient, QueryClientBuilder},
+    commands::Context, error::CliError, graphql::QueryClient, graphql::QueryClientBuilder,
     loader::new_spinner_progress_bar,
 };
-use futures::StreamExt;
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use log::debug;
 use owo_colors::OwoColorize;
 use tokio::time::sleep;
 
+struct Status {
+    pod: bool,
+    issuer: bool,
+    ingress: bool,
+    service: bool,
+}
+
 pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<bool, CliError> {
+    let spinner_style =
+        ProgressStyle::with_template("{prefix:.bold.dim} {spinner} {wide_msg}").unwrap();
+
     let (namespace, version, instance_name) = parse_name(name)?;
 
     let progress_bar = new_spinner_progress_bar();
+    progress_bar.set_style(spinner_style.clone());
+    progress_bar.set_prefix("[1/3]");
     progress_bar.set_message("Checking your permission to connect to the remote instance...");
 
     let auth_config = context
@@ -40,11 +50,12 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
         return Ok(false);
     }
 
-    progress_bar.finish_and_clear();
-
-    eprintln!("Checking your permission to connect to the remote instance...✅");
+    progress_bar
+        .finish_with_message("Checking your permission to connect to the remote instance...✅");
 
     let preparing_progress_bar = new_spinner_progress_bar();
+    preparing_progress_bar.set_style(spinner_style.clone());
+    preparing_progress_bar.set_prefix("[2/3]");
     preparing_progress_bar.set_message("Preparing your remote instance...");
 
     let k8s_pods = client
@@ -57,9 +68,6 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
 
     let user_email = auth_config.account.clone().replace(['@', '.'], "-");
 
-    println!("k8s pods: {:#?}", k8s_pods);
-
-    // FIXME: we need to check under the same pod
     let has_existing_livebook_pod = k8s_pods
         .into_iter()
         .any(|pod| pod.labels.contains(&user_email));
@@ -93,25 +101,10 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
                 .unwrap()
                 .livebook_resource;
 
-            println!("livebook resource: {:#?}", livebook_resource);
-
             if livebook_resource.is_none() {
                 break;
             }
-
-            println!("requerying ...");
         }
-
-        // // wait 5 seconds for the pod to be destroyed, otherwise it will failed when deploying new
-        // // livebook on the next step
-        // sleep(std::time::Duration::from_secs(5)).await;
-        //
-        // debug!("Destroyed the exisiting livebook instance.");
-        //
-        // let livebook_resource = client
-        //     .livebook_resource(&application, &namespace, &version)
-        //     .await?;
-        // println!("livebook resource: {:?}", livebook_resource);
     }
 
     debug!("Deploying a new livebook instance.");
@@ -128,7 +121,21 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
         .unwrap()
         .deploy_livebook;
 
+    preparing_progress_bar.finish();
+
     if let Some(new_instance) = new_instance {
+        let m = MultiProgress::new();
+
+        let (pod_loader, issuer_loader, ingress_loader, service_loader) =
+            setup_loaders(&m, spinner_style.clone());
+
+        let mut status = Status {
+            pod: false,
+            issuer: false,
+            ingress: false,
+            service: false,
+        };
+
         loop {
             sleep(std::time::Duration::from_secs(3)).await;
             let livebook_resource = client
@@ -138,40 +145,36 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
                 .unwrap()
                 .livebook_resource;
 
-            println!("livebook resource: {:#?}", livebook_resource);
+            if let Some(livebook) = livebook_resource {
+                if livebook.pod.status == "ok" && !status.pod {
+                    pod_loader.finish_with_message("Pod created successfully ✅");
+                    status.pod = true;
+                }
+                if livebook.issuer.status == "ok" && !status.issuer {
+                    issuer_loader.finish_with_message("Issuer created successfully ✅");
+                    status.issuer = true;
+                }
+                if livebook.ingress.status == "ok" && !status.ingress {
+                    ingress_loader.finish_with_message("Ingress created successfully ✅");
+                    status.ingress = true;
+                }
+                if livebook.service.status == "ok" && !status.service {
+                    service_loader.finish_with_message("Service created successfully ✅");
+                    status.service = true;
+                }
 
-            if livebook_resource.is_some()
-                && (livebook_resource.as_ref().unwrap().pod.status == "ok"
-                    && livebook_resource.as_ref().unwrap().issuer.status == "ok"
-                    && livebook_resource.as_ref().unwrap().ingress.status == "ok"
-                    && livebook_resource.as_ref().unwrap().service.status == "ok")
-            {
-                break;
+                if status.pod && status.issuer && status.ingress && status.service {
+                    m.clear().unwrap();
+                    break;
+                }
             }
-
-            println!("requerying ...");
         }
 
-        // let variables = watch_livebook::Variables {
-        //     application: application.to_string(),
-        //     namespace: namespace.to_string(),
-        //     version: version.to_string(),
-        //     name: new_instance.name.to_string(),
-        // };
-        //
-        // debug!("Start watching to the new livebook instance.");
-        // let (_client, mut stream) = client.subscribe_watch_livebook(variables).await?;
-        //
-        // while let Some(Ok(resp)) = stream.next().await {
-        //     debug!("{:?}", resp);
-        //     if resp.data.unwrap().watch_livebook.unwrap().ready {
-        //         break;
-        //     }
-        // }
-        preparing_progress_bar.finish_and_clear();
-        eprintln!("Provisioning your livebook instance...✅");
+        preparing_progress_bar.finish_with_message("Provisioning your livebook instance...✅");
 
         let connection_test_progress_bar = new_spinner_progress_bar();
+        connection_test_progress_bar.set_style(spinner_style.clone());
+        connection_test_progress_bar.set_prefix("[3/3]");
         connection_test_progress_bar
             .set_message("Testing connectivity to your livebook instance...");
 
@@ -197,9 +200,9 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
             }
         }
 
-        connection_test_progress_bar.finish_and_clear();
         if !connection_test_success {
-            eprintln!("Testing connectivity to your livebook instance...❌");
+            connection_test_progress_bar
+                .finish_with_message("Testing connectivity to your livebook instance...❌");
 
             let destroy_progress_bar = new_spinner_progress_bar();
             destroy_progress_bar.set_message("Destroying the livebook instances...");
@@ -212,8 +215,10 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
             return Ok(false);
         }
 
-        eprintln!("Testing connectivity to your livebook instance...✅");
+        connection_test_progress_bar
+            .finish_with_message("Testing connectivity to your livebook instance...✅");
 
+        eprintln!();
         eprintln!();
         eprintln!("✅ Your livebook instance is ready! Use the following details to access:\n");
         eprintln!("URL 🔗: {}", url.cyan());
@@ -272,6 +277,37 @@ async fn has_permission(
         .data
         .unwrap()
         .is_authorized)
+}
+
+fn setup_loaders(
+    m: &MultiProgress,
+    spinner_style: ProgressStyle,
+) -> (ProgressBar, ProgressBar, ProgressBar, ProgressBar) {
+    let step = 1_000_000;
+
+    let pod_loader = m.add(ProgressBar::new(step));
+    pod_loader.set_style(spinner_style.clone());
+    pod_loader.enable_steady_tick(std::time::Duration::from_millis(80));
+    pod_loader.set_prefix("[1/?]");
+    let issuer_loader = m.add(ProgressBar::new(step));
+    issuer_loader.set_style(spinner_style.clone());
+    issuer_loader.enable_steady_tick(std::time::Duration::from_millis(80));
+    issuer_loader.set_prefix("[2/?]");
+    let ingress_loader = m.add(ProgressBar::new(step));
+    ingress_loader.set_style(spinner_style.clone());
+    ingress_loader.enable_steady_tick(std::time::Duration::from_millis(80));
+    ingress_loader.set_prefix("[3/?]");
+    let service_loader = m.add(ProgressBar::new(step));
+    service_loader.set_style(spinner_style);
+    service_loader.enable_steady_tick(std::time::Duration::from_millis(80));
+    service_loader.set_prefix("[4/?]");
+
+    pod_loader.set_message("Setting up pod ...");
+    issuer_loader.set_message("Setting up issuer ...");
+    ingress_loader.set_message("Setting up ingress ...");
+    service_loader.set_message("Setting up service ...");
+
+    (pod_loader, issuer_loader, ingress_loader, service_loader)
 }
 
 #[cfg(test)]
