@@ -8,7 +8,7 @@ use owo_colors::OwoColorize;
 use tokio::time::sleep;
 
 const RETRY_WAIT_TIME_IN_SEC: u64 = 3;
-const MAX_CHECKING_RETRY: u64 = 20;
+const MAX_CHECKING_RETRY: u64 = 30;
 
 struct Status {
     pod: bool,
