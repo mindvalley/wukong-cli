@@ -246,22 +246,6 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
     Ok(true)
 }
 
-fn parse_name(name: &str) -> Result<(String, String, String), CliError> {
-    if let Some((instance_info, instance_name)) = name.split_once('/') {
-        if let Some((version, namespace)) = instance_info.split_once('@') {
-            return Ok((
-                namespace.to_string(),
-                version.to_string(),
-                instance_name.to_string(),
-            ));
-        }
-    }
-
-    Err(CliError::InvalidInput {
-        value: name.to_string(),
-    })
-}
-
 async fn has_permission(
     client: &QueryClient,
     application: &str,
@@ -274,26 +258,4 @@ async fn has_permission(
         .data
         .unwrap()
         .is_authorized)
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test_parse_name_success() {
-        let (namespace, version, instance_name) = parse_name("green@prod/wukong-abc").unwrap();
-
-        assert_eq!(namespace, "prod");
-        assert_eq!(version, "green");
-        assert_eq!(instance_name, "wukong-abc");
-    }
-
-    #[test]
-    fn test_parse_name_failed() {
-        match parse_name("green-prod/wukong-abc") {
-            Ok(_) => panic!("the test should be failed"),
-            Err(_) => assert!(true),
-        }
-    }
 }
