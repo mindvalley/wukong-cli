@@ -62,19 +62,14 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
     preparing_progress_bar.set_prefix("[2/3]");
     preparing_progress_bar.set_message("Preparing your remote instance...");
 
-    let k8s_pods = client
-        .fetch_kubernetes_pods(&application, &namespace, &version)
-        .await
-        .unwrap()
+    let livebook_resource = client
+        .livebook_resource(&application, &namespace, &version)
+        .await?
         .data
         .unwrap()
-        .kubernetes_pods;
+        .livebook_resource;
 
-    let user_email = auth_config.account.clone().replace(['@', '.'], "-");
-
-    let has_existing_livebook_pod = k8s_pods
-        .into_iter()
-        .any(|pod| pod.labels.contains(&user_email));
+    let has_existing_livebook_pod = livebook_resource.is_some();
 
     if has_existing_livebook_pod {
         preparing_progress_bar.set_message("Found a provisioned Livebook instance belonging to you, re-creating your remote instance...");
@@ -116,7 +111,7 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
     }
 
     debug!("Deploying a new livebook instance.");
-    // handle random time out error, so we retry up to 3 times
+
     let new_instance = client
         .deploy_livebook(
             &application,
