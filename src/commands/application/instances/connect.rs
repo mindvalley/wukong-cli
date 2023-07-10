@@ -1,16 +1,56 @@
 use crate::{
-    commands::Context,
+    commands::{
+        deployment::{DeploymentNamespace, DeploymentVersion},
+        Context,
+    },
     error::CliError,
     graphql::{kubernetes::watch_livebook, QueryClient, QueryClientBuilder},
     loader::new_spinner_progress_bar,
 };
+use dialoguer::{theme::ColorfulTheme, Select};
 use futures::StreamExt;
 use log::debug;
 use owo_colors::OwoColorize;
 use tokio::time::sleep;
 
-pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<bool, CliError> {
-    let (namespace, version, instance_name) = parse_name(name)?;
+pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
+    let namespace_idx = Select::with_theme(&ColorfulTheme::default())
+        .with_prompt(format!(
+            "Please choose the namespace you want to connect to",
+        ))
+        .default(0)
+        .items(&vec![
+            DeploymentNamespace::Prod.to_string(),
+            DeploymentNamespace::Staging.to_string(),
+        ])
+        .interact_opt()?;
+
+    let namespace = match namespace_idx {
+        Some(0) => DeploymentNamespace::Prod.to_string().to_lowercase(),
+        Some(1) => DeploymentNamespace::Staging.to_string().to_lowercase(),
+        _ => {
+            eprintln!("You didn't choose any namespace to connect to.");
+            return Ok(false);
+        }
+    };
+
+    let version_idx = Select::with_theme(&ColorfulTheme::default())
+        .with_prompt(format!("Please choose the version you want to connect to",))
+        .default(0)
+        .items(&vec![
+            DeploymentVersion::Green.to_string(),
+            DeploymentVersion::Blue.to_string(),
+        ])
+        .interact()?;
+
+    let version = match version_idx {
+        0 => DeploymentVersion::Green.to_string().to_lowercase(),
+        1 => DeploymentVersion::Blue.to_string().to_lowercase(),
+        _ => {
+            eprintln!("You didn't choose any version to connect to.");
+            return Ok(false);
+        }
+    };
 
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Checking your permission to connect to the remote instance...");
@@ -43,6 +83,34 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
     progress_bar.finish_and_clear();
 
     eprintln!("Checking your permission to connect to the remote instance...✅");
+
+    let fetching_progress_bar = new_spinner_progress_bar();
+    fetching_progress_bar.set_message(format!(
+        "Listing running instances of the application {}...",
+        application.bright_green()
+    ));
+
+    let k8s_pods = client
+        .fetch_kubernetes_pods(&application, &namespace, &version)
+        .await?
+        .data
+        .unwrap()
+        .kubernetes_pods;
+
+    fetching_progress_bar.finish_and_clear();
+
+    let instance_name_idx = Select::with_theme(&ColorfulTheme::default())
+        .with_prompt(format!("Please choose the instance you want to connect",))
+        .default(0)
+        .items(
+            &k8s_pods
+                .iter()
+                .map(|pod| pod.name.clone())
+                .collect::<Vec<String>>(),
+        )
+        .interact()?;
+
+    let instance_name = k8s_pods[instance_name_idx].name.clone();
 
     let preparing_progress_bar = new_spinner_progress_bar();
     preparing_progress_bar.set_message("Preparing your remote instance...");
@@ -79,13 +147,7 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
 
     debug!("Deploying a new livebook instance.");
     let new_instance = client
-        .deploy_livebook(
-            &application,
-            &namespace,
-            &version,
-            &instance_name,
-            *port as i64,
-        )
+        .deploy_livebook(&application, &namespace, &version, &instance_name, 8080)
         .await?
         .data
         .unwrap()
