@@ -4,7 +4,7 @@ use super::{JobBuild, PipelineBranch, PipelinePullRequest};
 use crate::{
     commands::Context,
     error::CliError,
-    graphql::{pipeline::pipeline_query::PipelineQueryPipeline, QueryClientBuilder},
+    graphql::{pipeline::pipeline_query::PipelineQueryPipeline, QueryClient},
     loader::new_spinner_progress_bar,
     output::{colored_println, table::TableOutput},
     telemetry::{self, TelemetryData, TelemetryEvent},
@@ -16,17 +16,7 @@ pub async fn handle_describe(context: Context, name: &str) -> Result<bool, CliEr
     progress_bar.set_message("Fetching pipeline data ...");
 
     // Calling API ...
-    let client = QueryClientBuilder::default()
-        .with_access_token(
-            context
-                .config
-                .auth
-                .ok_or(CliError::UnAuthenticated)?
-                .id_token,
-        )
-        .with_sub(context.state.sub)
-        .with_api_url(context.config.core.wukong_api_url)
-        .build()?;
+    let client = QueryClient::from_default_config()?;
 
     let pipeline_resp = client
         .fetch_pipeline(name)

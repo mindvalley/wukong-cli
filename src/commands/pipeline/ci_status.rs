@@ -5,7 +5,7 @@ use super::PipelineCiStatus;
 use crate::{
     commands::Context,
     error::CliError,
-    graphql::QueryClientBuilder,
+    graphql::QueryClient,
     loader::new_spinner_progress_bar,
     output::{colored_println, table::TableOutput},
     telemetry::{self, TelemetryData, TelemetryEvent},
@@ -55,17 +55,7 @@ pub async fn handle_ci_status(
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Fetching ci status ...");
 
-    let client = QueryClientBuilder::default()
-        .with_access_token(
-            context
-                .config
-                .auth
-                .ok_or(CliError::UnAuthenticated)?
-                .id_token,
-        )
-        .with_sub(context.state.sub)
-        .with_api_url(context.config.core.wukong_api_url)
-        .build()?;
+    let client = QueryClient::from_default_config()?;
 
     let ci_status_resp = client
         .fetch_ci_status(&repo_url, &branch)
