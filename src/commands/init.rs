@@ -1,6 +1,6 @@
 use crate::{
     auth::Auth,
-    config::{AuthConfig, Config, CONFIG_FILE},
+    config::{AuthConfig, Config},
     error::{AuthError, CliError, ConfigError},
     graphql::QueryClientBuilder,
     loader::new_spinner_progress_bar,
@@ -15,11 +15,7 @@ use openidconnect::RefreshToken;
 pub async fn handle_init() -> Result<bool, CliError> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
 
-    let config_file = CONFIG_FILE
-        .as_ref()
-        .expect("Unable to identify user's home directory");
-
-    let config = match Config::load(config_file) {
+    let config = match Config::load_from_default_path() {
         Ok(config) => config,
         Err(error) => match error {
             ConfigError::NotFound { .. } | ConfigError::BadTomlData(_) => Config::default(),
@@ -149,11 +145,7 @@ Some things to try next:
         new_config.core.application
     );
 
-    if let Some(ref config_file) = *CONFIG_FILE {
-        new_config
-            .save(config_file)
-            .expect("Config file save failed");
-    }
+    new_config.save_to_default_path()?;
 
     Ok(true)
 }

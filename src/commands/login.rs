@@ -1,6 +1,6 @@
 use crate::{
     auth::Auth,
-    config::{AuthConfig, CONFIG_FILE},
+    config::AuthConfig,
     error::{AuthError, CliError},
     loader::new_spinner_progress_bar,
     output::colored_println,
@@ -13,11 +13,7 @@ use log::debug;
 use openidconnect::RefreshToken;
 
 pub async fn handle_login() -> Result<bool, CliError> {
-    let config_file = CONFIG_FILE
-        .as_ref()
-        .expect("Unable to identify user's home directory");
-
-    let mut config = CLIConfig::load(config_file)?;
+    let mut config = CLIConfig::load_from_default_path()?;
 
     if let Some(auth_config) = &config.auth {
         let selections = vec![
@@ -102,11 +98,7 @@ async fn login_and_update_config(mut current_config: CLIConfig) -> Result<bool, 
         refresh_token: auth_info.refresh_token,
     });
 
-    let config_file = CONFIG_FILE
-        .as_ref()
-        .expect("Unable to identify user's home directory");
-
-    current_config.save(config_file).unwrap();
+    current_config.save_to_default_path()?;
     colored_println!("You are now logged in as {}.", auth_info.account);
 
     Ok(true)
