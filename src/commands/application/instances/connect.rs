@@ -73,7 +73,7 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
     fetch_instance_progress_bar.finish_and_clear();
 
     let instance_name_idx = Select::with_theme(&ColorfulTheme::default())
-        .with_prompt(format!("Please choose the instance you want to connect",))
+        .with_prompt("Please choose the instance you want to connect")
         .default(0)
         .items(
             &k8s_pods
@@ -209,7 +209,7 @@ async fn cleanup_previous_livebook_instance(
     preparing_progress_bar: indicatif::ProgressBar,
 ) -> Result<(), CliError> {
     let k8s_pods = client
-        .fetch_kubernetes_pods(&application, &namespace, &version)
+        .fetch_kubernetes_pods(application, namespace, version)
         .await
         .unwrap()
         .data
@@ -227,7 +227,7 @@ async fn cleanup_previous_livebook_instance(
 
         debug!("Destroying the exisiting livebook instance.");
         let _destroyed = client
-            .destroy_livebook(&application, &namespace, &version)
+            .destroy_livebook(application, namespace, version)
             .await
             .unwrap();
 
@@ -248,7 +248,7 @@ async fn get_ready_k8s_pods(
     version: &str,
 ) -> Result<Vec<KubernetesPod>, CliError> {
     let k8s_pods = client
-        .fetch_kubernetes_pods(&application, &namespace, &version)
+        .fetch_kubernetes_pods(application, namespace, version)
         .await?
         .data
         .unwrap()
@@ -272,7 +272,7 @@ fn select_deployment_namespace() -> Result<Option<String>, CliError> {
     let namespace_idx = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Please choose the namespace you want to connect to")
         .default(0)
-        .items(&vec![
+        .items(&[
             DeploymentNamespace::Prod.to_string(),
             DeploymentNamespace::Staging.to_string(),
         ])
@@ -294,7 +294,7 @@ fn select_deployment_version() -> Result<Option<String>, CliError> {
     let version_idx = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Please choose the version you want to connect to")
         .default(0)
-        .items(&vec![
+        .items(&[
             DeploymentVersion::Green.to_string(),
             DeploymentVersion::Blue.to_string(),
         ])
