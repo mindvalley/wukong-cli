@@ -32,7 +32,7 @@ pub struct State {
 #[derive(Default, Debug)]
 pub struct Context {
     state: State,
-    config: Config,
+    pub config: Config,
 }
 
 impl Context {

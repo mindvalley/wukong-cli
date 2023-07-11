@@ -25,7 +25,8 @@ use self::{
     },
 };
 use crate::{
-    error::APIError,
+    config::Config,
+    error::{APIError, CliError},
     telemetry::{self, TelemetryData, TelemetryEvent},
 };
 use graphql_client::{GraphQLQuery, QueryBody, Response};
@@ -35,13 +36,20 @@ use std::fmt::Debug;
 use std::{thread, time};
 use wukong_telemetry_macro::wukong_telemetry;
 
+// TODO: this will be removed on v2.0
+#[allow(dead_code)]
 #[derive(Debug, Default)]
 pub struct QueryClientBuilder {
-    access_token: Option<String>,
-    sub: Option<String>,
     api_url: String,
+    // authentication
+    access_token: Option<String>,
+    expiry_time: Option<String>,
+    refresh_token: Option<String>,
+    // for telemetry usage
+    sub: Option<String>,
 }
 
+#[allow(dead_code)]
 impl QueryClientBuilder {
     pub fn with_access_token(mut self, access_token: String) -> Self {
         self.access_token = Some(access_token);
@@ -49,13 +57,23 @@ impl QueryClientBuilder {
     }
 
     // for telemetry usage
-    pub fn with_sub(mut self, sub: Option<String>) -> Self {
-        self.sub = sub;
+    pub fn with_sub(mut self, sub: String) -> Self {
+        self.sub = Some(sub);
         self
     }
 
     pub fn with_api_url(mut self, api_url: String) -> Self {
         self.api_url = api_url;
+        self
+    }
+
+    pub fn with_expiry_time(mut self, expiry_time: String) -> Self {
+        self.expiry_time = Some(expiry_time);
+        self
+    }
+
+    pub fn with_refresh_token(mut self, refresh_token: String) -> Self {
+        self.refresh_token = Some(refresh_token);
         self
     }
 
@@ -78,6 +96,8 @@ impl QueryClientBuilder {
             reqwest_client: client,
             api_url: self.api_url,
             sub: self.sub,
+            expiry_time: self.expiry_time,
+            refresh_token: self.refresh_token,
         })
     }
 }
@@ -85,11 +105,47 @@ impl QueryClientBuilder {
 pub struct QueryClient {
     reqwest_client: reqwest::Client,
     api_url: String,
+    // authentication
+    access_token: Option<String>,
+    expiry_time: Option<String>,
+    refresh_token: Option<String>,
     // for telemetry usage
     sub: Option<String>,
 }
 
 impl QueryClient {
+    pub fn from_default_config() -> Result<Self, CliError> {
+        let config = Config::load_from_default_path()?;
+        Self::from_config(&config)
+    }
+
+    pub fn from_config(config: &Config) -> Result<Self, CliError> {
+        let auth_config = config.auth.as_ref().ok_or(CliError::UnAuthenticated)?;
+        let token = auth_config.id_token.clone();
+
+        let mut headers = header::HeaderMap::new();
+
+        let bearer_token = format!("Bearer {}", token);
+        headers.insert(
+            header::AUTHORIZATION,
+            header::HeaderValue::from_str(&bearer_token).unwrap(),
+        );
+
+        let client = reqwest::Client::builder()
+            .default_headers(headers)
+            .build()
+            .map_err(|err| <reqwest::Error as Into<APIError>>::into(err))?;
+
+        Ok(QueryClient {
+            reqwest_client: client,
+            api_url: config.core.wukong_api_url.clone(),
+            access_token: Some(token),
+            expiry_time: Some(auth_config.expiry_time.clone()),
+            refresh_token: Some(auth_config.refresh_token.clone()),
+            sub: Some(auth_config.subject.clone()),
+        })
+    }
+
     pub fn inner(&self) -> &reqwest::Client {
         &self.reqwest_client
     }

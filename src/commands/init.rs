@@ -2,7 +2,7 @@ use crate::{
     auth::Auth,
     config::{AuthConfig, Config},
     error::{AuthError, CliError, ConfigError},
-    graphql::QueryClientBuilder,
+    graphql::QueryClient,
     loader::new_spinner_progress_bar,
     output::colored_println,
 };
@@ -93,17 +93,10 @@ pub async fn handle_init() -> Result<bool, CliError> {
         current_config
     };
 
-    // SAFETY: The auth must not be None here
-    let auth_config = new_config.auth.as_ref().unwrap();
-
     let fetch_loader = new_spinner_progress_bar();
     fetch_loader.set_message("Fetching application list...");
     // Calling API ...
-    let client = QueryClientBuilder::default()
-        .with_access_token(auth_config.id_token.clone())
-        .with_sub(Some(auth_config.subject.clone()))
-        .with_api_url(new_config.core.wukong_api_url.clone())
-        .build()?;
+    let client = QueryClient::from_config(&new_config)?;
 
     let applications_data: Vec<String> = client
         .fetch_application_list()

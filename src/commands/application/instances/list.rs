@@ -1,7 +1,7 @@
 use crate::{
     commands::Context,
     error::CliError,
-    graphql::{QueryClient, QueryClientBuilder},
+    graphql::QueryClient,
     loader::new_spinner_progress_bar,
     output::{colored_println, table::TableOutput},
 };
@@ -30,17 +30,7 @@ pub async fn handle_list(
     progress_bar.set_message("Checking your permission to connect to the remote instance...");
 
     // Calling API ...
-    let client = QueryClientBuilder::default()
-        .with_access_token(
-            context
-                .config
-                .auth
-                .ok_or(CliError::UnAuthenticated)?
-                .id_token,
-        )
-        .with_sub(context.state.sub)
-        .with_api_url(context.config.core.wukong_api_url)
-        .build()?;
+    let client = QueryClient::from_default_config()?;
 
     let application = context.state.application.unwrap();
 

@@ -35,11 +35,7 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
         .as_ref()
         .ok_or(CliError::UnAuthenticated)?;
 
-    let client = QueryClientBuilder::default()
-        .with_access_token(auth_config.id_token.clone())
-        .with_sub(context.state.sub)
-        .with_api_url(context.config.core.wukong_api_url)
-        .build()?;
+    let client = QueryClient::from_default_config()?;
 
     let application = context.state.application.unwrap();
 
