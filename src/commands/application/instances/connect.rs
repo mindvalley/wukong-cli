@@ -13,48 +13,12 @@ use log::debug;
 use owo_colors::OwoColorize;
 use tokio::time::sleep;
 
-fn select_deployment_namespace() -> Result<Option<String>, CliError> {
-    let namespace_idx = Select::with_theme(&ColorfulTheme::default())
-        .with_prompt("Please choose the namespace you want to connect to")
-        .default(0)
-        .items(&vec![
-            DeploymentNamespace::Prod.to_string(),
-            DeploymentNamespace::Staging.to_string(),
-        ])
-        .interact()?;
-
-    let namespace = match namespace_idx {
-        0 => DeploymentNamespace::Prod.to_string().to_lowercase(),
-        1 => DeploymentNamespace::Staging.to_string().to_lowercase(),
-        _ => {
-            eprintln!("You didn't choose any namespace to connect to.");
-            return Ok(None);
-        }
-    };
-
-    Ok(Some(namespace))
-}
-
-fn select_deployment_version() -> Result<Option<String>, CliError> {
-    let version_idx = Select::with_theme(&ColorfulTheme::default())
-        .with_prompt("Please choose the version you want to connect to")
-        .default(0)
-        .items(&vec![
-            DeploymentVersion::Green.to_string(),
-            DeploymentVersion::Blue.to_string(),
-        ])
-        .interact()?;
-
-    let version = match version_idx {
-        0 => DeploymentVersion::Green.to_string().to_lowercase(),
-        1 => DeploymentVersion::Blue.to_string().to_lowercase(),
-        _ => {
-            eprintln!("You didn't choose any version to connect to.");
-            return Ok(None);
-        }
-    };
-
-    Ok(Some(version))
+struct kubernetes_pod {
+    name: String,
+    pod_ip: Option<String>,
+    ready: bool,
+    labels: Vec<String>,
+    is_livebook: Option<bool>,
 }
 
 pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
@@ -105,12 +69,14 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
         version.bright_green()
     ));
 
-    let k8s_pods = client
-        .fetch_kubernetes_pods(&application, &namespace, &version)
-        .await?
-        .data
-        .unwrap()
-        .kubernetes_pods;
+    let k8s_pods = get_ready_k8s_pods(&client, &application, &namespace, &version).await?;
+
+    // let k8s_pods = client
+    //     .fetch_kubernetes_pods(&application, &namespace, &version)
+    //     .await?
+    //     .data
+    //     .unwrap()
+    //     .kubernetes_pods;
 
     fetching_progress_bar.finish_and_clear();
 
@@ -259,6 +225,79 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
     eprintln!("Cleanup provisioned resources...✅");
 
     Ok(true)
+}
+
+async fn get_ready_k8s_pods(
+    client: &QueryClient,
+    application: &str,
+    namespace: &str,
+    version: &str,
+) -> Result<Vec<kubernetes_pod>, CliError> {
+    let k8s_pods = client
+        .fetch_kubernetes_pods(&application, &namespace, &version)
+        .await?
+        .data
+        .unwrap()
+        .kubernetes_pods;
+
+    // filter out the pods that are not ready and livebook pods
+    let ready_pods = k8s_pods
+        .into_iter()
+        .map(|pod| kubernetes_pod {
+            name: pod.name,
+            pod_ip: pod.pod_ip,
+            ready: pod.ready,
+            is_livebook: Some(pod.labels.contains(&"livebook".to_string())),
+            labels: pod.labels,
+        })
+        .filter(|pod| pod.ready && !pod.is_livebook.unwrap_or_default())
+        .collect();
+
+    Ok(ready_pods)
+}
+
+fn select_deployment_namespace() -> Result<Option<String>, CliError> {
+    let namespace_idx = Select::with_theme(&ColorfulTheme::default())
+        .with_prompt("Please choose the namespace you want to connect to")
+        .default(0)
+        .items(&vec![
+            DeploymentNamespace::Prod.to_string(),
+            DeploymentNamespace::Staging.to_string(),
+        ])
+        .interact()?;
+
+    let namespace = match namespace_idx {
+        0 => DeploymentNamespace::Prod.to_string().to_lowercase(),
+        1 => DeploymentNamespace::Staging.to_string().to_lowercase(),
+        _ => {
+            eprintln!("You didn't choose any namespace to connect to.");
+            return Ok(None);
+        }
+    };
+
+    Ok(Some(namespace))
+}
+
+fn select_deployment_version() -> Result<Option<String>, CliError> {
+    let version_idx = Select::with_theme(&ColorfulTheme::default())
+        .with_prompt("Please choose the version you want to connect to")
+        .default(0)
+        .items(&vec![
+            DeploymentVersion::Green.to_string(),
+            DeploymentVersion::Blue.to_string(),
+        ])
+        .interact()?;
+
+    let version = match version_idx {
+        0 => DeploymentVersion::Green.to_string().to_lowercase(),
+        1 => DeploymentVersion::Blue.to_string().to_lowercase(),
+        _ => {
+            eprintln!("You didn't choose any version to connect to.");
+            return Ok(None);
+        }
+    };
+
+    Ok(Some(version))
 }
 
 async fn has_permission(
