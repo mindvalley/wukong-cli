@@ -16,8 +16,8 @@ use self::{
     },
     kubernetes::{
         deploy_livebook, destroy_livebook, is_authorized_query, kubernetes_pods_query,
-        watch_livebook, DeployLivebook, DestroyLivebook, IsAuthorizedQuery, KubernetesPodsQuery,
-        WatchLivebook,
+        livebook_resource_query, DeployLivebook, DestroyLivebook, IsAuthorizedQuery,
+        KubernetesPodsQuery, LivebookResourceQuery,
     },
     pipeline::{
         ci_status_query, multi_branch_pipeline_query, pipeline_query, pipelines_query,
@@ -29,42 +29,11 @@ use crate::{
     telemetry::{self, TelemetryData, TelemetryEvent},
 };
 use graphql_client::{GraphQLQuery, QueryBody, Response};
-use hyper::StatusCode;
 use log::debug;
 use reqwest::header;
-use serde_json::json;
 use std::fmt::Debug;
 use std::{thread, time};
 use wukong_telemetry_macro::wukong_telemetry;
-
-use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue, Message};
-use futures::StreamExt;
-use graphql_ws_client::{
-    graphql::{GraphQLClient, StreamingOperation},
-    AsyncWebsocketClient, GraphQLClientClientBuilder, SubscriptionStream,
-};
-
-pub struct TokioSpawner(tokio::runtime::Handle);
-
-impl TokioSpawner {
-    pub fn new(handle: tokio::runtime::Handle) -> Self {
-        TokioSpawner(handle)
-    }
-
-    pub fn current() -> Self {
-        TokioSpawner::new(tokio::runtime::Handle::current())
-    }
-}
-
-impl futures::task::Spawn for TokioSpawner {
-    fn spawn_obj(
-        &self,
-        obj: futures::task::FutureObj<'static, ()>,
-    ) -> Result<(), futures::task::SpawnError> {
-        self.0.spawn(obj);
-        Ok(())
-    }
-}
 
 #[derive(Debug, Default)]
 pub struct QueryClientBuilder {
@@ -107,7 +76,6 @@ impl QueryClientBuilder {
 
         Ok(QueryClient {
             reqwest_client: client,
-            access_token: self.access_token,
             api_url: self.api_url,
             sub: self.sub,
         })
@@ -116,7 +84,6 @@ impl QueryClientBuilder {
 
 pub struct QueryClient {
     reqwest_client: reqwest::Client,
-    access_token: Option<String>,
     api_url: String,
     // for telemetry usage
     sub: Option<String>,
@@ -361,77 +328,13 @@ impl QueryClient {
         DeployLivebook::mutate(self, application, namespace, version, name, port).await
     }
 
-    #[wukong_telemetry(api_event = "watch_livebook")]
-    pub async fn subscribe_watch_livebook(
+    pub async fn livebook_resource(
         &self,
-        variables: watch_livebook::Variables,
-    ) -> Result<
-        (
-            AsyncWebsocketClient<GraphQLClient, Message>,
-            SubscriptionStream<GraphQLClient, StreamingOperation<WatchLivebook>>,
-        ),
-        APIError,
-    > {
-        self.subscribe_graphql::<WatchLivebook>(variables).await
-    }
-
-    async fn subscribe_graphql<T: GraphQLQuery + Send + Sync + Unpin + 'static>(
-        &self,
-        variables: T::Variables,
-    ) -> Result<
-        (
-            AsyncWebsocketClient<GraphQLClient, Message>,
-            SubscriptionStream<GraphQLClient, StreamingOperation<T>>,
-        ),
-        APIError,
-    >
-    where
-        <T as GraphQLQuery>::Variables: Send + Sync + Unpin,
-        <T as GraphQLQuery>::ResponseData: std::fmt::Debug,
-    {
-        let bearer = format!("Bearer {}", self.access_token.clone().unwrap_or_default());
-
-        #[cfg(not(feature = "prod"))]
-        let websocket_api_url = self.api_url.clone().replace("http://", "ws://");
-        #[cfg(feature = "prod")]
-        let websocket_api_url = self.api_url.clone().replace("https://", "wss://");
-
-        let mut request = format!(
-            "{}/graphql-ws?authorization={}",
-            websocket_api_url,
-            urlencoding::encode(&bearer)
-        )
-        .into_client_request()?;
-
-        request.headers_mut().append(
-            "Sec-WebSocket-Protocol",
-            HeaderValue::from_str("graphql-transport-ws").unwrap(),
-        );
-
-        let (connection, _response) = async_tungstenite::tokio::connect_async(request)
-            .await
-            .map_err(|err| match err {
-                async_tungstenite::tungstenite::Error::Http(http_err)
-                    if http_err.status() == StatusCode::UNAUTHORIZED
-                        || http_err.status() == StatusCode::FORBIDDEN =>
-                {
-                    APIError::UnAuthorized
-                }
-                err => APIError::WebsocketError(err),
-            })?;
-
-        let (sink, stream) = connection.split::<Message>();
-
-        let mut client = GraphQLClientClientBuilder::new()
-            .payload(json!({}))
-            .build(stream, sink, TokioSpawner::current())
-            .await?;
-
-        let stream = client
-            .streaming_operation(StreamingOperation::<T>::new(variables))
-            .await?;
-
-        Ok((client, stream))
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<Response<livebook_resource_query::ResponseData>, APIError> {
+        LivebookResourceQuery::fetch(self, application, namespace, version).await
     }
 
     #[wukong_telemetry(api_event = "destroy_livebook")]

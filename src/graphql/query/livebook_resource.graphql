@@ -1,0 +1,28 @@
+query LivebookResourceQuery(
+  $application: String!
+  $namespace: String!
+  $version: String!
+) {
+  livebookResource(
+    application: $application
+    namespace: $namespace
+    version: $version
+  ) {
+    pod {
+      status
+      message
+    }
+    issuer {
+      status
+      message
+    }
+    ingress {
+      status
+      message
+    }
+    service {
+      status
+      message
+    }
+  }
+}
