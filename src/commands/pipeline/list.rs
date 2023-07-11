@@ -18,7 +18,7 @@ pub async fn handle_list(context: Context) -> Result<bool, CliError> {
     let application = context.state.application.unwrap();
 
     // Calling API ...
-    let client = QueryClient::from_default_config()?;
+    let mut client = QueryClient::from_default_config()?;
 
     let pipelines_data = client
         .fetch_pipeline_list(&application)

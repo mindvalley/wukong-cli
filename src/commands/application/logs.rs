@@ -134,7 +134,7 @@ pub async fn handle_logs(
     application_progress_bar.set_message("Fetching application details ... ");
 
     // Calling API ...
-    let client = QueryClient::from_default_config()?;
+    let mut client = QueryClient::from_default_config()?;
 
     let application_resp = client
         .fetch_application_with_k8s_cluster(

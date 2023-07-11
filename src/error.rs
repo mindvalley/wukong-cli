@@ -67,6 +67,8 @@ pub enum APIError {
     ChangelogComparingSameBuild,
     #[error("API Error: Request to {domain} timed out.")]
     Timeout { domain: String },
+    #[error("Error when refreshing token. Please try again.")]
+    RefreshTokenError,
 }
 
 #[derive(Debug, ThisError)]

@@ -10,7 +10,7 @@ use wukong_telemetry_macro::wukong_telemetry;
 #[wukong_telemetry(command_event = "application_info")]
 pub async fn handle_info(context: Context) -> Result<bool, CliError> {
     // Calling API ...
-    let client = QueryClient::from_default_config()?;
+    let mut client = QueryClient::from_default_config()?;
 
     let application_resp = client
         .fetch_application(&context.state.application.unwrap()) // SAFERY: the application is checked on the caller so it will always be Some(x) here

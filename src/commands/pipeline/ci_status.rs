@@ -55,7 +55,7 @@ pub async fn handle_ci_status(
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Fetching ci status ...");
 
-    let client = QueryClient::from_default_config()?;
+    let mut client = QueryClient::from_default_config()?;
 
     let ci_status_resp = client
         .fetch_ci_status(&repo_url, &branch)
