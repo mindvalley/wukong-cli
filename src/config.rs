@@ -105,12 +105,25 @@ impl Default for Config {
 }
 
 impl Config {
+    /// Load a configuration from default path.
+    ///
+    /// # Errors
+    ///
+    /// This function may return typical file I/O errors.
+    pub fn load_from_default_path() -> Result<Self, ConfigError> {
+        Self::load_from_path(
+            CONFIG_FILE
+                .as_ref()
+                .expect("Unable to identify user's home directory"),
+        )
+    }
+
     /// Load a configuration from file.
     ///
     /// # Errors
     ///
     /// This function may return typical file I/O errors.
-    pub fn load(path: &'static str) -> Result<Self, ConfigError> {
+    pub fn load_from_path(path: &'static str) -> Result<Self, ConfigError> {
         let config_file_path = Path::new(path);
 
         let content = std::fs::read_to_string(
@@ -137,7 +150,7 @@ impl Config {
     /// # Errors
     ///
     /// This function may return typical file I/O errors.
-    pub fn save(&self, path: &str) -> Result<(), ConfigError> {
+    pub fn save_to_path(&self, path: &str) -> Result<(), ConfigError> {
         let config_file_path = Path::new(path);
         let serialized = toml::to_string(self).map_err(ConfigError::SerializeTomlError)?;
 
@@ -150,12 +163,20 @@ impl Config {
         Ok(())
     }
 
+    pub fn save_to_default_path(&self) -> Result<(), ConfigError> {
+        self.save_to_path(
+            CONFIG_FILE
+                .as_ref()
+                .expect("Unable to identify user's home directory"),
+        )
+    }
+
     pub fn get_config_with_path() -> Result<ConfigWithPath, ConfigError> {
         let config_file = CONFIG_FILE
             .as_ref()
             .expect("Unable to identify user's home directory");
 
-        let config = Config::load(config_file)?;
+        let config = Config::load_from_path(config_file)?;
 
         let config_with_path = ConfigWithPath {
             config,
@@ -176,10 +197,10 @@ mod test {
         let config = Config::default();
 
         // 1. save the config file
-        config.save(path).unwrap();
+        config.save_to_path(path).unwrap();
 
         // 2. load the config file
-        let saved_config = Config::load(path).unwrap();
+        let saved_config = Config::load_from_path(path).unwrap();
 
         assert_eq!(saved_config.core.application, config.core.application);
 
@@ -190,7 +211,7 @@ mod test {
     #[test]
     fn load_non_exist_file() {
         let path = "./non/exist/path";
-        let result = Config::load(path);
+        let result = Config::load_from_path(path);
 
         assert!(result.is_err());
         assert!(matches!(result, Err(ConfigError::NotFound { .. })));
