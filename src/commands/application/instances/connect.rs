@@ -13,11 +13,9 @@ use log::debug;
 use owo_colors::OwoColorize;
 use tokio::time::sleep;
 
-struct kubernetes_pod {
+struct KubernetesPod {
     name: String,
-    pod_ip: Option<String>,
     ready: bool,
-    labels: Vec<String>,
     is_livebook: Option<bool>,
 }
 
@@ -32,7 +30,7 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
         None => return Ok(false),
     };
 
-    let progress_bar = new_spinner_progress_bar();
+    let check_permission_progress_bar = new_spinner_progress_bar();
 
     let auth_config = context
         .config
@@ -49,36 +47,30 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
     let application = context.state.application.unwrap();
 
     // Check for permission:
-    progress_bar.set_message("Checking your permission to connect to the remote instance...");
+    check_permission_progress_bar
+        .set_message("Checking your permission to connect to the remote instance...");
     if !has_permission(&client, &application, &namespace, &version)
         .await
         .unwrap()
     {
-        progress_bar.finish_and_clear();
+        check_permission_progress_bar.finish_and_clear();
         eprintln!("You don't have permission to connect to this instance.");
         eprintln!("Please check with your team manager to get approval first.");
 
         return Ok(false);
     }
 
-    progress_bar.finish_and_clear();
+    check_permission_progress_bar.finish_and_clear();
 
-    let fetching_progress_bar = new_spinner_progress_bar();
-    fetching_progress_bar.set_message(format!(
+    let fetch_instance_progress_bar = new_spinner_progress_bar();
+    fetch_instance_progress_bar.set_message(format!(
         "Finding the available instances to connect to in the {} version...",
         version.bright_green()
     ));
 
     let k8s_pods = get_ready_k8s_pods(&client, &application, &namespace, &version).await?;
 
-    // let k8s_pods = client
-    //     .fetch_kubernetes_pods(&application, &namespace, &version)
-    //     .await?
-    //     .data
-    //     .unwrap()
-    //     .kubernetes_pods;
-
-    fetching_progress_bar.finish_and_clear();
+    fetch_instance_progress_bar.finish_and_clear();
 
     let instance_name_idx = Select::with_theme(&ColorfulTheme::default())
         .with_prompt(format!("Please choose the instance you want to connect",))
@@ -96,37 +88,18 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
     let preparing_progress_bar = new_spinner_progress_bar();
     preparing_progress_bar.set_message("Preparing your remote instance...");
 
-    let k8s_pods = client
-        .fetch_kubernetes_pods(&application, &namespace, &version)
-        .await
-        .unwrap()
-        .data
-        .unwrap()
-        .kubernetes_pods;
-
-    let user_email = auth_config.account.clone().replace(['@', '.'], "-");
-
-    let has_existing_livebook_pod = k8s_pods
-        .into_iter()
-        .any(|pod| pod.labels.contains(&user_email));
-
-    if has_existing_livebook_pod {
-        preparing_progress_bar.set_message("Found a provisioned Livebook instance belonging to you, re-creating your remote instance...");
-
-        debug!("Destroying the exisiting livebook instance.");
-        let _destroyed = client
-            .destroy_livebook(&application, &namespace, &version)
-            .await
-            .unwrap();
-
-        // wait 5 seconds for the pod to be destroyed, otherwise it will failed when deploying new
-        // livebook on the next step
-        sleep(std::time::Duration::from_secs(5)).await;
-
-        debug!("Destroyed the exisiting livebook instance.");
-    }
+    cleanup_previous_livebook_instance(
+        &client,
+        &application,
+        &namespace,
+        &version,
+        &auth_config,
+        preparing_progress_bar.clone(),
+    )
+    .await?;
 
     debug!("Deploying a new livebook instance.");
+
     let new_instance = client
         .deploy_livebook(&application, &namespace, &version, &instance_name, 8080)
         .await?
@@ -227,12 +200,53 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
     Ok(true)
 }
 
+async fn cleanup_previous_livebook_instance(
+    client: &QueryClient,
+    application: &str,
+    namespace: &str,
+    version: &str,
+    auth_config: &&crate::config::AuthConfig,
+    preparing_progress_bar: indicatif::ProgressBar,
+) -> Result<(), CliError> {
+    let k8s_pods = client
+        .fetch_kubernetes_pods(&application, &namespace, &version)
+        .await
+        .unwrap()
+        .data
+        .unwrap()
+        .kubernetes_pods;
+
+    let user_email = auth_config.account.clone().replace(['@', '.'], "-");
+
+    let has_existing_livebook_pod = k8s_pods
+        .into_iter()
+        .any(|pod| pod.labels.contains(&user_email));
+
+    if has_existing_livebook_pod {
+        preparing_progress_bar.set_message("Found a provisioned Livebook instance belonging to you, re-creating your remote instance...");
+
+        debug!("Destroying the exisiting livebook instance.");
+        let _destroyed = client
+            .destroy_livebook(&application, &namespace, &version)
+            .await
+            .unwrap();
+
+        // wait 5 seconds for the pod to be destroyed, otherwise it will failed when deploying new
+        // livebook on the next step
+        sleep(std::time::Duration::from_secs(5)).await;
+
+        debug!("Destroyed the exisiting livebook instance.");
+    }
+
+    Ok(())
+}
+
 async fn get_ready_k8s_pods(
     client: &QueryClient,
     application: &str,
     namespace: &str,
     version: &str,
-) -> Result<Vec<kubernetes_pod>, CliError> {
+) -> Result<Vec<KubernetesPod>, CliError> {
     let k8s_pods = client
         .fetch_kubernetes_pods(&application, &namespace, &version)
         .await?
@@ -243,12 +257,10 @@ async fn get_ready_k8s_pods(
     // filter out the pods that are not ready and livebook pods
     let ready_pods = k8s_pods
         .into_iter()
-        .map(|pod| kubernetes_pod {
+        .map(|pod| KubernetesPod {
             name: pod.name,
-            pod_ip: pod.pod_ip,
             ready: pod.ready,
             is_livebook: Some(pod.labels.contains(&"livebook".to_string())),
-            labels: pod.labels,
         })
         .filter(|pod| pod.ready && !pod.is_livebook.unwrap_or_default())
         .collect();
