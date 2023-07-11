@@ -16,7 +16,7 @@ pub async fn handle_describe(context: Context, name: &str) -> Result<bool, CliEr
     progress_bar.set_message("Fetching pipeline data ...");
 
     // Calling API ...
-    let client = QueryClient::from_default_config()?;
+    let mut client = QueryClient::from_default_config()?;
 
     let pipeline_resp = client
         .fetch_pipeline(name)

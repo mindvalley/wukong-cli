@@ -43,7 +43,7 @@ pub async fn handle_rollback(
     progress_bar.set_message("Checking available CD pipelines ...");
 
     // Calling API ...
-    let client = QueryClient::from_default_config()?;
+    let mut client = QueryClient::from_default_config()?;
 
     let cd_pipelines_resp = client
         .fetch_cd_pipeline_list(&current_application)

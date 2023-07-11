@@ -30,11 +30,11 @@ pub async fn handle_list(
     progress_bar.set_message("Checking your permission to connect to the remote instance...");
 
     // Calling API ...
-    let client = QueryClient::from_default_config()?;
+    let mut client = QueryClient::from_default_config()?;
 
     let application = context.state.application.unwrap();
 
-    if !has_permission(&client, &application, namespace, version).await? {
+    if !has_permission(&mut client, &application, namespace, version).await? {
         progress_bar.finish_and_clear();
         eprintln!("You don't have permission to connect to this instance.");
         eprintln!("Please check with your team manager to get approval first.");
@@ -86,7 +86,7 @@ pub async fn handle_list(
 }
 
 async fn has_permission(
-    client: &QueryClient,
+    client: &mut QueryClient,
     application: &str,
     namespace: &str,
     version: &str,

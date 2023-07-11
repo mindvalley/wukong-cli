@@ -69,6 +69,8 @@ pub enum APIError {
     WebsocketError(#[from] async_tungstenite::tungstenite::Error),
     #[error(transparent)]
     GraphqlWSError(#[from] graphql_ws_client::Error),
+    #[error("Error when refreshing token. Please try again.")]
+    RefreshTokenError,
 }
 
 #[derive(Debug, ThisError)]

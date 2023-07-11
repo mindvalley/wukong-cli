@@ -21,11 +21,11 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
         .as_ref()
         .ok_or(CliError::UnAuthenticated)?;
 
-    let client = QueryClient::from_default_config()?;
+    let mut client = QueryClient::from_default_config()?;
 
     let application = context.state.application.unwrap();
 
-    if !has_permission(&client, &application, &namespace, &version)
+    if !has_permission(&mut client, &application, &namespace, &version)
         .await
         .unwrap()
     {
@@ -197,7 +197,7 @@ fn parse_name(name: &str) -> Result<(String, String, String), CliError> {
 }
 
 async fn has_permission(
-    client: &QueryClient,
+    client: &mut QueryClient,
     application: &str,
     namespace: &str,
     version: &str,

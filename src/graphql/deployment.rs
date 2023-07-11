@@ -12,7 +12,7 @@ pub struct CdPipelinesQuery;
 
 impl CdPipelinesQuery {
     pub(crate) async fn fetch(
-        client: &QueryClient,
+        client: &mut QueryClient,
         application: &str,
     ) -> Result<Response<cd_pipelines_query::ResponseData>, APIError> {
         let variables = cd_pipelines_query::Variables {
@@ -46,7 +46,7 @@ pub struct CdPipelineQuery;
 
 impl CdPipelineQuery {
     pub(crate) async fn fetch(
-        client: &QueryClient,
+        client: &mut QueryClient,
         application: &str,
         namespace: &str,
         version: &str,
@@ -84,7 +84,7 @@ pub struct CdPipelineForRollbackQuery;
 
 impl CdPipelineForRollbackQuery {
     pub(crate) async fn fetch(
-        client: &QueryClient,
+        client: &mut QueryClient,
         application: &str,
         namespace: &str,
         version: &str,
@@ -122,7 +122,7 @@ pub struct ExecuteCdPipeline;
 
 impl ExecuteCdPipeline {
     pub(crate) async fn mutate(
-        client: &QueryClient,
+        client: &mut QueryClient,
         application: &str,
         namespace: &str,
         version: &str,
@@ -171,7 +171,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_cd_pipeline_list_success_should_return_cd_pipeline_list() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::default()
+        let mut query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -212,7 +212,7 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = CdPipelinesQuery::fetch(&query_client, "valid_application").await;
+        let response = CdPipelinesQuery::fetch(&mut query_client, "valid_application").await;
 
         mock.assert();
         assert!(response.is_ok());
@@ -225,7 +225,7 @@ mod test {
     async fn test_fetch_cd_pipeline_list_failed_with_application_not_found_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::default()
+        let mut query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -257,7 +257,7 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = CdPipelinesQuery::fetch(&query_client, "invalid_application").await;
+        let response = CdPipelinesQuery::fetch(&mut query_client, "invalid_application").await;
 
         mock.assert();
         assert!(response.is_err());
@@ -274,7 +274,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_cd_pipeline_for_rollback_success_should_return_cd_pipeline() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::default()
+        let mut query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -306,9 +306,13 @@ mod test {
                 .body(api_resp);
         });
 
-        let response =
-            CdPipelineForRollbackQuery::fetch(&query_client, "valid_application", "prod", "green")
-                .await;
+        let response = CdPipelineForRollbackQuery::fetch(
+            &mut query_client,
+            "valid_application",
+            "prod",
+            "green",
+        )
+        .await;
 
         mock.assert();
         assert!(response.is_ok());
@@ -325,7 +329,7 @@ mod test {
     #[tokio::test]
     async fn test_execute_cd_pipeline_success_should_return_deployment_url() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::default()
+        let mut query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -348,7 +352,7 @@ mod test {
         });
 
         let response = ExecuteCdPipeline::mutate(
-            &query_client,
+            &mut query_client,
             "valid_application",
             "prod",
             "green",
@@ -372,7 +376,7 @@ mod test {
     async fn test_execute_cd_pipeline_list_failed_with_deploy_for_this_build_is_currently_running_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::default()
+        let mut query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -405,7 +409,7 @@ mod test {
         });
 
         let response = ExecuteCdPipeline::mutate(
-            &query_client,
+            &mut query_client,
             "valid_application",
             "prod",
             "green",

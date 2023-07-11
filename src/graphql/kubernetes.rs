@@ -12,7 +12,7 @@ pub struct KubernetesPodsQuery;
 
 impl KubernetesPodsQuery {
     pub(crate) async fn fetch(
-        client: &QueryClient,
+        client: &mut QueryClient,
         application: &str,
         namespace: &str,
         version: &str,
@@ -53,7 +53,7 @@ pub struct IsAuthorizedQuery;
 
 impl IsAuthorizedQuery {
     pub(crate) async fn fetch(
-        client: &QueryClient,
+        client: &mut QueryClient,
         application: &str,
         namespace: &str,
         version: &str,
@@ -87,7 +87,7 @@ pub struct DeployLivebook;
 
 impl DeployLivebook {
     pub(crate) async fn mutate(
-        client: &QueryClient,
+        client: &mut QueryClient,
         application: &str,
         namespace: &str,
         version: &str,
@@ -132,7 +132,7 @@ pub struct DestroyLivebook;
 
 impl DestroyLivebook {
     pub(crate) async fn mutate(
-        client: &QueryClient,
+        client: &mut QueryClient,
         application: &str,
         namespace: &str,
         version: &str,
@@ -180,7 +180,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_kubernetes_pods_list_success_should_return_kubernetes_pods_list() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::default()
+        let mut query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -214,7 +214,8 @@ mod test {
         });
 
         let response =
-            KubernetesPodsQuery::fetch(&query_client, "valid-application", "staging", "blue").await;
+            KubernetesPodsQuery::fetch(&mut query_client, "valid-application", "staging", "blue")
+                .await;
 
         mock.assert();
         assert!(response.is_ok());
@@ -227,7 +228,7 @@ mod test {
     async fn test_fetch_kubernetes_pods_list_failed_with_unautorized_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::default()
+        let mut query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -260,7 +261,7 @@ mod test {
         });
 
         let response =
-            KubernetesPodsQuery::fetch(&query_client, "some-application", "prod", "blue").await;
+            KubernetesPodsQuery::fetch(&mut query_client, "some-application", "prod", "blue").await;
 
         mock.assert();
         assert!(response.is_err());
@@ -277,7 +278,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_is_authorized_success_should_return_boolean_value() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::default()
+        let mut query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -298,7 +299,8 @@ mod test {
         });
 
         let response =
-            IsAuthorizedQuery::fetch(&query_client, "valid-application", "staging", "blue").await;
+            IsAuthorizedQuery::fetch(&mut query_client, "valid-application", "staging", "blue")
+                .await;
 
         mock.assert();
         assert!(response.is_ok());

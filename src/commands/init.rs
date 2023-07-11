@@ -96,7 +96,7 @@ pub async fn handle_init() -> Result<bool, CliError> {
     let fetch_loader = new_spinner_progress_bar();
     fetch_loader.set_message("Fetching application list...");
     // Calling API ...
-    let client = QueryClient::from_config(&new_config)?;
+    let mut client = QueryClient::from_config(&new_config)?;
 
     let applications_data: Vec<String> = client
         .fetch_application_list()

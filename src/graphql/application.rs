@@ -12,7 +12,7 @@ pub struct ApplicationQuery;
 
 impl ApplicationQuery {
     pub(crate) async fn fetch(
-        client: &QueryClient,
+        client: &mut QueryClient,
         name: &str,
     ) -> Result<Response<application_query::ResponseData>, APIError> {
         let variables = application_query::Variables {
@@ -42,7 +42,7 @@ pub struct ApplicationWithK8sClusterQuery;
 
 impl ApplicationWithK8sClusterQuery {
     pub(crate) async fn fetch(
-        client: &QueryClient,
+        client: &mut QueryClient,
         name: &str,
         namespace: &str,
         version: &str,
@@ -76,7 +76,7 @@ pub struct ApplicationsQuery;
 
 impl ApplicationsQuery {
     pub(crate) async fn fetch(
-        client: &QueryClient,
+        client: &mut QueryClient,
     ) -> Result<Response<applications_query::ResponseData>, APIError> {
         let variables = applications_query::Variables {};
 
@@ -102,7 +102,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_application_success_should_return_correct_application_info() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::default()
+        let mut query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -142,7 +142,7 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = ApplicationQuery::fetch(&query_client, "valid-application").await;
+        let response = ApplicationQuery::fetch(&mut query_client, "valid-application").await;
 
         mock.assert();
         assert!(response.is_ok());
@@ -160,7 +160,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_application_list_success_should_return_application_list() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::default()
+        let mut query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -190,7 +190,7 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = ApplicationsQuery::fetch(&query_client).await;
+        let response = ApplicationsQuery::fetch(&mut query_client).await;
 
         mock.assert();
         assert!(response.is_ok());
