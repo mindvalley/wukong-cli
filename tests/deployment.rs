@@ -94,7 +94,7 @@ refresh_token = "refresh_token"
     let output = cmd.get_output();
 
     insta::with_settings!({filters => vec![
-        (r"\d+ months ago|\d+(.\d+)s", "[DEPLOYMENT_TIME]"),
+        (r"\d+ months ago", "[DEPLOYMENT_TIME]"),
     ]}, {
         insta::assert_snapshot!(std::str::from_utf8(&output.stdout).unwrap());
     });
