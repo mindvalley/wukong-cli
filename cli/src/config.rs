@@ -6,7 +6,6 @@ use std::{
     io::{self, Write},
     path::Path,
 };
-use wukong_sdk::WKConfig;
 
 #[cfg(not(feature = "prod"))]
 static WUKONG_API_URL: &str = "http://localhost:4000/api";
@@ -116,13 +115,14 @@ impl Default for Config {
 // }
 
 impl Config {
-    pub fn load_default_path() -> Result<Self, ConfigError> {
+    pub fn load_from_default_path() -> Result<Self, ConfigError> {
         let config_file = CONFIG_FILE
             .as_ref()
             .expect("Unable to identify user's home directory");
 
         Config::load_from_path(config_file)
     }
+
     /// Load a configuration from file.
     ///
     /// # Errors

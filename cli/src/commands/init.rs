@@ -1,6 +1,6 @@
 use crate::{
     // auth::Auth,
-    config::{AuthConfig, Config, CONFIG_FILE},
+    config::{AuthConfig, Config},
     error::{ConfigError, WKCliError},
     // graphql::QueryClientBuilder,
     loader::new_spinner,
@@ -18,7 +18,7 @@ use wukong_sdk::{
 pub async fn handle_init() -> Result<bool, WKCliError> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
 
-    let config = match Config::load_default_path() {
+    let config = match Config::load_from_default_path() {
         Ok(config) => config,
         Err(error) => match error {
             // create new config if the config file not found or the config format is invalid

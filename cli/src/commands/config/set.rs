@@ -3,7 +3,7 @@ use crate::{config::Config as CliConfig, error::WKCliError};
 use super::ConfigName;
 
 pub fn handle_set(config_name: &ConfigName, config_value: &str) -> Result<bool, WKCliError> {
-    let mut config = CliConfig::load_default_path()?;
+    let mut config = CliConfig::load_from_default_path()?;
     match config_name {
         ConfigName::Application => {
             config.core.application = config_value.trim().to_string();

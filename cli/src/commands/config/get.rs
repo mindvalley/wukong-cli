@@ -3,7 +3,7 @@ use crate::{config::Config as CliConfig, error::WKCliError};
 use super::ConfigName;
 
 pub fn handle_get(config_name: &ConfigName) -> Result<bool, WKCliError> {
-    let config = CliConfig::load_default_path()?;
+    let config = CliConfig::load_from_default_path()?;
     match config_name {
         ConfigName::Application => println!("{}", config.core.application),
         ConfigName::WukongApiUrl => println!("{}", config.core.wukong_api_url),
