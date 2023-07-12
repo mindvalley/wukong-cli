@@ -177,7 +177,7 @@ impl QueryClient {
 
                 let mut config = Config::load_from_default_path().map_err(|err| {
                     debug!("Failed to refresh tokens when getting config: {:?}", err);
-                    APIError::RefreshTokenError
+                    err
                 })?;
                 let auth_config = config.auth.as_ref().unwrap();
 
@@ -186,7 +186,7 @@ impl QueryClient {
                     .await
                     .map_err(|err| {
                         debug!("Failed to refresh tokens: {:?}", err);
-                        APIError::RefreshTokenError
+                        err
                     })?;
 
                 config.auth = Some(AuthConfig {
@@ -200,7 +200,7 @@ impl QueryClient {
 
                 config.save_to_default_path().map_err(|err| {
                     debug!("Failed to refresh tokens when saving config: {:?}", err);
-                    APIError::RefreshTokenError
+                    err
                 })?;
 
                 // make sure to update the token and expiry time to the updated values
