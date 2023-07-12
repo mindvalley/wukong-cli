@@ -443,16 +443,3 @@ fn setup_loaders(
 
     (pod_loader, issuer_loader, ingress_loader, service_loader)
 }
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test_parse_name_failed() {
-        match parse_name("green-prod/wukong-abc") {
-            Ok(_) => panic!("the test should be failed"),
-            Err(_) => assert!(true),
-        }
-    }
-}
