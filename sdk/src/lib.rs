@@ -126,10 +126,7 @@ impl WKClient {
         }
     }
 
-    pub async fn fetch_applications(
-        &self,
-        variables: applications_query::Variables,
-    ) -> Result<applications_query::ResponseData, APIError> {
+    pub async fn fetch_applications(&self) -> Result<applications_query::ResponseData, WKError> {
         let gql_client = GQLClient::with_authorization(
             &self
                 .access_token
@@ -138,8 +135,31 @@ impl WKClient {
         )?;
 
         gql_client
-            .post_graphql::<ApplicationsQuery, _>(&self.api_url, variables)
+            .post_graphql::<ApplicationsQuery, _>(&self.api_url, applications_query::Variables)
             .await
+            .map_err(|err| err.into())
+    }
+
+    pub async fn fetch_pipelines(
+        &self,
+        application: String,
+    ) -> Result<pipelines_query::ResponseData, WKError> {
+        let gql_client = GQLClient::with_authorization(
+            &self
+                .access_token
+                .as_ref()
+                .ok_or(APIError::UnAuthenticated)?,
+        )?;
+
+        gql_client
+            .post_graphql::<PipelinesQuery, _>(
+                &self.api_url,
+                pipelines_query::Variables {
+                    application: Some(application),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
     }
 }
 

@@ -1,13 +1,15 @@
 use owo_colors::OwoColorize;
 use thiserror::Error as ThisError;
-use wukong_sdk::error::{APIError, AuthError};
+use wukong_sdk::error::{APIError, AuthError, WKError};
 
 #[derive(Debug, ThisError)]
 pub enum WKCliError {
     #[error(transparent)]
-    APIError(#[from] APIError),
+    WKSdkError(#[from] WKError),
     #[error(transparent)]
     Io(#[from] ::std::io::Error),
+    #[error(transparent)]
+    AuthError(#[from] AuthError),
     // #[error(transparent)]
     // Base64(#[from] base64::DecodeError),
     // #[error("Error parsing \"{value}\"")]
@@ -28,8 +30,6 @@ pub enum WKCliError {
     UnAuthenticated,
     #[error("You are un-initialised.")]
     UnInitialised,
-    #[error(transparent)]
-    AuthError(#[from] AuthError),
     #[error(transparent)]
     DeploymentError(#[from] DeploymentError),
     #[error(transparent)]
@@ -169,6 +169,36 @@ impl WKCliError {
     /// went wrong.
     pub fn suggestion(&self) -> Option<String> {
         match self {
+            WKCliError::WKSdkError(error) => {
+                match error {
+                    WKError::APIError(error) => match error {
+                        APIError::ResponseError { code, .. } if code == "unable_to_get_pipeline" => Some(
+                            String::from("Please check your pipeline's name. It could be invalid."),
+                        ),
+                        APIError::ResponseError { code, .. } if code == "unable_to_get_pipelines" => Some(
+                            String::from("Please check your application's name. It could be invalid."),
+                        ),
+                        APIError::ResponseError { code, .. } if code == "application_not_found" => Some(
+                            String::from("Please check your repo url. It's unrecognized by wukong."),
+                        ),
+                        APIError::ResponseError { code, .. } if code == "ci_status_application_not_found" => Some(format!(
+        r#"You can follow these steps to remedy this error:  
+    1. Confirm that you're in the correct working folder.
+    2. If you're not, consider moving to the right location and run {} command again.
+If none of the above steps work for you, please contact the following people on Slack for assistance: @alex.tuan / @jk-gan / @Fadhil"#,
+        "wukong pipeline ci-status".yellow()
+                        )),
+                        APIError::UnAuthenticated => Some(
+                            "Run \"wukong login\" to authenticate with your okta account.".to_string()
+                        ),
+                        APIError::UnAuthorized => Some(
+                            "Your token might be invalid/expired. Run \"wukong login\" to authenticate with your okta account.".to_string()
+                        ),
+                        _ => None,
+                    },
+                    _ => None
+                }
+            },
             WKCliError::UnAuthenticated => Some(String::from(
                 "Your access token is invalid. Run \"wukong login\" to authenticate with your okta account.",
             )),
@@ -187,31 +217,6 @@ impl WKCliError {
                 ),
                 _ => None,
             },
-            WKCliError::APIError(error) => match error {
-                APIError::ResponseError { code, .. } if code == "unable_to_get_pipeline" => Some(
-                    String::from("Please check your pipeline's name. It could be invalid."),
-                ),
-                APIError::ResponseError { code, .. } if code == "unable_to_get_pipelines" => Some(
-                    String::from("Please check your application's name. It could be invalid."),
-                ),
-                APIError::ResponseError { code, .. } if code == "application_not_found" => Some(
-                    String::from("Please check your repo url. It's unrecognized by wukong."),
-                ),
-                APIError::ResponseError { code, .. } if code == "ci_status_application_not_found" => Some(format!(
-        r#"You can follow these steps to remedy this error:  
-    1. Confirm that you're in the correct working folder.
-    2. If you're not, consider moving to the right location and run {} command again.
-If none of the above steps work for you, please contact the following people on Slack for assistance: @alex.tuan / @jk-gan / @Fadhil"#,
-        "wukong pipeline ci-status".yellow()
-                )),
-                APIError::UnAuthenticated => Some(
-                    "Run \"wukong login\" to authenticate with your okta account.".to_string()
-                ),
-                APIError::UnAuthorized => Some(
-                    "Your token might be invalid/expired. Run \"wukong login\" to authenticate with your okta account.".to_string()
-                ),
-                _ => None,
-            },
             WKCliError::DevConfigError(error) => match error {
                 DevConfigError::ConfigSecretNotFound=> Some(
                     "Run \"wukong config dev pull\" to pull the latest dev config.\n".to_string()
@@ -221,7 +226,6 @@ If none of the above steps work for you, please contact the following people on 
                 )),
                 _ => None,
             },
-            WKCliError::AuthError(AuthError::RefreshTokenExpired { .. }) => Some("Your refresh token is expired. Run \"wukong login\" to authenticate again.".to_string()),
             WKCliError::VaultError(VaultError::ConfigError(error)) => match error {
                     ConfigError::NotFound { .. } => Some(String::from(
                         "Run \"wukong init\" to initialise Wukong's configuration.",
@@ -234,6 +238,7 @@ If none of the above steps work for you, please contact the following people on 
                     // ),
                     _ => None,
                 },
+            WKCliError::AuthError(AuthError::RefreshTokenExpired { .. }) => Some("Your refresh token is expired. Run \"wukong login\" to authenticate again.".to_string()),
             _ => None,
         }
     }
