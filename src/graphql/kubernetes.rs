@@ -173,7 +173,7 @@ pub struct LivebookResourceQuery;
 
 impl LivebookResourceQuery {
     pub(crate) async fn fetch(
-        client: &QueryClient,
+        client: &mut QueryClient,
         application: &str,
         namespace: &str,
         version: &str,

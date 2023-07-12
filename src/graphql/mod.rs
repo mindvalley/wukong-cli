@@ -30,6 +30,7 @@ use crate::{
     error::{APIError, CliError},
     telemetry::{self, TelemetryData, TelemetryEvent},
 };
+use aion::*;
 use chrono::{DateTime, Local};
 use graphql_client::{GraphQLQuery, QueryBody, Response};
 use log::debug;
@@ -94,6 +95,7 @@ impl QueryClientBuilder {
             api_url: self.api_url,
             sub: self.sub,
             expiry_time: self.expiry_time,
+            access_token: self.access_token,
         })
     }
 }
@@ -425,7 +427,7 @@ impl QueryClient {
     }
 
     pub async fn livebook_resource(
-        &self,
+        &mut self,
         application: &str,
         namespace: &str,
         version: &str,
@@ -460,3 +462,4 @@ fn check_retry_and_auth_error(error: &graphql_client::Error) -> Option<APIError>
         return None;
     }
 }
+

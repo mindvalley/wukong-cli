@@ -1,6 +1,5 @@
 use crate::{
-    commands::Context, error::CliError, graphql::QueryClient, graphql::QueryClientBuilder,
-    loader::new_spinner_progress_bar,
+    commands::Context, error::CliError, graphql::QueryClient, loader::new_spinner_progress_bar,
 };
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use log::debug;
@@ -28,12 +27,6 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
     progress_bar.set_style(spinner_style.clone());
     progress_bar.set_prefix("[1/3]");
     progress_bar.set_message("Checking your permission to connect to the remote instance...");
-
-    let auth_config = context
-        .config
-        .auth
-        .as_ref()
-        .ok_or(CliError::UnAuthenticated)?;
 
     let mut client = QueryClient::from_default_config()?;
 
