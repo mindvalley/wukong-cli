@@ -291,7 +291,7 @@ async fn cleanup_previous_livebook_instance(
 
         debug!("Destroying the existing livebook instance.");
         match client
-            .destroy_livebook(&application, &namespace, &version)
+            .destroy_livebook(application, namespace, version)
             .await
         {
             Ok(_) => {}
@@ -309,7 +309,7 @@ async fn cleanup_previous_livebook_instance(
             sleep(std::time::Duration::from_secs(RETRY_WAIT_TIME_IN_SEC)).await;
 
             let livebook_resource = client
-                .livebook_resource(&application, &namespace, &version)
+                .livebook_resource(application, namespace, version)
                 .await?
                 .data
                 .unwrap()
@@ -456,4 +456,3 @@ mod test {
         }
     }
 }
-
