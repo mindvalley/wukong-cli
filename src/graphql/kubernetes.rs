@@ -166,10 +166,36 @@ impl DestroyLivebook {
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "src/graphql/schema.json",
-    query_path = "src/graphql/subscription/watch_livebook.graphql",
-    response_derives = "Debug, Serialize, Deserialize, Clone"
+    query_path = "src/graphql/query/livebook_resource.graphql",
+    response_derives = "Debug, Serialize, Deserialize"
 )]
-pub struct WatchLivebook;
+pub struct LivebookResourceQuery;
+
+impl LivebookResourceQuery {
+    pub(crate) async fn fetch(
+        client: &QueryClient,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<Response<livebook_resource_query::ResponseData>, APIError> {
+        let variables = livebook_resource_query::Variables {
+            application: application.to_string(),
+            namespace: namespace.to_string(),
+            version: version.to_string(),
+        };
+
+        let response = client
+            .call_api::<Self>(variables, |_, error| {
+                Err(APIError::ResponseError {
+                    code: error.message.clone(),
+                    message: format!("{error}"),
+                })
+            })
+            .await?;
+
+        Ok(response)
+    }
+}
 
 #[cfg(test)]
 mod test {

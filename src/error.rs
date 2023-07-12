@@ -39,6 +39,8 @@ pub enum CliError {
     GCloudError(#[from] GCloudError),
     #[error(transparent)]
     ExtractError(#[from] ExtractError),
+    #[error("Operation timeout")]
+    Timeout,
 }
 
 #[derive(Debug, ThisError)]
@@ -65,10 +67,6 @@ pub enum APIError {
     ChangelogComparingSameBuild,
     #[error("API Error: Request to {domain} timed out.")]
     Timeout { domain: String },
-    #[error(transparent)]
-    WebsocketError(#[from] async_tungstenite::tungstenite::Error),
-    #[error(transparent)]
-    GraphqlWSError(#[from] graphql_ws_client::Error),
 }
 
 #[derive(Debug, ThisError)]

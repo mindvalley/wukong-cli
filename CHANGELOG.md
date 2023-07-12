@@ -1,5 +1,27 @@
 # Changelog
 
+## [Unreleased](https://github.com/mindvalley/wukong-cli/tree/HEAD)
+
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/1.0.2...HEAD)
+
+**Fixed bugs:**
+
+- PXP-564: \[CLI\] Polling GraphQLquery for livebook status instead of subscription [\#117](https://github.com/mindvalley/wukong-cli/pull/117) ([jk-gan](https://github.com/jk-gan))
+
+## [1.0.2](https://github.com/mindvalley/wukong-cli/tree/1.0.2) (2023-07-03)
+
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/1.0.1...1.0.2)
+
+**Merged pull requests:**
+
+- chore/bump version 1.0.2 [\#116](https://github.com/mindvalley/wukong-cli/pull/116) ([onimsha](https://github.com/onimsha))
+- Update elixir\_working\_with\_secrets\_in\_bunker.md [\#115](https://github.com/mindvalley/wukong-cli/pull/115) ([onimsha](https://github.com/onimsha))
+- chore\(deps\): bump openssl from 0.10.54 to 0.10.55 [\#114](https://github.com/mindvalley/wukong-cli/pull/114) ([dependabot[bot]](https://github.com/apps/dependabot))
+- PXP-548: \[CLI\] Program does not exit on Ctrl-C key press [\#112](https://github.com/mindvalley/wukong-cli/pull/112) ([jk-gan](https://github.com/jk-gan))
+- chore/add more guides [\#111](https://github.com/mindvalley/wukong-cli/pull/111) ([onimsha](https://github.com/onimsha))
+- chore/update changelog [\#110](https://github.com/mindvalley/wukong-cli/pull/110) ([onimsha](https://github.com/onimsha))
+- PXP-549: \[API\] Google Cloud Oauth2 does not have the resfresh token [\#109](https://github.com/mindvalley/wukong-cli/pull/109) ([jk-gan](https://github.com/jk-gan))
+
 ## [1.0.1](https://github.com/mindvalley/wukong-cli/tree/1.0.1) (2023-06-12)
 
 [Full Changelog](https://github.com/mindvalley/wukong-cli/compare/1.0.0...1.0.1)

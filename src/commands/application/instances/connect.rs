@@ -4,14 +4,25 @@ use crate::{
         Context,
     },
     error::CliError,
-    graphql::{kubernetes::watch_livebook, QueryClient, QueryClientBuilder},
+    graphql::{QueryClient, QueryClientBuilder},
     loader::new_spinner_progress_bar,
 };
 use dialoguer::{theme::ColorfulTheme, Select};
-use futures::StreamExt;
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use log::debug;
 use owo_colors::OwoColorize;
 use tokio::time::sleep;
+
+// 2 mins timeout
+const RETRY_WAIT_TIME_IN_SEC: u64 = 3;
+const MAX_CHECKING_RETRY: u64 = 40;
+
+struct Status {
+    pod: bool,
+    issuer: bool,
+    ingress: bool,
+    service: bool,
+}
 
 struct KubernetesPod {
     name: String,
@@ -20,6 +31,9 @@ struct KubernetesPod {
 }
 
 pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
+    let spinner_style =
+        ProgressStyle::with_template("{prefix:.bold.dim} {spinner} {wide_msg}").unwrap();
+
     let namespace = match select_deployment_namespace()? {
         Some(namespace) => namespace,
         None => return Ok(false),
@@ -31,6 +45,10 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
     };
 
     let check_permission_progress_bar = new_spinner_progress_bar();
+    check_permission_progress_bar.set_style(spinner_style.clone());
+    check_permission_progress_bar.set_prefix("[1/3]");
+    check_permission_progress_bar
+        .set_message("Checking your permission to connect to the remote instance...");
 
     let auth_config = context
         .config
@@ -47,22 +65,22 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
     let application = context.state.application.unwrap();
 
     // Check for permission:
-    check_permission_progress_bar
-        .set_message("Checking your permission to connect to the remote instance...");
     if !has_permission(&client, &application, &namespace, &version)
         .await
         .unwrap()
     {
-        check_permission_progress_bar.finish_and_clear();
         eprintln!("You don't have permission to connect to this instance.");
         eprintln!("Please check with your team manager to get approval first.");
 
         return Ok(false);
     }
 
-    check_permission_progress_bar.finish_and_clear();
+    check_permission_progress_bar
+        .finish_with_message("Checking your permission to connect to the remote instance...✅");
 
     let fetch_instance_progress_bar = new_spinner_progress_bar();
+    fetch_instance_progress_bar.set_style(spinner_style.clone());
+    fetch_instance_progress_bar.set_prefix("[1/3]");
     fetch_instance_progress_bar.set_message(format!(
         "Finding the available instances to connect to in the {} version...",
         version.bright_green()
@@ -86,6 +104,8 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
     let instance_name = k8s_pods[instance_name_idx].name.clone();
 
     let preparing_progress_bar = new_spinner_progress_bar();
+    preparing_progress_bar.set_style(spinner_style.clone());
+    preparing_progress_bar.set_prefix("[2/3]");
     preparing_progress_bar.set_message("Preparing your remote instance...");
 
     cleanup_previous_livebook_instance(
@@ -93,7 +113,6 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
         &application,
         &namespace,
         &version,
-        &auth_config,
         preparing_progress_bar.clone(),
     )
     .await?;
@@ -107,27 +126,64 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
         .unwrap()
         .deploy_livebook;
 
+    preparing_progress_bar.finish();
+
     if let Some(new_instance) = new_instance {
-        let variables = watch_livebook::Variables {
-            application: application.to_string(),
-            namespace: namespace.to_string(),
-            version: version.to_string(),
-            name: new_instance.name.to_string(),
+        let m = MultiProgress::new();
+
+        let (pod_loader, issuer_loader, ingress_loader, service_loader) =
+            setup_loaders(&m, spinner_style.clone());
+
+        let mut status = Status {
+            pod: false,
+            issuer: false,
+            ingress: false,
+            service: false,
         };
 
-        debug!("Start watching to the new livebook instance.");
-        let (_client, mut stream) = client.subscribe_watch_livebook(variables).await?;
+        for i in 0..MAX_CHECKING_RETRY {
+            sleep(std::time::Duration::from_secs(RETRY_WAIT_TIME_IN_SEC)).await;
+            let livebook_resource = client
+                .livebook_resource(&application, &namespace, &version)
+                .await?
+                .data
+                .unwrap()
+                .livebook_resource;
 
-        while let Some(Ok(resp)) = stream.next().await {
-            debug!("{:?}", resp);
-            if resp.data.unwrap().watch_livebook.unwrap().ready {
-                break;
+            if let Some(livebook) = livebook_resource {
+                if livebook.pod.status == "ok" && !status.pod {
+                    pod_loader.finish_with_message("Pod created successfully ✅");
+                    status.pod = true;
+                }
+                if livebook.issuer.status == "ok" && !status.issuer {
+                    issuer_loader.finish_with_message("Issuer created successfully ✅");
+                    status.issuer = true;
+                }
+                if livebook.ingress.status == "ok" && !status.ingress {
+                    ingress_loader.finish_with_message("Ingress created successfully ✅");
+                    status.ingress = true;
+                }
+                if livebook.service.status == "ok" && !status.service {
+                    service_loader.finish_with_message("Service created successfully ✅");
+                    status.service = true;
+                }
+
+                if status.pod && status.issuer && status.ingress && status.service {
+                    m.clear().unwrap();
+                    break;
+                }
+
+                if i == MAX_CHECKING_RETRY - 1 {
+                    return Err(CliError::Timeout);
+                }
             }
         }
-        preparing_progress_bar.finish_and_clear();
-        eprintln!("Provisioning your livebook instance...✅");
+
+        preparing_progress_bar.finish_with_message("Provisioning your livebook instance...✅");
 
         let connection_test_progress_bar = new_spinner_progress_bar();
+        connection_test_progress_bar.set_style(spinner_style.clone());
+        connection_test_progress_bar.set_prefix("[3/3]");
         connection_test_progress_bar
             .set_message("Testing connectivity to your livebook instance...");
 
@@ -153,9 +209,9 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
             }
         }
 
-        connection_test_progress_bar.finish_and_clear();
         if !connection_test_success {
-            eprintln!("Testing connectivity to your livebook instance...❌");
+            connection_test_progress_bar
+                .finish_with_message("Testing connectivity to your livebook instance...❌");
 
             let destroy_progress_bar = new_spinner_progress_bar();
             destroy_progress_bar.set_message("Destroying the livebook instances...");
@@ -168,8 +224,10 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
             return Ok(false);
         }
 
-        eprintln!("Testing connectivity to your livebook instance...✅");
+        connection_test_progress_bar
+            .finish_with_message("Testing connectivity to your livebook instance...✅");
 
+        eprintln!();
         eprintln!();
         eprintln!("✅ Your livebook instance is ready! Use the following details to access:\n");
         eprintln!("URL 🔗: {}", url.cyan());
@@ -178,24 +236,25 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
             new_instance.password.unwrap_or_default().yellow()
         );
         eprintln!();
+
+        let running_progress_bar = new_spinner_progress_bar();
+        running_progress_bar
+            .set_message("Your livebook instance is running. Press Ctrl-C to terminate...");
+
+        tokio::signal::ctrl_c().await.unwrap();
+
+        running_progress_bar.finish_and_clear();
+        let exiting_progress_bar = new_spinner_progress_bar();
+        exiting_progress_bar.set_message("You're exiting from your remote session. Cleaning up...");
+
+        let _destroyed = client
+            .destroy_livebook(&application, &namespace, &version)
+            .await
+            .unwrap();
+
+        exiting_progress_bar.finish_and_clear();
+        eprintln!("Cleanup provisioned resources...✅");
     }
-    let running_progress_bar = new_spinner_progress_bar();
-    running_progress_bar
-        .set_message("Your livebook instance is running. Press Ctrl-C to terminate...");
-
-    tokio::signal::ctrl_c().await.unwrap();
-
-    running_progress_bar.finish_and_clear();
-    let exiting_progress_bar = new_spinner_progress_bar();
-    exiting_progress_bar.set_message("You're exiting from your remote session. Cleaning up...");
-
-    let _destroyed = client
-        .destroy_livebook(&application, &namespace, &version)
-        .await
-        .unwrap();
-
-    exiting_progress_bar.finish_and_clear();
-    eprintln!("Cleanup provisioned resources...✅");
 
     Ok(true)
 }
@@ -205,37 +264,55 @@ async fn cleanup_previous_livebook_instance(
     application: &str,
     namespace: &str,
     version: &str,
-    auth_config: &&crate::config::AuthConfig,
     preparing_progress_bar: indicatif::ProgressBar,
 ) -> Result<(), CliError> {
-    let k8s_pods = client
-        .fetch_kubernetes_pods(application, namespace, version)
+    let livebook_resource = client
+        .livebook_resource(application, namespace, version)
         .await
         .unwrap()
         .data
         .unwrap()
-        .kubernetes_pods;
+        .livebook_resource;
 
-    let user_email = auth_config.account.clone().replace(['@', '.'], "-");
-
-    let has_existing_livebook_pod = k8s_pods
-        .into_iter()
-        .any(|pod| pod.labels.contains(&user_email));
+    let has_existing_livebook_pod = livebook_resource.is_some();
 
     if has_existing_livebook_pod {
         preparing_progress_bar.set_message("Found a provisioned Livebook instance belonging to you, re-creating your remote instance...");
 
-        debug!("Destroying the exisiting livebook instance.");
-        let _destroyed = client
-            .destroy_livebook(application, namespace, version)
+        debug!("Destroying the existing livebook instance.");
+        match client
+            .destroy_livebook(&application, &namespace, &version)
             .await
-            .unwrap();
+        {
+            Ok(_) => {}
+            Err(err) => match &err {
+                crate::error::APIError::ResponseError { code, message } => {
+                    if !message.contains("pod_not_found") && !code.contains("pod_not_found") {
+                        return Err(err.into());
+                    }
+                }
+                _ => return Err(err.into()),
+            },
+        }
 
-        // wait 5 seconds for the pod to be destroyed, otherwise it will failed when deploying new
-        // livebook on the next step
-        sleep(std::time::Duration::from_secs(5)).await;
+        for i in 0..MAX_CHECKING_RETRY {
+            sleep(std::time::Duration::from_secs(RETRY_WAIT_TIME_IN_SEC)).await;
 
-        debug!("Destroyed the exisiting livebook instance.");
+            let livebook_resource = client
+                .livebook_resource(&application, &namespace, &version)
+                .await?
+                .data
+                .unwrap()
+                .livebook_resource;
+
+            if livebook_resource.is_none() {
+                break;
+            }
+
+            if i == MAX_CHECKING_RETRY - 1 {
+                return Err(CliError::Timeout);
+            }
+        }
     }
 
     Ok(())
@@ -325,3 +402,48 @@ async fn has_permission(
         .unwrap()
         .is_authorized)
 }
+
+fn setup_loaders(
+    m: &MultiProgress,
+    spinner_style: ProgressStyle,
+) -> (ProgressBar, ProgressBar, ProgressBar, ProgressBar) {
+    let step = 1_000_000;
+
+    let pod_loader = m.add(ProgressBar::new(step));
+    pod_loader.set_style(spinner_style.clone());
+    pod_loader.enable_steady_tick(std::time::Duration::from_millis(80));
+    pod_loader.set_prefix("[1/?]");
+    let issuer_loader = m.add(ProgressBar::new(step));
+    issuer_loader.set_style(spinner_style.clone());
+    issuer_loader.enable_steady_tick(std::time::Duration::from_millis(80));
+    issuer_loader.set_prefix("[2/?]");
+    let ingress_loader = m.add(ProgressBar::new(step));
+    ingress_loader.set_style(spinner_style.clone());
+    ingress_loader.enable_steady_tick(std::time::Duration::from_millis(80));
+    ingress_loader.set_prefix("[3/?]");
+    let service_loader = m.add(ProgressBar::new(step));
+    service_loader.set_style(spinner_style);
+    service_loader.enable_steady_tick(std::time::Duration::from_millis(80));
+    service_loader.set_prefix("[4/?]");
+
+    pod_loader.set_message("Setting up pod ...");
+    issuer_loader.set_message("Setting up issuer ...");
+    ingress_loader.set_message("Setting up ingress ...");
+    service_loader.set_message("Setting up service ...");
+
+    (pod_loader, issuer_loader, ingress_loader, service_loader)
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_parse_name_failed() {
+        match parse_name("green-prod/wukong-abc") {
+            Ok(_) => panic!("the test should be failed"),
+            Err(_) => assert!(true),
+        }
+    }
+}
+
