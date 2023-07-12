@@ -4,7 +4,7 @@ mod logs;
 
 use self::logs::handle_logs;
 use super::{Context, State};
-use crate::error::CliError;
+use crate::error::WKError;
 use clap::{command, Args, Subcommand, ValueEnum};
 use info::handle_info;
 
@@ -85,7 +85,7 @@ impl ToString for ApplicationNamespace {
 }
 
 impl Application {
-    pub async fn handle_command(&self, state: State) -> Result<bool, CliError> {
+    pub async fn handle_command(&self, state: State) -> Result<bool, WKError> {
         let context = Context::from_state(state).await?;
 
         match &self.subcommand {

@@ -1,7 +1,7 @@
 use super::{DeploymentNamespace, DeploymentVersion};
 use crate::{
     commands::Context,
-    error::{CliError, DeploymentError},
+    error::{DeploymentError, WKError},
     graphql::QueryClient,
     loader::new_spinner_progress_bar,
     output::colored_println,
@@ -144,7 +144,7 @@ pub async fn handle_execute(
     namespace: &Option<DeploymentNamespace>,
     version: &Option<DeploymentVersion>,
     artifact: &Option<String>,
-) -> Result<bool, CliError> {
+) -> Result<bool, WKError> {
     if namespace.is_none() && version.is_none() && artifact.is_none() {
         println!("Not detecting any flags, entering deployment terminal......");
     }
@@ -192,7 +192,7 @@ pub async fn handle_execute(
             // application
             DeploymentNamespace::Prod => {
                 if !has_prod_namespace {
-                    return Err(CliError::DeploymentError(
+                    return Err(WKError::DeploymentError(
                         DeploymentError::NamespaceNotAvailable {
                             namespace: "prod".to_string(),
                             application: current_application.clone(),
@@ -204,7 +204,7 @@ pub async fn handle_execute(
             // application
             DeploymentNamespace::Staging => {
                 if !has_staging_namespace {
-                    return Err(CliError::DeploymentError(
+                    return Err(WKError::DeploymentError(
                         DeploymentError::NamespaceNotAvailable {
                             namespace: "staging".to_string(),
                             application: current_application.clone(),
@@ -259,7 +259,7 @@ pub async fn handle_execute(
             // application
             DeploymentVersion::Blue => {
                 if !has_blue_version {
-                    return Err(CliError::DeploymentError(
+                    return Err(WKError::DeploymentError(
                         DeploymentError::VersionNotAvailable {
                             namespace: selected_namespace.to_lowercase(),
                             version: "blue".to_string(),
@@ -272,7 +272,7 @@ pub async fn handle_execute(
             // application
             DeploymentVersion::Green => {
                 if !has_green_version {
-                    return Err(CliError::DeploymentError(
+                    return Err(WKError::DeploymentError(
                         DeploymentError::VersionNotAvailable {
                             namespace: selected_namespace.to_lowercase(),
                             version: "green".to_string(),

@@ -4,7 +4,7 @@ mod pull;
 mod push;
 mod utils;
 
-use crate::error::CliError;
+use crate::error::WKError;
 use clap::{Args, Subcommand};
 use diff::handle_config_diff;
 use lint::handle_config_lint;
@@ -39,7 +39,7 @@ pub enum ConfigSubcommand {
 }
 
 impl Config {
-    pub async fn handle_command(&self) -> Result<bool, CliError> {
+    pub async fn handle_command(&self) -> Result<bool, WKError> {
         match &self.subcommand {
             ConfigSubcommand::Push => handle_config_push().await,
             ConfigSubcommand::Diff => handle_config_diff().await,

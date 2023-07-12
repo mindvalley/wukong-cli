@@ -1,6 +1,6 @@
 mod config;
 
-use crate::error::CliError;
+use crate::error::WKError;
 use clap::{Args, Subcommand};
 
 #[derive(Debug, Args)]
@@ -16,7 +16,7 @@ pub enum DevSubcommand {
 }
 
 impl Dev {
-    pub async fn handle_command(&self) -> Result<bool, CliError> {
+    pub async fn handle_command(&self) -> Result<bool, WKError> {
         match &self.subcommand {
             DevSubcommand::Config(config) => config.handle_command().await,
         }

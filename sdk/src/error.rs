@@ -2,7 +2,7 @@ use owo_colors::OwoColorize;
 use thiserror::Error as ThisError;
 
 #[derive(Debug, ThisError)]
-pub enum CliError {
+pub enum WKError {
     #[error(transparent)]
     APIError(#[from] APIError),
     #[error(transparent)]
@@ -180,18 +180,18 @@ pub enum ExtractError {
     BadTomlData(#[from] toml::de::Error),
 }
 
-impl CliError {
+impl WKError {
     /// Try to second-guess what the user was trying to do, depending on what
     /// went wrong.
     pub fn suggestion(&self) -> Option<String> {
         match self {
-            CliError::UnAuthenticated => Some(String::from(
+            WKError::UnAuthenticated => Some(String::from(
                 "Your access token is invalid. Run \"wukong login\" to authenticate with your okta account.",
             )),
-            CliError::UnInitialised => Some(String::from(
+            WKError::UnInitialised => Some(String::from(
                 "Run \"wukong init\" to initialise Wukong's configuration before running other commands.",
             )),
-            CliError::ConfigError(error) => match error {
+            WKError::ConfigError(error) => match error {
                 ConfigError::NotFound { .. } => Some(String::from(
                     "Run \"wukong init\" to initialise Wukong's configuration.",
                 )),
@@ -203,7 +203,7 @@ impl CliError {
                 ),
                 _ => None,
             },
-            CliError::APIError(error) => match error {
+            WKError::APIError(error) => match error {
                 APIError::ResponseError { code, .. } if code == "unable_to_get_pipeline" => Some(
                     String::from("Please check your pipeline's name. It could be invalid."),
                 ),
@@ -250,8 +250,8 @@ If none of the above steps work for you, please contact the following people on 
                 )),
                 _ => None,
             },
-            CliError::AuthError(AuthError::RefreshTokenExpired { .. }) => Some("Your refresh token is expired. Run \"wukong login\" to authenticate again.".to_string()),
-            CliError::VaultError(VaultError::ConfigError(error)) => match error {
+            WKError::AuthError(AuthError::RefreshTokenExpired { .. }) => Some("Your refresh token is expired. Run \"wukong login\" to authenticate again.".to_string()),
+            WKError::VaultError(VaultError::ConfigError(error)) => match error {
                     ConfigError::NotFound { .. } => Some(String::from(
                         "Run \"wukong init\" to initialise Wukong's configuration.",
                     )),

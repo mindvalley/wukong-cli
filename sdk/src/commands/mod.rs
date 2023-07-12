@@ -18,7 +18,7 @@ use openidconnect::RefreshToken;
 use crate::{
     auth::Auth,
     config::{AuthConfig, Config},
-    error::CliError,
+    error::WKError,
 };
 
 use self::{completion::handle_completion, init::handle_init, login::handle_login};
@@ -36,10 +36,10 @@ pub struct Context {
 }
 
 impl Context {
-    pub async fn from_state(mut state: State) -> Result<Self, CliError> {
+    pub async fn from_state(mut state: State) -> Result<Self, WKError> {
         let mut config = Config::load_from_default_path()?;
 
-        let auth_config = config.auth.as_ref().ok_or(CliError::UnAuthenticated)?;
+        let auth_config = config.auth.as_ref().ok_or(WKError::UnAuthenticated)?;
 
         // check access token expiry
         let current_time: DateTime<Local> = Local::now();
@@ -75,7 +75,7 @@ impl Context {
             config
                 .auth
                 .as_ref()
-                .ok_or(CliError::UnAuthenticated)?
+                .ok_or(WKError::UnAuthenticated)?
                 .subject
                 .clone(),
         );
@@ -157,7 +157,7 @@ pub enum CommandGroup {
 }
 
 impl ClapApp {
-    pub async fn execute(&self) -> Result<bool, CliError> {
+    pub async fn execute(&self) -> Result<bool, WKError> {
         let mut state = State::default();
 
         // overwritten by --application flag

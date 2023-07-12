@@ -4,7 +4,7 @@ pub mod list;
 
 use self::{ci_status::handle_ci_status, describe::handle_describe, list::handle_list};
 use crate::{
-    error::CliError,
+    error::WKError,
     output::table::{fmt_option_milliseconds, fmt_option_timestamp, fmt_timestamp},
 };
 use chrono::{DateTime, NaiveDateTime, Utc};
@@ -127,7 +127,7 @@ pub enum PipelineSubcommand {
 }
 
 impl Pipeline {
-    pub async fn handle_command(&self, state: State) -> Result<bool, CliError> {
+    pub async fn handle_command(&self, state: State) -> Result<bool, WKError> {
         let context = Context::from_state(state).await?;
 
         match &self.subcommand {

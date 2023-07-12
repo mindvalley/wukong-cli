@@ -1,5 +1,5 @@
 use crate::{
-    error::{CliError, ConfigError},
+    error::{ConfigError, WKError},
     Config as CLIConfig,
 };
 use clap::{Args, Subcommand, ValueEnum};
@@ -38,7 +38,7 @@ pub enum ConfigName {
 }
 
 impl Config {
-    pub fn handle_command(&self) -> Result<bool, CliError> {
+    pub fn handle_command(&self) -> Result<bool, WKError> {
         match &self.subcommand {
             ConfigSubcommand::List => {
                 let config = CLIConfig::load_from_default_path()?;

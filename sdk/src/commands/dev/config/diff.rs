@@ -1,4 +1,4 @@
-use crate::error::{CliError, DevConfigError};
+use crate::error::{DevConfigError, WKError};
 use crate::loader::new_spinner_progress_bar;
 use crate::services::vault::Vault;
 use crate::utils::line::Line;
@@ -11,7 +11,7 @@ use super::utils::{
     make_path_relative,
 };
 
-pub async fn handle_config_diff() -> Result<bool, CliError> {
+pub async fn handle_config_diff() -> Result<bool, WKError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("🔍 Finding config with annotation");
 
@@ -21,7 +21,7 @@ pub async fn handle_config_diff() -> Result<bool, CliError> {
     progress_bar.finish_and_clear();
 
     if extracted_infos.is_empty() {
-        return Err(CliError::DevConfigError(DevConfigError::ConfigNotFound));
+        return Err(WKError::DevConfigError(DevConfigError::ConfigNotFound));
     }
 
     if extracted_infos.len() != 1 {

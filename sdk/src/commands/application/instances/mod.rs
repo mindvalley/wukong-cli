@@ -1,7 +1,7 @@
 use self::{connect::handle_connect, list::handle_list};
 use crate::{
     commands::{application::ApplicationNamespace, Context},
-    error::CliError,
+    error::WKError,
 };
 use clap::{Args, Subcommand};
 
@@ -43,7 +43,7 @@ pub enum InstancesSubcommand {
 }
 
 impl Instances {
-    pub async fn handle_command(&self, context: Context) -> Result<bool, CliError> {
+    pub async fn handle_command(&self, context: Context) -> Result<bool, WKError> {
         match &self.subcommand {
             InstancesSubcommand::List { namespace, version } => {
                 handle_list(context, &namespace.to_string(), &version.to_string()).await

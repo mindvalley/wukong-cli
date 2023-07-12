@@ -1,5 +1,5 @@
 use crate::{
-    error::{CliError, DevConfigError, ExtractError},
+    error::{DevConfigError, ExtractError, WKError},
     services::vault::Vault,
     utils::secret_extractors::{
         ElixirConfigExtractor, SecretExtractor, SecretInfo, WKTomlConfigExtractor,
@@ -19,7 +19,7 @@ pub async fn get_updated_configs<'a>(
     vault: &Vault,
     vault_token: &str,
     config_files: &'a Vec<(String, Vec<SecretInfo>)>,
-) -> Result<Vec<(&'a SecretInfo, String, String, String)>, CliError> {
+) -> Result<Vec<(&'a SecretInfo, String, String, String)>, WKError> {
     // Comparing local vs remote ....
     println!("{}", "comparing local config vs remote config...".cyan());
 
@@ -52,12 +52,10 @@ pub async fn get_updated_configs<'a>(
             let remote_config = match remote_secrets.get(&info.name) {
                 Some(config) => config,
                 None => {
-                    return Err(CliError::DevConfigError(
-                        DevConfigError::InvalidSecretPath {
-                            config_path: make_path_relative(config_path),
-                            annotation: info.key.to_string(),
-                        },
-                    ));
+                    return Err(WKError::DevConfigError(DevConfigError::InvalidSecretPath {
+                        config_path: make_path_relative(config_path),
+                        annotation: info.key.to_string(),
+                    }));
                 }
             };
 
@@ -83,14 +81,14 @@ pub fn get_local_config_path(destination_file: &str, config_path: &str) -> PathB
 pub fn get_local_config_as_string(
     destination_file: &str,
     config_path: &str,
-) -> Result<String, CliError> {
+) -> Result<String, WKError> {
     let local_config_path = get_local_config_path(destination_file, config_path);
     let local_config = std::fs::read_to_string(local_config_path)?;
 
     Ok(local_config)
 }
 
-pub fn get_secret_config_files(current_path: Option<PathBuf>) -> Result<Vec<PathBuf>, CliError> {
+pub fn get_secret_config_files(current_path: Option<PathBuf>) -> Result<Vec<PathBuf>, WKError> {
     let current_path = current_path.unwrap_or(current_dir()?);
 
     let mut overrides = OverrideBuilder::new(current_path.clone());

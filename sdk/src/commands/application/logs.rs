@@ -1,7 +1,7 @@
 use super::{ApplicationNamespace, ApplicationVersion};
 use crate::{
     commands::Context,
-    error::CliError,
+    error::WKError,
     graphql::QueryClient,
     loader::new_spinner_progress_bar,
     services::gcloud::{google::logging::v2::LogEntry, GCloudClient, LogEntriesOptions},
@@ -122,7 +122,7 @@ pub async fn handle_logs(
     include: &Vec<String>,
     exclude: &Vec<String>,
     url_mode: &bool,
-) -> Result<bool, CliError> {
+) -> Result<bool, WKError> {
     let auth_progress_bar = new_spinner_progress_bar();
     auth_progress_bar.set_message("Checking if you're authenticated to Google Cloud...");
 
@@ -320,7 +320,7 @@ fn generate_filter(
     since: &Option<String>,
     until: &Option<String>,
     show_error_and_above: &bool,
-) -> Result<String, CliError> {
+) -> Result<String, WKError> {
     let mut filter = String::new();
     filter.push_str(format!("resource.type=\"k8s_container\" AND resource.labels.cluster_name=\"{}\" AND resource.labels.namespace_name=\"{}\"", cluster_name, namespace_name).as_str());
 
@@ -355,7 +355,7 @@ fn generate_filter(
     Ok(filter)
 }
 
-fn get_timestamp(timestamp: &String) -> Result<String, CliError> {
+fn get_timestamp(timestamp: &String) -> Result<String, WKError> {
     match DateTime::parse_from_rfc3339(timestamp) {
         Ok(_) => Ok(timestamp.clone()),
         Err(e) => {
@@ -374,7 +374,7 @@ fn get_timestamp(timestamp: &String) -> Result<String, CliError> {
             } else {
                 debug!("Error parsing timestamp: {}", &timestamp);
                 debug!("Error message: {:?}", e);
-                Err(CliError::ChronoParseError {
+                Err(WKError::ChronoParseError {
                     value: timestamp.clone(),
                     source: e,
                 })

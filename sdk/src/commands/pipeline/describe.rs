@@ -3,7 +3,7 @@ use wukong_telemetry_macro::wukong_telemetry;
 use super::{JobBuild, PipelineBranch, PipelinePullRequest};
 use crate::{
     commands::Context,
-    error::CliError,
+    error::WKError,
     graphql::{pipeline::pipeline_query::PipelineQueryPipeline, QueryClient},
     loader::new_spinner_progress_bar,
     output::{colored_println, table::TableOutput},
@@ -11,7 +11,7 @@ use crate::{
 };
 
 #[wukong_telemetry(command_event = "pipeline_describe")]
-pub async fn handle_describe(context: Context, name: &str) -> Result<bool, CliError> {
+pub async fn handle_describe(context: Context, name: &str) -> Result<bool, WKError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Fetching pipeline data ...");
 

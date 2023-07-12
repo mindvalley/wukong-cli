@@ -1,7 +1,7 @@
 use super::PipelineData;
 use crate::{
     commands::Context,
-    error::CliError,
+    error::WKError,
     graphql::{pipeline::pipelines_query::PipelinesQueryPipelines, QueryClient},
     loader::new_spinner_progress_bar,
     output::{colored_println, table::TableOutput},
@@ -10,7 +10,7 @@ use crate::{
 use wukong_telemetry_macro::wukong_telemetry;
 
 #[wukong_telemetry(command_event = "pipeline_list")]
-pub async fn handle_list(context: Context) -> Result<bool, CliError> {
+pub async fn handle_list(context: Context) -> Result<bool, WKError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Fetching pipelines list ...");
 

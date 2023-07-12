@@ -1,7 +1,7 @@
 use crate::error::DevConfigError;
 use crate::loader::new_spinner_progress_bar;
 use crate::utils::secret_extractors::SecretInfo;
-use crate::{error::CliError, services::vault::Vault};
+use crate::{error::WKError, services::vault::Vault};
 use dialoguer::Confirm;
 use dialoguer::{theme::ColorfulTheme, Select};
 use owo_colors::OwoColorize;
@@ -13,7 +13,7 @@ use super::utils::{
     get_secret_config_files, get_updated_configs, make_path_relative,
 };
 
-pub async fn handle_config_push() -> Result<bool, CliError> {
+pub async fn handle_config_push() -> Result<bool, WKError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("🔍 Finding config with annotation");
 
@@ -23,7 +23,7 @@ pub async fn handle_config_push() -> Result<bool, CliError> {
     progress_bar.finish_and_clear();
 
     if extracted_infos.is_empty() {
-        return Err(CliError::DevConfigError(DevConfigError::ConfigNotFound));
+        return Err(WKError::DevConfigError(DevConfigError::ConfigNotFound));
     }
 
     if extracted_infos.len() != 1 {
@@ -66,7 +66,7 @@ async fn update_secrets(
     vault: &Vault,
     vault_token: &str,
     config_to_update: &(String, &SecretInfo),
-) -> Result<(), CliError> {
+) -> Result<(), WKError> {
     let (config_path, secret_info) = config_to_update;
 
     let local_config_string =

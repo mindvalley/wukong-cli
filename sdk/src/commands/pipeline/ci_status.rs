@@ -4,7 +4,7 @@ use wukong_telemetry_macro::wukong_telemetry;
 use super::PipelineCiStatus;
 use crate::{
     commands::Context,
-    error::CliError,
+    error::WKError,
     graphql::QueryClient,
     loader::new_spinner_progress_bar,
     output::{colored_println, table::TableOutput},
@@ -17,7 +17,7 @@ pub async fn handle_ci_status(
     context: Context,
     repo_url: &Option<String>,
     branch: &Option<String>,
-) -> Result<bool, CliError> {
+) -> Result<bool, WKError> {
     let repo_url = match repo_url {
         Some(url) => url.clone(),
         None => {

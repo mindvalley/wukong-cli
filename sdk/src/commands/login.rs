@@ -1,7 +1,7 @@
 use crate::{
     auth::Auth,
     config::AuthConfig,
-    error::{AuthError, CliError},
+    error::{AuthError, WKError},
     loader::new_spinner_progress_bar,
     output::colored_println,
     Config as CLIConfig,
@@ -12,7 +12,7 @@ use dialoguer::{theme::ColorfulTheme, Select};
 use log::debug;
 use openidconnect::RefreshToken;
 
-pub async fn handle_login() -> Result<bool, CliError> {
+pub async fn handle_login() -> Result<bool, WKError> {
     let mut config = CLIConfig::load_from_default_path()?;
 
     if let Some(auth_config) = &config.auth {
@@ -84,7 +84,7 @@ pub async fn handle_login() -> Result<bool, CliError> {
     Ok(true)
 }
 
-async fn login_and_update_config(mut current_config: CLIConfig) -> Result<bool, CliError> {
+async fn login_and_update_config(mut current_config: CLIConfig) -> Result<bool, WKError> {
     let auth_info = Auth::new(&current_config.core.okta_client_id)
         .login()
         .await?;

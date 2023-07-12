@@ -1,6 +1,6 @@
 use crate::commands::dev::config::utils::get_local_config_path;
 use crate::services::vault::client::FetchSecretsData;
-use crate::{error::CliError, services::vault::Vault};
+use crate::{error::WKError, services::vault::Vault};
 use log::debug;
 use owo_colors::OwoColorize;
 use std::collections::HashMap;
@@ -9,7 +9,7 @@ use std::{env::current_dir, fs::File, path::Path};
 
 use super::utils::{extract_secret_infos, get_secret_config_files};
 
-pub async fn handle_config_pull(path: &Path) -> Result<bool, CliError> {
+pub async fn handle_config_pull(path: &Path) -> Result<bool, WKError> {
     let path = path.try_exists().map(|value| match value {
         true => {
             if path.to_string_lossy() == "." {

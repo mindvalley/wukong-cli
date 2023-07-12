@@ -4,7 +4,7 @@ use crate::{
         deployment::{DeploymentNamespace, DeploymentVersion},
         Context,
     },
-    error::{APIError, ApplicationInstanceError, CliError},
+    error::{APIError, ApplicationInstanceError, WKError},
     graphql::QueryClient,
     loader::new_spinner_progress_bar,
     output::colored_println,
@@ -36,7 +36,7 @@ pub async fn handle_connect(
     context: Context,
     namespace_arg: &Option<ApplicationNamespace>,
     version_arg: &Option<ApplicationVersion>,
-) -> Result<bool, CliError> {
+) -> Result<bool, WKError> {
     let spinner_style =
         ProgressStyle::with_template("{prefix:.bold.dim} {spinner} {wide_msg}").unwrap();
 
@@ -211,7 +211,7 @@ pub async fn handle_connect(
                 }
 
                 if i == MAX_CHECKING_RETRY - 1 {
-                    return Err(CliError::Timeout);
+                    return Err(WKError::Timeout);
                 }
             }
         }

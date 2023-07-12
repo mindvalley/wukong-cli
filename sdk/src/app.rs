@@ -1,4 +1,4 @@
-use crate::{commands::ClapApp, error::CliError, logger};
+use crate::{commands::ClapApp, error::WKError, logger};
 use clap::Parser;
 
 pub struct App {
@@ -12,7 +12,7 @@ pub struct AppState {
 }
 
 impl App {
-    pub fn new() -> Result<Self, CliError> {
+    pub fn new() -> Result<Self, WKError> {
         let cli = ClapApp::parse();
 
         logger::Builder::new()

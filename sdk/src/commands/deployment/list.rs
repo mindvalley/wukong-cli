@@ -1,6 +1,6 @@
 use crate::{
     commands::Context,
-    error::CliError,
+    error::WKError,
     graphql::QueryClient,
     loader::new_spinner_progress_bar,
     output::table::TableOutput,
@@ -60,7 +60,7 @@ struct CdPipeline {
 }
 
 #[wukong_telemetry(command_event = "deployment_list")]
-pub async fn handle_list(context: Context) -> Result<bool, CliError> {
+pub async fn handle_list(context: Context) -> Result<bool, WKError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Fetching cd pipeline list ... ");
 

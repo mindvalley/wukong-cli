@@ -6,7 +6,7 @@ use execute::handle_execute;
 use list::handle_list;
 use rollback::handle_rollback;
 
-use crate::CliError;
+use crate::WKError;
 use clap::{Args, Subcommand, ValueEnum};
 
 use super::{Context, State};
@@ -77,7 +77,7 @@ impl ToString for DeploymentNamespace {
 }
 
 impl Deployment {
-    pub async fn handle_command(&self, state: State) -> Result<bool, CliError> {
+    pub async fn handle_command(&self, state: State) -> Result<bool, WKError> {
         let context = Context::from_state(state).await?;
 
         match &self.subcommand {

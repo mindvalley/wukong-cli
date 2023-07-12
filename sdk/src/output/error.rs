@@ -1,16 +1,16 @@
-use crate::error::CliError;
+use crate::error::WKError;
 use owo_colors::{
     colors::{xterm::Gray, CustomColor},
     OwoColorize,
 };
 use std::{error::Error, fmt::Display};
 
-pub struct ErrorOutput(pub CliError);
+pub struct ErrorOutput(pub WKError);
 
 impl Display for ErrorOutput {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.0 {
-            CliError::Io(ref io_error)
+            WKError::Io(ref io_error)
                 if io_error.kind() == ::std::io::ErrorKind::BrokenPipe
                     || io_error.kind() == ::std::io::ErrorKind::Interrupted =>
             {
@@ -91,7 +91,7 @@ mod test {
 
     #[test]
     fn test_cli_error_output_format_with_suggestion() {
-        let error = CliError::UnInitialised;
+        let error = WKError::UnInitialised;
         let error_output = ErrorOutput(error);
 
         assert_eq!(
@@ -106,7 +106,7 @@ mod test {
     #[test]
     fn test_cli_error_output_format_with_caused_by() {
         let io_error = std::io::Error::new(std::io::ErrorKind::NotFound, "File not exist");
-        let error = CliError::ConfigError(ConfigError::NotFound {
+        let error = WKError::ConfigError(ConfigError::NotFound {
             path: "not/path/to/file",
             source: io_error,
         });

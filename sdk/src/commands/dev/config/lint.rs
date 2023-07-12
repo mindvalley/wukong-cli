@@ -1,4 +1,4 @@
-use crate::{error::CliError, loader::new_progress_bar};
+use crate::{error::WKError, loader::new_progress_bar};
 // use elixir_linter::{LintRule, Linter};
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use indicatif::ParallelProgressIterator;
@@ -11,7 +11,7 @@ use std::{
     time::Instant,
 };
 
-pub fn handle_config_lint(path: &Path) -> Result<bool, CliError> {
+pub fn handle_config_lint(path: &Path) -> Result<bool, WKError> {
     todo!()
     // let start = Instant::now();
     //

@@ -1,7 +1,7 @@
 use crate::{
     auth::Auth,
     config::{AuthConfig, Config},
-    error::{AuthError, CliError, ConfigError},
+    error::{AuthError, ConfigError, WKError},
     graphql::QueryClient,
     loader::new_spinner_progress_bar,
     output::colored_println,
@@ -12,7 +12,7 @@ use dialoguer::{theme::ColorfulTheme, Select};
 use log::debug;
 use openidconnect::RefreshToken;
 
-pub async fn handle_init() -> Result<bool, CliError> {
+pub async fn handle_init() -> Result<bool, WKError> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
 
     let config = match Config::load_from_default_path() {
@@ -143,7 +143,7 @@ Some things to try next:
     Ok(true)
 }
 
-async fn login_and_create_config(mut config: Config) -> Result<Config, CliError> {
+async fn login_and_create_config(mut config: Config) -> Result<Config, WKError> {
     let auth_info = Auth::new(&config.core.okta_client_id).login().await?;
 
     // we don't really care about the exisiting config (id_token, refresh_token, account)

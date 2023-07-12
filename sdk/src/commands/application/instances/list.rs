@@ -1,6 +1,6 @@
 use crate::{
     commands::Context,
-    error::CliError,
+    error::WKError,
     graphql::QueryClient,
     loader::new_spinner_progress_bar,
     output::{colored_println, table::TableOutput},
@@ -25,7 +25,7 @@ pub async fn handle_list(
     context: Context,
     namespace: &str,
     version: &str,
-) -> Result<bool, CliError> {
+) -> Result<bool, WKError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("Checking your permission to connect to the remote instance...");
 
@@ -90,7 +90,7 @@ async fn has_permission(
     application: &str,
     namespace: &str,
     version: &str,
-) -> Result<bool, CliError> {
+) -> Result<bool, WKError> {
     Ok(client
         .fetch_is_authorized(application, namespace, version)
         .await?
