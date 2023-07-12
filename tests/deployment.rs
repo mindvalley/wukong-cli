@@ -93,7 +93,11 @@ refresh_token = "refresh_token"
 
     let output = cmd.get_output();
 
-    insta::assert_snapshot!(std::str::from_utf8(&output.stdout).unwrap());
+    insta::with_settings!({filters => vec![
+        (r"\d+ months ago|\d+(.\d+)s", "[DEPLOYMENT_TIME]"),
+    ]}, {
+        insta::assert_snapshot!(std::str::from_utf8(&output.stdout).unwrap());
+    });
 
     mock.assert();
     temp.close().unwrap();
