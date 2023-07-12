@@ -462,4 +462,3 @@ fn check_retry_and_auth_error(error: &graphql_client::Error) -> Option<APIError>
         return None;
     }
 }
-
