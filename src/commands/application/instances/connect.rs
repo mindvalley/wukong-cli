@@ -66,8 +66,7 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
 
     // Check for permission:
     if !has_permission(&client, &application, &namespace, &version)
-        .await
-        .unwrap()
+        .await?
     {
         eprintln!("You don't have permission to connect to this instance.");
         eprintln!("Please check with your team manager to get approval first.");
