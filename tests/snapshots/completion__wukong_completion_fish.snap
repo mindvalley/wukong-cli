@@ -100,6 +100,8 @@ By default, it\'ll only report errors.
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from list" -s q -l quiet -d 'Do not print log message'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from list" -s h -l help -d 'Print help (see more with \'--help\')'
+complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from connect" -l namespace -d '(optional) The namespace to list the running instances' -r
+complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from connect" -l version -d '(optional) The version of the application to filter the returning running instances' -r
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from connect" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from connect" -s v -l verbose -d 'Use verbos output. More output per occurrence.
 

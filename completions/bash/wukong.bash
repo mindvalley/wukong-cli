@@ -490,12 +490,20 @@ _wukong() {
             return 0
             ;;
         wukong__application__instances__connect)
-            opts="-a -v -q -h --application --verbose --quiet --help"
+            opts="-a -v -q -h --namespace --version --application --verbose --quiet --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
+                --namespace)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                --version)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
                 --application)
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0

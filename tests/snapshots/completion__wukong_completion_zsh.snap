@@ -227,6 +227,8 @@ By default, it'\''ll only report errors.
 ;;
 (connect)
 _arguments "${_arguments_options[@]}" \
+'--namespace=[(optional) The namespace to list the running instances]:NAMESPACE: ' \
+'--version=[(optional) The version of the application to filter the returning running instances]:VERSION: ' \
 '-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
