@@ -44,8 +44,7 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
         None => return Ok(false),
     };
 
-    let version = match select_deployment_version(&client, &current_application, &namespace).await?
-    {
+    let version = match select_deployment_version()? {
         Some(version) => version,
         None => return Ok(false),
     };
@@ -384,47 +383,26 @@ fn select_deployment_namespace() -> Result<Option<String>, CliError> {
     Ok(Some(namespace))
 }
 
-async fn select_deployment_version(
-    client: &QueryClient,
-    application: &str,
-    namespace: &str,
-) -> Result<Option<String>, CliError> {
-    let cd_pipelines_resp = client
-        .fetch_cd_pipeline_list(&application)
-        .await?
-        .data
-        .unwrap()
-        .cd_pipelines;
-
-    let mut version_selections = cd_pipelines_resp
-        .iter()
-        .filter(|pipeline| pipeline.environment == namespace)
-        .map(|pipeline| pipeline.version.as_str())
-        .collect::<HashSet<_>>()
-        .into_iter()
-        .collect::<Vec<&str>>();
-
-    version_selections.sort();
-
-    if version_selections.is_empty() {
-        println!("This application is not configured with any environment. Please configure at least 1 environment before using this feature.");
-        return Ok(None);
-    }
-
+fn select_deployment_version() -> Result<Option<String>, CliError> {
     let version_idx = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Please choose the version you want to connect to")
         .default(0)
-        .items(
-            &version_selections
-                .iter()
-                .map(|version| capitalize(version))
-                .collect::<Vec<String>>(),
-        )
+        .items(&[
+            DeploymentVersion::Green.to_string(),
+            DeploymentVersion::Blue.to_string(),
+        ])
         .interact()?;
 
-    let selected_version = version_selections[version_idx].to_string();
+    let version = match version_idx {
+        0 => DeploymentVersion::Green.to_string().to_lowercase(),
+        1 => DeploymentVersion::Blue.to_string().to_lowercase(),
+        _ => {
+            eprintln!("You didn't choose any version to connect to.");
+            return Ok(None);
+        }
+    };
 
-    Ok(Some(selected_version))
+    Ok(Some(version))
 }
 
 async fn has_permission(
