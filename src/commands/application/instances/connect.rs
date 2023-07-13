@@ -3,7 +3,7 @@ use crate::{
         deployment::{DeploymentNamespace, DeploymentVersion},
         Context,
     },
-    error::CliError,
+    error::{APIError, CliError, DeploymentError},
     graphql::{QueryClient, QueryClientBuilder},
     loader::new_spinner_progress_bar,
     output::colored_println,
@@ -411,12 +411,40 @@ async fn has_permission(
     namespace: &str,
     version: &str,
 ) -> Result<bool, CliError> {
-    Ok(client
-        .fetch_is_authorized(application, namespace, version)
-        .await?
-        .data
-        .unwrap()
-        .is_authorized)
+    let is_authorized = match client
+        .fetch_is_authorized(&application, &namespace, version)
+        .await
+    {
+        Ok(data) => data.data.unwrap().is_authorized,
+        Err(err) => match &err {
+            APIError::ResponseError {
+                code,
+                message: _message,
+            } => {
+                if code == "k8s_cluster_namespace_config_not_defined" {
+                    return Err(CliError::DeploymentError(
+                        DeploymentError::NamespaceNotAvailable {
+                            namespace: namespace.to_string(),
+                            application: application.to_string(),
+                        },
+                    ));
+                } else if code == "k8s_cluster_version_config_not_defined" {
+                    return Err(CliError::DeploymentError(
+                        DeploymentError::VersionNotAvailable {
+                            namespace: namespace.to_string(),
+                            application: application.to_string(),
+                            version: version.to_string(),
+                        },
+                    ));
+                } else {
+                    return Err(err.into());
+                }
+            }
+            _ => return Err(err.into()),
+        },
+    };
+
+    Ok(is_authorized)
 }
 
 fn setup_loaders(
