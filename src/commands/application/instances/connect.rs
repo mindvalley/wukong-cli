@@ -6,6 +6,7 @@ use crate::{
     error::CliError,
     graphql::{QueryClient, QueryClientBuilder},
     loader::new_spinner_progress_bar,
+    output::colored_println,
 };
 use dialoguer::{theme::ColorfulTheme, Select};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
@@ -33,6 +34,10 @@ struct KubernetesPod {
 pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
     let spinner_style =
         ProgressStyle::with_template("{prefix:.bold.dim} {spinner} {wide_msg}").unwrap();
+
+    // SAFETY: This is safe to unwrap because we know that `application` is not None.
+    let current_application = context.state.application.unwrap();
+    colored_println!("Current application: {current_application}");
 
     let namespace = match select_deployment_namespace()? {
         Some(namespace) => namespace,
@@ -62,12 +67,8 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
         .with_api_url(context.config.core.wukong_api_url)
         .build()?;
 
-    let application = context.state.application.unwrap();
-
     // Check for permission:
-    if !has_permission(&client, &application, &namespace, &version)
-        .await?
-    {
+    if !has_permission(&client, &current_application, &namespace, &version).await? {
         eprintln!("You don't have permission to connect to this instance.");
         eprintln!("Please check with your team manager to get approval first.");
 
@@ -85,7 +86,7 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
         version.bright_green()
     ));
 
-    let k8s_pods = get_ready_k8s_pods(&client, &application, &namespace, &version).await?;
+    let k8s_pods = get_ready_k8s_pods(&client, &current_application, &namespace, &version).await?;
 
     debug!("Found {} pods", k8s_pods.len());
     if k8s_pods.is_empty() {
@@ -119,7 +120,7 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
 
     cleanup_previous_livebook_instance(
         &client,
-        &application,
+        &current_application,
         &namespace,
         &version,
         preparing_progress_bar.clone(),
@@ -129,7 +130,13 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
     debug!("Deploying a new livebook instance.");
 
     let new_instance = client
-        .deploy_livebook(&application, &namespace, &version, &instance_name, 8080)
+        .deploy_livebook(
+            &current_application,
+            &namespace,
+            &version,
+            &instance_name,
+            8080,
+        )
         .await?
         .data
         .unwrap()
@@ -153,7 +160,7 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
         for i in 0..MAX_CHECKING_RETRY {
             sleep(std::time::Duration::from_secs(RETRY_WAIT_TIME_IN_SEC)).await;
             let livebook_resource = client
-                .livebook_resource(&application, &namespace, &version)
+                .livebook_resource(&current_application, &namespace, &version)
                 .await?
                 .data
                 .unwrap()
@@ -225,7 +232,7 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
             let destroy_progress_bar = new_spinner_progress_bar();
             destroy_progress_bar.set_message("Destroying the livebook instances...");
             let _destroyed = client
-                .destroy_livebook(&application, &namespace, &version)
+                .destroy_livebook(&current_application, &namespace, &version)
                 .await
                 .unwrap();
             destroy_progress_bar.finish_and_clear();
@@ -257,7 +264,7 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
         exiting_progress_bar.set_message("You're exiting from your remote session. Cleaning up...");
 
         let _destroyed = client
-            .destroy_livebook(&application, &namespace, &version)
+            .destroy_livebook(&current_application, &namespace, &version)
             .await
             .unwrap();
 

@@ -223,8 +223,6 @@ By default, it'\''ll only report errors.
 ;;
 (connect)
 _arguments "${_arguments_options[@]}" \
-'-p+[(optional) The port for livebook instance]:PORT: ' \
-'--port=[(optional) The port for livebook instance]:PORT: ' \
 '-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
@@ -245,7 +243,6 @@ By default, it'\''ll only report errors.
 '(-v --verbose)*--quiet[Do not print log message]' \
 '-h[Print help]' \
 '--help[Print help]' \
-':name -- The instance name to connect to:' \
 && ret=0
 ;;
 (help)
