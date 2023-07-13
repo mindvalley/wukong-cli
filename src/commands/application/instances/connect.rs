@@ -73,7 +73,8 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
         None => return Ok(false),
     };
 
-    let version = match select_deployment_version()? {
+    let version = match select_deployment_version(&client, &current_application, &namespace).await?
+    {
         Some(version) => version,
         None => return Ok(false),
     };
@@ -389,12 +390,14 @@ async fn select_deployment_namespace(
         .unwrap()
         .cd_pipelines;
 
-    let namespace_selections = cd_pipelines_resp
+    let mut namespace_selections = cd_pipelines_resp
         .iter()
         .map(|pipeline| pipeline.environment.as_str())
         .collect::<HashSet<_>>()
         .into_iter()
         .collect::<Vec<&str>>();
+
+    namespace_selections.sort();
 
     if namespace_selections.is_empty() {
         println!("This application is not configured with any environment. Please configure at least 1 environment before using this feature.");
@@ -417,26 +420,47 @@ async fn select_deployment_namespace(
     Ok(Some(selected_namespace))
 }
 
-fn select_deployment_version() -> Result<Option<String>, CliError> {
+async fn select_deployment_version(
+    client: &QueryClient,
+    application: &str,
+    namespace: &str,
+) -> Result<Option<String>, CliError> {
+    let cd_pipelines_resp = client
+        .fetch_cd_pipeline_list(&application)
+        .await?
+        .data
+        .unwrap()
+        .cd_pipelines;
+
+    let mut version_selections = cd_pipelines_resp
+        .iter()
+        .filter(|pipeline| pipeline.environment == namespace)
+        .map(|pipeline| pipeline.version.as_str())
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect::<Vec<&str>>();
+
+    version_selections.sort();
+
+    if version_selections.is_empty() {
+        println!("This application is not configured with any environment. Please configure at least 1 environment before using this feature.");
+        return Ok(None);
+    }
+
     let version_idx = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Please choose the version you want to connect to")
         .default(0)
-        .items(&[
-            DeploymentVersion::Green.to_string(),
-            DeploymentVersion::Blue.to_string(),
-        ])
+        .items(
+            &version_selections
+                .iter()
+                .map(|version| capitalize(version))
+                .collect::<Vec<String>>(),
+        )
         .interact()?;
 
-    let version = match version_idx {
-        0 => DeploymentVersion::Green.to_string().to_lowercase(),
-        1 => DeploymentVersion::Blue.to_string().to_lowercase(),
-        _ => {
-            eprintln!("You didn't choose any version to connect to.");
-            return Ok(None);
-        }
-    };
+    let selected_version = version_selections[version_idx].to_string();
 
-    Ok(Some(version))
+    Ok(Some(selected_version))
 }
 
 async fn has_permission(
