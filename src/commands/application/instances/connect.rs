@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::{
     commands::{
         deployment::{DeploymentNamespace, DeploymentVersion},
@@ -31,15 +33,42 @@ struct KubernetesPod {
     is_livebook: Option<bool>,
 }
 
+fn capitalize(data: &str) -> String {
+    let mut result = String::new();
+    let mut first = true;
+    for value in data.chars() {
+        if first {
+            result.push(value.to_ascii_uppercase());
+            first = false;
+        } else {
+            result.push(value);
+        }
+    }
+
+    result
+}
+
 pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
     let spinner_style =
         ProgressStyle::with_template("{prefix:.bold.dim} {spinner} {wide_msg}").unwrap();
+
+    let auth_config = context
+        .config
+        .auth
+        .as_ref()
+        .ok_or(CliError::UnAuthenticated)?;
+
+    let client = QueryClientBuilder::default()
+        .with_access_token(auth_config.id_token.clone())
+        .with_sub(context.state.sub)
+        .with_api_url(context.config.core.wukong_api_url)
+        .build()?;
 
     // SAFETY: This is safe to unwrap because we know that `application` is not None.
     let current_application = context.state.application.unwrap();
     colored_println!("Current application: {current_application}\n");
 
-    let namespace = match select_deployment_namespace()? {
+    let namespace = match select_deployment_namespace(&client, &current_application).await? {
         Some(namespace) => namespace,
         None => return Ok(false),
     };
@@ -54,18 +83,6 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
     check_permission_progress_bar.set_prefix("[1/4]");
     check_permission_progress_bar
         .set_message("Checking your permission to connect to the remote instance...");
-
-    let auth_config = context
-        .config
-        .auth
-        .as_ref()
-        .ok_or(CliError::UnAuthenticated)?;
-
-    let client = QueryClientBuilder::default()
-        .with_access_token(auth_config.id_token.clone())
-        .with_sub(context.state.sub)
-        .with_api_url(context.config.core.wukong_api_url)
-        .build()?;
 
     // Check for permission:
     if !has_permission(&client, &current_application, &namespace, &version).await? {
@@ -361,26 +378,43 @@ async fn get_ready_k8s_pods(
     Ok(ready_pods)
 }
 
-fn select_deployment_namespace() -> Result<Option<String>, CliError> {
+async fn select_deployment_namespace(
+    client: &QueryClient,
+    application: &str,
+) -> Result<Option<String>, CliError> {
+    let cd_pipelines_resp = client
+        .fetch_cd_pipeline_list(&application)
+        .await?
+        .data
+        .unwrap()
+        .cd_pipelines;
+
+    let namespace_selections = cd_pipelines_resp
+        .iter()
+        .map(|pipeline| pipeline.environment.as_str())
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect::<Vec<&str>>();
+
+    if namespace_selections.is_empty() {
+        println!("This application is not configured with any environment. Please configure at least 1 environment before using this feature.");
+        return Ok(None);
+    }
+
     let namespace_idx = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Please choose the namespace you want to connect to")
         .default(0)
-        .items(&[
-            DeploymentNamespace::Prod.to_string(),
-            DeploymentNamespace::Staging.to_string(),
-        ])
+        .items(
+            &namespace_selections
+                .iter()
+                .map(|namespace| capitalize(namespace))
+                .collect::<Vec<String>>(),
+        )
         .interact()?;
 
-    let namespace = match namespace_idx {
-        0 => DeploymentNamespace::Prod.to_string().to_lowercase(),
-        1 => DeploymentNamespace::Staging.to_string().to_lowercase(),
-        _ => {
-            eprintln!("You didn't choose any namespace to connect to.");
-            return Ok(None);
-        }
-    };
+    let selected_namespace = namespace_selections[namespace_idx].to_string();
 
-    Ok(Some(namespace))
+    Ok(Some(selected_namespace))
 }
 
 fn select_deployment_version() -> Result<Option<String>, CliError> {
