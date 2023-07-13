@@ -37,7 +37,7 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
 
     // SAFETY: This is safe to unwrap because we know that `application` is not None.
     let current_application = context.state.application.unwrap();
-    colored_println!("Current application: {current_application}");
+    colored_println!("Current application: {current_application}\n");
 
     let namespace = match select_deployment_namespace()? {
         Some(namespace) => namespace,
