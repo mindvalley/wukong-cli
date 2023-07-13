@@ -93,6 +93,13 @@ pub fn fmt_option_string(o: &Option<String>) -> String {
     }
 }
 
+pub fn fmt_option_str(o: &Option<&str>) -> String {
+    match o {
+        Some(s) => s.to_string(),
+        None => "N/A".to_string(),
+    }
+}
+
 pub fn fmt_option_human_timestamp(o: &Option<i64>) -> String {
     match o {
         Some(s) => fmt_human_timestamp(s),

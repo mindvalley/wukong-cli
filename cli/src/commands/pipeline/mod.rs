@@ -4,7 +4,7 @@ pub mod list;
 
 use crate::{
     error::WKCliError,
-    output::table::{fmt_option_milliseconds, fmt_option_timestamp, fmt_timestamp},
+    output::table::{fmt_option_milliseconds, fmt_option_string, fmt_option_timestamp},
 };
 use chrono::{DateTime, NaiveDateTime, Utc};
 use clap::{Args, Subcommand};
@@ -52,11 +52,14 @@ struct PipelinePullRequest {
 #[derive(Tabled)]
 struct PipelineCiStatus {
     branch: String,
-    pull_request: String,
-    ci_status: String,
-    build_url: String,
-    #[tabled(display_with = "fmt_timestamp")]
-    timestamp: i64,
+    #[tabled(display_with = "fmt_option_string")]
+    pull_request: Option<String>,
+    #[tabled(display_with = "fmt_option_string")]
+    ci_status: Option<String>,
+    #[tabled(display_with = "fmt_option_string")]
+    build_url: Option<String>,
+    #[tabled(display_with = "fmt_option_timestamp")]
+    timestamp: Option<i64>,
 }
 
 struct JobBuild {

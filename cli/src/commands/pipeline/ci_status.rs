@@ -1,5 +1,4 @@
 use log::debug;
-use tabled::Tabled;
 use wukong_sdk::{WKClient, WKConfig};
 
 use crate::{
@@ -81,51 +80,32 @@ pub async fn handle_ci_status(
 
     fetch_loader.finish_and_clear();
 
-    match ci_status_resp {
-        Some(ci_status) => {
-            let pipeline_ci_status = PipelineCiStatus {
+    let table = match ci_status_resp {
+        Some(ci_status) => TableOutput {
+            title: Some("CI Status:".to_string()),
+            header: None,
+            data: vec![PipelineCiStatus {
                 branch,
-                pull_request: ci_status.name,
-                ci_status: ci_status.result,
-                build_url: ci_status.build_url,
-                timestamp: ci_status.timestamp,
-            };
+                pull_request: Some(ci_status.name),
+                ci_status: Some(ci_status.result),
+                build_url: Some(ci_status.build_url),
+                timestamp: Some(ci_status.timestamp),
+            }],
+        },
+        None => TableOutput {
+            title: Some("CI Status:".to_string()),
+            header: None,
+            data: vec![PipelineCiStatus {
+                branch,
+                pull_request: None,
+                ci_status: None,
+                build_url: None,
+                timestamp: None,
+            }],
+        },
+    };
 
-            let table = TableOutput {
-                title: Some("CI Status:".to_string()),
-                header: None,
-                data: vec![pipeline_ci_status],
-            };
-
-            colored_println!("{table}");
-        }
-        None => {
-            #[derive(Tabled)]
-            struct EmptyPipelineStatus<'a> {
-                branch: &'a str,
-                pull_request: &'a str,
-                ci_status: &'a str,
-                build_url: &'a str,
-                timestamp: &'a str,
-            }
-
-            let pipeline_ci_status = EmptyPipelineStatus {
-                branch: &branch,
-                pull_request: "N/A",
-                ci_status: "N/A",
-                build_url: "N/A",
-                timestamp: "N/A",
-            };
-
-            let table = TableOutput {
-                title: Some("CI Status:".to_string()),
-                header: None,
-                data: vec![pipeline_ci_status],
-            };
-
-            colored_println!("{table}");
-        }
-    }
+    colored_println!("{table}");
 
     Ok(true)
 }
