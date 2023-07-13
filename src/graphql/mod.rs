@@ -204,6 +204,20 @@ impl QueryClient {
                 })?;
 
                 // make sure to update the token and expiry time to the updated values
+                let mut headers = header::HeaderMap::new();
+
+                let bearer_token = format!("Bearer {}", new_tokens.id_token);
+                headers.insert(
+                    header::AUTHORIZATION,
+                    header::HeaderValue::from_str(&bearer_token).unwrap(),
+                );
+
+                let client = reqwest::Client::builder()
+                    .default_headers(headers)
+                    .build()
+                    .map_err(<reqwest::Error as Into<APIError>>::into)?;
+
+                self.reqwest_client = client;
                 self.access_token = Some(new_tokens.id_token);
                 self.expiry_time = Some(new_tokens.expiry_time);
             }

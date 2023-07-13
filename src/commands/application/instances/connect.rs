@@ -205,8 +205,7 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
             destroy_progress_bar.set_message("Destroying the livebook instances...");
             let _destroyed = client
                 .destroy_livebook(&application, &namespace, &version)
-                .await
-                .unwrap();
+                .await?;
             destroy_progress_bar.finish_and_clear();
             eprintln!("The session has been terminated.");
             return Ok(false);
@@ -238,7 +237,10 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
         let _destroyed = client
             .destroy_livebook(&application, &namespace, &version)
             .await
-            .unwrap();
+            .map_err(|err| {
+                eprintln!("Failed to destroy the livebook instance.");
+                err
+            })?;
 
         exiting_progress_bar.finish_and_clear();
         eprintln!("Cleanup provisioned resources...✅");
