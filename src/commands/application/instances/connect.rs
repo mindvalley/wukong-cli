@@ -1,6 +1,5 @@
 use crate::{
     commands::{
-        application::{ApplicationNamespace, ApplicationVersion},
         deployment::{DeploymentNamespace, DeploymentVersion},
         Context,
     },
@@ -424,7 +423,7 @@ async fn has_permission(
     version: &str,
 ) -> Result<bool, CliError> {
     let is_authorized = match client
-        .fetch_is_authorized(&application, &namespace, version)
+        .fetch_is_authorized(application, namespace, version)
         .await
     {
         Ok(data) => data.data.unwrap().is_authorized,
@@ -450,7 +449,7 @@ async fn has_permission(
                     ));
                 } else if code == "application_config_not_defined" {
                     return Err(CliError::ApplicationInstanceError(
-                        ApplicationInstanceError::ApplicationNotAvailable {
+                        ApplicationInstanceError::ApplicationNotFound {
                             application: application.to_string(),
                         },
                     ));

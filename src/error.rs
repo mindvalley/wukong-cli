@@ -120,8 +120,6 @@ pub enum DeploymentError {
         version: String,
         application: String,
     },
-    #[error("\"{application}\" is invalid application name.")]
-    ApplicationNotAvailable { application: String },
 }
 
 #[derive(Debug, ThisError)]
@@ -138,7 +136,7 @@ pub enum ApplicationInstanceError {
         application: String,
     },
     #[error("\"{application}\" is not available  in k8s.")]
-    ApplicationNotAvailable { application: String },
+    ApplicationNotFound { application: String },
 }
 
 // Vault Service Error
