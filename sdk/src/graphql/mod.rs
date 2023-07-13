@@ -27,8 +27,9 @@ pub use self::{
 use crate::{
     auth::Auth,
     config::{AuthConfig, Config},
-    error::{APIError, CliError},
+    error::{APIError, WKError},
     telemetry::{self, TelemetryData, TelemetryEvent},
+    WKClient,
 };
 use aion::*;
 use chrono::{DateTime, Local};
@@ -543,5 +544,87 @@ impl GQLClient {
         } else {
             Err(APIError::MissingResponseData)
         }
+    }
+}
+
+impl WKClient {
+    pub async fn fetch_applications(&self) -> Result<applications_query::ResponseData, WKError> {
+        let gql_client = GQLClient::with_authorization(
+            &self
+                .access_token
+                .as_ref()
+                .ok_or(APIError::UnAuthenticated)?,
+        )?;
+
+        gql_client
+            .post_graphql::<ApplicationsQuery, _>(&self.api_url, applications_query::Variables)
+            .await
+            .map_err(|err| err.into())
+    }
+
+    pub async fn fetch_pipelines(
+        &self,
+        application: &str,
+    ) -> Result<pipelines_query::ResponseData, WKError> {
+        let gql_client = GQLClient::with_authorization(
+            &self
+                .access_token
+                .as_ref()
+                .ok_or(APIError::UnAuthenticated)?,
+        )?;
+
+        gql_client
+            .post_graphql::<PipelinesQuery, _>(
+                &self.api_url,
+                pipelines_query::Variables {
+                    application: Some(application.to_string()),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    pub async fn fetch_pipeline(
+        &self,
+        name: &str,
+    ) -> Result<pipeline_query::ResponseData, WKError> {
+        let gql_client = GQLClient::with_authorization(
+            &self
+                .access_token
+                .as_ref()
+                .ok_or(APIError::UnAuthenticated)?,
+        )?;
+
+        gql_client
+            .post_graphql::<PipelineQuery, _>(
+                &self.api_url,
+                pipeline_query::Variables {
+                    name: name.to_string(),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    pub async fn fetch_multi_branch_pipeline(
+        &self,
+        name: &str,
+    ) -> Result<multi_branch_pipeline_query::ResponseData, WKError> {
+        let gql_client = GQLClient::with_authorization(
+            &self
+                .access_token
+                .as_ref()
+                .ok_or(APIError::UnAuthenticated)?,
+        )?;
+
+        gql_client
+            .post_graphql::<MultiBranchPipelineQuery, _>(
+                &self.api_url,
+                multi_branch_pipeline_query::Variables {
+                    name: name.to_string(),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
     }
 }

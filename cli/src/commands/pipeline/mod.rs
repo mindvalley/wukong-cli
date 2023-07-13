@@ -1,8 +1,7 @@
 // pub mod ci_status;
-// pub mod describe;
+pub mod describe;
 pub mod list;
 
-// use self::{ci_status::handle_ci_status, describe::handle_describe, list::handle_list};
 use crate::{
     error::WKCliError,
     output::table::{fmt_option_milliseconds, fmt_option_timestamp, fmt_timestamp},
@@ -13,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::{fmt::Display, str};
 use tabled::Tabled;
 
-use self::list::handle_list;
+use self::{describe::handle_describe, list::handle_list};
 
 use super::Context;
 
@@ -132,7 +131,7 @@ impl Pipeline {
     pub async fn handle_command(&self, context: Context) -> Result<bool, WKCliError> {
         match &self.subcommand {
             PipelineSubcommand::List => handle_list(context).await,
-            PipelineSubcommand::Describe { name } => todo!(),
+            PipelineSubcommand::Describe { name } => handle_describe(context, name).await,
             PipelineSubcommand::CiStatus { repo_url, branch } => todo!(),
             // PipelineSubcommand::List => handle_list(context).await,
             // PipelineSubcommand::Describe { name } => handle_describe(context, name).await,

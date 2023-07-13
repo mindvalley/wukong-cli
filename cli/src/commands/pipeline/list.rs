@@ -20,7 +20,7 @@ pub async fn handle_list(context: Context) -> Result<bool, WKCliError> {
     });
 
     let pipelines_data = wk_client
-        .fetch_pipelines(context.current_application.clone())
+        .fetch_pipelines(&context.current_application)
         .await?
         .pipelines;
 
