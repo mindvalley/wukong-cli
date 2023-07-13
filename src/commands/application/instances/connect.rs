@@ -3,7 +3,7 @@ use crate::{
         deployment::{DeploymentNamespace, DeploymentVersion},
         Context,
     },
-    error::{APIError, CliError, DeploymentError},
+    error::{APIError, CliError, ApplicationInstanceError},
     graphql::{QueryClient, QueryClientBuilder},
     loader::new_spinner_progress_bar,
     output::colored_println,
@@ -422,23 +422,23 @@ async fn has_permission(
                 message: _message,
             } => {
                 if code == "k8s_cluster_namespace_config_not_defined" {
-                    return Err(CliError::DeploymentError(
-                        DeploymentError::NamespaceNotAvailable {
+                    return Err(CliError::ApplicationInstanceError(
+                        ApplicationInstanceError::NamespaceNotAvailable {
                             namespace: namespace.to_string(),
                             application: application.to_string(),
                         },
                     ));
                 } else if code == "k8s_cluster_version_config_not_defined" {
-                    return Err(CliError::DeploymentError(
-                        DeploymentError::VersionNotAvailable {
+                    return Err(CliError::ApplicationInstanceError(
+                        ApplicationInstanceError::VersionNotAvailable {
                             namespace: namespace.to_string(),
                             application: application.to_string(),
                             version: version.to_string(),
                         },
                     ));
                 } else if code == "application_config_not_defined" {
-                    return Err(CliError::DeploymentError(
-                        DeploymentError::ApplicationNotAvailable {
+                    return Err(CliError::ApplicationInstanceError(
+                        ApplicationInstanceError::ApplicationNotAvailable {
                             application: application.to_string(),
                         },
                     ));
