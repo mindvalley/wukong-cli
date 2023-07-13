@@ -31,7 +31,15 @@ pub enum InstancesSubcommand {
         version: ApplicationVersion,
     },
     /// Start the interactive session to connect to the remote Elixir instance.
-    Connect,
+    Connect {
+        /// (optional) The namespace to list the running instances.
+        #[arg(long, value_enum)]
+        namespace: Option<String>,
+
+        /// (optional) The version of the application to filter the returning running instances.
+        #[arg(long, value_enum)]
+        version: Option<String>,
+    },
 }
 
 impl Instances {
@@ -40,7 +48,9 @@ impl Instances {
             InstancesSubcommand::List { namespace, version } => {
                 handle_list(context, &namespace.to_string(), &version.to_string()).await
             }
-            InstancesSubcommand::Connect => handle_connect(context).await,
+            InstancesSubcommand::Connect { namespace, version } => {
+                handle_connect(context, namespace, version).await
+            }
         }
     }
 }

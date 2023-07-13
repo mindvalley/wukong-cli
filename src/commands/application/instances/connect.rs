@@ -1,9 +1,10 @@
 use crate::{
     commands::{
+        application::{ApplicationNamespace, ApplicationVersion},
         deployment::{DeploymentNamespace, DeploymentVersion},
         Context,
     },
-    error::{APIError, CliError, ApplicationInstanceError},
+    error::{APIError, ApplicationInstanceError, CliError},
     graphql::{QueryClient, QueryClientBuilder},
     loader::new_spinner_progress_bar,
     output::colored_println,
@@ -31,7 +32,11 @@ struct KubernetesPod {
     is_livebook: Option<bool>,
 }
 
-pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
+pub async fn handle_connect(
+    context: Context,
+    namespace_arg: &Option<String>,
+    version_arg: &Option<String>,
+) -> Result<bool, CliError> {
     let spinner_style =
         ProgressStyle::with_template("{prefix:.bold.dim} {spinner} {wide_msg}").unwrap();
 
@@ -39,15 +44,22 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
     let current_application = context.state.application.unwrap();
     colored_println!("Current application: {current_application}\n");
 
-    let namespace = match select_deployment_namespace()? {
-        Some(namespace) => namespace,
-        None => return Ok(false),
-    };
+    let mut namespace: String = namespace_arg.clone().unwrap_or_default();
+    let mut version: String = version_arg.clone().unwrap_or_default();
 
-    let version = match select_deployment_version()? {
-        Some(version) => version,
-        None => return Ok(false),
-    };
+    if namespace_arg.is_none() {
+        namespace = match select_deployment_namespace()? {
+            Some(data) => data,
+            None => return Ok(false),
+        };
+    }
+
+    if version_arg.is_none() {
+        version = match select_deployment_version()? {
+            Some(version) => version,
+            None => return Ok(false),
+        };
+    }
 
     let check_permission_progress_bar = new_spinner_progress_bar();
     check_permission_progress_bar.set_style(spinner_style.clone());
