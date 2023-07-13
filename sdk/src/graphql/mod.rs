@@ -517,6 +517,7 @@ impl GQLClient {
     where
         Q: GraphQLQuery,
         U: reqwest::IntoUrl,
+        Q::ResponseData: Debug,
     {
         let body = Q::build_query(variables);
         let res: Response<Q::ResponseData> = self
@@ -527,6 +528,8 @@ impl GQLClient {
             .await?
             .json()
             .await?;
+
+        debug!("GraphQL response: {:?}", res);
 
         if let Some(errors) = res.errors {
             if errors[0].message.to_lowercase().contains("unauthenticated") {
@@ -622,6 +625,30 @@ impl WKClient {
                 &self.api_url,
                 multi_branch_pipeline_query::Variables {
                     name: name.to_string(),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    pub async fn fetch_ci_status(
+        &self,
+        repo_url: &str,
+        branch: &str,
+    ) -> Result<ci_status_query::ResponseData, WKError> {
+        let gql_client = GQLClient::with_authorization(
+            &self
+                .access_token
+                .as_ref()
+                .ok_or(APIError::UnAuthenticated)?,
+        )?;
+
+        gql_client
+            .post_graphql::<CiStatusQuery, _>(
+                &self.api_url,
+                ci_status_query::Variables {
+                    repo_url: repo_url.to_string(),
+                    branch: branch.to_string(),
                 },
             )
             .await

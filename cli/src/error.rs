@@ -10,6 +10,8 @@ pub enum WKCliError {
     Io(#[from] ::std::io::Error),
     #[error(transparent)]
     AuthError(#[from] AuthError),
+    #[error("The application is not recognized for the current command.")]
+    ApplicationConfigNotDefined,
     // #[error(transparent)]
     // Base64(#[from] base64::DecodeError),
     // #[error("Error parsing \"{value}\"")]

@@ -1,4 +1,4 @@
-// pub mod ci_status;
+pub mod ci_status;
 pub mod describe;
 pub mod list;
 
@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::{fmt::Display, str};
 use tabled::Tabled;
 
-use self::{describe::handle_describe, list::handle_list};
+use self::{ci_status::handle_ci_status, describe::handle_describe, list::handle_list};
 
 use super::Context;
 
@@ -132,12 +132,9 @@ impl Pipeline {
         match &self.subcommand {
             PipelineSubcommand::List => handle_list(context).await,
             PipelineSubcommand::Describe { name } => handle_describe(context, name).await,
-            PipelineSubcommand::CiStatus { repo_url, branch } => todo!(),
-            // PipelineSubcommand::List => handle_list(context).await,
-            // PipelineSubcommand::Describe { name } => handle_describe(context, name).await,
-            // PipelineSubcommand::CiStatus { repo_url, branch } => {
-            //     handle_ci_status(context, repo_url, branch).await
-            // }
+            PipelineSubcommand::CiStatus { repo_url, branch } => {
+                handle_ci_status(context, repo_url, branch).await
+            }
         }
     }
 }

@@ -12,7 +12,7 @@ use crate::{
 };
 
 // #[wukong_telemetry(command_event = "pipeline_describe")]
-pub async fn handle_describe(context: Context, name: &str) -> Result<bool, WKCliError> {
+pub async fn handle_describe(_context: Context, name: &str) -> Result<bool, WKCliError> {
     let fetch_loader = new_spinner();
     fetch_loader.set_message("Fetching pipeline data ...");
 
