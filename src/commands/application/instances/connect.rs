@@ -51,7 +51,7 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
 
     let check_permission_progress_bar = new_spinner_progress_bar();
     check_permission_progress_bar.set_style(spinner_style.clone());
-    check_permission_progress_bar.set_prefix("[1/4]");
+    check_permission_progress_bar.set_prefix("[1/2]");
     check_permission_progress_bar
         .set_message("Checking your permission to connect to the remote instance...");
 
@@ -80,7 +80,7 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
 
     let fetch_instance_progress_bar = new_spinner_progress_bar();
     fetch_instance_progress_bar.set_style(spinner_style.clone());
-    fetch_instance_progress_bar.set_prefix("[2/4]");
+    fetch_instance_progress_bar.set_prefix("[2/2]");
     fetch_instance_progress_bar.set_message(format!(
         "Finding the available instances to connect to in the {} version...",
         version.bright_green()
@@ -115,7 +115,7 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
 
     let preparing_progress_bar = new_spinner_progress_bar();
     preparing_progress_bar.set_style(spinner_style.clone());
-    preparing_progress_bar.set_prefix("[3/4]");
+    preparing_progress_bar.set_prefix("[1/2]");
     preparing_progress_bar.set_message("Preparing your remote instance...");
 
     cleanup_previous_livebook_instance(
@@ -199,7 +199,7 @@ pub async fn handle_connect(context: Context) -> Result<bool, CliError> {
 
         let connection_test_progress_bar = new_spinner_progress_bar();
         connection_test_progress_bar.set_style(spinner_style.clone());
-        connection_test_progress_bar.set_prefix("[4/4]");
+        connection_test_progress_bar.set_prefix("[2/2]");
         connection_test_progress_bar
             .set_message("Testing connectivity to your livebook instance...");
 
@@ -434,6 +434,12 @@ async fn has_permission(
                             namespace: namespace.to_string(),
                             application: application.to_string(),
                             version: version.to_string(),
+                        },
+                    ));
+                } else if code == "application_config_not_defined" {
+                    return Err(CliError::DeploymentError(
+                        DeploymentError::ApplicationNotAvailable {
+                            application: application.to_string(),
                         },
                     ));
                 } else {

@@ -118,6 +118,8 @@ pub enum DeploymentError {
         version: String,
         application: String,
     },
+    #[error("\"{application}\" is invalid application name.")]
+    ApplicationNotAvailable { application: String },
 }
 
 // Vault Service Error
