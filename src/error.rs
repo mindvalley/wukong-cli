@@ -135,7 +135,7 @@ pub enum ApplicationInstanceError {
         version: String,
         application: String,
     },
-    #[error("\"{application}\" is not available  in k8s.")]
+    #[error("This application is not available  in k8s.")]
     ApplicationNotFound { application: String },
 }
 
