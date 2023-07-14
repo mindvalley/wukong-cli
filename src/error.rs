@@ -125,18 +125,11 @@ pub enum DeploymentError {
 #[derive(Debug, ThisError)]
 pub enum ApplicationInstanceError {
     #[error("There is no k8s configuration associated with your application.")]
-    NamespaceNotAvailable {
-        namespace: String,
-        application: String,
-    },
+    NamespaceNotAvailable,
     #[error("This version has no associated k8s cluster configuration.")]
-    VersionNotAvailable {
-        namespace: String,
-        version: String,
-        application: String,
-    },
+    VersionNotAvailable { version: String },
     #[error("This application is not available  in k8s.")]
-    ApplicationNotFound { application: String },
+    ApplicationNotFound,
 }
 
 // Vault Service Error

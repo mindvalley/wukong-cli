@@ -434,24 +434,17 @@ async fn has_permission(
             } => {
                 if code == "k8s_cluster_namespace_config_not_defined" {
                     return Err(CliError::ApplicationInstanceError(
-                        ApplicationInstanceError::NamespaceNotAvailable {
-                            namespace: namespace.to_string(),
-                            application: application.to_string(),
-                        },
+                        ApplicationInstanceError::NamespaceNotAvailable,
                     ));
                 } else if code == "k8s_cluster_version_config_not_defined" {
                     return Err(CliError::ApplicationInstanceError(
                         ApplicationInstanceError::VersionNotAvailable {
-                            namespace: namespace.to_string(),
-                            application: application.to_string(),
                             version: version.to_string(),
                         },
                     ));
                 } else if code == "application_config_not_defined" {
                     return Err(CliError::ApplicationInstanceError(
-                        ApplicationInstanceError::ApplicationNotFound {
-                            application: application.to_string(),
-                        },
+                        ApplicationInstanceError::ApplicationNotFound,
                     ));
                 } else {
                     return Err(err.into());
