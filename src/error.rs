@@ -129,7 +129,7 @@ pub enum ApplicationInstanceError {
         namespace: String,
         application: String,
     },
-    #[error("The \"{version}\" version has no associated k8s cluster configuration.")]
+    #[error("This version has no associated k8s cluster configuration.")]
     VersionNotAvailable {
         namespace: String,
         version: String,
