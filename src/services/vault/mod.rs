@@ -63,7 +63,7 @@ impl Vault {
             let remaining_duration = expiry_time.signed_duration_since(current_time);
 
             if remaining_duration < Duration::hours(1) {
-                let mut config_with_path = CLIConfig::get_config_with_path()?;
+                let mut config = CLIConfig::load_from_default_path()?;
 
                 debug!("Extending the token expiration time");
                 let progress_bar = new_spinner_progress_bar();
@@ -83,12 +83,12 @@ impl Vault {
 
                     let expiry_time = self.calculate_expiry_time(data.auth.lease_duration);
 
-                    config_with_path.config.vault = Some(VaultConfig {
-                        api_token: config_with_path.config.vault.unwrap().api_token,
+                    config.vault = Some(VaultConfig {
+                        api_token: config.vault.unwrap().api_token,
                         expiry_time,
                     });
 
-                    config_with_path.config.save(&config_with_path.path)?;
+                    config.save_to_default_path()?;
                 }
 
                 progress_bar.finish_and_clear();
@@ -101,9 +101,9 @@ impl Vault {
     }
 
     pub async fn handle_login(&self) -> Result<VaultConfig, VaultError> {
-        let mut config_with_path = CLIConfig::get_config_with_path()?;
+        let mut config = CLIConfig::load_from_default_path()?;
 
-        let email = match &config_with_path.config.auth {
+        let email = match &config.auth {
             Some(auth_config) => {
                 colored_println!("Login Vault with okta account {}", auth_config.account);
                 auth_config.account.to_string()
@@ -132,19 +132,16 @@ impl Vault {
 
             let expiry_time = self.calculate_expiry_time(data.auth.lease_duration);
 
-            config_with_path.config.vault = Some(VaultConfig {
+            config.vault = Some(VaultConfig {
                 api_token: data.auth.client_token,
                 expiry_time,
             });
 
-            config_with_path.config.save(&config_with_path.path)?;
+            config.save_to_default_path()?;
 
             colored_println!("You are now logged in as {}.\n", email);
 
-            Ok(config_with_path
-                .config
-                .vault
-                .expect("Vault config should be set"))
+            Ok(config.vault.expect("Vault config should be set"))
         } else {
             self.handle_error(response).await?;
             unreachable!()

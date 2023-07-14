@@ -25,23 +25,34 @@ use self::{
     },
 };
 use crate::{
-    error::APIError,
+    auth::Auth,
+    config::{AuthConfig, Config},
+    error::{APIError, CliError},
     telemetry::{self, TelemetryData, TelemetryEvent},
 };
+use aion::*;
+use chrono::{DateTime, Local};
 use graphql_client::{GraphQLQuery, QueryBody, Response};
 use log::debug;
+use openidconnect::RefreshToken;
 use reqwest::header;
 use std::fmt::Debug;
 use std::{thread, time};
 use wukong_telemetry_macro::wukong_telemetry;
 
+// TODO: this will be removed on v2.0
+#[allow(dead_code)]
 #[derive(Debug, Default)]
 pub struct QueryClientBuilder {
-    access_token: Option<String>,
-    sub: Option<String>,
     api_url: String,
+    // authentication
+    access_token: Option<String>,
+    expiry_time: Option<String>,
+    // for telemetry usage
+    sub: Option<String>,
 }
 
+#[allow(dead_code)]
 impl QueryClientBuilder {
     pub fn with_access_token(mut self, access_token: String) -> Self {
         self.access_token = Some(access_token);
@@ -49,13 +60,18 @@ impl QueryClientBuilder {
     }
 
     // for telemetry usage
-    pub fn with_sub(mut self, sub: Option<String>) -> Self {
-        self.sub = sub;
+    pub fn with_sub(mut self, sub: String) -> Self {
+        self.sub = Some(sub);
         self
     }
 
     pub fn with_api_url(mut self, api_url: String) -> Self {
         self.api_url = api_url;
+        self
+    }
+
+    pub fn with_expiry_time(mut self, expiry_time: String) -> Self {
+        self.expiry_time = Some(expiry_time);
         self
     }
 
@@ -78,6 +94,8 @@ impl QueryClientBuilder {
             reqwest_client: client,
             api_url: self.api_url,
             sub: self.sub,
+            expiry_time: self.expiry_time,
+            access_token: self.access_token,
         })
     }
 }
@@ -85,17 +103,51 @@ impl QueryClientBuilder {
 pub struct QueryClient {
     reqwest_client: reqwest::Client,
     api_url: String,
+    // authentication
+    access_token: Option<String>,
+    expiry_time: Option<String>,
     // for telemetry usage
     sub: Option<String>,
 }
 
 impl QueryClient {
+    pub fn from_default_config() -> Result<Self, CliError> {
+        let config = Config::load_from_default_path()?;
+        Self::from_config(&config)
+    }
+
+    pub fn from_config(config: &Config) -> Result<Self, CliError> {
+        let auth_config = config.auth.as_ref().ok_or(CliError::UnAuthenticated)?;
+        let token = auth_config.id_token.clone();
+
+        let mut headers = header::HeaderMap::new();
+
+        let bearer_token = format!("Bearer {}", token);
+        headers.insert(
+            header::AUTHORIZATION,
+            header::HeaderValue::from_str(&bearer_token).unwrap(),
+        );
+
+        let client = reqwest::Client::builder()
+            .default_headers(headers)
+            .build()
+            .map_err(<reqwest::Error as Into<APIError>>::into)?;
+
+        Ok(QueryClient {
+            reqwest_client: client,
+            api_url: config.core.wukong_api_url.clone(),
+            access_token: Some(token),
+            expiry_time: Some(auth_config.expiry_time.clone()),
+            sub: Some(auth_config.subject.clone()),
+        })
+    }
+
     pub fn inner(&self) -> &reqwest::Client {
         &self.reqwest_client
     }
 
     pub async fn call_api<Q>(
-        &self,
+        &mut self,
         variables: Q::Variables,
         handler: impl Fn(
             Response<Q::ResponseData>,
@@ -110,6 +162,66 @@ impl QueryClient {
 
         debug!("url: {:?}", &self.api_url);
         debug!("query: \n{}", body.query);
+
+        // Before calling API, do a token expiry check first
+
+        if let (Some(_token), Some(expiry_time)) = (&self.access_token, &self.expiry_time) {
+            let current_time: DateTime<Local> = Local::now();
+            let expiry = DateTime::parse_from_rfc3339(expiry_time)
+                .unwrap()
+                .with_timezone(&Local);
+            let remaining_duration = expiry.signed_duration_since(current_time);
+
+            if remaining_duration < 5.minutes() {
+                debug!("Access token expired. Refreshing tokens...");
+
+                let mut config = Config::load_from_default_path().map_err(|err| {
+                    debug!("Failed to refresh tokens when getting config: {:?}", err);
+                    err
+                })?;
+                let auth_config = config.auth.as_ref().unwrap();
+
+                let new_tokens = Auth::new(&config.core.okta_client_id)
+                    .refresh_tokens(&RefreshToken::new(auth_config.refresh_token.clone()))
+                    .await
+                    .map_err(|err| {
+                        debug!("Failed to refresh tokens: {:?}", err);
+                        err
+                    })?;
+
+                config.auth = Some(AuthConfig {
+                    account: auth_config.account.clone(),
+                    subject: auth_config.subject.clone(),
+                    id_token: new_tokens.id_token.clone(),
+                    access_token: new_tokens.access_token.clone(),
+                    expiry_time: new_tokens.expiry_time.clone(),
+                    refresh_token: new_tokens.refresh_token,
+                });
+
+                config.save_to_default_path().map_err(|err| {
+                    debug!("Failed to refresh tokens when saving config: {:?}", err);
+                    err
+                })?;
+
+                // make sure to update the token and expiry time to the updated values
+                let mut headers = header::HeaderMap::new();
+
+                let bearer_token = format!("Bearer {}", new_tokens.id_token);
+                headers.insert(
+                    header::AUTHORIZATION,
+                    header::HeaderValue::from_str(&bearer_token).unwrap(),
+                );
+
+                let client = reqwest::Client::builder()
+                    .default_headers(headers)
+                    .build()
+                    .map_err(<reqwest::Error as Into<APIError>>::into)?;
+
+                self.reqwest_client = client;
+                self.access_token = Some(new_tokens.id_token);
+                self.expiry_time = Some(new_tokens.expiry_time);
+            }
+        }
 
         let response: Result<Response<Q::ResponseData>, APIError> =
             self.retry_request::<Q>(body, handler).await;
@@ -179,7 +291,7 @@ impl QueryClient {
 
     #[wukong_telemetry(api_event = "fetch_pipeline_list")]
     pub async fn fetch_pipeline_list(
-        &self,
+        &mut self,
         application: &str,
     ) -> Result<Response<pipelines_query::ResponseData>, APIError> {
         PipelinesQuery::fetch(self, application).await
@@ -187,7 +299,7 @@ impl QueryClient {
 
     #[wukong_telemetry(api_event = "fetch_pipeline")]
     pub async fn fetch_pipeline(
-        &self,
+        &mut self,
         name: &str,
     ) -> Result<Response<pipeline_query::ResponseData>, APIError> {
         PipelineQuery::fetch(self, name).await
@@ -195,7 +307,7 @@ impl QueryClient {
 
     #[wukong_telemetry(api_event = "fetch_multi_branch_pipeline")]
     pub async fn fetch_multi_branch_pipeline(
-        &self,
+        &mut self,
         name: &str,
     ) -> Result<Response<multi_branch_pipeline_query::ResponseData>, APIError> {
         MultiBranchPipelineQuery::fetch(self, name).await
@@ -203,7 +315,7 @@ impl QueryClient {
 
     #[wukong_telemetry(api_event = "fetch_ci_status")]
     pub async fn fetch_ci_status(
-        &self,
+        &mut self,
         repo_url: &str,
         branch: &str,
     ) -> Result<Response<ci_status_query::ResponseData>, APIError> {
@@ -212,14 +324,14 @@ impl QueryClient {
 
     #[wukong_telemetry(api_event = "fetch_application_list")]
     pub async fn fetch_application_list(
-        &self,
+        &mut self,
     ) -> Result<Response<applications_query::ResponseData>, APIError> {
         ApplicationsQuery::fetch(self).await
     }
 
     #[wukong_telemetry(api_event = "fetch_application")]
     pub async fn fetch_application(
-        &self,
+        &mut self,
         name: &str,
     ) -> Result<Response<application_query::ResponseData>, APIError> {
         ApplicationQuery::fetch(self, name).await
@@ -227,7 +339,7 @@ impl QueryClient {
 
     #[wukong_telemetry(api_event = "fetch_application_with_k8s_cluster")]
     pub async fn fetch_application_with_k8s_cluster(
-        &self,
+        &mut self,
         name: &str,
         namespace: &str,
         version: &str,
@@ -237,7 +349,7 @@ impl QueryClient {
 
     #[wukong_telemetry(api_event = "fetch_cd_pipeline_list")]
     pub async fn fetch_cd_pipeline_list(
-        &self,
+        &mut self,
         application: &str,
     ) -> Result<Response<cd_pipelines_query::ResponseData>, APIError> {
         CdPipelinesQuery::fetch(self, application).await
@@ -245,7 +357,7 @@ impl QueryClient {
 
     #[wukong_telemetry(api_event = "fetch_cd_pipeline")]
     pub async fn fetch_cd_pipeline(
-        &self,
+        &mut self,
         application: &str,
         namespace: &str,
         version: &str,
@@ -255,7 +367,7 @@ impl QueryClient {
 
     #[wukong_telemetry(api_event = "fetch_cd_pipeline_for_rollback")]
     pub async fn fetch_cd_pipeline_for_rollback(
-        &self,
+        &mut self,
         application: &str,
         namespace: &str,
         version: &str,
@@ -265,7 +377,7 @@ impl QueryClient {
 
     #[wukong_telemetry(api_event = "execute_cd_pipeline")]
     pub async fn execute_cd_pipeline(
-        &self,
+        &mut self,
         application: &str,
         namespace: &str,
         version: &str,
@@ -287,7 +399,7 @@ impl QueryClient {
 
     #[wukong_telemetry(api_event = "fetch_changelogs")]
     pub async fn fetch_changelogs(
-        &self,
+        &mut self,
         application: &str,
         namespace: &str,
         version: &str,
@@ -298,7 +410,7 @@ impl QueryClient {
 
     #[wukong_telemetry(api_event = "fetch_kubernetes_pods")]
     pub async fn fetch_kubernetes_pods(
-        &self,
+        &mut self,
         application: &str,
         namespace: &str,
         version: &str,
@@ -308,7 +420,7 @@ impl QueryClient {
 
     #[wukong_telemetry(api_event = "fetch_is_authorized")]
     pub async fn fetch_is_authorized(
-        &self,
+        &mut self,
         application: &str,
         namespace: &str,
         version: &str,
@@ -318,7 +430,7 @@ impl QueryClient {
 
     #[wukong_telemetry(api_event = "deploy_livebook")]
     pub async fn deploy_livebook(
-        &self,
+        &mut self,
         application: &str,
         namespace: &str,
         version: &str,
@@ -329,7 +441,7 @@ impl QueryClient {
     }
 
     pub async fn livebook_resource(
-        &self,
+        &mut self,
         application: &str,
         namespace: &str,
         version: &str,
@@ -339,7 +451,7 @@ impl QueryClient {
 
     #[wukong_telemetry(api_event = "destroy_livebook")]
     pub async fn destroy_livebook(
-        &self,
+        &mut self,
         application: &str,
         namespace: &str,
         version: &str,

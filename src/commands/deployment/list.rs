@@ -1,7 +1,7 @@
 use crate::{
     commands::Context,
     error::CliError,
-    graphql::QueryClientBuilder,
+    graphql::QueryClient,
     loader::new_spinner_progress_bar,
     output::table::TableOutput,
     output::{
@@ -68,17 +68,7 @@ pub async fn handle_list(context: Context) -> Result<bool, CliError> {
     let application = context.state.application.unwrap();
 
     // Calling API ...
-    let client = QueryClientBuilder::default()
-        .with_access_token(
-            context
-                .config
-                .auth
-                .ok_or(CliError::UnAuthenticated)?
-                .id_token,
-        )
-        .with_sub(context.state.sub)
-        .with_api_url(context.config.core.wukong_api_url)
-        .build()?;
+    let mut client = QueryClient::from_default_config()?;
 
     let cd_pipelines_data = client
         .fetch_cd_pipeline_list(&application)

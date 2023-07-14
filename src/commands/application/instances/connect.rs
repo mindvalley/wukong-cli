@@ -1,6 +1,5 @@
 use crate::{
-    commands::Context, error::CliError, graphql::QueryClient, graphql::QueryClientBuilder,
-    loader::new_spinner_progress_bar,
+    commands::Context, error::CliError, graphql::QueryClient, loader::new_spinner_progress_bar,
 };
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use log::debug;
@@ -29,21 +28,11 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
     progress_bar.set_prefix("[1/3]");
     progress_bar.set_message("Checking your permission to connect to the remote instance...");
 
-    let auth_config = context
-        .config
-        .auth
-        .as_ref()
-        .ok_or(CliError::UnAuthenticated)?;
-
-    let client = QueryClientBuilder::default()
-        .with_access_token(auth_config.id_token.clone())
-        .with_sub(context.state.sub)
-        .with_api_url(context.config.core.wukong_api_url)
-        .build()?;
+    let mut client = QueryClient::from_default_config()?;
 
     let application = context.state.application.unwrap();
 
-    if !has_permission(&client, &application, &namespace, &version)
+    if !has_permission(&mut client, &application, &namespace, &version)
         .await
         .unwrap()
     {
@@ -216,8 +205,7 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
             destroy_progress_bar.set_message("Destroying the livebook instances...");
             let _destroyed = client
                 .destroy_livebook(&application, &namespace, &version)
-                .await
-                .unwrap();
+                .await?;
             destroy_progress_bar.finish_and_clear();
             eprintln!("The session has been terminated.");
             return Ok(false);
@@ -249,7 +237,10 @@ pub async fn handle_connect(context: Context, name: &str, port: &u16) -> Result<
         let _destroyed = client
             .destroy_livebook(&application, &namespace, &version)
             .await
-            .unwrap();
+            .map_err(|err| {
+                eprintln!("Failed to destroy the livebook instance.");
+                err
+            })?;
 
         exiting_progress_bar.finish_and_clear();
         eprintln!("Cleanup provisioned resources...✅");
@@ -275,7 +266,7 @@ fn parse_name(name: &str) -> Result<(String, String, String), CliError> {
 }
 
 async fn has_permission(
-    client: &QueryClient,
+    client: &mut QueryClient,
     application: &str,
     namespace: &str,
     version: &str,

@@ -12,7 +12,7 @@ pub struct PipelinesQuery;
 
 impl PipelinesQuery {
     pub async fn fetch(
-        client: &QueryClient,
+        client: &mut QueryClient,
         application: &str,
     ) -> Result<Response<pipelines_query::ResponseData>, APIError> {
         let variables = pipelines_query::Variables {
@@ -51,7 +51,7 @@ pub struct PipelineQuery;
 
 impl PipelineQuery {
     pub(crate) async fn fetch(
-        client: &QueryClient,
+        client: &mut QueryClient,
         name: &str,
     ) -> Result<Response<pipeline_query::ResponseData>, APIError> {
         let variables = pipeline_query::Variables {
@@ -88,7 +88,7 @@ pub struct MultiBranchPipelineQuery;
 
 impl MultiBranchPipelineQuery {
     pub async fn fetch(
-        client: &QueryClient,
+        client: &mut QueryClient,
         name: &str,
     ) -> Result<Response<multi_branch_pipeline_query::ResponseData>, APIError> {
         let variables = multi_branch_pipeline_query::Variables {
@@ -125,7 +125,7 @@ pub struct CiStatusQuery;
 
 impl CiStatusQuery {
     pub async fn fetch(
-        client: &QueryClient,
+        client: &mut QueryClient,
         repo_url: &str,
         branch: &str,
     ) -> Result<Response<ci_status_query::ResponseData>, APIError> {
@@ -160,7 +160,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_pipeline_list_success_should_return_pipeline_list() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::default()
+        let mut query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -195,7 +195,7 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = PipelinesQuery::fetch(&query_client, "mv-platform").await;
+        let response = PipelinesQuery::fetch(&mut query_client, "mv-platform").await;
 
         mock.assert();
         assert!(response.is_ok());
@@ -208,7 +208,7 @@ mod test {
     async fn test_fetch_pipeline_list_failed_with_unable_to_get_pipelines_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::default()
+        let mut query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -240,7 +240,7 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = PipelinesQuery::fetch(&query_client, "invalid_application").await;
+        let response = PipelinesQuery::fetch(&mut query_client, "invalid_application").await;
 
         mock.assert();
         assert!(response.is_err());
@@ -260,7 +260,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_pipeline_success_should_return_pipeline() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::default()
+        let mut query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -287,7 +287,8 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = PipelineQuery::fetch(&query_client, "mv-platform-main-branch-build").await;
+        let response =
+            PipelineQuery::fetch(&mut query_client, "mv-platform-main-branch-build").await;
 
         mock.assert();
         assert!(response.is_ok());
@@ -309,7 +310,7 @@ mod test {
     async fn test_fetch_pipeline_failed_with_unable_to_get_pipeline_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::default()
+        let mut query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -341,7 +342,7 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = PipelineQuery::fetch(&query_client, "invalid_name").await;
+        let response = PipelineQuery::fetch(&mut query_client, "invalid_name").await;
 
         mock.assert();
         assert!(response.is_err());
@@ -358,7 +359,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_multi_branch_pipeline_success_should_return_that_pipeline() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::default()
+        let mut query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -405,7 +406,7 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = MultiBranchPipelineQuery::fetch(&query_client, "mv-platform-ci").await;
+        let response = MultiBranchPipelineQuery::fetch(&mut query_client, "mv-platform-ci").await;
 
         mock.assert();
         assert!(response.is_ok());
@@ -434,7 +435,7 @@ mod test {
     async fn test_fetch_multi_branch_pipeline_with_unable_to_get_pipeline_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::default()
+        let mut query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -466,7 +467,7 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = MultiBranchPipelineQuery::fetch(&query_client, "invalid_pipeline").await;
+        let response = MultiBranchPipelineQuery::fetch(&mut query_client, "invalid_pipeline").await;
 
         mock.assert();
         assert!(response.is_err());
@@ -483,7 +484,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_ci_status_success_should_return_ci_status() {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::default()
+        let mut query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -515,7 +516,8 @@ mod test {
         });
 
         let response =
-            CiStatusQuery::fetch(&query_client, "https://repo.com/mv-platform-ci", "main").await;
+            CiStatusQuery::fetch(&mut query_client, "https://repo.com/mv-platform-ci", "main")
+                .await;
 
         mock.assert();
         assert!(response.is_ok());
@@ -539,7 +541,7 @@ mod test {
     async fn test_fetch_ci_status_failed_with_application_not_found_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::default()
+        let mut query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -572,7 +574,7 @@ mod test {
         });
 
         let response =
-            CiStatusQuery::fetch(&query_client, "http://invalid_repo_url.com", "main").await;
+            CiStatusQuery::fetch(&mut query_client, "http://invalid_repo_url.com", "main").await;
 
         mock.assert();
         assert!(response.is_err());
@@ -593,7 +595,7 @@ mod test {
     async fn test_fetch_ci_status_failed_with_no_builds_associated_with_this_branch_error_should_return_ok_response(
     ) {
         let server = MockServer::start();
-        let query_client = QueryClientBuilder::default()
+        let mut query_client = QueryClientBuilder::default()
             .with_access_token("test_access_token".to_string())
             .with_api_url(server.base_url())
             .build()
@@ -628,7 +630,7 @@ mod test {
         });
 
         let response =
-            CiStatusQuery::fetch(&query_client, "http://valid_repo_url.com", "main").await;
+            CiStatusQuery::fetch(&mut query_client, "http://valid_repo_url.com", "main").await;
 
         mock.assert();
         assert!(response.is_ok());

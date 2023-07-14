@@ -17,7 +17,7 @@ use openidconnect::RefreshToken;
 
 use crate::{
     auth::Auth,
-    config::{AuthConfig, Config, CONFIG_FILE},
+    config::{AuthConfig, Config},
     error::CliError,
 };
 
@@ -32,16 +32,12 @@ pub struct State {
 #[derive(Default, Debug)]
 pub struct Context {
     state: State,
-    config: Config,
+    pub config: Config,
 }
 
 impl Context {
     pub async fn from_state(mut state: State) -> Result<Self, CliError> {
-        let config_file = CONFIG_FILE
-            .as_ref()
-            .expect("Unable to identify user's home directory");
-
-        let mut config = Config::load(config_file)?;
+        let mut config = Config::load_from_default_path()?;
 
         let auth_config = config.auth.as_ref().ok_or(CliError::UnAuthenticated)?;
 
@@ -68,9 +64,7 @@ impl Context {
                 refresh_token: new_tokens.refresh_token,
             });
 
-            config
-                .save(config_file)
-                .expect("The token is refreshed but the new config can't be saved.");
+            config.save_to_default_path()?;
         }
 
         if state.application.is_none() {
