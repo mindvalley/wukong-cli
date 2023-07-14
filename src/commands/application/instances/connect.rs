@@ -58,6 +58,8 @@ pub async fn handle_connect(
             Some(data) => data,
             None => return Ok(false),
         };
+    } else {
+        println!("You've selected `{namespace}` as the deployment namespace.\n");
     }
 
     if version_arg.is_none() {
@@ -65,6 +67,8 @@ pub async fn handle_connect(
             Some(version) => version,
             None => return Ok(false),
         };
+    } else {
+        println!("You've selected `{version}` as the deployment version.\n");
     }
 
     let check_permission_progress_bar = new_spinner_progress_bar();
