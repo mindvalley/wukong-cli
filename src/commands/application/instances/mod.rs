@@ -34,11 +34,11 @@ pub enum InstancesSubcommand {
     Connect {
         /// (optional) The namespace to list the running instances.
         #[arg(long, value_enum)]
-        namespace: Option<String>,
+        namespace: Option<ApplicationNamespace>,
 
         /// (optional) The version of the application to filter the returning running instances.
         #[arg(long, value_enum)]
-        version: Option<String>,
+        version: Option<ApplicationVersion>,
     },
 }
 

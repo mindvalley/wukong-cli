@@ -1,5 +1,6 @@
 use crate::{
     commands::{
+        application::{ApplicationNamespace, ApplicationVersion},
         deployment::{DeploymentNamespace, DeploymentVersion},
         Context,
     },
@@ -33,8 +34,8 @@ struct KubernetesPod {
 
 pub async fn handle_connect(
     context: Context,
-    namespace_arg: &Option<String>,
-    version_arg: &Option<String>,
+    namespace_arg: &Option<ApplicationNamespace>,
+    version_arg: &Option<ApplicationVersion>,
 ) -> Result<bool, CliError> {
     let spinner_style =
         ProgressStyle::with_template("{prefix:.bold.dim} {spinner} {wide_msg}").unwrap();
@@ -43,8 +44,14 @@ pub async fn handle_connect(
     let current_application = context.state.application.unwrap();
     colored_println!("Current application: {current_application}\n");
 
-    let mut namespace: String = namespace_arg.clone().unwrap_or_default();
-    let mut version: String = version_arg.clone().unwrap_or_default();
+    let mut namespace: String = match namespace_arg {
+        Some(namespace) => namespace.to_string(),
+        None => "".to_string(),
+    };
+    let mut version: String = match version_arg {
+        Some(version) => version.to_string(),
+        None => "".to_string(),
+    };
 
     if namespace_arg.is_none() {
         namespace = match select_deployment_namespace()? {
