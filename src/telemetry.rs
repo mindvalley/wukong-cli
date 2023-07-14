@@ -6,20 +6,20 @@ use std::{
 
 use chrono::{offset::Utc, SecondsFormat};
 
-#[cfg(all(feature = "prod"))]
+#[cfg(feature = "prod")]
 use once_cell::sync::Lazy;
-#[cfg(all(feature = "prod"))]
+#[cfg(feature = "prod")]
 use reqwest::header;
 
 use serde::{Deserialize, Serialize};
 
-#[cfg(all(feature = "prod"))]
+#[cfg(feature = "prod")]
 const EVENT_THRESHOLD: usize = 20;
 
-#[cfg(all(feature = "prod"))]
+#[cfg(feature = "prod")]
 const HONEYCOMB_API_KEY: &str = env!("WUKONG_HONEYCOMB_API_KEY");
 
-#[cfg(all(feature = "prod"))]
+#[cfg(feature = "prod")]
 const HONEYCOMB_DATASET: &str = "wukong_telemetry_prod";
 
 /// The default path to the wukong telemetry file.
@@ -32,7 +32,7 @@ const HONEYCOMB_DATASET: &str = "wukong_telemetry_prod";
 /// directory, which should not happen under typical OS environments.
 ///
 /// [Lazy]: https://docs.rs/once_cell/latest/once_cell/sync/struct.Lazy.html
-#[cfg(all(feature = "prod"))]
+#[cfg(feature = "prod")]
 pub static TELEMETRY_FILE: Lazy<Option<String>> = Lazy::new(|| {
     dirs::home_dir().map(|mut path| {
         path.extend([".config", "wukong", "telemetry.json"]);
@@ -161,7 +161,7 @@ impl TelemetryData {
     }
 
     pub async fn record_event(&self) {
-        #[cfg(all(feature = "prod"))]
+        #[cfg(feature = "prod")]
         {
             let telemetry_file = TELEMETRY_FILE
                 .as_ref()
@@ -187,7 +187,7 @@ impl TelemetryData {
     }
 }
 
-#[cfg(all(feature = "prod"))]
+#[cfg(feature = "prod")]
 async fn send_event(event_data: Vec<HoneycombEventData>) {
     if let Ok(client) = reqwest::Client::builder().build() {
         let url = format!("https://api.honeycomb.io/1/batch/{}", HONEYCOMB_DATASET);

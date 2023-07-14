@@ -59,7 +59,7 @@ impl VaultClient {
 
     pub fn new() -> Self {
         let client = reqwest::Client::new();
-        #[cfg(all(feature = "prod"))]
+        #[cfg(feature = "prod")]
         let base_url = "https://bunker.mindvalley.dev:8200".to_string();
 
         #[cfg(not(feature = "prod"))]

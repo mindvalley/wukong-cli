@@ -12,9 +12,9 @@ static WUKONG_API_URL: &str = "http://localhost:4000/api";
 #[cfg(not(feature = "prod"))]
 static OKTA_CLIENT_ID: &str = "0oakfxaegyAV5JDD5357";
 
-#[cfg(all(feature = "prod"))]
+#[cfg(feature = "prod")]
 static WUKONG_API_URL: &str = "https://wukong-api-proxy.mindvalley.dev/api";
-#[cfg(all(feature = "prod"))]
+#[cfg(feature = "prod")]
 static OKTA_CLIENT_ID: &str = "0oakfxaegyAV5JDD5357";
 
 /// The default path to the CLI configuration file.
@@ -28,7 +28,7 @@ static OKTA_CLIENT_ID: &str = "0oakfxaegyAV5JDD5357";
 ///
 /// [Lazy]: https://docs.rs/once_cell/latest/once_cell/sync/struct.Lazy.html
 pub static CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
-    #[cfg(all(feature = "prod"))]
+    #[cfg(feature = "prod")]
     return dirs::home_dir().map(|mut path| {
         path.extend([".config", "wukong", "config.toml"]);
         path.to_str().unwrap().to_string()
