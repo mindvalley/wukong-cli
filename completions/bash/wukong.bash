@@ -497,11 +497,11 @@ _wukong() {
             fi
             case "${prev}" in
                 --namespace)
-                    COMPREPLY=($(compgen -f "${cur}"))
+                    COMPREPLY=($(compgen -W "prod staging" -- "${cur}"))
                     return 0
                     ;;
                 --version)
-                    COMPREPLY=($(compgen -f "${cur}"))
+                    COMPREPLY=($(compgen -W "blue green" -- "${cur}"))
                     return 0
                     ;;
                 --application)
