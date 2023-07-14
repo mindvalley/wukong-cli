@@ -59,7 +59,13 @@ pub async fn handle_connect(
             None => return Ok(false),
         };
     } else {
-        println!("You've selected `{namespace}` as the deployment namespace.\n");
+        println!(
+            "{} {} `{}` {}\n",
+            "✔".green(),
+            "Step 1: You've selected".bold(),
+            namespace.green(),
+            "namespace.".bold()
+        );
     }
 
     if version_arg.is_none() {
@@ -68,7 +74,13 @@ pub async fn handle_connect(
             None => return Ok(false),
         };
     } else {
-        println!("You've selected `{version}` as the deployment version.\n");
+        println!(
+            "{} {} `{}` {}\n",
+            "✔".green(),
+            "Step 2: You've selected".bold(),
+            version.green(),
+            "version.".bold()
+        );
     }
 
     let check_permission_progress_bar = new_spinner_progress_bar();
@@ -385,7 +397,7 @@ async fn get_ready_k8s_pods(
 
 fn select_deployment_namespace() -> Result<Option<String>, CliError> {
     let namespace_idx = Select::with_theme(&ColorfulTheme::default())
-        .with_prompt("Please choose the namespace you want to connect to")
+        .with_prompt("Step 1: Please choose the namespace you want to connect to")
         .default(0)
         .items(&[
             DeploymentNamespace::Prod.to_string(),
@@ -407,7 +419,7 @@ fn select_deployment_namespace() -> Result<Option<String>, CliError> {
 
 fn select_deployment_version() -> Result<Option<String>, CliError> {
     let version_idx = Select::with_theme(&ColorfulTheme::default())
-        .with_prompt("Please choose the version you want to connect to")
+        .with_prompt("Step 2: Please choose the version you want to connect to")
         .default(0)
         .items(&[
             DeploymentVersion::Green.to_string(),
