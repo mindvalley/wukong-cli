@@ -15,7 +15,7 @@ mod telemetry;
 mod utils;
 
 use app::App;
-use config::{Config, CONFIG_FILE};
+use config::Config;
 use error::CliError;
 
 pub async fn run() -> Result<bool, CliError> {

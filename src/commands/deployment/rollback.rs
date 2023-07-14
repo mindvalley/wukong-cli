@@ -2,7 +2,7 @@ use super::{DeploymentNamespace, DeploymentVersion};
 use crate::{
     commands::Context,
     error::{CliError, DeploymentError},
-    graphql::QueryClientBuilder,
+    graphql::QueryClient,
     loader::new_spinner_progress_bar,
     output::colored_println,
     telemetry::{self, TelemetryData, TelemetryEvent},
@@ -43,17 +43,7 @@ pub async fn handle_rollback(
     progress_bar.set_message("Checking available CD pipelines ...");
 
     // Calling API ...
-    let client = QueryClientBuilder::default()
-        .with_access_token(
-            context
-                .config
-                .auth
-                .ok_or(CliError::UnAuthenticated)?
-                .id_token,
-        )
-        .with_sub(context.state.sub)
-        .with_api_url(context.config.core.wukong_api_url)
-        .build()?;
+    let mut client = QueryClient::from_default_config()?;
 
     let cd_pipelines_resp = client
         .fetch_cd_pipeline_list(&current_application)

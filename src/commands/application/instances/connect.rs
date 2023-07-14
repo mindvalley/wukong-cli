@@ -5,7 +5,7 @@ use crate::{
         Context,
     },
     error::{APIError, ApplicationInstanceError, CliError},
-    graphql::{QueryClient, QueryClientBuilder},
+    graphql::QueryClient,
     loader::new_spinner_progress_bar,
     output::colored_println,
 };
@@ -41,8 +41,8 @@ pub async fn handle_connect(
         ProgressStyle::with_template("{prefix:.bold.dim} {spinner} {wide_msg}").unwrap();
 
     // SAFETY: This is safe to unwrap because we know that `application` is not None.
-    let current_application = context.state.application.unwrap();
-    colored_println!("Current application: {current_application}\n");
+    let application = context.state.application.clone().unwrap();
+    colored_println!("Current application: {application}\n");
 
     let mut namespace: String = match namespace_arg {
         Some(namespace) => namespace.to_string(),
@@ -89,20 +89,13 @@ pub async fn handle_connect(
     check_permission_progress_bar
         .set_message("Checking your permission to connect to the remote instance...");
 
-    let auth_config = context
-        .config
-        .auth
-        .as_ref()
-        .ok_or(CliError::UnAuthenticated)?;
+    let mut client = QueryClient::from_default_config()?;
 
-    let client = QueryClientBuilder::default()
-        .with_access_token(auth_config.id_token.clone())
-        .with_sub(context.state.sub)
-        .with_api_url(context.config.core.wukong_api_url)
-        .build()?;
-
-    // Check for permission:
-    if !has_permission(&client, &current_application, &namespace, &version).await? {
+    if !has_permission(&mut client, &application, &namespace, &version)
+        .await
+        .unwrap()
+    {
+        check_permission_progress_bar.finish_and_clear();
         eprintln!("You don't have permission to connect to this instance.");
         eprintln!("Please check with your team manager to get approval first.");
 
@@ -120,7 +113,7 @@ pub async fn handle_connect(
         version.bright_green()
     ));
 
-    let k8s_pods = get_ready_k8s_pods(&client, &current_application, &namespace, &version).await?;
+    let k8s_pods = get_ready_k8s_pods(&mut client, &application, &namespace, &version).await?;
 
     debug!("Found {} pods", k8s_pods.len());
     if k8s_pods.is_empty() {
@@ -153,8 +146,8 @@ pub async fn handle_connect(
     preparing_progress_bar.set_message("Preparing your remote instance...");
 
     cleanup_previous_livebook_instance(
-        &client,
-        &current_application,
+        &mut client,
+        &application,
         &namespace,
         &version,
         preparing_progress_bar.clone(),
@@ -164,13 +157,7 @@ pub async fn handle_connect(
     debug!("Deploying a new livebook instance.");
 
     let new_instance = client
-        .deploy_livebook(
-            &current_application,
-            &namespace,
-            &version,
-            &instance_name,
-            8080,
-        )
+        .deploy_livebook(&application, &namespace, &version, &instance_name, 8080)
         .await?
         .data
         .unwrap()
@@ -194,7 +181,7 @@ pub async fn handle_connect(
         for i in 0..MAX_CHECKING_RETRY {
             sleep(std::time::Duration::from_secs(RETRY_WAIT_TIME_IN_SEC)).await;
             let livebook_resource = client
-                .livebook_resource(&current_application, &namespace, &version)
+                .livebook_resource(&application, &namespace, &version)
                 .await?
                 .data
                 .unwrap()
@@ -266,9 +253,8 @@ pub async fn handle_connect(
             let destroy_progress_bar = new_spinner_progress_bar();
             destroy_progress_bar.set_message("Destroying the livebook instances...");
             let _destroyed = client
-                .destroy_livebook(&current_application, &namespace, &version)
-                .await
-                .unwrap();
+                .destroy_livebook(&application, &namespace, &version)
+                .await?;
             destroy_progress_bar.finish_and_clear();
             eprintln!("The session has been terminated.");
             return Ok(false);
@@ -298,9 +284,12 @@ pub async fn handle_connect(
         exiting_progress_bar.set_message("You're exiting from your remote session. Cleaning up...");
 
         let _destroyed = client
-            .destroy_livebook(&current_application, &namespace, &version)
+            .destroy_livebook(&application, &namespace, &version)
             .await
-            .unwrap();
+            .map_err(|err| {
+                eprintln!("Failed to destroy the livebook instance.");
+                err
+            })?;
 
         exiting_progress_bar.finish_and_clear();
         eprintln!("Cleanup provisioned resources...✅");
@@ -310,7 +299,7 @@ pub async fn handle_connect(
 }
 
 async fn cleanup_previous_livebook_instance(
-    client: &QueryClient,
+    client: &mut QueryClient,
     application: &str,
     namespace: &str,
     version: &str,
@@ -331,7 +320,7 @@ async fn cleanup_previous_livebook_instance(
 
         debug!("Destroying the existing livebook instance.");
         match client
-            .destroy_livebook(application, namespace, version)
+            .destroy_livebook(&application, &namespace, &version)
             .await
         {
             Ok(_) => {}
@@ -369,7 +358,7 @@ async fn cleanup_previous_livebook_instance(
 }
 
 async fn get_ready_k8s_pods(
-    client: &QueryClient,
+    client: &mut QueryClient,
     application: &str,
     namespace: &str,
     version: &str,
@@ -440,7 +429,7 @@ fn select_deployment_version() -> Result<Option<String>, CliError> {
 }
 
 async fn has_permission(
-    client: &QueryClient,
+    client: &mut QueryClient,
     application: &str,
     namespace: &str,
     version: &str,
