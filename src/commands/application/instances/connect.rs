@@ -320,7 +320,7 @@ async fn cleanup_previous_livebook_instance(
 
         debug!("Destroying the existing livebook instance.");
         match client
-            .destroy_livebook(&application, &namespace, &version)
+            .destroy_livebook(application, namespace, version)
             .await
         {
             Ok(_) => {}
