@@ -78,7 +78,7 @@ pub fn fmt_timestamp(o: &i64) -> String {
         }
     }
 
-    #[cfg(all(feature = "prod"))]
+    #[cfg(feature = "prod")]
     {
         // prod will also use Local timezone
         let dt = DateTime::<Utc>::from_utc(naive, Utc).with_timezone(&Local);
@@ -124,7 +124,7 @@ pub fn fmt_human_timestamp(o: &i64) -> String {
         }
     }
 
-    #[cfg(all(feature = "prod"))]
+    #[cfg(feature = "prod")]
     {
         // prod will also use Local timezone
         let dt = DateTime::<Utc>::from_utc(naive, Utc).with_timezone(&Local);

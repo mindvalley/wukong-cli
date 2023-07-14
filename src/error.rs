@@ -32,6 +32,8 @@ pub enum CliError {
     #[error(transparent)]
     DeploymentError(#[from] DeploymentError),
     #[error(transparent)]
+    ApplicationInstanceError(#[from] ApplicationInstanceError),
+    #[error(transparent)]
     VaultError(#[from] VaultError),
     #[error(transparent)]
     DevConfigError(#[from] DevConfigError),
@@ -125,6 +127,16 @@ pub enum DeploymentError {
     },
 }
 
+#[derive(Debug, ThisError)]
+pub enum ApplicationInstanceError {
+    #[error("There is no k8s configuration associated with your application.")]
+    NamespaceNotAvailable,
+    #[error("This version has no associated k8s cluster configuration.")]
+    VersionNotAvailable { version: String },
+    #[error("This application is not available  in k8s.")]
+    ApplicationNotFound,
+}
+
 // Vault Service Error
 #[derive(Debug, ThisError)]
 pub enum VaultError {
@@ -214,6 +226,19 @@ If none of the above steps work for you, please contact the following people on 
                 ),
                 _ => None,
             },
+             CliError::ApplicationInstanceError(error) => match error {
+                ApplicationInstanceError::VersionNotAvailable { version, .. } => Some(
+                    format!(
+                    "You can try to check the following:
+    * Whether your application is supporting this {version} version. 
+    * Contact Wukong dev team to check if there is any k8s configuration enabled for this version. "
+                )),
+                ApplicationInstanceError::NamespaceNotAvailable { .. } => Some(
+                    "You may want to contact Wukong dev team to check if there is any k8s configuration for your application.".to_string()
+                ),
+                _ => None,
+            },
+
             CliError::DevConfigError(error) => match error {
                 DevConfigError::ConfigSecretNotFound=> Some(
                     "Run \"wukong config dev pull\" to pull the latest dev config.\n".to_string()

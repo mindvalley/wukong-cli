@@ -119,7 +119,7 @@ impl GCloudClient {
         };
 
         // ~/.config/wukong/
-        #[cfg(all(feature = "prod"))]
+        #[cfg(feature = "prod")]
         let config_dir = dirs::home_dir()
             .map(|mut path| {
                 path.extend([".config", "wukong"]);
