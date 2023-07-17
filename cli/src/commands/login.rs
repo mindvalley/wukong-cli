@@ -109,3 +109,4 @@ async fn login_and_create_config(mut config: Config) -> Result<Config, WKCliErro
 
     Ok(config)
 }
+

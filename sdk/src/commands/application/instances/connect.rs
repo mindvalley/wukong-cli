@@ -304,7 +304,7 @@ async fn cleanup_previous_livebook_instance(
     namespace: &str,
     version: &str,
     preparing_progress_bar: indicatif::ProgressBar,
-) -> Result<(), CliError> {
+) -> Result<(), WKError> {
     let livebook_resource = client
         .livebook_resource(application, namespace, version)
         .await
@@ -349,7 +349,7 @@ async fn cleanup_previous_livebook_instance(
             }
 
             if i == MAX_CHECKING_RETRY - 1 {
-                return Err(CliError::Timeout);
+                return Err(WKError::Timeout);
             }
         }
     }
@@ -362,7 +362,7 @@ async fn get_ready_k8s_pods(
     application: &str,
     namespace: &str,
     version: &str,
-) -> Result<Vec<KubernetesPod>, CliError> {
+) -> Result<Vec<KubernetesPod>, WKError> {
     let k8s_pods = client
         .fetch_kubernetes_pods(application, namespace, version)
         .await?
@@ -384,7 +384,7 @@ async fn get_ready_k8s_pods(
     Ok(ready_pods)
 }
 
-fn select_deployment_namespace() -> Result<Option<String>, CliError> {
+fn select_deployment_namespace() -> Result<Option<String>, WKError> {
     let namespace_idx = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Step 1: Please choose the namespace you want to connect to")
         .default(0)
@@ -406,7 +406,7 @@ fn select_deployment_namespace() -> Result<Option<String>, CliError> {
     Ok(Some(namespace))
 }
 
-fn select_deployment_version() -> Result<Option<String>, CliError> {
+fn select_deployment_version() -> Result<Option<String>, WKError> {
     let version_idx = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Step 2: Please choose the version you want to connect to")
         .default(0)
@@ -433,7 +433,7 @@ async fn has_permission(
     application: &str,
     namespace: &str,
     version: &str,
-) -> Result<bool, CliError> {
+) -> Result<bool, WKError> {
     let is_authorized = match client
         .fetch_is_authorized(application, namespace, version)
         .await
@@ -445,17 +445,17 @@ async fn has_permission(
                 message: _message,
             } => {
                 if code == "k8s_cluster_namespace_config_not_defined" {
-                    return Err(CliError::ApplicationInstanceError(
+                    return Err(WKError::ApplicationInstanceError(
                         ApplicationInstanceError::NamespaceNotAvailable,
                     ));
                 } else if code == "k8s_cluster_version_config_not_defined" {
-                    return Err(CliError::ApplicationInstanceError(
+                    return Err(WKError::ApplicationInstanceError(
                         ApplicationInstanceError::VersionNotAvailable {
                             version: version.to_string(),
                         },
                     ));
                 } else if code == "application_config_not_defined" {
-                    return Err(CliError::ApplicationInstanceError(
+                    return Err(WKError::ApplicationInstanceError(
                         ApplicationInstanceError::ApplicationNotFound,
                     ));
                 } else {

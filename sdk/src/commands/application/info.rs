@@ -1,6 +1,6 @@
 use crate::{
     commands::Context,
-    error::CliError,
+    error::WKError,
     graphql::QueryClient,
     telemetry::{self, TelemetryData, TelemetryEvent},
 };

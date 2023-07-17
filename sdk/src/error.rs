@@ -228,7 +228,7 @@ If none of the above steps work for you, please contact the following people on 
                 ),
                 _ => None,
             },
-             CliError::ApplicationInstanceError(error) => match error {
+             WKError::ApplicationInstanceError(error) => match error {
                 ApplicationInstanceError::VersionNotAvailable { version, .. } => Some(
                     format!(
                     "You can try to check the following:
@@ -240,8 +240,7 @@ If none of the above steps work for you, please contact the following people on 
                 ),
                 _ => None,
             },
-
-            CliError::DevConfigError(error) => match error {
+            WKError::DevConfigError(error) => match error {
                 DevConfigError::ConfigSecretNotFound=> Some(
                     "Run \"wukong config dev pull\" to pull the latest dev config.\n".to_string()
                ),

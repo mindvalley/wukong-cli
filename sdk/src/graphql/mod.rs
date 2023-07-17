@@ -112,13 +112,13 @@ pub struct QueryClient {
 }
 
 impl QueryClient {
-    pub fn from_default_config() -> Result<Self, CliError> {
+    pub fn from_default_config() -> Result<Self, WKError> {
         let config = Config::load_from_default_path()?;
         Self::from_config(&config)
     }
 
-    pub fn from_config(config: &Config) -> Result<Self, CliError> {
-        let auth_config = config.auth.as_ref().ok_or(CliError::UnAuthenticated)?;
+    pub fn from_config(config: &Config) -> Result<Self, WKError> {
+        let auth_config = config.auth.as_ref().ok_or(WKError::UnAuthenticated)?;
         let token = auth_config.id_token.clone();
 
         let mut headers = header::HeaderMap::new();
