@@ -1,5 +1,5 @@
 use log::debug;
-use wukong_sdk::{WKClient, WKConfig};
+use wukong_sdk::WKClient;
 
 use crate::{
     commands::{pipeline::PipelineCiStatus, Context},
@@ -7,6 +7,7 @@ use crate::{
     error::WKCliError,
     loader::new_spinner,
     output::{colored_println, table::TableOutput},
+    utils::wukong_sdk::FromWKCliConfig,
 };
 use std::process::Command as ProcessCommand;
 
@@ -54,10 +55,7 @@ pub async fn handle_ci_status(
     fetch_loader.set_message("Fetching ci status ...");
 
     let config = Config::load_from_default_path()?;
-    let wk_client = WKClient::new(WKConfig {
-        api_url: config.core.wukong_api_url,
-        access_token: config.auth.map(|auth| auth.id_token),
-    });
+    let wk_client = WKClient::from_cli_config(&config);
 
     let ci_status_resp = wk_client
         .fetch_ci_status(&repo_url, &branch)

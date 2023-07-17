@@ -4,8 +4,9 @@ use crate::{
     error::WKCliError,
     loader::new_spinner,
     output::{colored_println, table::TableOutput},
+    utils::wukong_sdk::FromWKCliConfig,
 };
-use wukong_sdk::{graphql::pipelines_query::PipelinesQueryPipelines, WKClient, WKConfig};
+use wukong_sdk::{graphql::pipelines_query::PipelinesQueryPipelines, WKClient};
 
 // #[wukong_telemetry(command_event = "pipeline_list")]
 pub async fn handle_list(context: Context) -> Result<bool, WKCliError> {
@@ -13,11 +14,7 @@ pub async fn handle_list(context: Context) -> Result<bool, WKCliError> {
     fetch_loader.set_message("Fetching pipelines list ...");
 
     let config = Config::load_from_default_path()?;
-    // Calling API ...
-    let wk_client = WKClient::new(WKConfig {
-        api_url: config.core.wukong_api_url,
-        access_token: config.auth.map(|auth| auth.id_token),
-    });
+    let wk_client = WKClient::from_cli_config(&config);
 
     let pipelines_data = wk_client
         .fetch_pipelines(&context.current_application)

@@ -5115,6 +5115,7 @@ name = "wukong"
 version = "1.0.1"
 dependencies = [
  "aion",
+ "base64 0.21.2",
  "chrono",
  "chrono-tz",
  "clap 4.3.12",
@@ -5122,6 +5123,7 @@ dependencies = [
  "clap_complete",
  "dialoguer",
  "dirs 5.0.1",
+ "edit",
  "human-panic",
  "indicatif",
  "log",

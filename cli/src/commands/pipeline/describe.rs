@@ -1,4 +1,4 @@
-use wukong_sdk::{graphql::pipeline_query::PipelineQueryPipeline, WKClient, WKConfig};
+use wukong_sdk::{graphql::pipeline_query::PipelineQueryPipeline, WKClient};
 
 use crate::{
     commands::{
@@ -9,6 +9,7 @@ use crate::{
     error::WKCliError,
     loader::new_spinner,
     output::{colored_println, table::TableOutput},
+    utils::wukong_sdk::FromWKCliConfig,
 };
 
 // #[wukong_telemetry(command_event = "pipeline_describe")]
@@ -17,10 +18,7 @@ pub async fn handle_describe(_context: Context, name: &str) -> Result<bool, WKCl
     fetch_loader.set_message("Fetching pipeline data ...");
 
     let config = Config::load_from_default_path()?;
-    let wk_client = WKClient::new(WKConfig {
-        api_url: config.core.wukong_api_url,
-        access_token: config.auth.map(|auth| auth.id_token),
-    });
+    let wk_client = WKClient::from_cli_config(&config);
 
     let pipeline = wk_client.fetch_pipeline(name).await?.pipeline;
 

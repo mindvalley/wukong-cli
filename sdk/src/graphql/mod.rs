@@ -537,7 +537,7 @@ impl GQLClient {
             } else {
                 return Err(APIError::ResponseError {
                     code: errors[0].message.clone(),
-                    message: "".to_string(),
+                    message: errors[0].message.to_string(),
                 });
             }
         }
@@ -653,5 +653,196 @@ impl WKClient {
             )
             .await
             .map_err(|err| err.into())
+    }
+
+    pub async fn fetch_cd_pipelines(
+        &self,
+        application: &str,
+    ) -> Result<cd_pipelines_query::ResponseData, WKError> {
+        let gql_client = GQLClient::with_authorization(
+            &self
+                .access_token
+                .as_ref()
+                .ok_or(APIError::UnAuthenticated)?,
+        )?;
+
+        gql_client
+            .post_graphql::<CdPipelinesQuery, _>(
+                &self.api_url,
+                cd_pipelines_query::Variables {
+                    application: application.to_string(),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    pub async fn fetch_cd_pipeline(
+        &self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<cd_pipeline_query::ResponseData, WKError> {
+        let gql_client = GQLClient::with_authorization(
+            &self
+                .access_token
+                .as_ref()
+                .ok_or(APIError::UnAuthenticated)?,
+        )?;
+
+        gql_client
+            .post_graphql::<CdPipelineQuery, _>(
+                &self.api_url,
+                cd_pipeline_query::Variables {
+                    application: application.to_string(),
+                    namespace: namespace.to_string(),
+                    version: version.to_string(),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    pub async fn fetch_changelogs(
+        &self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+        build_artifact_name: &str,
+    ) -> Result<changelogs_query::ResponseData, WKError> {
+        let gql_client = GQLClient::with_authorization(
+            &self
+                .access_token
+                .as_ref()
+                .ok_or(APIError::UnAuthenticated)?,
+        )?;
+
+        gql_client
+            .post_graphql::<ChangelogsQuery, _>(
+                &self.api_url,
+                changelogs_query::Variables {
+                    application: application.to_string(),
+                    namespace: namespace.to_string(),
+                    version: version.to_string(),
+                    build_artifact_name: build_artifact_name.to_string(),
+                },
+            )
+            .await
+            .map_err(|err| match &err {
+                APIError::ResponseError { code: _, message } => match message.as_str() {
+                    "application_not_found" => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: format!("Application `{application}` not found."),
+                    }
+                    .into(),
+                    "unable_to_determine_changelog" => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: format!(
+                            "Unable to determine the changelog for {build_artifact_name}."
+                        ),
+                    }
+                    .into(),
+                    "comparing_same_build" => APIError::ChangelogComparingSameBuild.into(),
+                    _ => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: format!("{err}"),
+                    }
+                    .into(),
+                },
+                _ => err.into(),
+            })
+    }
+
+    pub async fn deploy_cd_pipeline_build(
+        &self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+        build_artifact_name: &str,
+        changelogs: Option<String>,
+        send_to_slack: bool,
+    ) -> Result<execute_cd_pipeline::ResponseData, WKError> {
+        let gql_client = GQLClient::with_authorization(
+            &self
+                .access_token
+                .as_ref()
+                .ok_or(APIError::UnAuthenticated)?,
+        )?;
+
+        gql_client
+            .post_graphql::<ExecuteCdPipeline, _>(
+                &self.api_url,
+                execute_cd_pipeline::Variables {
+                    application: application.to_string(),
+                    build_number: 0,
+                    build_artifact_name: Some(build_artifact_name.to_string()),
+                    namespace: namespace.to_string(),
+                    version: version.to_string(),
+                    changelogs,
+                    send_to_slack,
+                },
+            )
+            .await
+            .map_err(|err| match &err {
+                APIError::ResponseError { code: _, message } => match message.as_str() {
+                    "application_not_found" => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: format!("Application `{application}` not found."),
+                    }.into(),
+                    "deploy_for_this_build_is_currently_running" => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: "Cannot submit this deployment request, since there is another running deployment with the same arguments is running on Spinnaker.\nYou can wait a few minutes and submit the deployment again.".to_string()
+                    }.into(),
+                    _ => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: format!("{err}"),
+                    }
+                    .into(),
+                },
+                _ => err.into(),
+            })
+    }
+
+    pub async fn fetch_preview_cd_pipeline_build(
+        &self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<cd_pipeline_for_rollback_query::ResponseData, WKError> {
+        let gql_client = GQLClient::with_authorization(
+            &self
+                .access_token
+                .as_ref()
+                .ok_or(APIError::UnAuthenticated)?,
+        )?;
+
+        gql_client
+            .post_graphql::<CdPipelineForRollbackQuery, _>(
+                &self.api_url,
+                cd_pipeline_for_rollback_query::Variables {
+                    application: application.to_string(),
+                    namespace: namespace.to_string(),
+                    version: version.to_string(),
+                },
+            )
+            .await
+            .map_err(|err| match &err {
+                APIError::ResponseError { code: _, message } => match message.as_str() {
+                    "application_not_found" => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: format!("Application `{application}` not found."),
+                    }.into(),
+                    "deploy_for_this_build_is_currently_running" => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: "Cannot submit this deployment request, since there is another running deployment with the same arguments is running on Spinnaker.\nYou can wait a few minutes and submit the deployment again.".to_string()
+                    }.into(),
+                    _ => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: format!("{err}"),
+                    }
+                    .into(),
+                },
+                _ => err.into(),
+            })
     }
 }
