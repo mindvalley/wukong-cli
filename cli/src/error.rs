@@ -42,6 +42,20 @@ pub enum WKCliError {
     GCloudError(#[from] GCloudError),
     #[error(transparent)]
     ExtractError(#[from] ExtractError),
+    #[error(transparent)]
+    ApplicationInstanceError(#[from] ApplicationInstanceError),
+    #[error("Operation timeout")]
+    Timeout,
+}
+
+#[derive(Debug, ThisError)]
+pub enum ApplicationInstanceError {
+    #[error("There is no k8s configuration associated with your application.")]
+    NamespaceNotAvailable,
+    #[error("This version has no associated k8s cluster configuration.")]
+    VersionNotAvailable { version: String },
+    #[error("This application is not available in k8s.")]
+    ApplicationNotFound,
 }
 
 // #[derive(Debug, ThisError)]

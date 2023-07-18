@@ -9,7 +9,6 @@ use wukong_telemetry_macro::wukong_telemetry;
 
 #[wukong_telemetry(command_event = "application_info")]
 pub async fn handle_info(context: Context) -> Result<bool, WKError> {
-    // Calling API ...
     let mut client = QueryClient::from_default_config()?;
 
     let application_resp = client

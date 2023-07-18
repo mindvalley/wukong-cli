@@ -59,6 +59,7 @@ pub async fn handle_login() -> Result<bool, WKCliError> {
                     });
 
                     refresh_token_loader.finish_and_clear();
+                    colored_println!("You are logged in as: {}.\n", login_selections[selection]);
 
                     current_config
                 }
@@ -109,4 +110,3 @@ async fn login_and_create_config(mut config: Config) -> Result<Config, WKCliErro
 
     Ok(config)
 }
-

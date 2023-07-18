@@ -9,6 +9,7 @@ use crate::{
     error::WKCliError,
 };
 
+mod application;
 mod config;
 mod deployment;
 mod init;
@@ -65,8 +66,8 @@ impl LogLevel for ErrorLevel {
 pub enum CommandGroup {
     /// Initialize Wukong's configurations
     Init,
-    // /// This command group contains the commands to interact with an application’s configurations
-    // Application(application::Application),
+    /// This command group contains the commands to interact with an application’s configurations
+    Application(application::Application),
     /// This command group contains the commands to view & interact with an application’s pipeline
     Pipeline(pipeline::Pipeline),
     // /// This command group contains the commands to view and interact with the
@@ -104,7 +105,7 @@ impl ClapApp {
             CommandGroup::Init => handle_init().await,
             // CommandGroup::Completion { shell } => handle_completion(*shell),
             CommandGroup::Login => handle_login().await,
-            // CommandGroup::Application(application) => application.handle_command(state).await,
+            CommandGroup::Application(application) => application.handle_command(context).await,
             CommandGroup::Pipeline(pipeline) => pipeline.handle_command(context).await,
             CommandGroup::Deployment(deployment) => deployment.handle_command(context).await,
             CommandGroup::Config(config) => config.handle_command(),

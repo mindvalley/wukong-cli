@@ -135,7 +135,7 @@ pub enum ApplicationInstanceError {
     NamespaceNotAvailable,
     #[error("This version has no associated k8s cluster configuration.")]
     VersionNotAvailable { version: String },
-    #[error("This application is not available  in k8s.")]
+    #[error("This application is not available in k8s.")]
     ApplicationNotFound,
 }
 

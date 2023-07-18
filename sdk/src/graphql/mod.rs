@@ -565,6 +565,28 @@ impl WKClient {
             .map_err(|err| err.into())
     }
 
+    pub async fn fetch_application(
+        &self,
+        name: &str,
+    ) -> Result<application_query::ResponseData, WKError> {
+        let gql_client = GQLClient::with_authorization(
+            &self
+                .access_token
+                .as_ref()
+                .ok_or(APIError::UnAuthenticated)?,
+        )?;
+
+        gql_client
+            .post_graphql::<ApplicationQuery, _>(
+                &self.api_url,
+                application_query::Variables {
+                    name: name.to_string(),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
     pub async fn fetch_pipelines(
         &self,
         application: &str,
@@ -917,5 +939,139 @@ impl WKClient {
                 },
                 _ => err.into(),
             })
+    }
+
+    pub async fn fetch_is_authorized(
+        &self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<is_authorized_query::ResponseData, WKError> {
+        let gql_client = GQLClient::with_authorization(
+            &self
+                .access_token
+                .as_ref()
+                .ok_or(APIError::UnAuthenticated)?,
+        )?;
+
+        gql_client
+            .post_graphql::<IsAuthorizedQuery, _>(
+                &self.api_url,
+                is_authorized_query::Variables {
+                    application: application.to_string(),
+                    namespace: namespace.to_string(),
+                    version: version.to_string(),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    pub async fn fetch_kubernetes_pods(
+        &self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<kubernetes_pods_query::ResponseData, WKError> {
+        let gql_client = GQLClient::with_authorization(
+            &self
+                .access_token
+                .as_ref()
+                .ok_or(APIError::UnAuthenticated)?,
+        )?;
+
+        gql_client
+            .post_graphql::<KubernetesPodsQuery, _>(
+                &self.api_url,
+                kubernetes_pods_query::Variables {
+                    application: application.to_string(),
+                    namespace: namespace.to_string(),
+                    version: version.to_string(),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    pub async fn check_livebook_resource(
+        &self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<livebook_resource_query::ResponseData, WKError> {
+        let gql_client = GQLClient::with_authorization(
+            &self
+                .access_token
+                .as_ref()
+                .ok_or(APIError::UnAuthenticated)?,
+        )?;
+
+        gql_client
+            .post_graphql::<LivebookResourceQuery, _>(
+                &self.api_url,
+                livebook_resource_query::Variables {
+                    application: application.to_string(),
+                    namespace: namespace.to_string(),
+                    version: version.to_string(),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    pub async fn deploy_livebook(
+        &mut self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+        name: &str,
+        port: i64,
+    ) -> Result<deploy_livebook::ResponseData, WKError> {
+        let gql_client = GQLClient::with_authorization(
+            &self
+                .access_token
+                .as_ref()
+                .ok_or(APIError::UnAuthenticated)?,
+        )?;
+
+        gql_client
+            .post_graphql::<DeployLivebook, _>(
+                &self.api_url,
+                deploy_livebook::Variables {
+                    application: application.to_string(),
+                    namespace: namespace.to_string(),
+                    version: version.to_string(),
+                    name: name.to_string(),
+                    port,
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    pub async fn destroy_livebook(
+        &self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<destroy_livebook::ResponseData, WKError> {
+        let gql_client = GQLClient::with_authorization(
+            &self
+                .access_token
+                .as_ref()
+                .ok_or(APIError::UnAuthenticated)?,
+        )?;
+
+        gql_client
+            .post_graphql::<DestroyLivebook, _>(
+                &self.api_url,
+                destroy_livebook::Variables {
+                    application: application.to_string(),
+                    namespace: namespace.to_string(),
+                    version: version.to_string(),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
     }
 }

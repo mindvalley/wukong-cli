@@ -5131,6 +5131,7 @@ dependencies = [
  "openidconnect 3.3.0",
  "owo-colors",
  "regex",
+ "reqwest",
  "serde",
  "tabled",
  "thiserror",
