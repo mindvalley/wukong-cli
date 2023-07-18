@@ -584,7 +584,23 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| err.into())
+            .map_err(|err| match &err {
+                APIError::ResponseError { code: _, message } => match message.as_str() {
+                    "unable_to_get_pipelines" => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: format!(
+                            "Unable to get pipelines for application `{application}`."
+                        ),
+                    }
+                    .into(),
+                    _ => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: format!("{err}"),
+                    }
+                    .into(),
+                },
+                _ => err.into(),
+            })
     }
 
     pub async fn fetch_pipeline(
@@ -606,7 +622,21 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| err.into())
+            .map_err(|err| match &err {
+                APIError::ResponseError { code: _, message } => match message.as_str() {
+                    "unable_to_get_pipeline" => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: format!("Unable to get pipeline `{name}`."),
+                    }
+                    .into(),
+                    _ => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: format!("{err}"),
+                    }
+                    .into(),
+                },
+                _ => err.into(),
+            })
     }
 
     pub async fn fetch_multi_branch_pipeline(
@@ -628,9 +658,24 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| err.into())
+            .map_err(|err| match &err {
+                APIError::ResponseError { code: _, message } => match message.as_str() {
+                    "unable_to_get_pipeline" => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: format!("Unable to get pipeline `{name}`."),
+                    }
+                    .into(),
+                    _ => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: format!("{err}"),
+                    }
+                    .into(),
+                },
+                _ => err.into(),
+            })
     }
 
+    // TODO: Error handling
     pub async fn fetch_ci_status(
         &self,
         repo_url: &str,
@@ -674,7 +719,21 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| err.into())
+            .map_err(|err| match &err {
+                APIError::ResponseError { code: _, message } => match message.as_str() {
+                    "application_not_found" => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: format!("Application `{application}` not found."),
+                    }
+                    .into(),
+                    _ => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: format!("{err}"),
+                    }
+                    .into(),
+                },
+                _ => err.into(),
+            })
     }
 
     pub async fn fetch_cd_pipeline(
@@ -700,7 +759,21 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| err.into())
+            .map_err(|err| match &err {
+                APIError::ResponseError { code: _, message } => match message.as_str() {
+                    "application_not_found" => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: format!("Application `{application}` not found."),
+                    }
+                    .into(),
+                    _ => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: format!("{err}"),
+                    }
+                    .into(),
+                },
+                _ => err.into(),
+            })
     }
 
     pub async fn fetch_changelogs(
