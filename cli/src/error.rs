@@ -20,12 +20,12 @@ pub enum WKCliError {
     RefreshTokenExpired,
     // #[error(transparent)]
     // Base64(#[from] base64::DecodeError),
-    // #[error("Error parsing \"{value}\"")]
-    // ChronoParseError {
-    //     value: String,
-    //     #[source]
-    //     source: chrono::ParseError,
-    // },
+    #[error("Error parsing \"{value}\"")]
+    ChronoParseError {
+        value: String,
+        #[source]
+        source: chrono::ParseError,
+    },
     #[error("Invalid input: \"{value}\"")]
     InvalidInput { value: String },
     #[error(transparent)]

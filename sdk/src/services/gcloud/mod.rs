@@ -22,12 +22,104 @@ use chrono::Duration;
 use google::logging::v2::{
     logging_service_v2_client::LoggingServiceV2Client, ListLogEntriesRequest,
 };
-use std::{future::Future, pin::Pin};
+use std::{fmt::Display, future::Future, pin::Pin};
 use tonic::{metadata::MetadataValue, transport::Channel, Request};
 use yup_oauth2::{
     authenticator_delegate::{DefaultInstalledFlowDelegate, InstalledFlowDelegate},
     ApplicationSecret, InstalledFlowAuthenticator, InstalledFlowReturnMethod,
 };
+
+use self::google::logging::v2::{log_entry, LogEntry};
+
+impl Display for LogEntry {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "time={} ", self.timestamp.as_ref().unwrap())?;
+        write!(f, "level={} ", self.severity().as_str_name())?;
+
+        match self.payload.as_ref().unwrap() {
+            log_entry::Payload::ProtoPayload(payload) => {
+                write!(f, "proto_payload={:?}", payload)?;
+            }
+            log_entry::Payload::TextPayload(payload) => {
+                write!(f, "text_payload={:?}", payload)?;
+            }
+            log_entry::Payload::JsonPayload(payload) => {
+                let keys = payload.fields.keys().collect::<Vec<_>>();
+                let value = keys
+                    .iter()
+                    .filter(|k| payload.fields.get(**k).is_some())
+                    .map(|k| {
+                        format!(
+                            "{}: {}",
+                            k,
+                            display_prost_type_value_kind(
+                                payload.fields.get(*k).unwrap().kind.clone()
+                            )
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join(", ");
+
+                write!(f, "json_payload={{ {value} }}")?;
+            }
+        };
+        writeln!(f)?;
+        Ok(())
+    }
+}
+
+fn display_prost_type_value_kind(kind: Option<prost_types::value::Kind>) -> String {
+    if let Some(kind) = kind {
+        match kind {
+            prost_types::value::Kind::NullValue(_) => "null".to_string(),
+            prost_types::value::Kind::NumberValue(value) => {
+                format!("{value}")
+            }
+            prost_types::value::Kind::StringValue(value) => format!("{:?}", value)
+                .replace('\"', r#"""#)
+                .replace("\\n", "")
+                .replace('\\', "")
+                .split(' ')
+                .filter(|s| !s.is_empty())
+                .collect::<Vec<_>>()
+                .join(" "),
+            prost_types::value::Kind::BoolValue(value) => {
+                format!("{value}")
+            }
+            prost_types::value::Kind::StructValue(value) => {
+                let keys = value.fields.keys().collect::<Vec<_>>();
+                let value = keys
+                    .iter()
+                    .filter(|k| value.fields.get(**k).is_some())
+                    .map(|k| {
+                        format!(
+                            "{}: {}",
+                            k,
+                            display_prost_type_value_kind(
+                                value.fields.get(*k).unwrap().kind.clone()
+                            )
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join(", ");
+
+                format!("{{ {value} }}")
+            }
+            prost_types::value::Kind::ListValue(value) => {
+                let values = value
+                    .values
+                    .iter()
+                    .map(|v| display_prost_type_value_kind(v.kind.clone()))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+
+                format!("[{values}]")
+            }
+        }
+    } else {
+        "null".to_string()
+    }
+}
 
 /// async function to be pinned by the `present_user_url` method of the trait
 /// we use the existing `DefaultInstalledFlowDelegate::present_user_url` method as a fallback for

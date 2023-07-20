@@ -1,3 +1,8 @@
+use super::{ApplicationNamespace, ApplicationVersion};
+use crate::{
+    auth, commands::Context, config::Config, error::WKCliError, loader::new_spinner,
+    utils::wukong_sdk::FromWKCliConfig,
+};
 use aion::*;
 use chrono::{DateTime, Local};
 use log::{debug, trace};
@@ -5,114 +10,7 @@ use once_cell::sync::Lazy;
 use openidconnect::url;
 use owo_colors::OwoColorize;
 use regex::Regex;
-use std::fmt::Display;
-use wukong_sdk::{
-    services::gcloud::{google::logging::v2::LogEntry, LogEntriesOptions},
-    WKClient,
-};
-
-use crate::{
-    auth, commands::Context, config::Config, error::WKCliError, loader::new_spinner,
-    utils::wukong_sdk::FromWKCliConfig,
-};
-
-use super::{ApplicationNamespace, ApplicationVersion};
-
-impl Display for LogEntry {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "time={} ", self.timestamp.as_ref().unwrap())?;
-        write!(f, "level={} ", self.severity().as_str_name())?;
-
-        match self.payload.as_ref().unwrap() {
-            crate::services::gcloud::google::logging::v2::log_entry::Payload::ProtoPayload(
-                payload,
-            ) => {
-                write!(f, "proto_payload={:?}", payload)?;
-            }
-            crate::services::gcloud::google::logging::v2::log_entry::Payload::TextPayload(
-                payload,
-            ) => {
-                write!(f, "text_payload={:?}", payload)?;
-            }
-            crate::services::gcloud::google::logging::v2::log_entry::Payload::JsonPayload(
-                payload,
-            ) => {
-                let keys = payload.fields.keys().collect::<Vec<_>>();
-                let value = keys
-                    .iter()
-                    .filter(|k| payload.fields.get(**k).is_some())
-                    .map(|k| {
-                        format!(
-                            "{}: {}",
-                            k,
-                            display_prost_type_value_kind(
-                                payload.fields.get(*k).unwrap().kind.clone()
-                            )
-                        )
-                    })
-                    .collect::<Vec<_>>()
-                    .join(", ");
-
-                write!(f, "json_payload={{ {value} }}")?;
-            }
-        };
-        writeln!(f)?;
-        Ok(())
-    }
-}
-
-fn display_prost_type_value_kind(kind: Option<prost_types::value::Kind>) -> String {
-    if let Some(kind) = kind {
-        match kind {
-            prost_types::value::Kind::NullValue(_) => "null".to_string(),
-            prost_types::value::Kind::NumberValue(value) => {
-                format!("{value}")
-            }
-            prost_types::value::Kind::StringValue(value) => format!("{:?}", value)
-                .replace('\"', r#"""#)
-                .replace("\\n", "")
-                .replace('\\', "")
-                .split(' ')
-                .filter(|s| !s.is_empty())
-                .collect::<Vec<_>>()
-                .join(" "),
-            prost_types::value::Kind::BoolValue(value) => {
-                format!("{value}")
-            }
-            prost_types::value::Kind::StructValue(value) => {
-                let keys = value.fields.keys().collect::<Vec<_>>();
-                let value = keys
-                    .iter()
-                    .filter(|k| value.fields.get(**k).is_some())
-                    .map(|k| {
-                        format!(
-                            "{}: {}",
-                            k,
-                            display_prost_type_value_kind(
-                                value.fields.get(*k).unwrap().kind.clone()
-                            )
-                        )
-                    })
-                    .collect::<Vec<_>>()
-                    .join(", ");
-
-                format!("{{ {value} }}")
-            }
-            prost_types::value::Kind::ListValue(value) => {
-                let values = value
-                    .values
-                    .iter()
-                    .map(|v| display_prost_type_value_kind(v.kind.clone()))
-                    .collect::<Vec<_>>()
-                    .join(", ");
-
-                format!("[{values}]")
-            }
-        }
-    } else {
-        "null".to_string()
-    }
-}
+use wukong_sdk::{services::gcloud::LogEntriesOptions, WKClient};
 
 #[allow(clippy::too_many_arguments)]
 pub async fn handle_logs(
@@ -131,8 +29,8 @@ pub async fn handle_logs(
     auth_loader.set_message("Checking if you're authenticated to Google Cloud...");
 
     let config = Config::load_from_default_path()?;
-    let gcloud_access_token = auth::google_cloud::get_token_or_login();
-    let wk_client = WKClient::from_cli_config(&config);
+    let gcloud_access_token = auth::google_cloud::get_token_or_login().await;
+    let mut wk_client = WKClient::from_cli_config(&config);
 
     auth_loader.finish_and_clear();
 
@@ -378,7 +276,7 @@ fn get_timestamp(timestamp: &String) -> Result<String, WKCliError> {
             } else {
                 debug!("Error parsing timestamp: {}", &timestamp);
                 debug!("Error message: {:?}", e);
-                Err(WKError::ChronoParseError {
+                Err(WKCliError::ChronoParseError {
                     value: timestamp.clone(),
                     source: e,
                 })
