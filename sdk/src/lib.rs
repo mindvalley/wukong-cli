@@ -105,9 +105,6 @@ impl OktaAuthenticatorBuilder {
     }
 }
 
-pub struct GoogleAuthenticator {}
-pub struct VaultAuthenticator {}
-
 pub struct WKConfig {
     pub api_url: String,
     pub access_token: Option<String>,

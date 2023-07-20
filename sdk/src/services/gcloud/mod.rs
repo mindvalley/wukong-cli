@@ -14,7 +14,10 @@ pub mod google {
     pub mod rpc;
 }
 
-use crate::error::GCloudError;
+use crate::{
+    error::{GCloudError, WKError},
+    WKClient,
+};
 use chrono::Duration;
 use google::logging::v2::{
     logging_service_v2_client::LoggingServiceV2Client, ListLogEntriesRequest,
@@ -97,78 +100,81 @@ pub struct GCloudClient {
 }
 
 impl GCloudClient {
-    const GOOGLE_CLIENT_ID: &'static str =
-        "16448589901-ccrhj03hhg6adn9uv8vi2trnpmd62k6n.apps.googleusercontent.com";
-    const GOOGLE_CLIENT_SECRET: &'static str = "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";
-    const TOKEN_URI: &'static str = "https://oauth2.googleapis.com/token";
-    const AUTH_URI: &'static str = "https://accounts.google.com/o/oauth2/auth";
-    const REDIRECT_URI: &'static str = "http://127.0.0.1/8855";
-    const AUTH_PROVIDER_X509_CERT_URL: &'static str = "https://www.googleapis.com/oauth2/v1/certs";
-
-    pub async fn new() -> Self {
-        let secret = ApplicationSecret {
-            client_id: Self::GOOGLE_CLIENT_ID.to_string(),
-            client_secret: Self::GOOGLE_CLIENT_SECRET.to_string(),
-            token_uri: Self::TOKEN_URI.to_string(),
-            auth_uri: Self::AUTH_URI.to_string(),
-            redirect_uris: vec![Self::REDIRECT_URI.to_string()],
-            project_id: None,
-            client_email: None,
-            auth_provider_x509_cert_url: Some(Self::AUTH_PROVIDER_X509_CERT_URL.to_string()),
-            client_x509_cert_url: None,
-        };
-
-        // ~/.config/wukong/
-        #[cfg(feature = "prod")]
-        let config_dir = dirs::home_dir()
-            .map(|mut path| {
-                path.extend([".config", "wukong"]);
-                path.to_str().unwrap().to_string()
-            })
-            .expect("wukong config path is invalid");
-
-        #[cfg(not(feature = "prod"))]
-        let config_dir = {
-            match std::env::var("WUKONG_DEV_GCLOUD_FILE") {
-                Ok(config) => config,
-                Err(_) => dirs::home_dir()
-                    .map(|mut path| {
-                        path.extend([".config", "wukong", "dev"]);
-                        path.to_str().unwrap().to_string()
-                    })
-                    .expect("wukong dev config path is invalid"),
-            }
-        };
-
-        let client = hyper::Client::builder().build(
-            hyper_rustls::HttpsConnectorBuilder::new()
-                .with_native_roots()
-                .https_only()
-                .enable_http1()
-                .enable_http2()
-                .build(),
-        );
-
-        let authenticator = InstalledFlowAuthenticator::with_client(
-            secret,
-            InstalledFlowReturnMethod::HTTPPortRedirect(8855),
-            client,
-        )
-        .persist_tokens_to_disk(format!("{}/gcloud_logging", config_dir))
-        .flow_delegate(Box::new(InstalledFlowBrowserDelegate))
-        .build()
-        .await
-        .unwrap();
-
-        let access_token = authenticator
-            .token(&["https://www.googleapis.com/auth/logging.read"])
-            .await
-            .unwrap();
-
-        Self {
-            access_token: access_token.token().unwrap().to_string(),
-        }
+    pub fn new(access_token: String) -> Self {
+        Self { access_token }
     }
+    // const GOOGLE_CLIENT_ID: &'static str =
+    //     "16448589901-ccrhj03hhg6adn9uv8vi2trnpmd62k6n.apps.googleusercontent.com";
+    // const GOOGLE_CLIENT_SECRET: &'static str = "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";
+    // const TOKEN_URI: &'static str = "https://oauth2.googleapis.com/token";
+    // const AUTH_URI: &'static str = "https://accounts.google.com/o/oauth2/auth";
+    // const REDIRECT_URI: &'static str = "http://127.0.0.1/8855";
+    // const AUTH_PROVIDER_X509_CERT_URL: &'static str = "https://www.googleapis.com/oauth2/v1/certs";
+
+    // pub async fn new() -> Self {
+    //     let secret = ApplicationSecret {
+    //         client_id: Self::GOOGLE_CLIENT_ID.to_string(),
+    //         client_secret: Self::GOOGLE_CLIENT_SECRET.to_string(),
+    //         token_uri: Self::TOKEN_URI.to_string(),
+    //         auth_uri: Self::AUTH_URI.to_string(),
+    //         redirect_uris: vec![Self::REDIRECT_URI.to_string()],
+    //         project_id: None,
+    //         client_email: None,
+    //         auth_provider_x509_cert_url: Some(Self::AUTH_PROVIDER_X509_CERT_URL.to_string()),
+    //         client_x509_cert_url: None,
+    //     };
+    //
+    //     // ~/.config/wukong/
+    //     #[cfg(feature = "prod")]
+    //     let config_dir = dirs::home_dir()
+    //         .map(|mut path| {
+    //             path.extend([".config", "wukong"]);
+    //             path.to_str().unwrap().to_string()
+    //         })
+    //         .expect("wukong config path is invalid");
+    //
+    //     #[cfg(not(feature = "prod"))]
+    //     let config_dir = {
+    //         match std::env::var("WUKONG_DEV_GCLOUD_FILE") {
+    //             Ok(config) => config,
+    //             Err(_) => dirs::home_dir()
+    //                 .map(|mut path| {
+    //                     path.extend([".config", "wukong", "dev"]);
+    //                     path.to_str().unwrap().to_string()
+    //                 })
+    //                 .expect("wukong dev config path is invalid"),
+    //         }
+    //     };
+    //
+    //     let client = hyper::Client::builder().build(
+    //         hyper_rustls::HttpsConnectorBuilder::new()
+    //             .with_native_roots()
+    //             .https_only()
+    //             .enable_http1()
+    //             .enable_http2()
+    //             .build(),
+    //     );
+    //
+    //     let authenticator = InstalledFlowAuthenticator::with_client(
+    //         secret,
+    //         InstalledFlowReturnMethod::HTTPPortRedirect(8855),
+    //         client,
+    //     )
+    //     .persist_tokens_to_disk(format!("{}/gcloud_logging", config_dir))
+    //     .flow_delegate(Box::new(InstalledFlowBrowserDelegate))
+    //     .build()
+    //     .await
+    //     .unwrap();
+    //
+    //     let access_token = authenticator
+    //         .token(&["https://www.googleapis.com/auth/logging.read"])
+    //         .await
+    //         .unwrap();
+    //
+    //     Self {
+    //         access_token: access_token.token().unwrap().to_string(),
+    //     }
+    // }
 
     pub async fn get_log_entries(
         &self,
@@ -203,5 +209,19 @@ impl GCloudClient {
             entries: Some(response.entries),
             next_page_token: Some(response.next_page_token),
         })
+    }
+}
+
+impl WKClient {
+    pub async fn get_gcloud_log_entries(
+        &self,
+        optons: LogEntriesOptions,
+        access_token: String,
+    ) -> Result<LogEntries, WKError> {
+        let google_client = GCloudClient::new(access_token);
+        google_client
+            .get_log_entries(optons)
+            .await
+            .map_err(|err| err.into())
     }
 }

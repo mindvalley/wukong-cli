@@ -5138,7 +5138,9 @@ dependencies = [
  "time-humanize",
  "tokio",
  "toml",
+ "webbrowser",
  "wukong-sdk",
+ "yup-oauth2",
 ]
 
 [[package]]

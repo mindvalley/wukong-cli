@@ -1,8 +1,8 @@
 pub mod info;
 pub mod instances;
-mod logs;
+// mod logs;
 
-use self::logs::handle_logs;
+// use self::logs::handle_logs;
 use super::{Context, State};
 use crate::error::WKError;
 use clap::{command, Args, Subcommand, ValueEnum};
@@ -101,11 +101,12 @@ impl Application {
                 exclude,
                 url_mode,
             } => {
-                handle_logs(
-                    context, namespace, version, errors, since, until, limit, include, exclude,
-                    url_mode,
-                )
-                .await
+                todo!();
+                // handle_logs(
+                //     context, namespace, version, errors, since, until, limit, include, exclude,
+                //     url_mode,
+                // )
+                // .await
             }
             ApplicationSubcommand::Instances(instances) => instances.handle_command(context).await,
         }
