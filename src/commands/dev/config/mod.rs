@@ -4,7 +4,10 @@ mod pull;
 mod push;
 mod utils;
 
-use crate::{commands::Context, error::CliError};
+use crate::{
+    commands::{Context, State},
+    error::CliError,
+};
 use clap::{Args, Subcommand};
 use diff::handle_config_diff;
 use lint::handle_config_lint;
@@ -39,11 +42,20 @@ pub enum ConfigSubcommand {
 }
 
 impl Config {
-    pub async fn handle_command(&self, context: Context) -> Result<bool, CliError> {
+    pub async fn handle_command(&self, state: State) -> Result<bool, CliError> {
         match &self.subcommand {
-            ConfigSubcommand::Push => handle_config_push(context).await,
-            ConfigSubcommand::Diff => handle_config_diff(context).await,
-            ConfigSubcommand::Pull { path } => handle_config_pull(context, path).await,
+            ConfigSubcommand::Push => {
+                let context = Context::from_state(state).await?;
+                handle_config_push(context).await
+            }
+            ConfigSubcommand::Diff => {
+                let context = Context::from_state(state).await?;
+                handle_config_diff(context).await
+            }
+            ConfigSubcommand::Pull { path } => {
+                let context = Context::from_state(state).await?;
+                handle_config_pull(context, path).await
+            }
             ConfigSubcommand::Lint { path } => handle_config_lint(path),
         }
     }
