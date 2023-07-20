@@ -1074,4 +1074,30 @@ impl WKClient {
             .await
             .map_err(|err| err.into())
     }
+
+    pub async fn fetch_application_with_k8s_cluster(
+        &mut self,
+        name: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<application_with_k8s_cluster_query::ResponseData, WKError> {
+        let gql_client = GQLClient::with_authorization(
+            &self
+                .access_token
+                .as_ref()
+                .ok_or(APIError::UnAuthenticated)?,
+        )?;
+
+        gql_client
+            .post_graphql::<ApplicationWithK8sClusterQuery, _>(
+                &self.api_url,
+                application_with_k8s_cluster_query::Variables {
+                    name: name.to_string(),
+                    namespace: namespace.to_string(),
+                    version: version.to_string(),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
 }

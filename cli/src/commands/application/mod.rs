@@ -1,6 +1,6 @@
-pub mod info;
-pub mod instances;
-// mod logs;
+mod info;
+mod instances;
+mod logs;
 //
 // use self::logs::handle_logs;
 // use super::{Context, State};

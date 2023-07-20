@@ -12,6 +12,12 @@ pub enum WKCliError {
     AuthError(#[from] AuthError),
     #[error("The application is not recognized for the current command.")]
     ApplicationConfigNotDefined,
+    #[error("You are un-authenticated.")]
+    UnAuthenticated,
+    #[error("You are un-initialised.")]
+    UnInitialised,
+    #[error("The refresh token is expired. You have to login again.")]
+    RefreshTokenExpired,
     // #[error(transparent)]
     // Base64(#[from] base64::DecodeError),
     // #[error("Error parsing \"{value}\"")]
@@ -28,10 +34,6 @@ pub enum WKCliError {
     ConfigError(#[from] ConfigError),
     #[error("Failed to discover OpenID Provider")]
     OpenIDDiscoveryError,
-    #[error("You are un-authenticated.")]
-    UnAuthenticated,
-    #[error("You are un-initialised.")]
-    UnInitialised,
     #[error(transparent)]
     DeploymentError(#[from] DeploymentError),
     #[error(transparent)]

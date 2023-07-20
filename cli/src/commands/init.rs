@@ -1,17 +1,14 @@
 use crate::{
-    // auth::Auth,
-    config::{AuthConfig, Config},
+    auth,
+    config::Config,
     error::{ConfigError, WKCliError},
-    // graphql::QueryClientBuilder,
     loader::new_spinner,
     output::colored_println,
-    // output::colored_println,
-    utils::{compare_with_current_time, wukong_sdk::FromWKCliConfig},
+    utils::wukong_sdk::FromWKCliConfig,
 };
-use aion::*;
 use dialoguer::{theme::ColorfulTheme, Select};
 use log::debug;
-use wukong_sdk::{error::AuthError, OktaAuthenticator, WKClient};
+use wukong_sdk::WKClient;
 
 pub async fn handle_init() -> Result<bool, WKCliError> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
@@ -42,34 +39,16 @@ pub async fn handle_init() -> Result<bool, WKCliError> {
     } else {
         // check access token expiry
         let mut current_config = config.clone();
-        let auth_config = current_config.auth.as_ref().unwrap();
 
-        let remaining_duration = compare_with_current_time(&auth_config.expiry_time);
-        if remaining_duration < 5.minutes() {
+        if auth::okta::need_tokens_refresh(&config)? {
             debug!("Access token expired. Refreshing tokens...");
 
             let refresh_token_loader = new_spinner();
             refresh_token_loader.set_message("Refreshing tokens...");
 
-            let okta_authenticator = OktaAuthenticator::builder()
-                .with_okta_id(&config.core.okta_client_id)
-                .with_callback_url("http://localhost:6758/login/callback")
-                .build();
-
-            let updated_config = match okta_authenticator
-                .refresh_tokens(auth_config.refresh_token.clone())
-                .await
-            {
+            let updated_config = match auth::okta::refresh_tokens(&config).await {
                 Ok(new_tokens) => {
-                    current_config.auth = Some(AuthConfig {
-                        account: auth_config.account.clone(),
-                        subject: auth_config.subject.clone(),
-                        id_token: new_tokens.id_token.clone(),
-                        access_token: new_tokens.access_token.clone(),
-                        expiry_time: new_tokens.expiry_time,
-                        refresh_token: new_tokens.refresh_token,
-                    });
-
+                    current_config.auth = Some(new_tokens.into());
                     refresh_token_loader.finish_and_clear();
 
                     current_config
@@ -77,7 +56,7 @@ pub async fn handle_init() -> Result<bool, WKCliError> {
                 Err(err) => {
                     refresh_token_loader.finish_and_clear();
                     match err {
-                        AuthError::RefreshTokenExpired { .. } => {
+                        WKCliError::RefreshTokenExpired { .. } => {
                             eprintln!("The refresh token is expired. You have to login again.");
                             login_and_create_config(current_config).await?
                         }
@@ -146,25 +125,12 @@ Some things to try next:
 }
 
 async fn login_and_create_config(mut config: Config) -> Result<Config, WKCliError> {
-    // let auth_info = Auth::new(&config.core.okta_client_id).login().await?;
-    let okta_authenticator = OktaAuthenticator::builder()
-        .with_okta_id(&config.core.okta_client_id)
-        .with_callback_url("http://localhost:6758/login/callback")
-        .build();
-    let auth_info = okta_authenticator.login().await?;
+    let auth_info = auth::okta::login(&config).await?;
+    let acc = auth_info.account.clone();
 
-    // we don't really care about the exisiting config (id_token, refresh_token, account)
-    // if the user choose to log in with a new account
-    config.auth = Some(AuthConfig {
-        account: auth_info.account.clone(),
-        subject: auth_info.subject.clone(),
-        id_token: auth_info.id_token,
-        access_token: auth_info.access_token,
-        expiry_time: auth_info.expiry_time,
-        refresh_token: auth_info.refresh_token,
-    });
+    config.auth = Some(auth_info.into());
 
-    colored_println!("You are logged in as: {}.\n", auth_info.account);
+    colored_println!("You are logged in as: {acc}.\n");
 
     Ok(config)
 }

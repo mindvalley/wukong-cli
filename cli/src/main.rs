@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 mod app;
+mod auth;
 mod commands;
 mod config;
 mod error;
