@@ -5,6 +5,7 @@ use crate::{
     graphql::QueryClient,
     loader::new_spinner_progress_bar,
     services::gcloud::{google::logging::v2::LogEntry, GCloudClient, LogEntriesOptions},
+    telemetry::{self, TelemetryData, TelemetryEvent},
 };
 use aion::*;
 use chrono::{DateTime, Local};
@@ -13,6 +14,7 @@ use once_cell::sync::Lazy;
 use owo_colors::OwoColorize;
 use regex::Regex;
 use std::fmt::Display;
+use wukong_telemetry_macro::wukong_telemetry;
 
 impl Display for LogEntry {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -110,7 +112,7 @@ fn display_prost_type_value_kind(kind: Option<prost_types::value::Kind>) -> Stri
     }
 }
 
-#[allow(clippy::too_many_arguments)]
+#[wukong_telemetry(command_event = "application_logs")]
 pub async fn handle_logs(
     context: Context,
     namespace: &ApplicationNamespace,

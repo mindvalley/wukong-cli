@@ -1,17 +1,21 @@
+use crate::commands::Context;
 use crate::error::{CliError, DevConfigError};
 use crate::loader::new_spinner_progress_bar;
 use crate::services::vault::Vault;
+use crate::telemetry::{self, TelemetryData, TelemetryEvent};
 use crate::utils::line::Line;
 use dialoguer::console::{style, Style};
 use owo_colors::OwoColorize;
 use similar::{ChangeTag, TextDiff};
+use wukong_telemetry_macro::wukong_telemetry;
 
 use super::utils::{
     extract_secret_infos, get_local_config_path, get_secret_config_files, get_updated_configs,
     make_path_relative,
 };
 
-pub async fn handle_config_diff() -> Result<bool, CliError> {
+#[wukong_telemetry(command_event = "dev_config_diff")]
+pub async fn handle_config_diff(context: Context) -> Result<bool, CliError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("🔍 Finding config with annotation");
 

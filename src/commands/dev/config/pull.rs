@@ -1,15 +1,19 @@
 use crate::commands::dev::config::utils::get_local_config_path;
+use crate::commands::Context;
 use crate::services::vault::client::FetchSecretsData;
+use crate::telemetry::{self, TelemetryData, TelemetryEvent};
 use crate::{error::CliError, services::vault::Vault};
 use log::debug;
 use owo_colors::OwoColorize;
 use std::collections::HashMap;
 use std::io::{prelude::*, ErrorKind};
 use std::{env::current_dir, fs::File, path::Path};
+use wukong_telemetry_macro::wukong_telemetry;
 
 use super::utils::{extract_secret_infos, get_secret_config_files};
 
-pub async fn handle_config_pull(path: &Path) -> Result<bool, CliError> {
+#[wukong_telemetry(command_event = "dev_config_pull")]
+pub async fn handle_config_pull(context: Context, path: &Path) -> Result<bool, CliError> {
     let path = path.try_exists().map(|value| match value {
         true => {
             if path.to_string_lossy() == "." {

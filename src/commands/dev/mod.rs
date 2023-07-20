@@ -3,6 +3,8 @@ mod config;
 use crate::error::CliError;
 use clap::{Args, Subcommand};
 
+use super::{Context, State};
+
 #[derive(Debug, Args)]
 pub struct Dev {
     #[command(subcommand)]
@@ -16,9 +18,11 @@ pub enum DevSubcommand {
 }
 
 impl Dev {
-    pub async fn handle_command(&self) -> Result<bool, CliError> {
+    pub async fn handle_command(&self, state: State) -> Result<bool, CliError> {
+        let context = Context::from_state(state).await?;
+
         match &self.subcommand {
-            DevSubcommand::Config(config) => config.handle_command().await,
+            DevSubcommand::Config(config) => config.handle_command(context).await,
         }
     }
 }

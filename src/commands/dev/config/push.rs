@@ -1,11 +1,14 @@
+use crate::commands::Context;
 use crate::error::DevConfigError;
 use crate::loader::new_spinner_progress_bar;
+use crate::telemetry::{self, TelemetryData, TelemetryEvent};
 use crate::utils::secret_extractors::SecretInfo;
 use crate::{error::CliError, services::vault::Vault};
 use dialoguer::Confirm;
 use dialoguer::{theme::ColorfulTheme, Select};
 use owo_colors::OwoColorize;
 use std::collections::HashMap;
+use wukong_telemetry_macro::wukong_telemetry;
 
 use super::diff::print_diff;
 use super::utils::{
@@ -13,7 +16,8 @@ use super::utils::{
     get_secret_config_files, get_updated_configs, make_path_relative,
 };
 
-pub async fn handle_config_push() -> Result<bool, CliError> {
+#[wukong_telemetry(command_event = "dev_config_push")]
+pub async fn handle_config_push(context: Context) -> Result<bool, CliError> {
     let progress_bar = new_spinner_progress_bar();
     progress_bar.set_message("🔍 Finding config with annotation");
 
