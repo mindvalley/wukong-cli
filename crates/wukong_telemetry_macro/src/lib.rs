@@ -24,6 +24,7 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
 
     if let Some(command_event) = command_event_value {
         generated_func = quote! {
+            #[allow(clippy::too_many_arguments)]
             #visibility #asyncness fn #fn_ident(#fn_inputs) #fn_output {
                 // SAFETY: the application can't be None since it is checked in the caller
                 let current_application = context.state.application.as_ref().expect("Current application must not be None for command event telemetry.").clone();

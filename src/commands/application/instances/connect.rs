@@ -8,12 +8,14 @@ use crate::{
     graphql::QueryClient,
     loader::new_spinner_progress_bar,
     output::colored_println,
+    telemetry::{self, TelemetryData, TelemetryEvent},
 };
 use dialoguer::{theme::ColorfulTheme, Select};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use log::debug;
 use owo_colors::OwoColorize;
 use tokio::time::sleep;
+use wukong_telemetry_macro::wukong_telemetry;
 
 // 2 mins timeout
 const RETRY_WAIT_TIME_IN_SEC: u64 = 3;
@@ -32,6 +34,7 @@ struct KubernetesPod {
     is_livebook: Option<bool>,
 }
 
+#[wukong_telemetry(command_event = "application_instances_connect")]
 pub async fn handle_connect(
     context: Context,
     namespace_arg: &Option<ApplicationNamespace>,
@@ -91,10 +94,7 @@ pub async fn handle_connect(
 
     let mut client = QueryClient::from_default_config()?;
 
-    if !has_permission(&mut client, &application, &namespace, &version)
-        .await
-        .unwrap()
-    {
+    if !has_permission(&mut client, &application, &namespace, &version).await? {
         check_permission_progress_bar.finish_and_clear();
         eprintln!("You don't have permission to connect to this instance.");
         eprintln!("Please check with your team manager to get approval first.");
