@@ -25,7 +25,8 @@ thiserror = "1.0.40"
 dirs = "5.0.1"
 toml = "0.7.5"
 aion = "0.2.0"
-openidconnect = "3.2.0"
+url = "2.3.1"
+openidconnect = "3.3.0"
 chrono = { version = "0.4.26", default-features = false, features = ["std"] }
 
 human-panic = "1.1.5"
@@ -40,3 +41,7 @@ webbrowser = "0.8"
 prost = "0.11.9"
 tonic = { version = "0.9.2", features = ["tls", "tls-webpki-roots"] }
 prost-types = "0.11.8"
+miette = { version = "5.10.0", features = ["fancy"] }
+ignore = "0.4.20"
+rayon = "1.7.0"
+similar = { version = "2.2.1", features = ["inline"] }

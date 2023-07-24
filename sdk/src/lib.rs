@@ -11,6 +11,7 @@ pub mod services {
     pub mod gcloud;
     pub mod vault;
 }
+pub mod linter;
 mod telemetry;
 mod utils;
 

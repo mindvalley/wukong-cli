@@ -1,5 +1,9 @@
 use crate::{
-    auth, config::Config, error::WKCliError, loader::new_spinner, output::colored_println,
+    auth,
+    config::Config,
+    error::{AuthError, WKCliError},
+    loader::new_spinner,
+    output::colored_println,
 };
 use dialoguer::{theme::ColorfulTheme, Select};
 use log::debug;
@@ -42,7 +46,7 @@ pub async fn handle_login() -> Result<bool, WKCliError> {
                 Err(err) => {
                     refresh_token_loader.finish_and_clear();
                     match err {
-                        WKCliError::RefreshTokenExpired { .. } => {
+                        WKCliError::AuthError(AuthError::OktaRefreshTokenExpired { .. }) => {
                             eprintln!("The refresh token is expired. You have to login again.");
                             login_and_create_config(current_config).await?
                         }

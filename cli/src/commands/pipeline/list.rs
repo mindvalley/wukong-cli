@@ -1,6 +1,6 @@
 use crate::{
     commands::{pipeline::PipelineData, Context},
-    config::Config,
+    config::{Config, CONFIG_FILE},
     error::WKCliError,
     loader::new_spinner,
     output::{colored_println, table::TableOutput},

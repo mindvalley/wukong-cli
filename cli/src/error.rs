@@ -1,6 +1,6 @@
 use owo_colors::OwoColorize;
 use thiserror::Error as ThisError;
-use wukong_sdk::error::{APIError, AuthError, WKError};
+use wukong_sdk::error::{APIError, WKError};
 
 #[derive(Debug, ThisError)]
 pub enum WKCliError {
@@ -16,8 +16,8 @@ pub enum WKCliError {
     UnAuthenticated,
     #[error("You are un-initialised.")]
     UnInitialised,
-    #[error("The refresh token is expired. You have to login again.")]
-    RefreshTokenExpired,
+    #[error(transparent)]
+    ReqwestError(#[from] reqwest::Error),
     // #[error(transparent)]
     // Base64(#[from] base64::DecodeError),
     #[error("Error parsing \"{value}\"")]
@@ -32,8 +32,6 @@ pub enum WKCliError {
     ParseIntError(#[from] std::num::ParseIntError),
     #[error(transparent)]
     ConfigError(#[from] ConfigError),
-    #[error("Failed to discover OpenID Provider")]
-    OpenIDDiscoveryError,
     #[error(transparent)]
     DeploymentError(#[from] DeploymentError),
     #[error(transparent)]
@@ -58,6 +56,24 @@ pub enum ApplicationInstanceError {
     VersionNotAvailable { version: String },
     #[error("This application is not available in k8s.")]
     ApplicationNotFound,
+}
+
+#[derive(Debug, ThisError)]
+pub enum AuthError {
+    #[error("Refresh token expired: {message}")]
+    OktaRefreshTokenExpired { message: String },
+    #[error("OpenID Connect Error: {message}")]
+    OpenIDConnectError { message: String },
+    #[error("Failed to discover OpenID Provider")]
+    OpenIDDiscoveryError,
+    #[error("Vault secret not found.")]
+    VaultSecretNotFound,
+    #[error("Vault permission denied.")]
+    VaultPermissionDenied,
+    #[error("Invalid credentials. Please try again.")]
+    VaultAuthenticationFailed,
+    #[error("Vault API Response Error: {message}")]
+    VaultResponseError { code: String, message: String },
 }
 
 // #[derive(Debug, ThisError)]
@@ -256,7 +272,7 @@ If none of the above steps work for you, please contact the following people on 
                     // ),
                     _ => None,
                 },
-            WKCliError::AuthError(AuthError::RefreshTokenExpired { .. }) => Some("Your refresh token is expired. Run \"wukong login\" to authenticate again.".to_string()),
+            // WKCliError::AuthError(AuthError::RefreshTokenExpired { .. }) => Some("Your refresh token is expired. Run \"wukong login\" to authenticate again.".to_string()),
             _ => None,
         }
     }

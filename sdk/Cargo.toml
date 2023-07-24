@@ -73,7 +73,7 @@ regex = "1.7.0"
 chrono-tz = "0.8.1"
 
 # elixir-linter
-# elixir_linter = { path = "crates/elixir-linter" }
+elixir_linter = { path = "crates/elixir-linter" }
 miette = { version = "5.5.0", features = ["fancy"] }
 ignore = "0.4.20"
 rayon = "1.7.0"

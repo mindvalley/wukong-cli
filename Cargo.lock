@@ -1229,9 +1229,9 @@ checksum = "304e6508efa593091e97a9abbc10f90aa7ca635b6d2784feff3c89d41dd12272"
 
 [[package]]
 name = "ecdsa"
-version = "0.16.7"
+version = "0.16.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0997c976637b606099b9985693efa3581e84e41f5c11ba5255f88711058ad428"
+checksum = "a4b1e0c257a9e9f25f90ff76d7a68360ed497ee519c8e428d1825ef0000799d4"
 dependencies = [
  "der",
  "digest",
@@ -1256,6 +1256,17 @@ name = "either"
 version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7fcaabb2fef8c910e7f4c7ce9f67a1283a1715879a7c230ca9d6d1ae31f16d91"
+
+[[package]]
+name = "elixir_linter"
+version = "0.1.0"
+dependencies = [
+ "glob",
+ "miette",
+ "thiserror",
+ "tree-sitter",
+ "tree-sitter-elixir",
+]
 
 [[package]]
 name = "elliptic-curve"
@@ -1546,6 +1557,12 @@ dependencies = [
  "openssl-sys",
  "url 2.4.0",
 ]
+
+[[package]]
+name = "glob"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
 name = "globset"
@@ -2721,7 +2738,7 @@ dependencies = [
  "serde_json",
  "serde_path_to_error",
  "serde_plain",
- "serde_with 3.0.0",
+ "serde_with 3.1.0",
  "sha2",
  "subtle",
  "thiserror",
@@ -3789,9 +3806,9 @@ dependencies = [
 
 [[package]]
 name = "serde_with"
-version = "3.0.0"
+version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f02d8aa6e3c385bf084924f660ce2a3a6bd333ba55b35e8590b321f35d88513"
+checksum = "21e47d95bc83ed33b2ecf84f4187ad1ab9685d18ff28db000c99deac8ce180e3"
 dependencies = [
  "base64 0.21.2",
  "chrono",
@@ -3799,7 +3816,7 @@ dependencies = [
  "indexmap 1.9.3",
  "serde",
  "serde_json",
- "serde_with_macros 3.0.0",
+ "serde_with_macros 3.1.0",
  "time 0.3.23",
 ]
 
@@ -3829,9 +3846,9 @@ dependencies = [
 
 [[package]]
 name = "serde_with_macros"
-version = "3.0.0"
+version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "edc7d5d3932fb12ce722ee5e64dd38c504efba37567f0c402f6ca728c3b8b070"
+checksum = "ea3cee93715c2e266b9338b7544da68a9f24e227722ba482bd1c024367c77c65"
 dependencies = [
  "darling 0.20.3",
  "proc-macro2",
@@ -4548,6 +4565,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "tree-sitter-elixir"
+version = "0.1.0"
+source = "git+https://github.com/elixir-lang/tree-sitter-elixir?tag=v0.1.0#869dff3ceb8823ca4b17ca33b663667c8e41e8ba"
+dependencies = [
+ "cc",
+ "tree-sitter",
+]
+
+[[package]]
 name = "try-lock"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5125,22 +5151,27 @@ dependencies = [
  "dirs 5.0.1",
  "edit",
  "human-panic",
+ "ignore",
  "indicatif",
  "log",
+ "miette",
  "once_cell",
  "openidconnect 3.3.0",
  "owo-colors",
  "prost",
  "prost-types",
+ "rayon",
  "regex",
  "reqwest",
  "serde",
+ "similar",
  "tabled",
  "thiserror",
  "time-humanize",
  "tokio",
  "toml",
  "tonic",
+ "url 2.4.0",
  "webbrowser",
  "wukong-sdk",
  "yup-oauth2",
@@ -5165,6 +5196,7 @@ dependencies = [
  "dialoguer",
  "dirs 4.0.0",
  "edit",
+ "elixir_linter",
  "futures 0.3.28",
  "git2",
  "google-logging2",

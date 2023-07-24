@@ -1,7 +1,7 @@
 use crate::{
     auth,
     config::Config,
-    error::{ConfigError, WKCliError},
+    error::{AuthError, ConfigError, WKCliError},
     loader::new_spinner,
     output::colored_println,
     utils::wukong_sdk::FromWKCliConfig,
@@ -56,7 +56,7 @@ pub async fn handle_init() -> Result<bool, WKCliError> {
                 Err(err) => {
                     refresh_token_loader.finish_and_clear();
                     match err {
-                        WKCliError::RefreshTokenExpired { .. } => {
+                        WKCliError::AuthError(AuthError::OktaRefreshTokenExpired { .. }) => {
                             eprintln!("The refresh token is expired. You have to login again.");
                             login_and_create_config(current_config).await?
                         }

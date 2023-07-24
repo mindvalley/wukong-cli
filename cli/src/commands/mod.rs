@@ -75,8 +75,8 @@ pub enum CommandGroup {
     // /// This command group contains the commands to view and interact with the
     /// Continuous Delivery pipeline of an application.
     Deployment(deployment::Deployment),
-    // /// This command group contains the commands to interact with the local development environment.
-    // Dev(dev::Dev),
+    /// This command group contains the commands to interact with the local development environment.
+    Dev(dev::Dev),
     /// This command group contains the commands to view & interact with Wukong's configurations
     Config(config::Config),
     /// Login to start using wukong command
@@ -111,7 +111,7 @@ impl ClapApp {
             CommandGroup::Pipeline(pipeline) => pipeline.handle_command(context).await,
             CommandGroup::Deployment(deployment) => deployment.handle_command(context).await,
             CommandGroup::Config(config) => config.handle_command(),
-            // CommandGroup::Dev(dev) => dev.handle_command().await,
+            CommandGroup::Dev(dev) => dev.handle_command().await,
         }
     }
 }
