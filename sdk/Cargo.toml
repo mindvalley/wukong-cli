@@ -3,10 +3,6 @@ name = "wukong-sdk"
 version = "1.0.1"
 edition = "2021"
 
-[lib]
-name = "wukong_sdk"
-path = "src/lib.rs"
-
 [features]
 prod = []
 
