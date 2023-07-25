@@ -1,22 +1,17 @@
 mod diff;
 mod lint;
-// mod pull;
-// mod push;
+mod pull;
+mod push;
 mod utils;
 
-// use crate::error::WKError;
-// use clap::{Args, Subcommand};
-// use diff::handle_config_diff;
+use diff::handle_config_diff;
 use lint::handle_config_lint;
-// use pull::handle_config_pull;
-// use push::handle_config_push;
-// use std::path::PathBuf;
-
-use std::path::PathBuf;
-
-use clap::{Args, Subcommand};
+use pull::handle_config_pull;
+use push::handle_config_push;
 
 use crate::error::WKCliError;
+use clap::{Args, Subcommand};
+use std::path::PathBuf;
 
 #[derive(Debug, Args)]
 pub struct Config {
@@ -47,18 +42,9 @@ pub enum ConfigSubcommand {
 impl Config {
     pub async fn handle_command(&self) -> Result<bool, WKCliError> {
         match &self.subcommand {
-            ConfigSubcommand::Push => {
-                todo!();
-                // handle_config_push().await
-            }
-            ConfigSubcommand::Diff => {
-                todo!();
-                // handle_config_diff().await
-            }
-            ConfigSubcommand::Pull { path } => {
-                todo!();
-                // handle_config_pull(path).await
-            }
+            ConfigSubcommand::Push => handle_config_push().await,
+            ConfigSubcommand::Diff => handle_config_diff().await,
+            ConfigSubcommand::Pull { path } => handle_config_pull(path).await,
             ConfigSubcommand::Lint { path } => handle_config_lint(path),
         }
     }

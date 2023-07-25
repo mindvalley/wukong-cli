@@ -23,116 +23,115 @@ pub struct VaultSecretAnnotation {
 }
 
 pub fn read_vault_annotation(src: &str) -> Vec<VaultSecretAnnotation> {
-    todo!();
-    //     let elixir_lang = tree_sitter_elixir::language();
-    //     let mut parser = Parser::new();
-    //     parser.set_language(elixir_lang).unwrap();
-    //
-    //     let tree = parser.parse(src, None).unwrap();
-    //
-    //     let query = Query::new(
-    //         elixir_lang,
-    //         r#"
-    // (
-    //     (comment) @comment
-    //     .
-    //     [
-    //         (call target: (identifier) @identifier (arguments (string (quoted_content) @import_file)))
-    //         (call
-    //             target: (identifier)
-    //           (arguments
-    //             (call
-    //                 target: (_) @file_checking
-    //       	        (arguments (string (quoted_content) @checked_file))))
-    //           (do_block
-    // 			        (call
-    // 				        target: (identifier) @identifier
-    // 				        (arguments (string (quoted_content) @import_file))))
-    // 		        )
-    // 	    (binary_operator
-    // 		    left: (call
-    // 			    target: (_) @file_checking
-    // 			    (arguments (string (quoted_content) @checked_file)))
-    // 		    right: (call
-    // 			    target: (identifier) @identifier
-    // 			    (arguments (string (quoted_content) @import_file))))
-    //     ]
-    //     (#eq? @file_checking "File.exists?")
-    //     (#match? @identifier "import_config|import_config!")
-    //     (#match? @comment "\#( )*wukong.mindvalley.dev/config-secrets-location:")
-    // )
-    //         "#,
-    //     )
-    //     .unwrap();
-    //
-    //     let mut query_cursor = QueryCursor::new();
-    //     let all_matches = query_cursor.matches(&query, tree.root_node(), src.as_bytes());
-    //
-    //     let comment_idx = query.capture_index_for_name("comment").unwrap();
-    //     let import_file_idx = query.capture_index_for_name("import_file").unwrap();
-    //
-    //     let mut annotations = vec![];
-    //     for each in all_matches {
-    //         let annotation = each
-    //             .captures
-    //             .iter()
-    //             .find(|c| c.index == comment_idx)
-    //             .unwrap();
-    //         let annotation_text = annotation.node.utf8_text(src.as_bytes()).unwrap();
-    //         let annotation_part: Vec<String> = annotation_text
-    //             .replacen('#', "", 1)
-    //             .split(": ")
-    //             .map(|each| each.trim().to_string())
-    //             .collect();
-    //
-    //         if annotation_part.len() != 2 {
-    //             continue;
-    //         }
-    //
-    //         let key = annotation_part[0].clone();
-    //         let value = annotation_part[1].clone();
-    //         let value_part = value.split('#').collect::<Vec<&str>>();
-    //         if value_part.len() != 2 {
-    //             continue;
-    //         }
-    //         let secret_path_with_source = value_part[0].to_string();
-    //         let secret_name = value_part[1].to_string();
-    //
-    //         let splited_source_and_path = secret_path_with_source.split(':').collect::<Vec<&str>>();
-    //         if splited_source_and_path.len() != 2 {
-    //             continue;
-    //         }
-    //         let source = splited_source_and_path[0].to_string();
-    //         let path_with_engine = splited_source_and_path[1].to_string();
-    //
-    //         let splited_engine_and_path = path_with_engine.split('/').collect::<Vec<&str>>();
-    //         let (engine, path) = splited_engine_and_path.split_at(1);
-    //
-    //         let secret_path = path.join("/");
-    //
-    //         let file_name = each
-    //             .captures
-    //             .iter()
-    //             .find(|c| c.index == import_file_idx)
-    //             .unwrap();
-    //
-    //         annotations.push(VaultSecretAnnotation {
-    //             key,
-    //             source,
-    //             engine: engine[0].to_string(),
-    //             secret_path,
-    //             secret_name,
-    //             destination_file: file_name
-    //                 .node
-    //                 .utf8_text(src.as_bytes())
-    //                 .unwrap()
-    //                 .trim()
-    //                 .to_string(),
-    //             raw: value,
-    //         });
-    //     }
-    //
-    //     annotations
+    let elixir_lang = tree_sitter_elixir::language();
+    let mut parser = Parser::new();
+    parser.set_language(elixir_lang).unwrap();
+
+    let tree = parser.parse(src, None).unwrap();
+
+    let query = Query::new(
+            elixir_lang,
+            r#"
+    (
+        (comment) @comment
+        .
+        [
+            (call target: (identifier) @identifier (arguments (string (quoted_content) @import_file)))
+            (call
+                target: (identifier)
+              (arguments
+                (call
+                    target: (_) @file_checking
+          	        (arguments (string (quoted_content) @checked_file))))
+              (do_block
+    			        (call
+    				        target: (identifier) @identifier
+    				        (arguments (string (quoted_content) @import_file))))
+    		        )
+    	    (binary_operator
+    		    left: (call
+    			    target: (_) @file_checking
+    			    (arguments (string (quoted_content) @checked_file)))
+    		    right: (call
+    			    target: (identifier) @identifier
+    			    (arguments (string (quoted_content) @import_file))))
+        ]
+        (#eq? @file_checking "File.exists?")
+        (#match? @identifier "import_config|import_config!")
+        (#match? @comment "\#( )*wukong.mindvalley.dev/config-secrets-location:")
+    )
+            "#,
+        )
+        .unwrap();
+
+    let mut query_cursor = QueryCursor::new();
+    let all_matches = query_cursor.matches(&query, tree.root_node(), src.as_bytes());
+
+    let comment_idx = query.capture_index_for_name("comment").unwrap();
+    let import_file_idx = query.capture_index_for_name("import_file").unwrap();
+
+    let mut annotations = vec![];
+    for each in all_matches {
+        let annotation = each
+            .captures
+            .iter()
+            .find(|c| c.index == comment_idx)
+            .unwrap();
+        let annotation_text = annotation.node.utf8_text(src.as_bytes()).unwrap();
+        let annotation_part: Vec<String> = annotation_text
+            .replacen('#', "", 1)
+            .split(": ")
+            .map(|each| each.trim().to_string())
+            .collect();
+
+        if annotation_part.len() != 2 {
+            continue;
+        }
+
+        let key = annotation_part[0].clone();
+        let value = annotation_part[1].clone();
+        let value_part = value.split('#').collect::<Vec<&str>>();
+        if value_part.len() != 2 {
+            continue;
+        }
+        let secret_path_with_source = value_part[0].to_string();
+        let secret_name = value_part[1].to_string();
+
+        let splited_source_and_path = secret_path_with_source.split(':').collect::<Vec<&str>>();
+        if splited_source_and_path.len() != 2 {
+            continue;
+        }
+        let source = splited_source_and_path[0].to_string();
+        let path_with_engine = splited_source_and_path[1].to_string();
+
+        let splited_engine_and_path = path_with_engine.split('/').collect::<Vec<&str>>();
+        let (engine, path) = splited_engine_and_path.split_at(1);
+
+        let secret_path = path.join("/");
+
+        let file_name = each
+            .captures
+            .iter()
+            .find(|c| c.index == import_file_idx)
+            .unwrap();
+
+        annotations.push(VaultSecretAnnotation {
+            key,
+            source,
+            engine: engine[0].to_string(),
+            secret_path,
+            secret_name,
+            destination_file: file_name
+                .node
+                .utf8_text(src.as_bytes())
+                .unwrap()
+                .trim()
+                .to_string(),
+            raw: value,
+        });
+    }
+
+    annotations
 }
 
 #[cfg(test)]

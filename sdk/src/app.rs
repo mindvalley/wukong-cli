@@ -1,8 +1,8 @@
-use crate::{commands::ClapApp, error::WKError, logger};
+use crate::{error::WKError, logger};
 use clap::Parser;
 
 pub struct App {
-    pub cli: ClapApp,
+    // pub cli: ClapApp,
 }
 
 #[derive(Debug)]
@@ -13,12 +13,13 @@ pub struct AppState {
 
 impl App {
     pub fn new() -> Result<Self, WKError> {
-        let cli = ClapApp::parse();
-
-        logger::Builder::new()
-            .with_max_level(cli.verbose.log_level_filter())
-            .init();
-
-        Ok(Self { cli })
+        Ok(Self {})
+        // let cli = ClapApp::parse();
+        //
+        // logger::Builder::new()
+        //     .with_max_level(cli.verbose.log_level_filter())
+        //     .init();
+        //
+        // Ok(Self { cli })
     }
 }

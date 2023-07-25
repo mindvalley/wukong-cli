@@ -1,18 +1,19 @@
-// use crate::error::{DevConfigError, WKError};
-// use crate::loader::new_spinner_progress_bar;
-// use crate::services::vault::Vault;
-// use crate::utils::line::Line;
-// use dialoguer::console::{style, Style};
-use crate::{error::WKCliError, loader::new_spinner};
+use crate::{
+    auth::vault,
+    commands::dev::config::utils::make_path_relative,
+    config::Config,
+    error::WKCliError,
+    loader::new_spinner,
+    utils::{line::Line, wukong_sdk::FromWKCliConfig},
+};
+use dialoguer::console::{style, Style};
 use owo_colors::OwoColorize;
 use similar::{ChangeTag, TextDiff};
+use wukong_sdk::WKClient;
 
-use super::utils::{extract_secret_infos, get_secret_config_files};
-
-// use super::utils::{
-//     extract_secret_infos, get_local_config_path, get_secret_config_files, get_updated_configs,
-//     make_path_relative,
-// };
+use super::utils::{
+    extract_secret_infos, get_local_config_path, get_secret_config_files, get_updated_configs,
+};
 
 pub async fn handle_config_diff() -> Result<bool, WKCliError> {
     let loader = new_spinner();
@@ -24,7 +25,7 @@ pub async fn handle_config_diff() -> Result<bool, WKCliError> {
     loader.finish_and_clear();
 
     if extracted_infos.is_empty() {
-        return Err(WKCliError::DevConfigError(DevConfigError::ConfigNotFound));
+        return Err(WKCliError::DevConfigNotFound);
     }
 
     if extracted_infos.len() != 1 {
@@ -34,10 +35,11 @@ pub async fn handle_config_diff() -> Result<bool, WKCliError> {
         );
     }
 
-    let vault = Vault::new();
-    let vault_token = vault.get_token_or_login().await?;
+    let mut config = Config::load_from_default_path()?;
+    let wk_client = WKClient::from_cli_config(&config);
+    let vault_token = vault::get_token_or_login(&mut config).await?;
 
-    let updated_configs = get_updated_configs(&vault, &vault_token, &extracted_infos).await?;
+    let updated_configs = get_updated_configs(&wk_client, &vault_token, &extracted_infos).await?;
 
     if updated_configs.is_empty() {
         println!("The config file is already up to date with the Vault Bunker.");

@@ -166,63 +166,63 @@ impl QueryClient {
 
         // Before calling API, do a token expiry check first
 
-        if let (Some(_token), Some(expiry_time)) = (&self.access_token, &self.expiry_time) {
-            let current_time: DateTime<Local> = Local::now();
-            let expiry = DateTime::parse_from_rfc3339(expiry_time)
-                .unwrap()
-                .with_timezone(&Local);
-            let remaining_duration = expiry.signed_duration_since(current_time);
-
-            if remaining_duration < 5.minutes() {
-                debug!("Access token expired. Refreshing tokens...");
-
-                let mut config = Config::load_from_default_path().map_err(|err| {
-                    debug!("Failed to refresh tokens when getting config: {:?}", err);
-                    err
-                })?;
-                let auth_config = config.auth.as_ref().unwrap();
-
-                let new_tokens = Auth::new(&config.core.okta_client_id)
-                    .refresh_tokens(&RefreshToken::new(auth_config.refresh_token.clone()))
-                    .await
-                    .map_err(|err| {
-                        debug!("Failed to refresh tokens: {:?}", err);
-                        err
-                    })?;
-
-                config.auth = Some(AuthConfig {
-                    account: auth_config.account.clone(),
-                    subject: auth_config.subject.clone(),
-                    id_token: new_tokens.id_token.clone(),
-                    access_token: new_tokens.access_token.clone(),
-                    expiry_time: new_tokens.expiry_time.clone(),
-                    refresh_token: new_tokens.refresh_token,
-                });
-
-                config.save_to_default_path().map_err(|err| {
-                    debug!("Failed to refresh tokens when saving config: {:?}", err);
-                    err
-                })?;
-
-                // make sure to update the token and expiry time to the updated values
-                let mut headers = header::HeaderMap::new();
-
-                let bearer_token = format!("Bearer {}", new_tokens.id_token);
-                headers.insert(
-                    header::AUTHORIZATION,
-                    header::HeaderValue::from_str(&bearer_token).unwrap(),
-                );
-
-                let client = reqwest::Client::builder()
-                    .default_headers(headers)
-                    .build()
-                    .map_err(<reqwest::Error as Into<APIError>>::into)?;
-
-                self.reqwest_client = client;
-                self.access_token = Some(new_tokens.id_token);
-                self.expiry_time = Some(new_tokens.expiry_time);
-            }
-        }
+        // if let (Some(_token), Some(expiry_time)) = (&self.access_token, &self.expiry_time) {
+        //     let current_time: DateTime<Local> = Local::now();
+        //     let expiry = DateTime::parse_from_rfc3339(expiry_time)
+        //         .unwrap()
+        //         .with_timezone(&Local);
+        //     let remaining_duration = expiry.signed_duration_since(current_time);
+        //
+        //     if remaining_duration < 5.minutes() {
+        //         debug!("Access token expired. Refreshing tokens...");
+        //
+        //         let mut config = Config::load_from_default_path().map_err(|err| {
+        //             debug!("Failed to refresh tokens when getting config: {:?}", err);
+        //             err
+        //         })?;
+        //         let auth_config = config.auth.as_ref().unwrap();
+        //
+        //         let new_tokens = Auth::new(&config.core.okta_client_id)
+        //             .refresh_tokens(&RefreshToken::new(auth_config.refresh_token.clone()))
+        //             .await
+        //             .map_err(|err| {
+        //                 debug!("Failed to refresh tokens: {:?}", err);
+        //                 err
+        //             })?;
+        //
+        //         config.auth = Some(AuthConfig {
+        //             account: auth_config.account.clone(),
+        //             subject: auth_config.subject.clone(),
+        //             id_token: new_tokens.id_token.clone(),
+        //             access_token: new_tokens.access_token.clone(),
+        //             expiry_time: new_tokens.expiry_time.clone(),
+        //             refresh_token: new_tokens.refresh_token,
+        //         });
+        //
+        //         config.save_to_default_path().map_err(|err| {
+        //             debug!("Failed to refresh tokens when saving config: {:?}", err);
+        //             err
+        //         })?;
+        //
+        //         // make sure to update the token and expiry time to the updated values
+        //         let mut headers = header::HeaderMap::new();
+        //
+        //         let bearer_token = format!("Bearer {}", new_tokens.id_token);
+        //         headers.insert(
+        //             header::AUTHORIZATION,
+        //             header::HeaderValue::from_str(&bearer_token).unwrap(),
+        //         );
+        //
+        //         let client = reqwest::Client::builder()
+        //             .default_headers(headers)
+        //             .build()
+        //             .map_err(<reqwest::Error as Into<APIError>>::into)?;
+        //
+        //         self.reqwest_client = client;
+        //         self.access_token = Some(new_tokens.id_token);
+        //         self.expiry_time = Some(new_tokens.expiry_time);
+        //     }
+        // }
 
         let response: Result<Response<Q::ResponseData>, APIError> =
             self.retry_request::<Q>(body, handler).await;

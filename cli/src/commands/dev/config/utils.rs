@@ -1,10 +1,3 @@
-// use crate::{
-//     error::{DevConfigError, ExtractError, WKError},
-//     services::vault::Vault,
-//     utils::secret_extractors::{
-//         ElixirConfigExtractor, SecretExtractor, SecretInfo, WKTomlConfigExtractor,
-//     },
-// };
 use ignore::{overrides::OverrideBuilder, WalkBuilder};
 use log::debug;
 use owo_colors::OwoColorize;
@@ -12,13 +5,18 @@ use std::{
     env::current_dir,
     path::{Path, PathBuf},
 };
-
-use crate::error::WKCliError;
+use wukong_sdk::{
+    secret_extractors::{
+        ElixirConfigExtractor, SecretExtractor, SecretInfo, WKTomlConfigExtractor,
+    },
+    WKClient,
+};
 
 use super::diff::has_diff;
+use crate::error::WKCliError;
 
 pub async fn get_updated_configs<'a>(
-    vault: &Vault,
+    wk_client: &WKClient,
     vault_token: &str,
     config_files: &'a Vec<(String, Vec<SecretInfo>)>,
 ) -> Result<Vec<(&'a SecretInfo, String, String, String)>, WKCliError> {
@@ -30,7 +28,7 @@ pub async fn get_updated_configs<'a>(
     for config_file in config_files {
         let (config_path, secret_infos) = config_file;
         for info in secret_infos {
-            let remote_secrets = vault.get_secrets(vault_token, &info.src).await?.data;
+            let remote_secrets = wk_client.get_secrets(vault_token, &info.src).await?.data;
 
             let local_config = match get_local_config_as_string(&info.destination_file, config_path)
             {
@@ -54,10 +52,10 @@ pub async fn get_updated_configs<'a>(
             let remote_config = match remote_secrets.get(&info.name) {
                 Some(config) => config,
                 None => {
-                    return Err(WKError::DevConfigError(DevConfigError::InvalidSecretPath {
+                    return Err(WKCliError::InvalidSecretPath {
                         config_path: make_path_relative(config_path),
                         annotation: info.key.to_string(),
-                    }));
+                    });
                 }
             };
 
@@ -83,14 +81,14 @@ pub fn get_local_config_path(destination_file: &str, config_path: &str) -> PathB
 pub fn get_local_config_as_string(
     destination_file: &str,
     config_path: &str,
-) -> Result<String, WKError> {
+) -> Result<String, WKCliError> {
     let local_config_path = get_local_config_path(destination_file, config_path);
     let local_config = std::fs::read_to_string(local_config_path)?;
 
     Ok(local_config)
 }
 
-pub fn get_secret_config_files(current_path: Option<PathBuf>) -> Result<Vec<PathBuf>, WKError> {
+pub fn get_secret_config_files(current_path: Option<PathBuf>) -> Result<Vec<PathBuf>, WKCliError> {
     let current_path = current_path.unwrap_or(current_dir()?);
 
     let mut overrides = OverrideBuilder::new(current_path.clone());
@@ -122,7 +120,7 @@ pub fn make_path_relative(path: &str) -> String {
 
 pub fn extract_secret_infos(
     secret_config_files: Vec<PathBuf>,
-) -> Result<Vec<(String, Vec<SecretInfo>)>, ExtractError> {
+) -> Result<Vec<(String, Vec<SecretInfo>)>, WKCliError> {
     let mut extracted_infos = Vec::new();
 
     for file in secret_config_files {
@@ -133,6 +131,7 @@ pub fn extract_secret_infos(
                     WKTomlConfigExtractor::extract(&file)?,
                 ));
             }
+            // at the moment we only support dev.exs
             x if x.contains("dev.exs") => {
                 extracted_infos.push((
                     file.to_string_lossy().to_string(),

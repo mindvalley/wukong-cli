@@ -1,11 +1,13 @@
 use owo_colors::OwoColorize;
 use thiserror::Error as ThisError;
-use wukong_sdk::error::{APIError, WKError};
+use wukong_sdk::error::{APIError, ExtractError, WKError};
 
 #[derive(Debug, ThisError)]
 pub enum WKCliError {
     #[error(transparent)]
     WKSdkError(#[from] WKError),
+    #[error(transparent)]
+    WKSecretExtractError(#[from] ExtractError),
     #[error(transparent)]
     Io(#[from] ::std::io::Error),
     #[error(transparent)]
@@ -18,6 +20,13 @@ pub enum WKCliError {
     UnInitialised,
     #[error(transparent)]
     ReqwestError(#[from] reqwest::Error),
+    #[error("No config file found!")]
+    DevConfigNotFound,
+    #[error("Invalid secret path in the config file.")]
+    InvalidSecretPath {
+        config_path: String,
+        annotation: String,
+    },
     // #[error(transparent)]
     // Base64(#[from] base64::DecodeError),
     #[error("Error parsing \"{value}\"")]
@@ -40,8 +49,8 @@ pub enum WKCliError {
     DevConfigError(#[from] DevConfigError),
     #[error(transparent)]
     GCloudError(#[from] GCloudError),
-    #[error(transparent)]
-    ExtractError(#[from] ExtractError),
+    // #[error(transparent)]
+    // ExtractError(#[from] ExtractError),
     #[error(transparent)]
     ApplicationInstanceError(#[from] ApplicationInstanceError),
     #[error("Operation timeout")]
@@ -192,11 +201,11 @@ pub enum GCloudError {
 }
 
 // Secret Extractor Error
-#[derive(Debug, ThisError)]
-pub enum ExtractError {
-    // #[error("Bad TOML data.")]
-    // BadTomlData(#[from] toml::de::Error),
-}
+// #[derive(Debug, ThisError)]
+// pub enum ExtractError {
+// #[error("Bad TOML data.")]
+// BadTomlData(#[from] toml::de::Error),
+// }
 
 impl WKCliError {
     /// Try to second-guess what the user was trying to do, depending on what
