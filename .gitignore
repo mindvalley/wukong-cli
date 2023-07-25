@@ -11,7 +11,7 @@
 # Added by cargo
 */target/
 
-/crates/*/target/
+sdk/crates/*/target/
 
 # env
 /src/env/local.toml
