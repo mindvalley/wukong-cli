@@ -5,7 +5,9 @@ use dialoguer::{theme::ColorfulTheme, Confirm, Select};
 use edit::Builder;
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
-use wukong_sdk::{error::APIError, WKClient};
+use wukong_sdk::error::{APIError, WKError};
+use wukong_telemetry::*;
+use wukong_telemetry_macro::*;
 
 use crate::{
     commands::Context,
@@ -13,7 +15,7 @@ use crate::{
     error::{DeploymentError, WKCliError},
     loader::new_spinner,
     output::colored_println,
-    utils::wukong_sdk::FromWKCliConfig,
+    wukong_client::WKClient,
 };
 
 use super::{DeploymentNamespace, DeploymentVersion};
@@ -141,7 +143,7 @@ struct Commit {
     message_headline: String,
 }
 
-// #[wukong_telemetry(command_event = "deployment_execute")]
+#[wukong_telemetry(command_event = "deployment_execute")]
 pub async fn handle_execute(
     context: Context,
     namespace: &Option<DeploymentNamespace>,
@@ -159,7 +161,7 @@ pub async fn handle_execute(
     fetch_loader.set_message("Checking available CD pipelines ...");
 
     let config = Config::load_from_default_path()?;
-    let wk_client = WKClient::from_cli_config(&config);
+    let wk_client = WKClient::new(&config);
 
     let cd_pipelines_data = wk_client
         .fetch_cd_pipelines(&current_application)
@@ -511,7 +513,7 @@ pub async fn handle_execute(
             changelog = format!("{changelog}\n{instructions}");
         }
         Err(error) => match error {
-            wukong_sdk::error::WKError::APIError(APIError::ChangelogComparingSameBuild) => {
+            WKCliError::WKSdkError(WKError::APIError(APIError::ChangelogComparingSameBuild)) => {
                 is_same_build = true;
                 let instructions = r#"
 <!-- You are in the CHANGELOG editor. -->

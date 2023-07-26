@@ -21,6 +21,7 @@ mod pipeline;
 #[derive(Debug, Default)]
 pub struct Context {
     current_application: String,
+    sub: Option<String>,
 }
 
 /// A Swiss-army Knife CLI For Mindvalley Developers
@@ -107,13 +108,35 @@ impl ClapApp {
             CommandGroup::Init => handle_init().await,
             CommandGroup::Completion { shell } => handle_completion(*shell),
             CommandGroup::Login => handle_login().await,
-            CommandGroup::Application(application) => application.handle_command(context).await,
-            CommandGroup::Pipeline(pipeline) => pipeline.handle_command(context).await,
-            CommandGroup::Deployment(deployment) => deployment.handle_command(context).await,
+            CommandGroup::Application(application) => {
+                application.handle_command(get_context(&self)?).await
+            }
+            CommandGroup::Pipeline(pipeline) => pipeline.handle_command(get_context(&self)?).await,
+            CommandGroup::Deployment(deployment) => {
+                deployment.handle_command(get_context(&self)?).await
+            }
             CommandGroup::Config(config) => config.handle_command(),
-            CommandGroup::Dev(dev) => dev.handle_command().await,
+            CommandGroup::Dev(dev) => dev.handle_command(get_context(&self)?).await,
         }
     }
+}
+
+// for telemetry
+fn get_context(clap_app: &ClapApp) -> Result<Context, WKCliError> {
+    let mut context = Context::default();
+
+    // overwritten by --application flag
+    context.current_application = match clap_app.application {
+        Some(ref application) => application.clone(),
+        None => {
+            let config = Config::load_from_default_path()?;
+            config.core.application
+        }
+    };
+
+    let config = Config::load_from_default_path()?;
+    context.sub = config.auth.map(|auth_config| auth_config.subject);
+    Ok(context)
 }
 
 #[cfg(test)]

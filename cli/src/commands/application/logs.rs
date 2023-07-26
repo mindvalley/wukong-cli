@@ -1,7 +1,7 @@
 use super::{ApplicationNamespace, ApplicationVersion};
 use crate::{
     auth, commands::Context, config::Config, error::WKCliError, loader::new_spinner,
-    utils::wukong_sdk::FromWKCliConfig,
+    wukong_client::WKClient,
 };
 use aion::*;
 use chrono::{DateTime, Local};
@@ -10,9 +10,11 @@ use once_cell::sync::Lazy;
 use openidconnect::url;
 use owo_colors::OwoColorize;
 use regex::Regex;
-use wukong_sdk::{services::gcloud::LogEntriesOptions, WKClient};
+use wukong_sdk::services::gcloud::LogEntriesOptions;
+use wukong_telemetry::*;
+use wukong_telemetry_macro::*;
 
-#[allow(clippy::too_many_arguments)]
+#[wukong_telemetry(command_event = "application_logs")]
 pub async fn handle_logs(
     context: Context,
     namespace: &ApplicationNamespace,
@@ -30,7 +32,7 @@ pub async fn handle_logs(
 
     let config = Config::load_from_default_path()?;
     let gcloud_access_token = auth::google_cloud::get_token_or_login().await;
-    let mut wk_client = WKClient::from_cli_config(&config);
+    let mut wk_client = WKClient::new(&config);
 
     auth_loader.finish_and_clear();
 

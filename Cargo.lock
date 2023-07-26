@@ -5182,6 +5182,8 @@ dependencies = [
  "url 2.4.0",
  "webbrowser",
  "wukong-sdk",
+ "wukong-telemetry",
+ "wukong-telemetry-macro",
  "yup-oauth2",
 ]
 
@@ -5245,13 +5247,23 @@ dependencies = [
  "url 2.4.0",
  "urlencoding",
  "webbrowser",
- "wukong_telemetry_macro",
+ "wukong-telemetry-macro",
  "yup-oauth2",
 ]
 
 [[package]]
-name = "wukong_telemetry_macro"
+name = "wukong-telemetry"
 version = "0.1.0"
+dependencies = [
+ "chrono",
+ "reqwest",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "wukong-telemetry-macro"
+version = "1.0.0"
 dependencies = [
  "proc-macro2",
  "quote",

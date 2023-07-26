@@ -1,2 +1,2 @@
 [workspace]
-members = ["cli", "sdk"]
+members = ["cli", "sdk", "telemetry", "telemetry-macro"]

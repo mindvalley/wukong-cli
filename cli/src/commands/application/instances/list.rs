@@ -1,7 +1,6 @@
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 use tabled::Tabled;
-use wukong_sdk::WKClient;
 
 use crate::{
     commands::Context,
@@ -9,7 +8,7 @@ use crate::{
     error::WKCliError,
     loader::new_spinner,
     output::{colored_println, table::TableOutput},
-    utils::wukong_sdk::FromWKCliConfig,
+    wukong_client::WKClient,
 };
 
 #[derive(Tabled, Serialize, Deserialize, Debug)]
@@ -33,7 +32,7 @@ pub async fn handle_list(
     loader.set_message("Checking your permission to connect to the remote instance...");
 
     let config = Config::load_from_default_path()?;
-    let mut wk_client = WKClient::from_cli_config(&config);
+    let mut wk_client = WKClient::new(&config);
 
     let application = context.current_application;
 

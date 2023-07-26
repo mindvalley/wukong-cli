@@ -8,16 +8,22 @@ use std::{
 
 use log::debug;
 use owo_colors::OwoColorize;
-use wukong_sdk::{services::vault::client::FetchSecretsData, WKClient};
+use wukong_sdk::services::vault::client::FetchSecretsData;
 
 use crate::{
-    auth::vault, commands::dev::config::utils::get_local_config_path, config::Config,
-    error::WKCliError, utils::wukong_sdk::FromWKCliConfig,
+    auth::vault,
+    commands::{dev::config::utils::get_local_config_path, Context},
+    config::Config,
+    error::WKCliError,
+    wukong_client::WKClient,
 };
 
 use super::utils::{extract_secret_infos, get_secret_config_files};
+use wukong_telemetry::*;
+use wukong_telemetry_macro::*;
 
-pub async fn handle_config_pull(path: &Path) -> Result<bool, WKCliError> {
+#[wukong_telemetry(command_event = "dev_config_pull")]
+pub async fn handle_config_pull(context: Context, path: &Path) -> Result<bool, WKCliError> {
     let path = path.try_exists().map(|value| match value {
         true => {
             if path.to_string_lossy() == "." {
@@ -36,7 +42,7 @@ pub async fn handle_config_pull(path: &Path) -> Result<bool, WKCliError> {
     let extracted_infos = extract_secret_infos(secret_config_files)?;
 
     let mut config = Config::load_from_default_path()?;
-    let wk_client = WKClient::from_cli_config(&config);
+    let wk_client = WKClient::new(&config);
     let vault_token = vault::get_token_or_login(&mut config).await?;
 
     let mut has_error = false;

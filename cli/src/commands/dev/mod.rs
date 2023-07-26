@@ -3,6 +3,8 @@ mod config;
 use crate::error::WKCliError;
 use clap::{Args, Subcommand};
 
+use super::Context;
+
 #[derive(Debug, Args)]
 pub struct Dev {
     #[command(subcommand)]
@@ -16,9 +18,9 @@ pub enum DevSubcommand {
 }
 
 impl Dev {
-    pub async fn handle_command(&self) -> Result<bool, WKCliError> {
+    pub async fn handle_command(&self, context: Context) -> Result<bool, WKCliError> {
         match &self.subcommand {
-            DevSubcommand::Config(config) => config.handle_command().await,
+            DevSubcommand::Config(config) => config.handle_command(context).await,
         }
     }
 }

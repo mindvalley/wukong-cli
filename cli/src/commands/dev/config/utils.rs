@@ -5,15 +5,12 @@ use std::{
     env::current_dir,
     path::{Path, PathBuf},
 };
-use wukong_sdk::{
-    secret_extractors::{
-        ElixirConfigExtractor, SecretExtractor, SecretInfo, WKTomlConfigExtractor,
-    },
-    WKClient,
+use wukong_sdk::secret_extractors::{
+    ElixirConfigExtractor, SecretExtractor, SecretInfo, WKTomlConfigExtractor,
 };
 
 use super::diff::has_diff;
-use crate::error::WKCliError;
+use crate::{error::WKCliError, wukong_client::WKClient};
 
 pub async fn get_updated_configs<'a>(
     wk_client: &WKClient,

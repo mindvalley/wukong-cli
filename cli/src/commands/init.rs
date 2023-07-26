@@ -4,11 +4,10 @@ use crate::{
     error::{AuthError, ConfigError, WKCliError},
     loader::new_spinner,
     output::colored_println,
-    utils::wukong_sdk::FromWKCliConfig,
+    wukong_client::WKClient,
 };
 use dialoguer::{theme::ColorfulTheme, Select};
 use log::debug;
-use wukong_sdk::WKClient;
 
 pub async fn handle_init() -> Result<bool, WKCliError> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
@@ -76,7 +75,7 @@ pub async fn handle_init() -> Result<bool, WKCliError> {
     let fetch_loader = new_spinner();
     fetch_loader.set_message("Fetching application list...");
 
-    let wk_client = WKClient::from_cli_config(&new_config);
+    let wk_client = WKClient::new(&new_config);
 
     let applications_data: Vec<String> = wk_client
         .fetch_applications()

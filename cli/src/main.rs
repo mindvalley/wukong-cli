@@ -1,21 +1,9 @@
 #![forbid(unsafe_code)]
 
-mod app;
-mod auth;
-mod commands;
-mod config;
-mod error;
-mod loader;
-mod logger;
-mod output;
-mod utils;
-
-use app::App;
-use error::WKCliError;
 use human_panic::setup_panic;
 use log::{error, info};
 use std::process;
-use wukong_sdk::output::error::ErrorOutput;
+use wukong::{output::error::ErrorOutput, run};
 
 #[tokio::main]
 async fn main() {
@@ -31,8 +19,7 @@ async fn main() {
 
     match run().await {
         Err(error) => {
-            // error!("{}", ErrorOutput(error));
-            eprintln!("Error: {}", error);
+            error!("{}", ErrorOutput(error));
             process::exit(1);
         }
         Ok(false) => {
@@ -44,10 +31,4 @@ async fn main() {
             process::exit(0);
         }
     }
-}
-
-async fn run() -> Result<bool, WKCliError> {
-    let app = App::new()?;
-
-    app.cli.execute().await
 }

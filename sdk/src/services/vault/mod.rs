@@ -3,10 +3,9 @@ pub mod client;
 use self::client::{FetchSecretsData, Login, VaultClient};
 use crate::error::{APIError, VaultError, WKError};
 use crate::loader::new_spinner_progress_bar;
-use crate::output::colored_println;
 use crate::services::vault::client::FetchSecrets;
+use crate::WKClient;
 use crate::{config::VaultConfig, services::vault::client::Renew};
-use crate::{Config as CLIConfig, WKClient};
 use chrono::{DateTime, Duration, Local};
 use dialoguer::theme::ColorfulTheme;
 use log::debug;
@@ -332,7 +331,7 @@ impl WKClient {
         // progress_bar.finish_and_clear();
 
         if response.status().is_success() {
-            colored_println!("Successfully updated the secrets.");
+            // colored_println!("Successfully updated the secrets.");
         } else {
             handle_error(response).await?;
         }

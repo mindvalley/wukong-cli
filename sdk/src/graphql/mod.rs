@@ -25,17 +25,13 @@ pub use self::{
     },
 };
 use crate::{
-    auth::Auth,
-    config::{AuthConfig, Config},
+    config::Config,
     error::{APIError, WKError},
     telemetry::{self, TelemetryData, TelemetryEvent},
     WKClient,
 };
-use aion::*;
-use chrono::{DateTime, Local};
 use graphql_client::{GraphQLQuery, QueryBody, Response};
 use log::debug;
-use openidconnect::RefreshToken;
 use reqwest::header;
 use std::fmt::Debug;
 use std::{thread, time};
@@ -290,157 +286,6 @@ impl QueryClient {
         Ok(response)
     }
 
-    #[wukong_telemetry(api_event = "fetch_pipeline_list")]
-    pub async fn fetch_pipeline_list(
-        &mut self,
-        application: &str,
-    ) -> Result<Response<pipelines_query::ResponseData>, APIError> {
-        PipelinesQuery::fetch(self, application).await
-    }
-
-    #[wukong_telemetry(api_event = "fetch_pipeline")]
-    pub async fn fetch_pipeline(
-        &mut self,
-        name: &str,
-    ) -> Result<Response<pipeline_query::ResponseData>, APIError> {
-        PipelineQuery::fetch(self, name).await
-    }
-
-    #[wukong_telemetry(api_event = "fetch_multi_branch_pipeline")]
-    pub async fn fetch_multi_branch_pipeline(
-        &mut self,
-        name: &str,
-    ) -> Result<Response<multi_branch_pipeline_query::ResponseData>, APIError> {
-        MultiBranchPipelineQuery::fetch(self, name).await
-    }
-
-    #[wukong_telemetry(api_event = "fetch_ci_status")]
-    pub async fn fetch_ci_status(
-        &mut self,
-        repo_url: &str,
-        branch: &str,
-    ) -> Result<Response<ci_status_query::ResponseData>, APIError> {
-        CiStatusQuery::fetch(self, repo_url, branch).await
-    }
-
-    #[wukong_telemetry(api_event = "fetch_application_list")]
-    pub async fn fetch_application_list(
-        &mut self,
-    ) -> Result<Response<applications_query::ResponseData>, APIError> {
-        ApplicationsQuery::fetch(self).await
-    }
-
-    #[wukong_telemetry(api_event = "fetch_application")]
-    pub async fn fetch_application(
-        &mut self,
-        name: &str,
-    ) -> Result<Response<application_query::ResponseData>, APIError> {
-        ApplicationQuery::fetch(self, name).await
-    }
-
-    #[wukong_telemetry(api_event = "fetch_application_with_k8s_cluster")]
-    pub async fn fetch_application_with_k8s_cluster(
-        &mut self,
-        name: &str,
-        namespace: &str,
-        version: &str,
-    ) -> Result<Response<application_with_k8s_cluster_query::ResponseData>, APIError> {
-        ApplicationWithK8sClusterQuery::fetch(self, name, namespace, version).await
-    }
-
-    #[wukong_telemetry(api_event = "fetch_cd_pipeline_list")]
-    pub async fn fetch_cd_pipeline_list(
-        &mut self,
-        application: &str,
-    ) -> Result<Response<cd_pipelines_query::ResponseData>, APIError> {
-        CdPipelinesQuery::fetch(self, application).await
-    }
-
-    #[wukong_telemetry(api_event = "fetch_cd_pipeline")]
-    pub async fn fetch_cd_pipeline(
-        &mut self,
-        application: &str,
-        namespace: &str,
-        version: &str,
-    ) -> Result<Response<cd_pipeline_query::ResponseData>, APIError> {
-        CdPipelineQuery::fetch(self, application, namespace, version).await
-    }
-
-    #[wukong_telemetry(api_event = "fetch_cd_pipeline_for_rollback")]
-    pub async fn fetch_cd_pipeline_for_rollback(
-        &mut self,
-        application: &str,
-        namespace: &str,
-        version: &str,
-    ) -> Result<Response<cd_pipeline_for_rollback_query::ResponseData>, APIError> {
-        CdPipelineForRollbackQuery::fetch(self, application, namespace, version).await
-    }
-
-    #[wukong_telemetry(api_event = "execute_cd_pipeline")]
-    pub async fn execute_cd_pipeline(
-        &mut self,
-        application: &str,
-        namespace: &str,
-        version: &str,
-        build_artifact_name: &str,
-        changelogs: Option<String>,
-        send_to_slack: bool,
-    ) -> Result<Response<execute_cd_pipeline::ResponseData>, APIError> {
-        ExecuteCdPipeline::mutate(
-            self,
-            application,
-            namespace,
-            version,
-            build_artifact_name,
-            changelogs,
-            send_to_slack,
-        )
-        .await
-    }
-
-    #[wukong_telemetry(api_event = "fetch_changelogs")]
-    pub async fn fetch_changelogs(
-        &mut self,
-        application: &str,
-        namespace: &str,
-        version: &str,
-        build_artifact_name: &str,
-    ) -> Result<Response<changelogs_query::ResponseData>, APIError> {
-        ChangelogsQuery::fetch(self, application, namespace, version, build_artifact_name).await
-    }
-
-    #[wukong_telemetry(api_event = "fetch_kubernetes_pods")]
-    pub async fn fetch_kubernetes_pods(
-        &mut self,
-        application: &str,
-        namespace: &str,
-        version: &str,
-    ) -> Result<Response<kubernetes_pods_query::ResponseData>, APIError> {
-        KubernetesPodsQuery::fetch(self, application, namespace, version).await
-    }
-
-    #[wukong_telemetry(api_event = "fetch_is_authorized")]
-    pub async fn fetch_is_authorized(
-        &mut self,
-        application: &str,
-        namespace: &str,
-        version: &str,
-    ) -> Result<Response<is_authorized_query::ResponseData>, APIError> {
-        IsAuthorizedQuery::fetch(self, application, namespace, version).await
-    }
-
-    #[wukong_telemetry(api_event = "deploy_livebook")]
-    pub async fn deploy_livebook(
-        &mut self,
-        application: &str,
-        namespace: &str,
-        version: &str,
-        name: &str,
-        port: i64,
-    ) -> Result<Response<deploy_livebook::ResponseData>, APIError> {
-        DeployLivebook::mutate(self, application, namespace, version, name, port).await
-    }
-
     pub async fn livebook_resource(
         &mut self,
         application: &str,
@@ -448,16 +293,6 @@ impl QueryClient {
         version: &str,
     ) -> Result<Response<livebook_resource_query::ResponseData>, APIError> {
         LivebookResourceQuery::fetch(self, application, namespace, version).await
-    }
-
-    #[wukong_telemetry(api_event = "destroy_livebook")]
-    pub async fn destroy_livebook(
-        &mut self,
-        application: &str,
-        namespace: &str,
-        version: &str,
-    ) -> Result<Response<destroy_livebook::ResponseData>, APIError> {
-        DestroyLivebook::mutate(self, application, namespace, version).await
     }
 }
 
@@ -516,33 +351,59 @@ impl GQLClient {
     ) -> Result<Q::ResponseData, APIError>
     where
         Q: GraphQLQuery,
-        U: reqwest::IntoUrl,
+        U: reqwest::IntoUrl + Clone + Debug,
         Q::ResponseData: Debug,
     {
+        let mut retry_count = 0;
         let body = Q::build_query(variables);
-        let res: Response<Q::ResponseData> = self
-            .inner
-            .post(url)
-            .json(&body)
-            .send()
-            .await?
-            .json()
-            .await?;
+        debug!("url: {:?}", &url);
+        debug!("query: \n{}", body.query);
 
-        debug!("GraphQL response: {:?}", res);
+        let request = self.inner.post(url.clone()).json(&body);
+        debug!("request: {:#?}", request);
 
-        if let Some(errors) = res.errors {
-            if errors[0].message.to_lowercase().contains("unauthenticated") {
-                return Err(APIError::UnAuthenticated);
-            } else {
-                return Err(APIError::ResponseError {
-                    code: errors[0].message.clone(),
-                    message: errors[0].message.to_string(),
-                });
+        let response: Response<Q::ResponseData> = request.send().await?.json().await?;
+        debug!("response: {:#?}", response);
+
+        // We use <= 3 so it does one extra loop where the last response is checked
+        // in order to return an APIError::Timeout if it was a timeout error in the
+        // case of it failing all 3 retries.
+        while response.errors.is_some() && retry_count <= 3 {
+            if let Some(errors) = response.errors.clone() {
+                let first_error = errors[0].clone();
+
+                match check_retry_and_auth_error(&first_error) {
+                    Some(APIError::UnAuthenticated) => return Err(APIError::UnAuthenticated),
+                    Some(APIError::Timeout { domain }) => {
+                        if retry_count == 3 {
+                            return Err(APIError::Timeout { domain });
+                        }
+                        retry_count += 1;
+                        eprintln!(
+                            "... request to {domain} timed out, retrying the request {}/3",
+                            retry_count
+                        );
+
+                        thread::sleep(time::Duration::from_secs(5));
+
+                        let request = self.inner.post(url.clone()).json(&body);
+                        debug!("request: {:#?}", request);
+
+                        let response: Response<Q::ResponseData> =
+                            request.send().await?.json().await?;
+                        debug!("response: {:#?}", response);
+                    }
+                    _ => {
+                        return Err(APIError::ResponseError {
+                            code: first_error.message.clone(),
+                            message: first_error.message.to_string(),
+                        });
+                    }
+                }
             }
         }
 
-        if let Some(data) = res.data {
+        if let Some(data) = response.data {
             Ok(data)
         } else {
             Err(APIError::MissingResponseData)
@@ -587,6 +448,7 @@ impl WKClient {
             .map_err(|err| err.into())
     }
 
+    // #[wukong_telemetry(api_event = "fetch_pipeline_list")]
     pub async fn fetch_pipelines(
         &self,
         application: &str,
@@ -898,7 +760,7 @@ impl WKClient {
             })
     }
 
-    pub async fn fetch_preview_cd_pipeline_build(
+    pub async fn fetch_previous_cd_pipeline_build(
         &self,
         application: &str,
         namespace: &str,

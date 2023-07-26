@@ -1,20 +1,22 @@
 use crate::{
     commands::{pipeline::PipelineData, Context},
-    config::{Config, CONFIG_FILE},
+    config::Config,
     error::WKCliError,
     loader::new_spinner,
     output::{colored_println, table::TableOutput},
-    utils::wukong_sdk::FromWKCliConfig,
+    wukong_client::WKClient,
 };
-use wukong_sdk::{graphql::pipelines_query::PipelinesQueryPipelines, WKClient};
+use wukong_sdk::graphql::pipelines_query::PipelinesQueryPipelines;
+use wukong_telemetry::*;
+use wukong_telemetry_macro::*;
 
-// #[wukong_telemetry(command_event = "pipeline_list")]
+#[wukong_telemetry(command_event = "pipeline_list")]
 pub async fn handle_list(context: Context) -> Result<bool, WKCliError> {
     let fetch_loader = new_spinner();
     fetch_loader.set_message("Fetching pipelines list ...");
 
     let config = Config::load_from_default_path()?;
-    let wk_client = WKClient::from_cli_config(&config);
+    let wk_client = WKClient::new(&config);
 
     let pipelines_data = wk_client
         .fetch_pipelines(&context.current_application)

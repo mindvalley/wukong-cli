@@ -1,6 +1,4 @@
 pub mod line;
-pub mod wukong_sdk;
-
 use chrono::{DateTime, Duration, Local};
 
 pub fn compare_with_current_time(time: &str) -> Duration {

@@ -25,15 +25,14 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
     if let Some(command_event) = command_event_value {
         generated_func = quote! {
             #visibility #asyncness fn #fn_ident(#fn_inputs) #fn_output {
-                // SAFETY: the application can't be None since it is checked in the caller
-                let current_application = context.state.application.as_ref().expect("Current application must not be None for command event telemetry.").clone();
+                let current_application = context.current_application.clone();
                 // SAFETY: the sub can't be None since it is checked in the caller
-                let current_sub = context.state.sub.as_ref().expect("Current sub must not be None for command event telemetry.").clone();
+                let current_sub = context.sub.as_ref().expect("Current sub must not be None for command event telemetry.").clone();
 
                 TelemetryData::new(
                     TelemetryEvent::Command {
                         name: #command_event.to_string(),
-                        run_mode: telemetry::CommandRunMode::NonInteractive,
+                        run_mode: CommandRunMode::NonInteractive,
                     },
                     Some(current_application),
                     current_sub,
@@ -86,7 +85,7 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
                             TelemetryEvent::Api {
                                 name: #api_event.to_string(),
                                 duration: now.elapsed().as_millis() as u64,
-                                response: telemetry::APIResponse::Success,
+                                response: APIResponse::Success,
                             },
                             #current_application,
                             current_sub,
@@ -97,7 +96,7 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
                             TelemetryEvent::Api {
                                 name: #api_event.to_string(),
                                 duration: now.elapsed().as_millis() as u64,
-                                response: telemetry::APIResponse::Error,
+                                response: APIResponse::Error,
                             },
                             #current_application,
                             current_sub,
@@ -109,7 +108,7 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
                 .record_event()
                 .await;
 
-                fn_result
+                fn_result.map_err(|err| err.into())
             }
         };
     } else {

@@ -10,9 +10,6 @@ prod = []
 strip = true
 lto = true
 
-[[bench]]
-name = "output_tokenizer_benchmark"
-harness = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -64,7 +61,7 @@ once_cell = "1.17.0"
 edit = "0.1.4"
 
 # Telemetry
-wukong_telemetry_macro = { path = "crates/wukong_telemetry_macro" }
+wukong-telemetry-macro = { path = "../telemetry-macro" }
 regex = "1.7.0"
 chrono-tz = "0.8.1"
 

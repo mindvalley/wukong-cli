@@ -1,33 +1,23 @@
 mod app;
-mod auth;
 mod config;
 pub mod error;
 pub mod graphql;
 mod loader;
 mod logger;
-pub mod output;
 pub mod services {
     pub mod gcloud;
     pub mod vault;
 }
 pub mod linter;
-mod telemetry;
+pub mod telemetry;
 mod utils;
 
-pub use utils::secret_extractors;
+pub mod wk_telemetry {
+    pub use crate::telemetry::*;
+    pub use wukong_telemetry_macro::wukong_telemetry;
+}
 
-use app::App;
-use auth::Auth;
-use config::{Config, CONFIG_FILE};
-use error::{APIError, AuthError, WKError};
-use graphql::{
-    applications_query, pipeline_query,
-    pipelines_query::{self, PipelinesQueryPipelines},
-    ApplicationsQuery, GQLClient, PipelinesQuery,
-};
-use graphql_client::{GraphQLQuery, Response};
-use hyper::header;
-use openidconnect::RefreshToken;
+pub use utils::secret_extractors;
 
 pub struct WKConfig {
     pub api_url: String,

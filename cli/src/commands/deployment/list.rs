@@ -7,11 +7,12 @@ use crate::{
         colored_println,
         table::{fmt_option_human_timestamp, fmt_option_string, TableOutput},
     },
-    utils::wukong_sdk::FromWKCliConfig,
+    wukong_client::WKClient,
 };
 use serde::{Deserialize, Serialize};
 use tabled::Tabled;
-use wukong_sdk::WKClient;
+use wukong_telemetry::*;
+use wukong_telemetry_macro::*;
 
 fn fmt_version(o: &str) -> String {
     fn capitalize_first_letter(o: &str) -> String {
@@ -58,13 +59,13 @@ struct CdPipeline {
     status: Option<String>,
 }
 
-// #[wukong_telemetry(command_event = "deployment_list")]
+#[wukong_telemetry(command_event = "deployment_list")]
 pub async fn handle_list(context: Context) -> Result<bool, WKCliError> {
     let fetch_loader = new_spinner();
     fetch_loader.set_message("Fetching cd pipeline list ... ");
 
     let config = Config::load_from_default_path()?;
-    let wk_client = WKClient::from_cli_config(&config);
+    let wk_client = WKClient::new(&config);
 
     let cd_pipelines_data = wk_client
         .fetch_cd_pipelines(&context.current_application)

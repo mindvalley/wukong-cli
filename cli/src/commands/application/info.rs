@@ -1,14 +1,12 @@
+use crate::{commands::Context, config::Config, error::WKCliError, wukong_client::WKClient};
 use owo_colors::OwoColorize;
-use wukong_sdk::WKClient;
+use wukong_telemetry::*;
+use wukong_telemetry_macro::*;
 
-use crate::{
-    commands::Context, config::Config, error::WKCliError, utils::wukong_sdk::FromWKCliConfig,
-};
-
-// #[wukong_telemetry(command_event = "application_info")]
+#[wukong_telemetry(command_event = "application_info")]
 pub async fn handle_info(context: Context) -> Result<bool, WKCliError> {
     let config = Config::load_from_default_path()?;
-    let wk_client = WKClient::from_cli_config(&config);
+    let wk_client = WKClient::new(&config);
 
     let application_resp = wk_client
         .fetch_application(&context.current_application) // SAFERY: the application is checked on the caller so it will always be Some(x) here

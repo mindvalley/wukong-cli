@@ -2,11 +2,15 @@ use std::collections::HashMap;
 
 use dialoguer::{theme::ColorfulTheme, Confirm, Select};
 use owo_colors::OwoColorize;
-use wukong_sdk::{secret_extractors::SecretInfo, WKClient};
+use wukong_sdk::secret_extractors::SecretInfo;
 
 use crate::{
-    auth::vault, commands::dev::config::utils::make_path_relative, config::Config,
-    error::WKCliError, loader::new_spinner, utils::wukong_sdk::FromWKCliConfig,
+    auth::vault,
+    commands::{dev::config::utils::make_path_relative, Context},
+    config::Config,
+    error::WKCliError,
+    loader::new_spinner,
+    wukong_client::WKClient,
 };
 
 use super::{
@@ -16,8 +20,11 @@ use super::{
         get_secret_config_files, get_updated_configs,
     },
 };
+use wukong_telemetry::*;
+use wukong_telemetry_macro::*;
 
-pub async fn handle_config_push() -> Result<bool, WKCliError> {
+#[wukong_telemetry(command_event = "dev_config_push")]
+pub async fn handle_config_push(context: Context) -> Result<bool, WKCliError> {
     let loader = new_spinner();
     loader.set_message("🔍 Finding config with annotation");
 
@@ -38,7 +45,7 @@ pub async fn handle_config_push() -> Result<bool, WKCliError> {
     }
 
     let mut config = Config::load_from_default_path()?;
-    let wk_client = WKClient::from_cli_config(&config);
+    let wk_client = WKClient::new(&config);
     let vault_token = vault::get_token_or_login(&mut config).await?;
 
     let updated_configs = get_updated_configs(&wk_client, &vault_token, &extracted_infos).await?;

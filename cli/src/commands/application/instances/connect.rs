@@ -3,7 +3,9 @@ use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use log::debug;
 use owo_colors::OwoColorize;
 use tokio::time::sleep;
-use wukong_sdk::WKClient;
+use wukong_sdk::error::WKError;
+use wukong_telemetry::*;
+use wukong_telemetry_macro::*;
 
 use crate::{
     commands::{
@@ -15,7 +17,7 @@ use crate::{
     error::{ApplicationInstanceError, WKCliError},
     loader::new_spinner,
     output::colored_println,
-    utils::wukong_sdk::FromWKCliConfig,
+    wukong_client::WKClient,
 };
 
 // 2 mins timeout
@@ -35,6 +37,7 @@ struct KubernetesPod {
     is_livebook: Option<bool>,
 }
 
+#[wukong_telemetry(command_event = "application_instances_connect")]
 pub async fn handle_connect(
     context: Context,
     namespace_arg: &Option<ApplicationNamespace>,
@@ -92,7 +95,7 @@ pub async fn handle_connect(
         .set_message("Checking your permission to connect to the remote instance...");
 
     let config = Config::load_from_default_path()?;
-    let mut wk_client = WKClient::from_cli_config(&config);
+    let mut wk_client = WKClient::new(&config);
 
     if !has_permission(&mut wk_client, &application, &namespace, &version)
         .await
@@ -319,7 +322,7 @@ async fn cleanup_previous_livebook_instance(
             .await
         {
             match &err {
-                wukong_sdk::error::WKError::APIError(api_error) => match api_error {
+                WKCliError::WKSdkError(WKError::APIError(api_error)) => match api_error {
                     wukong_sdk::error::APIError::ResponseError { code, message } => {
                         if !message.contains("pod_not_found") && !code.contains("pod_not_found") {
                             return Err(err.into());
@@ -433,7 +436,7 @@ async fn has_permission(
     {
         Ok(data) => data.is_authorized,
         Err(err) => match &err {
-            wukong_sdk::error::WKError::APIError(api_error) => match api_error {
+            WKCliError::WKSdkError(WKError::APIError(api_error)) => match api_error {
                 wukong_sdk::error::APIError::ResponseError { code, message: _ } => {
                     if code == "k8s_cluster_namespace_config_not_defined" {
                         return Err(WKCliError::ApplicationInstanceError(

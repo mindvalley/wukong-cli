@@ -98,3 +98,4 @@ mod test {
         assert_eq!(logger_builder.max_log_level, LevelFilter::Warn);
     }
 }
+

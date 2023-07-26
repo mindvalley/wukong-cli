@@ -1,5 +1,5 @@
 use log::debug;
-use wukong_sdk::WKClient;
+use wukong_sdk::error::WKError;
 
 use crate::{
     commands::{pipeline::PipelineCiStatus, Context},
@@ -7,13 +7,15 @@ use crate::{
     error::WKCliError,
     loader::new_spinner,
     output::{colored_println, table::TableOutput},
-    utils::wukong_sdk::FromWKCliConfig,
+    wukong_client::WKClient,
 };
 use std::process::Command as ProcessCommand;
+use wukong_telemetry::*;
+use wukong_telemetry_macro::*;
 
-// #[wukong_telemetry(command_event = "pipeline_ci_status")]
+#[wukong_telemetry(command_event = "pipeline_ci_status")]
 pub async fn handle_ci_status(
-    _context: Context,
+    context: Context,
     repo_url: &Option<String>,
     branch: &Option<String>,
 ) -> Result<bool, WKCliError> {
@@ -55,13 +57,13 @@ pub async fn handle_ci_status(
     fetch_loader.set_message("Fetching ci status ...");
 
     let config = Config::load_from_default_path()?;
-    let wk_client = WKClient::from_cli_config(&config);
+    let wk_client = WKClient::new(&config);
 
     let ci_status_resp = wk_client
         .fetch_ci_status(&repo_url, &branch)
         .await
         .map_err(|err| match &err {
-            wukong_sdk::error::WKError::APIError(api_error) => match api_error {
+            WKCliError::WKSdkError(WKError::APIError(api_error)) => match api_error {
                 wukong_sdk::error::APIError::ResponseError { code, message: _ } => {
                     if code == "application_config_not_defined" {
                         debug!("The application config is not defined. code: {code}");
