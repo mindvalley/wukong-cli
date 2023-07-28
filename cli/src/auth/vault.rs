@@ -80,7 +80,7 @@ pub async fn get_token_or_login(config: &mut Config) -> Result<String, WKCliErro
 
                 Ok(token)
             }
-            Err(_) => {
+            Err(WKCliError::AuthError(AuthError::VaultPermissionDenied)) => {
                 // login
                 colored_println!("Login Vault with okta account {}", auth_config.account);
 
@@ -106,6 +106,7 @@ pub async fn get_token_or_login(config: &mut Config) -> Result<String, WKCliErro
                 colored_println!("You are now logged in as {}.\n", email);
                 Ok(login_resp.auth.client_token)
             }
+            Err(err) => Err(err),
         },
         None => {
             colored_println!("Login Vault with okta account {}", auth_config.account);
@@ -142,6 +143,7 @@ pub async fn login(
     email: &str,
     password: &str,
 ) -> Result<Login, WKCliError> {
+    debug!("Login user ...");
     let url = format!("{}{}/{}", BASE_URL.as_str(), LOGIN_URL, email);
 
     let response = client
@@ -163,13 +165,18 @@ pub async fn login(
 }
 
 pub async fn verify_token(client: &reqwest::Client, api_token: &str) -> Result<bool, WKCliError> {
+    debug!("Verifying token ...");
     let url = format!("{}{}", BASE_URL.as_str(), VERIFY_TOKEN_URL);
+    let loader = new_spinner();
+    loader.set_message("Verifying the token...");
 
     let response = client
         .get(url)
         .header("X-Vault-Token", api_token)
         .send()
         .await?;
+
+    loader.finish_and_clear();
 
     debug!("verify token: {:?}", response);
 
@@ -184,6 +191,7 @@ pub async fn verify_token(client: &reqwest::Client, api_token: &str) -> Result<b
 }
 
 pub async fn renew_token(client: &reqwest::Client, api_token: &str) -> Result<Renew, WKCliError> {
+    debug!("Renewing token ...");
     let url = format!("{}{}", BASE_URL.as_str(), RENEW_TOKEN_URL);
 
     let response = client

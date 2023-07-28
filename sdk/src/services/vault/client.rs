@@ -50,6 +50,12 @@ pub struct VaultClient {
     base_url: String,
 }
 
+impl Default for VaultClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl VaultClient {
     pub const LOGIN: &str = "/v1/auth/okta/login";
     pub const RENEW_TOKEN: &str = "/v1/auth/token/renew-self";
