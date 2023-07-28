@@ -37,13 +37,13 @@ impl InstalledFlowDelegate for InstalledFlowBrowserDelegate {
     }
 }
 
-const GOOGLE_CLIENT_ID: &'static str =
+const GOOGLE_CLIENT_ID: &str =
     "16448589901-ccrhj03hhg6adn9uv8vi2trnpmd62k6n.apps.googleusercontent.com";
-const GOOGLE_CLIENT_SECRET: &'static str = "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";
-const TOKEN_URI: &'static str = "https://oauth2.googleapis.com/token";
-const AUTH_URI: &'static str = "https://accounts.google.com/o/oauth2/auth";
-const REDIRECT_URI: &'static str = "http://127.0.0.1/8855";
-const AUTH_PROVIDER_X509_CERT_URL: &'static str = "https://www.googleapis.com/oauth2/v1/certs";
+const GOOGLE_CLIENT_SECRET: &str = "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";
+const TOKEN_URI: &str = "https://oauth2.googleapis.com/token";
+const AUTH_URI: &str = "https://accounts.google.com/o/oauth2/auth";
+const REDIRECT_URI: &str = "http://127.0.0.1/8855";
+const AUTH_PROVIDER_X509_CERT_URL: &str = "https://www.googleapis.com/oauth2/v1/certs";
 
 pub async fn get_token_or_login() -> String {
     let secret = ApplicationSecret {

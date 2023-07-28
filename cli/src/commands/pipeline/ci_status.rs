@@ -1,5 +1,5 @@
 use log::debug;
-use wukong_sdk::error::WKError;
+use wukong_sdk::error::{APIError, WKError};
 
 use crate::{
     commands::{pipeline::PipelineCiStatus, Context},
@@ -63,18 +63,18 @@ pub async fn handle_ci_status(
         .fetch_ci_status(&repo_url, &branch)
         .await
         .map_err(|err| match &err {
-            WKCliError::WKSdkError(WKError::APIError(api_error)) => match api_error {
-                wukong_sdk::error::APIError::ResponseError { code, message: _ } => {
-                    if code == "application_config_not_defined" {
-                        debug!("The application config is not defined. code: {code}");
-                        WKCliError::ApplicationConfigNotDefined
-                    } else {
-                        err.into()
-                    }
+            WKCliError::WKSdkError(WKError::APIError(APIError::ResponseError {
+                code,
+                message: _,
+            })) => {
+                if code == "application_config_not_defined" {
+                    debug!("The application config is not defined. code: {code}");
+                    WKCliError::ApplicationConfigNotDefined
+                } else {
+                    err
                 }
-                _ => err.into(),
-            },
-            _ => err.into(),
+            }
+            _ => err,
         })?
         .ci_status;
 

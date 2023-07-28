@@ -15,6 +15,7 @@ use wukong_telemetry::*;
 use wukong_telemetry_macro::*;
 
 #[wukong_telemetry(command_event = "application_logs")]
+#[allow(clippy::too_many_arguments)]
 pub async fn handle_logs(
     context: Context,
     namespace: &ApplicationNamespace,

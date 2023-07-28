@@ -3,7 +3,7 @@ use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use log::debug;
 use owo_colors::OwoColorize;
 use tokio::time::sleep;
-use wukong_sdk::error::WKError;
+use wukong_sdk::error::{APIError, WKError};
 use wukong_telemetry::*;
 use wukong_telemetry_macro::*;
 
@@ -322,15 +322,15 @@ async fn cleanup_previous_livebook_instance(
             .await
         {
             match &err {
-                WKCliError::WKSdkError(WKError::APIError(api_error)) => match api_error {
-                    wukong_sdk::error::APIError::ResponseError { code, message } => {
-                        if !message.contains("pod_not_found") && !code.contains("pod_not_found") {
-                            return Err(err.into());
-                        }
+                WKCliError::WKSdkError(WKError::APIError(APIError::ResponseError {
+                    code,
+                    message,
+                })) => {
+                    if !message.contains("pod_not_found") && !code.contains("pod_not_found") {
+                        return Err(err);
                     }
-                    _ => return Err(err.into()),
-                },
-                _ => return Err(err.into()),
+                }
+                _ => return Err(err),
             }
         }
 
@@ -436,29 +436,29 @@ async fn has_permission(
     {
         Ok(data) => data.is_authorized,
         Err(err) => match &err {
-            WKCliError::WKSdkError(WKError::APIError(api_error)) => match api_error {
-                wukong_sdk::error::APIError::ResponseError { code, message: _ } => {
-                    if code == "k8s_cluster_namespace_config_not_defined" {
-                        return Err(WKCliError::ApplicationInstanceError(
-                            ApplicationInstanceError::NamespaceNotAvailable,
-                        ));
-                    } else if code == "k8s_cluster_version_config_not_defined" {
-                        return Err(WKCliError::ApplicationInstanceError(
-                            ApplicationInstanceError::VersionNotAvailable {
-                                version: version.to_string(),
-                            },
-                        ));
-                    } else if code == "application_config_not_defined" {
-                        return Err(WKCliError::ApplicationInstanceError(
-                            ApplicationInstanceError::ApplicationNotFound,
-                        ));
-                    } else {
-                        return Err(err.into());
-                    }
+            WKCliError::WKSdkError(WKError::APIError(APIError::ResponseError {
+                code,
+                message: _,
+            })) => {
+                if code == "k8s_cluster_namespace_config_not_defined" {
+                    return Err(WKCliError::ApplicationInstanceError(
+                        ApplicationInstanceError::NamespaceNotAvailable,
+                    ));
+                } else if code == "k8s_cluster_version_config_not_defined" {
+                    return Err(WKCliError::ApplicationInstanceError(
+                        ApplicationInstanceError::VersionNotAvailable {
+                            version: version.to_string(),
+                        },
+                    ));
+                } else if code == "application_config_not_defined" {
+                    return Err(WKCliError::ApplicationInstanceError(
+                        ApplicationInstanceError::ApplicationNotFound,
+                    ));
+                } else {
+                    return Err(err);
                 }
-                _ => return Err(err.into()),
-            },
-            _ => return Err(err.into()),
+            }
+            _ => return Err(err),
         },
     };
 

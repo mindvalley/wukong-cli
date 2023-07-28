@@ -170,21 +170,6 @@ impl Config {
                 .expect("Unable to identify user's home directory"),
         )
     }
-
-    pub fn get_config_with_path() -> Result<ConfigWithPath, ConfigError> {
-        let config_file = CONFIG_FILE
-            .as_ref()
-            .expect("Unable to identify user's home directory");
-
-        let config = Config::load_from_path(config_file)?;
-
-        let config_with_path = ConfigWithPath {
-            config,
-            path: config_file.to_string(),
-        };
-
-        Ok(config_with_path)
-    }
 }
 
 #[cfg(test)]

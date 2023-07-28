@@ -91,17 +91,6 @@ pub enum CommandGroup {
 
 impl ClapApp {
     pub async fn execute(&self) -> Result<bool, WKCliError> {
-        let mut context = Context::default();
-
-        // overwritten by --application flag
-        context.current_application = match self.application {
-            Some(ref application) => application.clone(),
-            None => {
-                let config = Config::load_from_default_path()?;
-                config.core.application
-            }
-        };
-
         debug!("current cli version: {}", crate_version!());
 
         match &self.command_group {
@@ -109,33 +98,34 @@ impl ClapApp {
             CommandGroup::Completion { shell } => handle_completion(*shell),
             CommandGroup::Login => handle_login().await,
             CommandGroup::Application(application) => {
-                application.handle_command(get_context(&self)?).await
+                application.handle_command(get_context(self)?).await
             }
-            CommandGroup::Pipeline(pipeline) => pipeline.handle_command(get_context(&self)?).await,
+            CommandGroup::Pipeline(pipeline) => pipeline.handle_command(get_context(self)?).await,
             CommandGroup::Deployment(deployment) => {
-                deployment.handle_command(get_context(&self)?).await
+                deployment.handle_command(get_context(self)?).await
             }
             CommandGroup::Config(config) => config.handle_command(),
-            CommandGroup::Dev(dev) => dev.handle_command(get_context(&self)?).await,
+            CommandGroup::Dev(dev) => dev.handle_command(get_context(self)?).await,
         }
     }
 }
 
 // for telemetry
 fn get_context(clap_app: &ClapApp) -> Result<Context, WKCliError> {
-    let mut context = Context::default();
+    let config = Config::load_from_default_path()?;
 
-    // overwritten by --application flag
-    context.current_application = match clap_app.application {
-        Some(ref application) => application.clone(),
-        None => {
-            let config = Config::load_from_default_path()?;
-            config.core.application
-        }
+    let context = Context {
+        // overwritten by --application flag
+        current_application: match clap_app.application {
+            Some(ref application) => application.clone(),
+            None => {
+                let config = Config::load_from_default_path()?;
+                config.core.application
+            }
+        },
+        sub: config.auth.map(|auth_config| auth_config.subject),
     };
 
-    let config = Config::load_from_default_path()?;
-    context.sub = config.auth.map(|auth_config| auth_config.subject);
     Ok(context)
 }
 

@@ -529,7 +529,7 @@ pub async fn handle_execute(
                 changelog = format!("{}\n{instructions}", "");
             }
             _ => {
-                return Err(error.into());
+                return Err(error);
             }
         },
     }
