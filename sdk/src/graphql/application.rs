@@ -1,6 +1,4 @@
-use super::QueryClient;
-use crate::error::APIError;
-use graphql_client::{GraphQLQuery, Response};
+use graphql_client::GraphQLQuery;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -10,28 +8,6 @@ use graphql_client::{GraphQLQuery, Response};
 )]
 pub struct ApplicationQuery;
 
-impl ApplicationQuery {
-    pub(crate) async fn fetch(
-        client: &mut QueryClient,
-        name: &str,
-    ) -> Result<Response<application_query::ResponseData>, APIError> {
-        let variables = application_query::Variables {
-            name: name.to_string(),
-        };
-
-        let response = client
-            .call_api::<ApplicationQuery>(variables, |_, error| {
-                Err(APIError::ResponseError {
-                    code: error.message.clone(),
-                    message: format!("{error}"),
-                })
-            })
-            .await?;
-
-        Ok(response)
-    }
-}
-
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "src/graphql/schema.json",
@@ -39,32 +15,6 @@ impl ApplicationQuery {
     response_derives = "Debug, Serialize, Deserialize"
 )]
 pub struct ApplicationWithK8sClusterQuery;
-
-impl ApplicationWithK8sClusterQuery {
-    pub(crate) async fn fetch(
-        client: &mut QueryClient,
-        name: &str,
-        namespace: &str,
-        version: &str,
-    ) -> Result<Response<application_with_k8s_cluster_query::ResponseData>, APIError> {
-        let variables = application_with_k8s_cluster_query::Variables {
-            name: name.to_string(),
-            namespace: namespace.to_string(),
-            version: version.to_string(),
-        };
-
-        let response = client
-            .call_api::<ApplicationWithK8sClusterQuery>(variables, |_, error| {
-                Err(APIError::ResponseError {
-                    code: error.message.clone(),
-                    message: format!("{error}"),
-                })
-            })
-            .await?;
-
-        Ok(response)
-    }
-}
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -74,39 +24,16 @@ impl ApplicationWithK8sClusterQuery {
 )]
 pub struct ApplicationsQuery;
 
-impl ApplicationsQuery {
-    pub(crate) async fn fetch(
-        client: &mut QueryClient,
-    ) -> Result<Response<applications_query::ResponseData>, APIError> {
-        let variables = applications_query::Variables {};
-
-        let response = client
-            .call_api::<ApplicationsQuery>(variables, |_, error| {
-                Err(APIError::ResponseError {
-                    code: error.message.clone(),
-                    message: format!("{error}"),
-                })
-            })
-            .await?;
-
-        Ok(response)
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::graphql::QueryClientBuilder;
+    use crate::graphql::GQLClient;
     use httpmock::prelude::*;
 
     #[tokio::test]
     async fn test_fetch_application_success_should_return_correct_application_info() {
         let server = MockServer::start();
-        let mut query_client = QueryClientBuilder::default()
-            .with_access_token("test_access_token".to_string())
-            .with_api_url(server.base_url())
-            .build()
-            .unwrap();
+        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
 
         let api_resp = r#"
 {
@@ -142,12 +69,19 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = ApplicationQuery::fetch(&mut query_client, "valid-application").await;
+        let response = gql_client
+            .post_graphql::<ApplicationQuery, _>(
+                server.base_url(),
+                application_query::Variables {
+                    name: "valid-application".to_string(),
+                },
+            )
+            .await;
 
         mock.assert();
         assert!(response.is_ok());
 
-        let application = response.unwrap().data.unwrap().application.unwrap();
+        let application = response.unwrap().application.unwrap();
         assert_eq!(application.name, "valid-application");
 
         let basic_info = application.basic_info.unwrap();
@@ -160,11 +94,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_application_list_success_should_return_application_list() {
         let server = MockServer::start();
-        let mut query_client = QueryClientBuilder::default()
-            .with_access_token("test_access_token".to_string())
-            .with_api_url(server.base_url())
-            .build()
-            .unwrap();
+        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
 
         let api_resp = r#"
 {
@@ -190,12 +120,17 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = ApplicationsQuery::fetch(&mut query_client).await;
+        let response = gql_client
+            .post_graphql::<ApplicationsQuery, _>(
+                server.base_url(),
+                applications_query::Variables {},
+            )
+            .await;
 
         mock.assert();
         assert!(response.is_ok());
 
-        let applications = response.unwrap().data.unwrap().applications;
+        let applications = response.unwrap().applications;
         assert_eq!(applications.len(), 3);
     }
 }

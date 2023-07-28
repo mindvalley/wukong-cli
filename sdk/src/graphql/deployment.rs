@@ -1,6 +1,4 @@
-use super::QueryClient;
-use crate::error::APIError;
-use graphql_client::{GraphQLQuery, Response};
+use graphql_client::GraphQLQuery;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -10,32 +8,6 @@ use graphql_client::{GraphQLQuery, Response};
 )]
 pub struct CdPipelinesQuery;
 
-impl CdPipelinesQuery {
-    pub(crate) async fn fetch(
-        client: &mut QueryClient,
-        application: &str,
-    ) -> Result<Response<cd_pipelines_query::ResponseData>, APIError> {
-        let variables = cd_pipelines_query::Variables {
-            application: application.to_string(),
-        };
-
-        let response = client
-            .call_api::<Self>(variables, |_, error| match error.message.as_str() {
-                "application_not_found" => Err(APIError::ResponseError {
-                    code: error.message,
-                    message: format!("Application `{application}` not found."),
-                }),
-                _ => Err(APIError::ResponseError {
-                    code: error.message.clone(),
-                    message: format!("{error}"),
-                }),
-            })
-            .await?;
-
-        Ok(response)
-    }
-}
-
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "src/graphql/schema.json",
@@ -43,36 +15,6 @@ impl CdPipelinesQuery {
     response_derives = "Debug, Serialize, Deserialize"
 )]
 pub struct CdPipelineQuery;
-
-impl CdPipelineQuery {
-    pub(crate) async fn fetch(
-        client: &mut QueryClient,
-        application: &str,
-        namespace: &str,
-        version: &str,
-    ) -> Result<Response<cd_pipeline_query::ResponseData>, APIError> {
-        let variables = cd_pipeline_query::Variables {
-            application: application.to_string(),
-            namespace: namespace.to_string(),
-            version: version.to_string(),
-        };
-
-        let response = client
-            .call_api::<Self>(variables, |_, error| match error.message.as_str() {
-                "application_not_found" => Err(APIError::ResponseError {
-                    code: error.message,
-                    message: format!("Application `{application}` not found."),
-                }),
-                _ => Err(APIError::ResponseError {
-                    code: error.message.clone(),
-                    message: format!("{error}"),
-                }),
-            })
-            .await?;
-
-        Ok(response)
-    }
-}
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -82,36 +24,6 @@ impl CdPipelineQuery {
 )]
 pub struct CdPipelineForRollbackQuery;
 
-impl CdPipelineForRollbackQuery {
-    pub(crate) async fn fetch(
-        client: &mut QueryClient,
-        application: &str,
-        namespace: &str,
-        version: &str,
-    ) -> Result<Response<cd_pipeline_for_rollback_query::ResponseData>, APIError> {
-        let variables = cd_pipeline_for_rollback_query::Variables {
-            application: application.to_string(),
-            namespace: namespace.to_string(),
-            version: version.to_string(),
-        };
-
-        let response = client
-            .call_api::<Self>(variables, |_, error| match error.message.as_str() {
-                "application_not_found" => Err(APIError::ResponseError {
-                    code: error.message,
-                    message: format!("Application `{application}` not found."),
-                }),
-                _ => Err(APIError::ResponseError {
-                    code: error.message.clone(),
-                    message: format!("{error}"),
-                }),
-            })
-            .await?;
-
-        Ok(response)
-    }
-}
-
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "src/graphql/schema.json",
@@ -120,62 +32,18 @@ impl CdPipelineForRollbackQuery {
 )]
 pub struct ExecuteCdPipeline;
 
-impl ExecuteCdPipeline {
-    pub(crate) async fn mutate(
-        client: &mut QueryClient,
-        application: &str,
-        namespace: &str,
-        version: &str,
-        build_artifact_name: &str,
-        changelogs: Option<String>,
-        send_to_slack: bool,
-    ) -> Result<Response<execute_cd_pipeline::ResponseData>, APIError> {
-        let variables = execute_cd_pipeline::Variables {
-            application: application.to_string(),
-            build_number: 0,
-            build_artifact_name: Some(build_artifact_name.to_string()),
-            namespace: namespace.to_string(),
-            version: version.to_string(),
-            changelogs,
-            send_to_slack,
-        };
-
-        let response = client
-            .call_api::<Self>(variables, |_, error| match error.message.as_str() {
-                "application_not_found" => Err(APIError::ResponseError {
-                    code: error.message,
-                    message: format!("Application `{application}` not found."),
-                }),
-                "deploy_for_this_build_is_currently_running" => Err(APIError::ResponseError {
-                    code: error.message,
-                    message: "Cannot submit this deployment request, since there is another running deployment with the same arguments is running on Spinnaker.\nYou can wait a few minutes and submit the deployment again.".to_string()
-                }),
-                _ => Err(APIError::ResponseError {
-                    code: error.message.clone(),
-                    message: format!("{error}"),
-                }),
-            })
-            .await?;
-
-        Ok(response)
-    }
-}
-
 #[cfg(test)]
 mod test {
+    use crate::{error::APIError, graphql::GQLClient};
+
     use super::*;
-    use crate::graphql::QueryClientBuilder;
     use base64::Engine;
     use httpmock::prelude::*;
 
     #[tokio::test]
     async fn test_fetch_cd_pipeline_list_success_should_return_cd_pipeline_list() {
         let server = MockServer::start();
-        let mut query_client = QueryClientBuilder::default()
-            .with_access_token("test_access_token".to_string())
-            .with_api_url(server.base_url())
-            .build()
-            .unwrap();
+        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
 
         let api_resp = r#"
 {
@@ -212,12 +80,19 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = CdPipelinesQuery::fetch(&mut query_client, "valid_application").await;
+        let response = gql_client
+            .post_graphql::<CdPipelinesQuery, _>(
+                server.base_url(),
+                cd_pipelines_query::Variables {
+                    application: "valid-application".to_string(),
+                },
+            )
+            .await;
 
         mock.assert();
         assert!(response.is_ok());
 
-        let cd_pipelines = response.unwrap().data.unwrap().cd_pipelines;
+        let cd_pipelines = response.unwrap().cd_pipelines;
         assert_eq!(cd_pipelines.len(), 2);
     }
 
@@ -225,11 +100,7 @@ mod test {
     async fn test_fetch_cd_pipeline_list_failed_with_application_not_found_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let mut query_client = QueryClientBuilder::default()
-            .with_access_token("test_access_token".to_string())
-            .with_api_url(server.base_url())
-            .build()
-            .unwrap();
+        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
 
         let api_resp = r#"
 {
@@ -257,7 +128,14 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = CdPipelinesQuery::fetch(&mut query_client, "invalid_application").await;
+        let response = gql_client
+            .post_graphql::<CdPipelinesQuery, _>(
+                server.base_url(),
+                cd_pipelines_query::Variables {
+                    application: "invalid-application".to_string(),
+                },
+            )
+            .await;
 
         mock.assert();
         assert!(response.is_err());
@@ -265,7 +143,7 @@ mod test {
         match response.as_ref().unwrap_err() {
             APIError::ResponseError { code, message } => {
                 assert_eq!(code, "application_not_found");
-                assert_eq!(message, "Application `invalid_application` not found.");
+                assert_eq!(message, "Application `invalid-application` not found.");
             }
             _ => panic!("it should be returning ResponseError"),
         }
@@ -274,11 +152,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_cd_pipeline_for_rollback_success_should_return_cd_pipeline() {
         let server = MockServer::start();
-        let mut query_client = QueryClientBuilder::default()
-            .with_access_token("test_access_token".to_string())
-            .with_api_url(server.base_url())
-            .build()
-            .unwrap();
+        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
 
         let api_resp = r#"
 {
@@ -306,18 +180,21 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = CdPipelineForRollbackQuery::fetch(
-            &mut query_client,
-            "valid_application",
-            "prod",
-            "green",
-        )
-        .await;
+        let response = gql_client
+            .post_graphql::<CdPipelineForRollbackQuery, _>(
+                server.base_url(),
+                cd_pipeline_for_rollback_query::Variables {
+                    application: "invalid-application".to_string(),
+                    namespace: "prod".to_string(),
+                    version: "green".to_string(),
+                },
+            )
+            .await;
 
         mock.assert();
         assert!(response.is_ok());
 
-        let cd_pipeline = response.unwrap().data.unwrap().cd_pipeline.unwrap();
+        let cd_pipeline = response.unwrap().cd_pipeline.unwrap();
         let previous_deployed_artifacts = cd_pipeline.previous_deployed_artifacts;
         assert_eq!(previous_deployed_artifacts.len(), 1);
         assert_eq!(
@@ -329,11 +206,7 @@ mod test {
     #[tokio::test]
     async fn test_execute_cd_pipeline_success_should_return_deployment_url() {
         let server = MockServer::start();
-        let mut query_client = QueryClientBuilder::default()
-            .with_access_token("test_access_token".to_string())
-            .with_api_url(server.base_url())
-            .build()
-            .unwrap();
+        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
 
         let api_resp = r#"
 {
@@ -351,24 +224,28 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = ExecuteCdPipeline::mutate(
-            &mut query_client,
-            "valid_application",
-            "prod",
-            "green",
-            "main-build-100",
-            Some(
-                base64::engine::general_purpose::STANDARD
-                    .encode("This is a changelog.\n\nThis is a new changelog.\n"),
-            ),
-            true,
-        )
-        .await;
+        let response = gql_client
+            .post_graphql::<ExecuteCdPipeline, _>(
+                server.base_url(),
+                execute_cd_pipeline::Variables {
+                    application: "valid-application".to_string(),
+                    build_number: 0,
+                    build_artifact_name: Some("main-build-100".to_string()),
+                    namespace: "prod".to_string(),
+                    version: "green".to_string(),
+                    changelogs: Some(
+                        base64::engine::general_purpose::STANDARD
+                            .encode("This is a changelog.\n\nThis is a new changelog.\n"),
+                    ),
+                    send_to_slack: true,
+                },
+            )
+            .await;
 
         mock.assert();
         assert!(response.is_ok());
 
-        let deployment_url = response.unwrap().data.unwrap().execute_cd_pipeline.url;
+        let deployment_url = response.unwrap().execute_cd_pipeline.url;
         assert_eq!(deployment_url, "https://cd_pipeline_deployment_url.com");
     }
 
@@ -376,11 +253,7 @@ mod test {
     async fn test_execute_cd_pipeline_list_failed_with_deploy_for_this_build_is_currently_running_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let mut query_client = QueryClientBuilder::default()
-            .with_access_token("test_access_token".to_string())
-            .with_api_url(server.base_url())
-            .build()
-            .unwrap();
+        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
 
         let api_resp = r#"
 {
@@ -408,19 +281,23 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = ExecuteCdPipeline::mutate(
-            &mut query_client,
-            "valid_application",
-            "prod",
-            "green",
-            "main-build-100",
-            Some(
-                base64::engine::general_purpose::STANDARD
-                    .encode("This is a changelog.\n\nThis is a new changelog.\n"),
-            ),
-            true,
-        )
-        .await;
+        let response = gql_client
+            .post_graphql::<ExecuteCdPipeline, _>(
+                server.base_url(),
+                execute_cd_pipeline::Variables {
+                    application: "valid-application".to_string(),
+                    build_number: 0,
+                    build_artifact_name: Some("main-build-100".to_string()),
+                    namespace: "prod".to_string(),
+                    version: "green".to_string(),
+                    changelogs: Some(
+                        base64::engine::general_purpose::STANDARD
+                            .encode("This is a changelog.\n\nThis is a new changelog.\n"),
+                    ),
+                    send_to_slack: true,
+                },
+            )
+            .await;
 
         mock.assert();
         assert!(response.is_err());

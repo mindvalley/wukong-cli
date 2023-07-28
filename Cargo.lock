@@ -5247,7 +5247,6 @@ dependencies = [
  "url 2.4.0",
  "urlencoding",
  "webbrowser",
- "wukong-telemetry-macro",
  "yup-oauth2",
 ]
 

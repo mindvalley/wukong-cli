@@ -1,6 +1,4 @@
-use super::QueryClient;
-use crate::error::APIError;
-use graphql_client::{GraphQLQuery, Response};
+use graphql_client::GraphQLQuery;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -10,37 +8,6 @@ use graphql_client::{GraphQLQuery, Response};
 )]
 pub struct PipelinesQuery;
 
-impl PipelinesQuery {
-    pub async fn fetch(
-        client: &mut QueryClient,
-        application: &str,
-    ) -> Result<Response<pipelines_query::ResponseData>, APIError> {
-        let variables = pipelines_query::Variables {
-            application: Some(application.to_string()),
-        };
-
-        let response = client
-            .call_api::<Self>(variables, |_, error| {
-                if error.message == "unable_to_get_pipelines" {
-                    return Err(APIError::ResponseError {
-                        code: error.message,
-                        message: format!(
-                            "Unable to get pipelines for application `{application}`."
-                        ),
-                    });
-                }
-
-                Err(APIError::ResponseError {
-                    code: error.message.clone(),
-                    message: format!("{error}"),
-                })
-            })
-            .await?;
-
-        Ok(response)
-    }
-}
-
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "src/graphql/schema.json",
@@ -48,35 +15,6 @@ impl PipelinesQuery {
     response_derives = "Debug, Serialize, Deserialize, PartialEq, Eq"
 )]
 pub struct PipelineQuery;
-
-impl PipelineQuery {
-    pub(crate) async fn fetch(
-        client: &mut QueryClient,
-        name: &str,
-    ) -> Result<Response<pipeline_query::ResponseData>, APIError> {
-        let variables = pipeline_query::Variables {
-            name: name.to_string(),
-        };
-
-        let response = client
-            .call_api::<Self>(variables, |_, error| {
-                if error.message == "unable_to_get_pipeline" {
-                    return Err(APIError::ResponseError {
-                        code: error.message,
-                        message: format!("Unable to get pipeline `{name}`."),
-                    });
-                }
-
-                Err(APIError::ResponseError {
-                    code: error.message.clone(),
-                    message: format!("{error}"),
-                })
-            })
-            .await?;
-
-        Ok(response)
-    }
-}
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -86,35 +24,6 @@ impl PipelineQuery {
 )]
 pub struct MultiBranchPipelineQuery;
 
-impl MultiBranchPipelineQuery {
-    pub async fn fetch(
-        client: &mut QueryClient,
-        name: &str,
-    ) -> Result<Response<multi_branch_pipeline_query::ResponseData>, APIError> {
-        let variables = multi_branch_pipeline_query::Variables {
-            name: name.to_string(),
-        };
-
-        let response = client
-            .call_api::<Self>(variables, |_, error| {
-                if error.message == "unable_to_get_pipeline" {
-                    return Err(APIError::ResponseError {
-                        code: error.message,
-                        message: format!("Unable to get pipeline `{name}`."),
-                    });
-                }
-
-                Err(APIError::ResponseError {
-                    code: error.message.clone(),
-                    message: format!("{error}"),
-                })
-            })
-            .await?;
-
-        Ok(response)
-    }
-}
-
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "src/graphql/schema.json",
@@ -123,48 +32,16 @@ impl MultiBranchPipelineQuery {
 )]
 pub struct CiStatusQuery;
 
-impl CiStatusQuery {
-    pub async fn fetch(
-        client: &mut QueryClient,
-        repo_url: &str,
-        branch: &str,
-    ) -> Result<Response<ci_status_query::ResponseData>, APIError> {
-        let variables = ci_status_query::Variables {
-            repo_url: repo_url.to_string(),
-            branch: branch.to_string(),
-        };
-
-        let response = client
-            .call_api::<Self>(variables, |resp, error| match error.message.as_str() {
-                "application_not_found" => Err(APIError::ResponseError { code: "ci_status_application_not_found".to_string(), message: 
-    "Could not find the application associated with this Git repo.\n\tEither you're not in the correct working folder for your application, or there's a misconfiguration.".to_string()
-                }),
-                "no_builds_associated_with_this_branch" => Ok(resp),
-                _ => Err(APIError::ResponseError {
-                    code: error.message.clone(),
-                    message: format!("{error}"),
-                }),
-            })
-            .await?;
-
-        Ok(response)
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::graphql::QueryClientBuilder;
+    use crate::{error::APIError, graphql::GQLClient};
     use httpmock::prelude::*;
 
     #[tokio::test]
     async fn test_fetch_pipeline_list_success_should_return_pipeline_list() {
         let server = MockServer::start();
-        let mut query_client = QueryClientBuilder::default()
-            .with_access_token("test_access_token".to_string())
-            .with_api_url(server.base_url())
-            .build()
-            .unwrap();
+        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
 
         let api_resp = r#"
 {
@@ -195,12 +72,19 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = PipelinesQuery::fetch(&mut query_client, "mv-platform").await;
+        let response = gql_client
+            .post_graphql::<PipelinesQuery, _>(
+                server.base_url(),
+                pipelines_query::Variables {
+                    application: Some("valid-application".to_string()),
+                },
+            )
+            .await;
 
         mock.assert();
         assert!(response.is_ok());
 
-        let pipelines = response.unwrap().data.unwrap().pipelines;
+        let pipelines = response.unwrap().pipelines;
         assert_eq!(pipelines.len(), 2);
     }
 
@@ -208,11 +92,7 @@ mod test {
     async fn test_fetch_pipeline_list_failed_with_unable_to_get_pipelines_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let mut query_client = QueryClientBuilder::default()
-            .with_access_token("test_access_token".to_string())
-            .with_api_url(server.base_url())
-            .build()
-            .unwrap();
+        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
 
         let api_resp = r#"
 {
@@ -240,7 +120,14 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = PipelinesQuery::fetch(&mut query_client, "invalid_application").await;
+        let response = gql_client
+            .post_graphql::<PipelinesQuery, _>(
+                server.base_url(),
+                pipelines_query::Variables {
+                    application: Some("invalid-application".to_string()),
+                },
+            )
+            .await;
 
         mock.assert();
         assert!(response.is_err());
@@ -250,7 +137,7 @@ mod test {
                 assert_eq!(code, "unable_to_get_pipelines");
                 assert_eq!(
                     message,
-                    "Unable to get pipelines for application `invalid_application`."
+                    "Unable to get pipelines for application `invalid-application`."
                 )
             }
             _ => panic!("it should be returning ResponseError"),
@@ -260,11 +147,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_pipeline_success_should_return_pipeline() {
         let server = MockServer::start();
-        let mut query_client = QueryClientBuilder::default()
-            .with_access_token("test_access_token".to_string())
-            .with_api_url(server.base_url())
-            .build()
-            .unwrap();
+        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
 
         let api_resp = r#"
 {
@@ -287,13 +170,19 @@ mod test {
                 .body(api_resp);
         });
 
-        let response =
-            PipelineQuery::fetch(&mut query_client, "mv-platform-main-branch-build").await;
+        let response = gql_client
+            .post_graphql::<PipelineQuery, _>(
+                server.base_url(),
+                pipeline_query::Variables {
+                    name: "mv-platform-main-branch-build".to_string(),
+                },
+            )
+            .await;
 
         mock.assert();
         assert!(response.is_ok());
 
-        match response.unwrap().data.unwrap().pipeline.unwrap() {
+        match response.unwrap().pipeline.unwrap() {
             pipeline_query::PipelineQueryPipeline::Job(job) => {
                 assert_eq!(job.name, "mv-platform-main-branch-build");
                 assert_eq!(job.last_duration, Some(522303));
@@ -310,11 +199,7 @@ mod test {
     async fn test_fetch_pipeline_failed_with_unable_to_get_pipeline_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let mut query_client = QueryClientBuilder::default()
-            .with_access_token("test_access_token".to_string())
-            .with_api_url(server.base_url())
-            .build()
-            .unwrap();
+        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
 
         let api_resp = r#"
 {
@@ -342,7 +227,14 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = PipelineQuery::fetch(&mut query_client, "invalid_name").await;
+        let response = gql_client
+            .post_graphql::<PipelineQuery, _>(
+                server.base_url(),
+                pipeline_query::Variables {
+                    name: "invalid-name".to_string(),
+                },
+            )
+            .await;
 
         mock.assert();
         assert!(response.is_err());
@@ -350,7 +242,7 @@ mod test {
         match response.as_ref().unwrap_err() {
             APIError::ResponseError { code, message } => {
                 assert_eq!(code, "unable_to_get_pipeline");
-                assert_eq!(message, "Unable to get pipeline `invalid_name`.")
+                assert_eq!(message, "Unable to get pipeline `invalid-name`.")
             }
             _ => panic!("it should be returning ResponseError"),
         }
@@ -359,11 +251,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_multi_branch_pipeline_success_should_return_that_pipeline() {
         let server = MockServer::start();
-        let mut query_client = QueryClientBuilder::default()
-            .with_access_token("test_access_token".to_string())
-            .with_api_url(server.base_url())
-            .build()
-            .unwrap();
+        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
 
         let api_resp = r#"
 {
@@ -406,17 +294,19 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = MultiBranchPipelineQuery::fetch(&mut query_client, "mv-platform-ci").await;
+        let response = gql_client
+            .post_graphql::<MultiBranchPipelineQuery, _>(
+                server.base_url(),
+                multi_branch_pipeline_query::Variables {
+                    name: "mv-platform-ci".to_string(),
+                },
+            )
+            .await;
 
         mock.assert();
         assert!(response.is_ok());
 
-        let pipeline = response
-            .unwrap()
-            .data
-            .unwrap()
-            .multi_branch_pipeline
-            .unwrap();
+        let pipeline = response.unwrap().multi_branch_pipeline.unwrap();
 
         assert_eq!(pipeline.last_duration, None);
         assert_eq!(pipeline.last_failed_at, Some(1664267048730));
@@ -435,11 +325,7 @@ mod test {
     async fn test_fetch_multi_branch_pipeline_with_unable_to_get_pipeline_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let mut query_client = QueryClientBuilder::default()
-            .with_access_token("test_access_token".to_string())
-            .with_api_url(server.base_url())
-            .build()
-            .unwrap();
+        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
 
         let api_resp = r#"
 {
@@ -467,7 +353,14 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = MultiBranchPipelineQuery::fetch(&mut query_client, "invalid_pipeline").await;
+        let response = gql_client
+            .post_graphql::<MultiBranchPipelineQuery, _>(
+                server.base_url(),
+                multi_branch_pipeline_query::Variables {
+                    name: "invalid-pipeline".to_string(),
+                },
+            )
+            .await;
 
         mock.assert();
         assert!(response.is_err());
@@ -475,7 +368,7 @@ mod test {
         match response.as_ref().unwrap_err() {
             APIError::ResponseError { code, message } => {
                 assert_eq!(code, "unable_to_get_pipeline");
-                assert_eq!(message, "Unable to get pipeline `invalid_pipeline`.")
+                assert_eq!(message, "Unable to get pipeline `invalid-pipeline`.")
             }
             _ => panic!("it should be returning ResponseError"),
         }
@@ -484,11 +377,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_ci_status_success_should_return_ci_status() {
         let server = MockServer::start();
-        let mut query_client = QueryClientBuilder::default()
-            .with_access_token("test_access_token".to_string())
-            .with_api_url(server.base_url())
-            .build()
-            .unwrap();
+        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
 
         let api_resp = r#"
 {
@@ -515,14 +404,20 @@ mod test {
                 .body(api_resp);
         });
 
-        let response =
-            CiStatusQuery::fetch(&mut query_client, "https://repo.com/mv-platform-ci", "main")
-                .await;
+        let response = gql_client
+            .post_graphql::<CiStatusQuery, _>(
+                server.base_url(),
+                ci_status_query::Variables {
+                    repo_url: "https://repo.com/mv-platform".to_string(),
+                    branch: "main".to_string(),
+                },
+            )
+            .await;
 
         mock.assert();
         assert!(response.is_ok());
 
-        let ci_status = response.unwrap().data.unwrap().ci_status.unwrap();
+        let ci_status = response.unwrap().ci_status.unwrap();
         assert_eq!(ci_status.name, "main");
         assert_eq!(ci_status.build_duration, Some(582271));
         assert_eq!(ci_status.build_number, 101);
@@ -541,11 +436,7 @@ mod test {
     async fn test_fetch_ci_status_failed_with_application_not_found_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let mut query_client = QueryClientBuilder::default()
-            .with_access_token("test_access_token".to_string())
-            .with_api_url(server.base_url())
-            .build()
-            .unwrap();
+        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
 
         let api_resp = r#"
 {
@@ -573,8 +464,15 @@ mod test {
                 .body(api_resp);
         });
 
-        let response =
-            CiStatusQuery::fetch(&mut query_client, "http://invalid_repo_url.com", "main").await;
+        let response = gql_client
+            .post_graphql::<CiStatusQuery, _>(
+                server.base_url(),
+                ci_status_query::Variables {
+                    repo_url: "https://invalid_repo_url.com".to_string(),
+                    branch: "main".to_string(),
+                },
+            )
+            .await;
 
         mock.assert();
         assert!(response.is_err());
@@ -595,11 +493,7 @@ mod test {
     async fn test_fetch_ci_status_failed_with_no_builds_associated_with_this_branch_error_should_return_ok_response(
     ) {
         let server = MockServer::start();
-        let mut query_client = QueryClientBuilder::default()
-            .with_access_token("test_access_token".to_string())
-            .with_api_url(server.base_url())
-            .build()
-            .unwrap();
+        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
 
         let api_resp = r#"
 {
@@ -629,12 +523,19 @@ mod test {
                 .body(api_resp);
         });
 
-        let response =
-            CiStatusQuery::fetch(&mut query_client, "http://valid_repo_url.com", "main").await;
+        let response = gql_client
+            .post_graphql::<CiStatusQuery, _>(
+                server.base_url(),
+                ci_status_query::Variables {
+                    repo_url: "https://valid_repo_url.com".to_string(),
+                    branch: "main".to_string(),
+                },
+            )
+            .await;
 
         mock.assert();
         assert!(response.is_ok());
-        let ci_status = response.unwrap().data.unwrap().ci_status;
+        let ci_status = response.unwrap().ci_status;
         assert!(ci_status.is_none());
     }
 }

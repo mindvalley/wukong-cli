@@ -25,276 +25,14 @@ pub use self::{
     },
 };
 use crate::{
-    config::Config,
     error::{APIError, WKError},
-    telemetry::{self, TelemetryData, TelemetryEvent},
     WKClient,
 };
-use graphql_client::{GraphQLQuery, QueryBody, Response};
+use graphql_client::{GraphQLQuery, Response};
 use log::debug;
 use reqwest::header;
 use std::fmt::Debug;
 use std::{thread, time};
-use wukong_telemetry_macro::wukong_telemetry;
-
-// TODO: this will be removed on v2.0
-#[allow(dead_code)]
-#[derive(Debug, Default)]
-pub struct QueryClientBuilder {
-    api_url: String,
-    // authentication
-    access_token: Option<String>,
-    expiry_time: Option<String>,
-    // for telemetry usage
-    sub: Option<String>,
-}
-
-#[allow(dead_code)]
-impl QueryClientBuilder {
-    pub fn with_access_token(mut self, access_token: String) -> Self {
-        self.access_token = Some(access_token);
-        self
-    }
-
-    // for telemetry usage
-    pub fn with_sub(mut self, sub: String) -> Self {
-        self.sub = Some(sub);
-        self
-    }
-
-    pub fn with_api_url(mut self, api_url: String) -> Self {
-        self.api_url = api_url;
-        self
-    }
-
-    pub fn with_expiry_time(mut self, expiry_time: String) -> Self {
-        self.expiry_time = Some(expiry_time);
-        self
-    }
-
-    pub fn build(self) -> Result<QueryClient, APIError> {
-        let mut headers = header::HeaderMap::new();
-
-        if let Some(token) = self.access_token.as_ref() {
-            let auth_value = format!("Bearer {}", token);
-            headers.insert(
-                header::AUTHORIZATION,
-                header::HeaderValue::from_str(&auth_value).unwrap(),
-            );
-        }
-
-        let client = reqwest::Client::builder()
-            .default_headers(headers)
-            .build()?;
-
-        Ok(QueryClient {
-            reqwest_client: client,
-            api_url: self.api_url,
-            sub: self.sub,
-            expiry_time: self.expiry_time,
-            access_token: self.access_token,
-        })
-    }
-}
-
-pub struct QueryClient {
-    reqwest_client: reqwest::Client,
-    api_url: String,
-    // authentication
-    access_token: Option<String>,
-    expiry_time: Option<String>,
-    // for telemetry usage
-    sub: Option<String>,
-}
-
-impl QueryClient {
-    pub fn from_default_config() -> Result<Self, WKError> {
-        let config = Config::load_from_default_path()?;
-        Self::from_config(&config)
-    }
-
-    pub fn from_config(config: &Config) -> Result<Self, WKError> {
-        let auth_config = config.auth.as_ref().ok_or(WKError::UnAuthenticated)?;
-        let token = auth_config.id_token.clone();
-
-        let mut headers = header::HeaderMap::new();
-
-        let bearer_token = format!("Bearer {}", token);
-        headers.insert(
-            header::AUTHORIZATION,
-            header::HeaderValue::from_str(&bearer_token).unwrap(),
-        );
-
-        let client = reqwest::Client::builder()
-            .default_headers(headers)
-            .build()
-            .map_err(<reqwest::Error as Into<APIError>>::into)?;
-
-        Ok(QueryClient {
-            reqwest_client: client,
-            api_url: config.core.wukong_api_url.clone(),
-            access_token: Some(token),
-            expiry_time: Some(auth_config.expiry_time.clone()),
-            sub: Some(auth_config.subject.clone()),
-        })
-    }
-
-    pub fn inner(&self) -> &reqwest::Client {
-        &self.reqwest_client
-    }
-
-    pub async fn call_api<Q>(
-        &mut self,
-        variables: Q::Variables,
-        handler: impl Fn(
-            Response<Q::ResponseData>,
-            graphql_client::Error,
-        ) -> Result<Response<Q::ResponseData>, APIError>,
-    ) -> Result<Response<Q::ResponseData>, APIError>
-    where
-        Q: GraphQLQuery,
-        Q::ResponseData: Debug,
-    {
-        let body = Q::build_query(variables);
-
-        debug!("url: {:?}", &self.api_url);
-        debug!("query: \n{}", body.query);
-
-        // Before calling API, do a token expiry check first
-
-        // if let (Some(_token), Some(expiry_time)) = (&self.access_token, &self.expiry_time) {
-        //     let current_time: DateTime<Local> = Local::now();
-        //     let expiry = DateTime::parse_from_rfc3339(expiry_time)
-        //         .unwrap()
-        //         .with_timezone(&Local);
-        //     let remaining_duration = expiry.signed_duration_since(current_time);
-        //
-        //     if remaining_duration < 5.minutes() {
-        //         debug!("Access token expired. Refreshing tokens...");
-        //
-        //         let mut config = Config::load_from_default_path().map_err(|err| {
-        //             debug!("Failed to refresh tokens when getting config: {:?}", err);
-        //             err
-        //         })?;
-        //         let auth_config = config.auth.as_ref().unwrap();
-        //
-        //         let new_tokens = Auth::new(&config.core.okta_client_id)
-        //             .refresh_tokens(&RefreshToken::new(auth_config.refresh_token.clone()))
-        //             .await
-        //             .map_err(|err| {
-        //                 debug!("Failed to refresh tokens: {:?}", err);
-        //                 err
-        //             })?;
-        //
-        //         config.auth = Some(AuthConfig {
-        //             account: auth_config.account.clone(),
-        //             subject: auth_config.subject.clone(),
-        //             id_token: new_tokens.id_token.clone(),
-        //             access_token: new_tokens.access_token.clone(),
-        //             expiry_time: new_tokens.expiry_time.clone(),
-        //             refresh_token: new_tokens.refresh_token,
-        //         });
-        //
-        //         config.save_to_default_path().map_err(|err| {
-        //             debug!("Failed to refresh tokens when saving config: {:?}", err);
-        //             err
-        //         })?;
-        //
-        //         // make sure to update the token and expiry time to the updated values
-        //         let mut headers = header::HeaderMap::new();
-        //
-        //         let bearer_token = format!("Bearer {}", new_tokens.id_token);
-        //         headers.insert(
-        //             header::AUTHORIZATION,
-        //             header::HeaderValue::from_str(&bearer_token).unwrap(),
-        //         );
-        //
-        //         let client = reqwest::Client::builder()
-        //             .default_headers(headers)
-        //             .build()
-        //             .map_err(<reqwest::Error as Into<APIError>>::into)?;
-        //
-        //         self.reqwest_client = client;
-        //         self.access_token = Some(new_tokens.id_token);
-        //         self.expiry_time = Some(new_tokens.expiry_time);
-        //     }
-        // }
-
-        let response: Result<Response<Q::ResponseData>, APIError> =
-            self.retry_request::<Q>(body, handler).await;
-
-        response
-    }
-
-    // Attempts the request and retries up to 3 times if the request times out.
-    async fn retry_request<Q>(
-        &self,
-        body: QueryBody<Q::Variables>,
-        handler: impl Fn(
-            Response<Q::ResponseData>,
-            graphql_client::Error,
-        ) -> Result<Response<Q::ResponseData>, APIError>,
-    ) -> Result<Response<Q::ResponseData>, APIError>
-    where
-        Q: GraphQLQuery,
-        Q::ResponseData: Debug,
-    {
-        let mut retry_count = 0;
-        let request = self.inner().post(&self.api_url).json(&body);
-
-        debug!("request: {:#?}", request);
-
-        let mut response: Response<<Q as GraphQLQuery>::ResponseData> =
-            request.send().await?.json().await?;
-
-        debug!("response: {:#?}", response);
-
-        // We use <= 3 so it does one extra loop where the last response is checked
-        // in order to return an APIError::Timeout if it was a timeout error in the
-        // case of it failing all 3 retries.
-        while response.errors.is_some() && retry_count <= 3 {
-            if let Some(errors) = response.errors.clone() {
-                let first_error = errors[0].clone();
-
-                match check_retry_and_auth_error(&first_error) {
-                    Some(APIError::UnAuthenticated) => return Err(APIError::UnAuthenticated),
-                    Some(APIError::Timeout { domain }) => {
-                        if retry_count == 3 {
-                            return Err(APIError::Timeout { domain });
-                        }
-                        retry_count += 1;
-                        eprintln!(
-                            "... request to {domain} timed out, retrying the request {}/3",
-                            retry_count
-                        );
-
-                        thread::sleep(time::Duration::from_secs(5));
-
-                        let request = self.inner().post(&self.api_url).json(&body);
-
-                        debug!("request: {:#?}", request);
-
-                        response = request.send().await?.json().await?;
-
-                        debug!("response: {:#?}", response);
-                    }
-                    _ => return handler(response, first_error),
-                }
-            }
-        }
-
-        Ok(response)
-    }
-
-    pub async fn livebook_resource(
-        &mut self,
-        application: &str,
-        namespace: &str,
-        version: &str,
-    ) -> Result<Response<livebook_resource_query::ResponseData>, APIError> {
-        LivebookResourceQuery::fetch(self, application, namespace, version).await
-    }
-}
 
 // Check if the error is a timeout error or an authentication error.
 // For Timeout errors, we get the domain and return it as part of the Timeout error.
@@ -396,7 +134,7 @@ impl GQLClient {
                     _ => {
                         return Err(APIError::ResponseError {
                             code: first_error.message.clone(),
-                            message: first_error.message.to_string(),
+                            message: format!("{first_error}"),
                         });
                     }
                 }
@@ -414,8 +152,7 @@ impl GQLClient {
 impl WKClient {
     pub async fn fetch_applications(&self) -> Result<applications_query::ResponseData, WKError> {
         let gql_client = GQLClient::with_authorization(
-            &self
-                .access_token
+            self.access_token
                 .as_ref()
                 .ok_or(APIError::UnAuthenticated)?,
         )?;
@@ -431,8 +168,7 @@ impl WKClient {
         name: &str,
     ) -> Result<application_query::ResponseData, WKError> {
         let gql_client = GQLClient::with_authorization(
-            &self
-                .access_token
+            self.access_token
                 .as_ref()
                 .ok_or(APIError::UnAuthenticated)?,
         )?;
@@ -448,14 +184,12 @@ impl WKClient {
             .map_err(|err| err.into())
     }
 
-    // #[wukong_telemetry(api_event = "fetch_pipeline_list")]
     pub async fn fetch_pipelines(
         &self,
         application: &str,
     ) -> Result<pipelines_query::ResponseData, WKError> {
         let gql_client = GQLClient::with_authorization(
-            &self
-                .access_token
+            self.access_token
                 .as_ref()
                 .ok_or(APIError::UnAuthenticated)?,
         )?;
@@ -492,8 +226,7 @@ impl WKClient {
         name: &str,
     ) -> Result<pipeline_query::ResponseData, WKError> {
         let gql_client = GQLClient::with_authorization(
-            &self
-                .access_token
+            self.access_token
                 .as_ref()
                 .ok_or(APIError::UnAuthenticated)?,
         )?;
@@ -528,8 +261,7 @@ impl WKClient {
         name: &str,
     ) -> Result<multi_branch_pipeline_query::ResponseData, WKError> {
         let gql_client = GQLClient::with_authorization(
-            &self
-                .access_token
+            self.access_token
                 .as_ref()
                 .ok_or(APIError::UnAuthenticated)?,
         )?;
@@ -566,13 +298,12 @@ impl WKClient {
         branch: &str,
     ) -> Result<ci_status_query::ResponseData, WKError> {
         let gql_client = GQLClient::with_authorization(
-            &self
-                .access_token
+            self.access_token
                 .as_ref()
                 .ok_or(APIError::UnAuthenticated)?,
         )?;
 
-        gql_client
+        let response = gql_client
             .post_graphql::<CiStatusQuery, _>(
                 &self.api_url,
                 ci_status_query::Variables {
@@ -580,8 +311,27 @@ impl WKClient {
                     branch: branch.to_string(),
                 },
             )
-            .await
-            .map_err(|err| err.into())
+            .await;
+
+        if let Err(err) = &response {
+            match err {
+                APIError::ResponseError { code: _, message } => {
+                    if message == "application_not_found" {
+                        return Err(APIError::ResponseError {
+                            code: "ci_status_application_not_found".to_string(),
+                            message: "Could not find the application associated with this Git repo.\n\tEither you're not in the correct working folder for your application, or there's a misconfiguration.".to_string()
+                        }.into());
+                    }
+
+                    if message == "no_builds_associated_with_this_branch" {
+                        return Ok(ci_status_query::ResponseData { ci_status: None });
+                    }
+                }
+                _ => return response.map_err(|err| err.into()),
+            }
+        }
+
+        response.map_err(|err| err.into())
     }
 
     pub async fn fetch_cd_pipelines(
@@ -589,8 +339,7 @@ impl WKClient {
         application: &str,
     ) -> Result<cd_pipelines_query::ResponseData, WKError> {
         let gql_client = GQLClient::with_authorization(
-            &self
-                .access_token
+            self.access_token
                 .as_ref()
                 .ok_or(APIError::UnAuthenticated)?,
         )?;
@@ -620,6 +369,7 @@ impl WKClient {
             })
     }
 
+    // TODO: Add test
     pub async fn fetch_cd_pipeline(
         &self,
         application: &str,
@@ -627,8 +377,7 @@ impl WKClient {
         version: &str,
     ) -> Result<cd_pipeline_query::ResponseData, WKError> {
         let gql_client = GQLClient::with_authorization(
-            &self
-                .access_token
+            self.access_token
                 .as_ref()
                 .ok_or(APIError::UnAuthenticated)?,
         )?;
@@ -668,8 +417,7 @@ impl WKClient {
         build_artifact_name: &str,
     ) -> Result<changelogs_query::ResponseData, WKError> {
         let gql_client = GQLClient::with_authorization(
-            &self
-                .access_token
+            self.access_token
                 .as_ref()
                 .ok_or(APIError::UnAuthenticated)?,
         )?;
@@ -720,8 +468,7 @@ impl WKClient {
         send_to_slack: bool,
     ) -> Result<execute_cd_pipeline::ResponseData, WKError> {
         let gql_client = GQLClient::with_authorization(
-            &self
-                .access_token
+            self.access_token
                 .as_ref()
                 .ok_or(APIError::UnAuthenticated)?,
         )?;
@@ -767,8 +514,7 @@ impl WKClient {
         version: &str,
     ) -> Result<cd_pipeline_for_rollback_query::ResponseData, WKError> {
         let gql_client = GQLClient::with_authorization(
-            &self
-                .access_token
+            self.access_token
                 .as_ref()
                 .ok_or(APIError::UnAuthenticated)?,
         )?;
@@ -788,11 +534,8 @@ impl WKClient {
                     "application_not_found" => APIError::ResponseError {
                         code: message.to_string(),
                         message: format!("Application `{application}` not found."),
-                    }.into(),
-                    "deploy_for_this_build_is_currently_running" => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: "Cannot submit this deployment request, since there is another running deployment with the same arguments is running on Spinnaker.\nYou can wait a few minutes and submit the deployment again.".to_string()
-                    }.into(),
+                    }
+                    .into(),
                     _ => APIError::ResponseError {
                         code: message.to_string(),
                         message: format!("{err}"),
@@ -810,8 +553,7 @@ impl WKClient {
         version: &str,
     ) -> Result<is_authorized_query::ResponseData, WKError> {
         let gql_client = GQLClient::with_authorization(
-            &self
-                .access_token
+            self.access_token
                 .as_ref()
                 .ok_or(APIError::UnAuthenticated)?,
         )?;
@@ -836,8 +578,7 @@ impl WKClient {
         version: &str,
     ) -> Result<kubernetes_pods_query::ResponseData, WKError> {
         let gql_client = GQLClient::with_authorization(
-            &self
-                .access_token
+            self.access_token
                 .as_ref()
                 .ok_or(APIError::UnAuthenticated)?,
         )?;
@@ -852,7 +593,21 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| err.into())
+            .map_err(|err| match &err {
+                APIError::ResponseError { code: _, message } => match message.as_str() {
+                    "Unauthorized" => APIError::ResponseError {
+                        code: message.clone(),
+                        message: message.to_string(),
+                    }
+                    .into(),
+                    _ => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: format!("{err}"),
+                    }
+                    .into(),
+                },
+                _ => err.into(),
+            })
     }
 
     pub async fn check_livebook_resource(
@@ -862,8 +617,7 @@ impl WKClient {
         version: &str,
     ) -> Result<livebook_resource_query::ResponseData, WKError> {
         let gql_client = GQLClient::with_authorization(
-            &self
-                .access_token
+            self.access_token
                 .as_ref()
                 .ok_or(APIError::UnAuthenticated)?,
         )?;
@@ -890,8 +644,7 @@ impl WKClient {
         port: i64,
     ) -> Result<deploy_livebook::ResponseData, WKError> {
         let gql_client = GQLClient::with_authorization(
-            &self
-                .access_token
+            self.access_token
                 .as_ref()
                 .ok_or(APIError::UnAuthenticated)?,
         )?;
@@ -908,7 +661,21 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| err.into())
+            .map_err(|err| match &err {
+                APIError::ResponseError { code: _, message } => match message.as_str() {
+                    "Unauthorized" => APIError::ResponseError {
+                        code: message.clone(),
+                        message: message.to_string(),
+                    }
+                    .into(),
+                    _ => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: format!("{err}"),
+                    }
+                    .into(),
+                },
+                _ => err.into(),
+            })
     }
 
     pub async fn destroy_livebook(
@@ -918,8 +685,7 @@ impl WKClient {
         version: &str,
     ) -> Result<destroy_livebook::ResponseData, WKError> {
         let gql_client = GQLClient::with_authorization(
-            &self
-                .access_token
+            self.access_token
                 .as_ref()
                 .ok_or(APIError::UnAuthenticated)?,
         )?;
@@ -934,7 +700,21 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| err.into())
+            .map_err(|err| match &err {
+                APIError::ResponseError { code: _, message } => match message.as_str() {
+                    "Unauthorized" => APIError::ResponseError {
+                        code: message.clone(),
+                        message: message.to_string(),
+                    }
+                    .into(),
+                    _ => APIError::ResponseError {
+                        code: message.to_string(),
+                        message: format!("{err}"),
+                    }
+                    .into(),
+                },
+                _ => err.into(),
+            })
     }
 
     pub async fn fetch_application_with_k8s_cluster(
@@ -944,8 +724,7 @@ impl WKClient {
         version: &str,
     ) -> Result<application_with_k8s_cluster_query::ResponseData, WKError> {
         let gql_client = GQLClient::with_authorization(
-            &self
-                .access_token
+            self.access_token
                 .as_ref()
                 .ok_or(APIError::UnAuthenticated)?,
         )?;

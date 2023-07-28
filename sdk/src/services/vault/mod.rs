@@ -1,13 +1,9 @@
 pub mod client;
 
-use self::client::{FetchSecretsData, Login, VaultClient};
+use self::client::{FetchSecretsData, VaultClient};
 use crate::error::{APIError, VaultError, WKError};
-use crate::loader::new_spinner_progress_bar;
 use crate::services::vault::client::FetchSecrets;
 use crate::WKClient;
-use crate::{config::VaultConfig, services::vault::client::Renew};
-use chrono::{DateTime, Duration, Local};
-use dialoguer::theme::ColorfulTheme;
 use log::debug;
 use reqwest::StatusCode;
 use std::collections::HashMap;

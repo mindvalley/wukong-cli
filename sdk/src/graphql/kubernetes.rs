@@ -1,6 +1,4 @@
-use super::QueryClient;
-use crate::error::APIError;
-use graphql_client::{GraphQLQuery, Response};
+use graphql_client::GraphQLQuery;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -10,39 +8,6 @@ use graphql_client::{GraphQLQuery, Response};
 )]
 pub struct KubernetesPodsQuery;
 
-impl KubernetesPodsQuery {
-    pub(crate) async fn fetch(
-        client: &mut QueryClient,
-        application: &str,
-        namespace: &str,
-        version: &str,
-    ) -> Result<Response<kubernetes_pods_query::ResponseData>, APIError> {
-        let variables = kubernetes_pods_query::Variables {
-            application: application.to_string(),
-            namespace: namespace.to_string(),
-            version: version.to_string(),
-        };
-
-        let response = client
-            .call_api::<Self>(variables, |_, error| {
-                if error.message == "Unauthorized" {
-                    return Err(APIError::ResponseError {
-                        code: error.message.clone(),
-                        message: error.message,
-                    });
-                }
-
-                Err(APIError::ResponseError {
-                    code: error.message.clone(),
-                    message: format!("{error}"),
-                })
-            })
-            .await?;
-
-        Ok(response)
-    }
-}
-
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "src/graphql/schema.json",
@@ -50,32 +15,6 @@ impl KubernetesPodsQuery {
     response_derives = "Debug, Serialize, Deserialize"
 )]
 pub struct IsAuthorizedQuery;
-
-impl IsAuthorizedQuery {
-    pub(crate) async fn fetch(
-        client: &mut QueryClient,
-        application: &str,
-        namespace: &str,
-        version: &str,
-    ) -> Result<Response<is_authorized_query::ResponseData>, APIError> {
-        let variables = is_authorized_query::Variables {
-            application: application.to_string(),
-            namespace: namespace.to_string(),
-            version: version.to_string(),
-        };
-
-        let response = client
-            .call_api::<Self>(variables, |_, error| {
-                Err(APIError::ResponseError {
-                    code: error.message.clone(),
-                    message: format!("{error}"),
-                })
-            })
-            .await?;
-
-        Ok(response)
-    }
-}
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -85,43 +24,6 @@ impl IsAuthorizedQuery {
 )]
 pub struct DeployLivebook;
 
-impl DeployLivebook {
-    pub(crate) async fn mutate(
-        client: &mut QueryClient,
-        application: &str,
-        namespace: &str,
-        version: &str,
-        name: &str,
-        port: i64,
-    ) -> Result<Response<deploy_livebook::ResponseData>, APIError> {
-        let variables = deploy_livebook::Variables {
-            application: application.to_string(),
-            namespace: namespace.to_string(),
-            version: version.to_string(),
-            name: name.to_string(),
-            port,
-        };
-
-        let response = client
-            .call_api::<Self>(variables, |_, error| {
-                if error.message == "Unauthorized" {
-                    return Err(APIError::ResponseError {
-                        code: error.message.clone(),
-                        message: error.message,
-                    });
-                }
-
-                Err(APIError::ResponseError {
-                    code: error.message.clone(),
-                    message: format!("{error}"),
-                })
-            })
-            .await?;
-
-        Ok(response)
-    }
-}
-
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "src/graphql/schema.json",
@@ -129,39 +31,6 @@ impl DeployLivebook {
     response_derives = "Debug, Serialize, Deserialize"
 )]
 pub struct DestroyLivebook;
-
-impl DestroyLivebook {
-    pub(crate) async fn mutate(
-        client: &mut QueryClient,
-        application: &str,
-        namespace: &str,
-        version: &str,
-    ) -> Result<Response<destroy_livebook::ResponseData>, APIError> {
-        let variables = destroy_livebook::Variables {
-            application: application.to_string(),
-            namespace: namespace.to_string(),
-            version: version.to_string(),
-        };
-
-        let response = client
-            .call_api::<Self>(variables, |_, error| {
-                if error.message == "Unauthorized" {
-                    return Err(APIError::ResponseError {
-                        code: error.message.clone(),
-                        message: error.message,
-                    });
-                }
-
-                Err(APIError::ResponseError {
-                    code: error.message.clone(),
-                    message: format!("{error}"),
-                })
-            })
-            .await?;
-
-        Ok(response)
-    }
-}
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -171,46 +40,16 @@ impl DestroyLivebook {
 )]
 pub struct LivebookResourceQuery;
 
-impl LivebookResourceQuery {
-    pub(crate) async fn fetch(
-        client: &mut QueryClient,
-        application: &str,
-        namespace: &str,
-        version: &str,
-    ) -> Result<Response<livebook_resource_query::ResponseData>, APIError> {
-        let variables = livebook_resource_query::Variables {
-            application: application.to_string(),
-            namespace: namespace.to_string(),
-            version: version.to_string(),
-        };
-
-        let response = client
-            .call_api::<Self>(variables, |_, error| {
-                Err(APIError::ResponseError {
-                    code: error.message.clone(),
-                    message: format!("{error}"),
-                })
-            })
-            .await?;
-
-        Ok(response)
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::graphql::QueryClientBuilder;
+    use crate::{error::APIError, graphql::GQLClient};
     use httpmock::prelude::*;
 
     #[tokio::test]
     async fn test_fetch_kubernetes_pods_list_success_should_return_kubernetes_pods_list() {
         let server = MockServer::start();
-        let mut query_client = QueryClientBuilder::default()
-            .with_access_token("test_access_token".to_string())
-            .with_api_url(server.base_url())
-            .build()
-            .unwrap();
+        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
 
         let api_resp = r#"
 {
@@ -239,14 +78,21 @@ mod test {
                 .body(api_resp);
         });
 
-        let response =
-            KubernetesPodsQuery::fetch(&mut query_client, "valid-application", "staging", "blue")
-                .await;
+        let response = gql_client
+            .post_graphql::<KubernetesPodsQuery, _>(
+                server.base_url(),
+                kubernetes_pods_query::Variables {
+                    application: "valid-application".to_string(),
+                    namespace: "staging".to_string(),
+                    version: "blue".to_string(),
+                },
+            )
+            .await;
 
         mock.assert();
         assert!(response.is_ok());
 
-        let kubernetes_pods = response.unwrap().data.unwrap().kubernetes_pods;
+        let kubernetes_pods = response.unwrap().kubernetes_pods;
         assert_eq!(kubernetes_pods.len(), 2);
     }
 
@@ -254,11 +100,7 @@ mod test {
     async fn test_fetch_kubernetes_pods_list_failed_with_unautorized_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let mut query_client = QueryClientBuilder::default()
-            .with_access_token("test_access_token".to_string())
-            .with_api_url(server.base_url())
-            .build()
-            .unwrap();
+        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
 
         let api_resp = r#"
 {
@@ -286,8 +128,16 @@ mod test {
                 .body(api_resp);
         });
 
-        let response =
-            KubernetesPodsQuery::fetch(&mut query_client, "some-application", "prod", "blue").await;
+        let response = gql_client
+            .post_graphql::<KubernetesPodsQuery, _>(
+                server.base_url(),
+                kubernetes_pods_query::Variables {
+                    application: "some-application".to_string(),
+                    namespace: "prod".to_string(),
+                    version: "blue".to_string(),
+                },
+            )
+            .await;
 
         mock.assert();
         assert!(response.is_err());
@@ -304,11 +154,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_is_authorized_success_should_return_boolean_value() {
         let server = MockServer::start();
-        let mut query_client = QueryClientBuilder::default()
-            .with_access_token("test_access_token".to_string())
-            .with_api_url(server.base_url())
-            .build()
-            .unwrap();
+        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
 
         let api_resp = r#"
 {
@@ -324,14 +170,21 @@ mod test {
                 .body(api_resp);
         });
 
-        let response =
-            IsAuthorizedQuery::fetch(&mut query_client, "valid-application", "staging", "blue")
-                .await;
+        let response = gql_client
+            .post_graphql::<IsAuthorizedQuery, _>(
+                server.base_url(),
+                is_authorized_query::Variables {
+                    application: "valid-application".to_string(),
+                    namespace: "staging".to_string(),
+                    version: "blue".to_string(),
+                },
+            )
+            .await;
 
         mock.assert();
         assert!(response.is_ok());
 
-        let is_authorized = response.unwrap().data.unwrap().is_authorized;
+        let is_authorized = response.unwrap().is_authorized;
         assert!(is_authorized);
     }
 }

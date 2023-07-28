@@ -49,7 +49,7 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
             .find_map(|input| match input {
                 syn::FnArg::Typed(typed) => match &*typed.pat {
                     syn::Pat::Ident(pat_ident) => {
-                        if pat_ident.ident.to_string() == "application" {
+                        if pat_ident.ident == "application" {
                             Some(())
                         } else {
                             None
@@ -61,12 +61,11 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
             })
             .is_some();
 
-        let current_application;
-        if has_application {
-            current_application = quote! { Some(application.to_string()) }
+        let current_application = if has_application {
+            quote! { Some(application.to_string()) }
         } else {
-            current_application = quote! { None }
-        }
+            quote! { None }
+        };
 
         generated_func = quote! {
             #visibility #asyncness fn #fn_ident(#fn_inputs) #fn_output {

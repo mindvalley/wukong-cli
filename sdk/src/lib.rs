@@ -1,21 +1,11 @@
-mod app;
-mod config;
 pub mod error;
 pub mod graphql;
-mod loader;
-mod logger;
 pub mod services {
     pub mod gcloud;
     pub mod vault;
 }
 pub mod linter;
-pub mod telemetry;
 mod utils;
-
-pub mod wk_telemetry {
-    pub use crate::telemetry::*;
-    pub use wukong_telemetry_macro::wukong_telemetry;
-}
 
 pub use utils::secret_extractors;
 
