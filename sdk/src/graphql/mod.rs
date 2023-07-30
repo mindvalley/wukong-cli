@@ -192,14 +192,11 @@ impl WKClient {
             .await
             .map_err(|err| {
                 match &err {
-                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                    APIError::ResponseError { code, message: _ } => match code.as_str() {
                         "unable_to_get_pipelines" => APIError::UnableToGetPipelines {
                             application: application.to_string(),
                         },
-                        _ => APIError::ResponseError {
-                            code: message.to_string(),
-                            message: format!("{err}"),
-                        },
+                        _ => err,
                     },
                     _ => err,
                 }
@@ -223,14 +220,11 @@ impl WKClient {
             .await
             .map_err(|err| {
                 match &err {
-                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                    APIError::ResponseError { code, message: _ } => match code.as_str() {
                         "unable_to_get_pipeline" => APIError::UnableToGetPipeline {
                             pipeline: name.to_string(),
                         },
-                        _ => APIError::ResponseError {
-                            code: message.to_string(),
-                            message: format!("{err}"),
-                        },
+                        _ => err,
                     },
                     _ => err,
                 }
@@ -254,14 +248,11 @@ impl WKClient {
             .await
             .map_err(|err| {
                 match &err {
-                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                    APIError::ResponseError { code, message: _ } => match code.as_str() {
                         "unable_to_get_pipeline" => APIError::UnableToGetPipeline {
                             pipeline: name.to_string(),
                         },
-                        _ => APIError::ResponseError {
-                            code: message.to_string(),
-                            message: format!("{err}"),
-                        },
+                        _ => err,
                     },
                     _ => err,
                 }
@@ -289,13 +280,13 @@ impl WKClient {
 
         if let Err(err) = &response {
             match err {
-                APIError::ResponseError { code: _, message } => {
-                    if message == "application_not_found" {
+                APIError::ResponseError { code, message: _ } => {
+                    if code == "application_not_found" {
                         return Err(APIError::CIStatusApplicationNotFound.into());
                     }
 
                     // we don't want this to be an error
-                    if message == "no_builds_associated_with_this_branch" {
+                    if code == "no_builds_associated_with_this_branch" {
                         return Ok(ci_status_query::ResponseData { ci_status: None });
                     }
                 }
@@ -322,14 +313,11 @@ impl WKClient {
             .await
             .map_err(|err| {
                 match &err {
-                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                    APIError::ResponseError { code, message: _ } => match code.as_str() {
                         "application_not_found" => APIError::ApplicationNotFound {
                             application: application.to_string(),
                         },
-                        _ => APIError::ResponseError {
-                            code: message.to_string(),
-                            message: format!("{err}"),
-                        },
+                        _ => err,
                     },
                     _ => err,
                 }
@@ -337,7 +325,6 @@ impl WKClient {
             })
     }
 
-    // TODO: Add test
     pub async fn fetch_cd_pipeline(
         &self,
         application: &str,
@@ -358,14 +345,11 @@ impl WKClient {
             .await
             .map_err(|err| {
                 match &err {
-                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                    APIError::ResponseError { code, message: _ } => match code.as_str() {
                         "application_not_found" => APIError::ApplicationNotFound {
                             application: application.to_string(),
                         },
-                        _ => APIError::ResponseError {
-                            code: message.to_string(),
-                            message: format!("{err}"),
-                        },
+                        _ => err,
                     },
                     _ => err,
                 }
@@ -395,7 +379,7 @@ impl WKClient {
             .await
             .map_err(|err| {
                 match &err {
-                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                    APIError::ResponseError { code, message: _ } => match code.as_str() {
                         "application_not_found" => APIError::ApplicationNotFound {
                             application: application.to_string(),
                         },
@@ -403,10 +387,7 @@ impl WKClient {
                             build: build_artifact_name.to_string(),
                         },
                         "comparing_same_build" => APIError::ChangelogComparingSameBuild,
-                        _ => APIError::ResponseError {
-                            code: message.to_string(),
-                            message: format!("{err}"),
-                        },
+                        _ => err,
                     },
                     _ => err,
                 }
@@ -441,17 +422,14 @@ impl WKClient {
             .await
             .map_err(|err| {
                 match &err {
-                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                    APIError::ResponseError { code, message: _ } => match code.as_str() {
                         "application_not_found" => APIError::ApplicationNotFound {
                             application: application.to_string(),
                         },
                         "deploy_for_this_build_is_currently_running" => {
                             APIError::DuplicatedDeployment
                         }
-                        _ => APIError::ResponseError {
-                            code: message.to_string(),
-                            message: format!("{err}"),
-                        },
+                        _ => err,
                     },
                     _ => err,
                 }
@@ -479,14 +457,11 @@ impl WKClient {
             .await
             .map_err(|err| {
                 match &err {
-                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                    APIError::ResponseError { code, message: _ } => match code.as_str() {
                         "application_not_found" => APIError::ApplicationNotFound {
                             application: application.to_string(),
                         },
-                        _ => APIError::ResponseError {
-                            code: message.to_string(),
-                            message: format!("{err}"),
-                        },
+                        _ => err,
                     },
                     _ => err,
                 }
@@ -535,15 +510,12 @@ impl WKClient {
             .await
             .map_err(|err| {
                 match &err {
-                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                    APIError::ResponseError { code, message: _ } => match code.as_str() {
                         "Unauthorized" => APIError::ResponseError {
-                            code: message.clone(),
-                            message: message.to_string(),
+                            code: code.clone(),
+                            message: code.to_string(),
                         },
-                        _ => APIError::ResponseError {
-                            code: message.to_string(),
-                            message: format!("{err}"),
-                        },
+                        _ => err,
                     },
                     _ => err,
                 }
@@ -596,15 +568,12 @@ impl WKClient {
             .await
             .map_err(|err| {
                 match &err {
-                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                    APIError::ResponseError { code, message: _ } => match code.as_str() {
                         "Unauthorized" => APIError::ResponseError {
-                            code: message.clone(),
-                            message: message.to_string(),
+                            code: code.clone(),
+                            message: code.to_string(),
                         },
-                        _ => APIError::ResponseError {
-                            code: message.to_string(),
-                            message: format!("{err}"),
-                        },
+                        _ => err,
                     },
                     _ => err,
                 }
@@ -632,15 +601,12 @@ impl WKClient {
             .await
             .map_err(|err| {
                 match &err {
-                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                    APIError::ResponseError { code, message: _ } => match code.as_str() {
                         "Unauthorized" => APIError::ResponseError {
-                            code: message.clone(),
-                            message: message.to_string(),
+                            code: code.clone(),
+                            message: code.to_string(),
                         },
-                        _ => APIError::ResponseError {
-                            code: message.to_string(),
-                            message: format!("{err}"),
-                        },
+                        _ => err,
                     },
                     _ => err,
                 }

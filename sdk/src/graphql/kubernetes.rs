@@ -42,14 +42,23 @@ pub struct LivebookResourceQuery;
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use crate::{error::APIError, graphql::GQLClient};
+    use crate::{
+        error::{APIError, WKError},
+        WKClient, WKConfig,
+    };
     use httpmock::prelude::*;
+
+    fn setup_wk_client(api_url: &str) -> WKClient {
+        WKClient::new(WKConfig {
+            api_url: api_url.to_string(),
+            access_token: "test_access_token".to_string(),
+        })
+    }
 
     #[tokio::test]
     async fn test_fetch_kubernetes_pods_list_success_should_return_kubernetes_pods_list() {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_client = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -78,15 +87,8 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = gql_client
-            .post_graphql::<KubernetesPodsQuery, _>(
-                server.base_url(),
-                kubernetes_pods_query::Variables {
-                    application: "valid-application".to_string(),
-                    namespace: "staging".to_string(),
-                    version: "blue".to_string(),
-                },
-            )
+        let response = wk_client
+            .fetch_kubernetes_pods("valid-application", "staging", "blue")
             .await;
 
         mock.assert();
@@ -100,7 +102,7 @@ mod test {
     async fn test_fetch_kubernetes_pods_list_failed_with_unautorized_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_client = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -128,22 +130,15 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = gql_client
-            .post_graphql::<KubernetesPodsQuery, _>(
-                server.base_url(),
-                kubernetes_pods_query::Variables {
-                    application: "some-application".to_string(),
-                    namespace: "prod".to_string(),
-                    version: "blue".to_string(),
-                },
-            )
+        let response = wk_client
+            .fetch_kubernetes_pods("some-application", "prod", "blue")
             .await;
 
         mock.assert();
         assert!(response.is_err());
 
         match response.as_ref().unwrap_err() {
-            APIError::ResponseError { code, message } => {
+            WKError::APIError(APIError::ResponseError { code, message }) => {
                 assert_eq!(code, "Unauthorized");
                 assert_eq!(message, "Unauthorized")
             }
@@ -154,7 +149,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_is_authorized_success_should_return_boolean_value() {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_client = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -170,15 +165,8 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = gql_client
-            .post_graphql::<IsAuthorizedQuery, _>(
-                server.base_url(),
-                is_authorized_query::Variables {
-                    application: "valid-application".to_string(),
-                    namespace: "staging".to_string(),
-                    version: "blue".to_string(),
-                },
-            )
+        let response = wk_client
+            .fetch_is_authorized("valid-application", "staging", "blue")
             .await;
 
         mock.assert();

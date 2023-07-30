@@ -26,14 +26,20 @@ pub struct ApplicationsQuery;
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use crate::graphql::GQLClient;
+    use crate::{WKClient, WKConfig};
     use httpmock::prelude::*;
+
+    fn setup_wk_client(api_url: &str) -> WKClient {
+        WKClient::new(WKConfig {
+            api_url: api_url.to_string(),
+            access_token: "test_access_token".to_string(),
+        })
+    }
 
     #[tokio::test]
     async fn test_fetch_application_success_should_return_correct_application_info() {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_clinet = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -69,14 +75,7 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = gql_client
-            .post_graphql::<ApplicationQuery, _>(
-                server.base_url(),
-                application_query::Variables {
-                    name: "valid-application".to_string(),
-                },
-            )
-            .await;
+        let response = wk_clinet.fetch_application("valid-application").await;
 
         mock.assert();
         assert!(response.is_ok());
@@ -94,7 +93,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_application_list_success_should_return_application_list() {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_clinet = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -120,12 +119,7 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = gql_client
-            .post_graphql::<ApplicationsQuery, _>(
-                server.base_url(),
-                applications_query::Variables {},
-            )
-            .await;
+        let response = wk_clinet.fetch_applications().await;
 
         mock.assert();
         assert!(response.is_ok());

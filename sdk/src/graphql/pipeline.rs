@@ -35,13 +35,23 @@ pub struct CiStatusQuery;
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{error::APIError, graphql::GQLClient};
+    use crate::{
+        error::{APIError, WKError},
+        WKClient, WKConfig,
+    };
     use httpmock::prelude::*;
+
+    fn setup_wk_client(api_url: &str) -> WKClient {
+        WKClient::new(WKConfig {
+            api_url: api_url.to_string(),
+            access_token: "test_access_token".to_string(),
+        })
+    }
 
     #[tokio::test]
     async fn test_fetch_pipeline_list_success_should_return_pipeline_list() {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_client = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -72,14 +82,7 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = gql_client
-            .post_graphql::<PipelinesQuery, _>(
-                server.base_url(),
-                pipelines_query::Variables {
-                    application: Some("valid-application".to_string()),
-                },
-            )
-            .await;
+        let response = wk_client.fetch_pipelines("valid-application").await;
 
         mock.assert();
         assert!(response.is_ok());
@@ -89,10 +92,10 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_fetch_pipeline_list_failed_with_unable_to_get_pipelines_error_should_return_response_error(
+    async fn test_fetch_pipeline_list_failed_with_unable_to_get_pipelines_error_should_return_unable_to_get_pipelines_error(
     ) {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_client = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -120,34 +123,29 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = gql_client
-            .post_graphql::<PipelinesQuery, _>(
-                server.base_url(),
-                pipelines_query::Variables {
-                    application: Some("invalid-application".to_string()),
-                },
-            )
-            .await;
+        let response = wk_client.fetch_pipelines("invalid-application").await;
 
         mock.assert();
         assert!(response.is_err());
 
-        match response.as_ref().unwrap_err() {
-            APIError::ResponseError { code, message } => {
-                assert_eq!(code, "unable_to_get_pipelines");
-                assert_eq!(
-                    message,
-                    "Unable to get pipelines for application `invalid-application`."
-                )
+        let error = response.unwrap_err();
+        match &error {
+            WKError::APIError(APIError::UnableToGetPipelines { application }) => {
+                assert_eq!(application, "invalid-application");
             }
-            _ => panic!("it should be returning ResponseError"),
-        }
+            _ => panic!("it should be returning APIError::UnableToGetPipelines"),
+        };
+
+        assert_eq!(
+            format!("{error}"),
+            "Unable to get pipelines for application `invalid-application`."
+        );
     }
 
     #[tokio::test]
     async fn test_fetch_pipeline_success_should_return_pipeline() {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_client = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -170,13 +168,8 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = gql_client
-            .post_graphql::<PipelineQuery, _>(
-                server.base_url(),
-                pipeline_query::Variables {
-                    name: "mv-platform-main-branch-build".to_string(),
-                },
-            )
+        let response = wk_client
+            .fetch_pipeline("mv-platform-main-branch-build")
             .await;
 
         mock.assert();
@@ -196,10 +189,10 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_fetch_pipeline_failed_with_unable_to_get_pipeline_error_should_return_response_error(
+    async fn test_fetch_pipeline_failed_with_unable_to_get_pipeline_error_should_return_unable_to_get_pipeline_error(
     ) {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_client = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -227,31 +220,29 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = gql_client
-            .post_graphql::<PipelineQuery, _>(
-                server.base_url(),
-                pipeline_query::Variables {
-                    name: "invalid-name".to_string(),
-                },
-            )
-            .await;
+        let response = wk_client.fetch_pipeline("invalid-pipeline").await;
 
         mock.assert();
         assert!(response.is_err());
 
-        match response.as_ref().unwrap_err() {
-            APIError::ResponseError { code, message } => {
-                assert_eq!(code, "unable_to_get_pipeline");
-                assert_eq!(message, "Unable to get pipeline `invalid-name`.")
+        let error = response.unwrap_err();
+        match &error {
+            WKError::APIError(APIError::UnableToGetPipeline { pipeline }) => {
+                assert_eq!(pipeline, "invalid-pipeline");
             }
-            _ => panic!("it should be returning ResponseError"),
-        }
+            _ => panic!("it should be returning APIError::UnableToGetPipeline"),
+        };
+
+        assert_eq!(
+            format!("{error}"),
+            "Unable to get pipeline `invalid-pipeline`."
+        );
     }
 
     #[tokio::test]
     async fn test_fetch_multi_branch_pipeline_success_should_return_that_pipeline() {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_client = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -294,13 +285,8 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = gql_client
-            .post_graphql::<MultiBranchPipelineQuery, _>(
-                server.base_url(),
-                multi_branch_pipeline_query::Variables {
-                    name: "mv-platform-ci".to_string(),
-                },
-            )
+        let response = wk_client
+            .fetch_multi_branch_pipeline("mv-platform-ci")
             .await;
 
         mock.assert();
@@ -322,10 +308,10 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_fetch_multi_branch_pipeline_with_unable_to_get_pipeline_error_should_return_response_error(
+    async fn test_fetch_multi_branch_pipeline_with_unable_to_get_pipeline_error_should_return_unable_to_get_pipeline_error(
     ) {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_client = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -353,31 +339,31 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = gql_client
-            .post_graphql::<MultiBranchPipelineQuery, _>(
-                server.base_url(),
-                multi_branch_pipeline_query::Variables {
-                    name: "invalid-pipeline".to_string(),
-                },
-            )
+        let response = wk_client
+            .fetch_multi_branch_pipeline("invalid-pipeline")
             .await;
 
         mock.assert();
         assert!(response.is_err());
 
-        match response.as_ref().unwrap_err() {
-            APIError::ResponseError { code, message } => {
-                assert_eq!(code, "unable_to_get_pipeline");
-                assert_eq!(message, "Unable to get pipeline `invalid-pipeline`.")
+        let error = response.unwrap_err();
+        match &error {
+            WKError::APIError(APIError::UnableToGetPipeline { pipeline }) => {
+                assert_eq!(pipeline, "invalid-pipeline");
             }
-            _ => panic!("it should be returning ResponseError"),
-        }
+            _ => panic!("it should be returning APIError::UnableToGetPipeline"),
+        };
+
+        assert_eq!(
+            format!("{error}"),
+            "Unable to get pipeline `invalid-pipeline`."
+        );
     }
 
     #[tokio::test]
     async fn test_fetch_ci_status_success_should_return_ci_status() {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_client = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -404,14 +390,8 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = gql_client
-            .post_graphql::<CiStatusQuery, _>(
-                server.base_url(),
-                ci_status_query::Variables {
-                    repo_url: "https://repo.com/mv-platform".to_string(),
-                    branch: "main".to_string(),
-                },
-            )
+        let response = wk_client
+            .fetch_ci_status("https://repo.com/mv-platform", "main")
             .await;
 
         mock.assert();
@@ -433,10 +413,10 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_fetch_ci_status_failed_with_application_not_found_error_should_return_response_error(
+    async fn test_fetch_ci_status_failed_with_application_not_found_error_should_return_ci_status_application_not_found_error(
     ) {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_client = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -464,36 +444,30 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = gql_client
-            .post_graphql::<CiStatusQuery, _>(
-                server.base_url(),
-                ci_status_query::Variables {
-                    repo_url: "https://invalid_repo_url.com".to_string(),
-                    branch: "main".to_string(),
-                },
-            )
+        let response = wk_client
+            .fetch_ci_status("https://invalid_repo_url.com", "main")
             .await;
 
         mock.assert();
         assert!(response.is_err());
 
-        match response.as_ref().unwrap_err() {
-            APIError::ResponseError { code, message } => {
-                assert_eq!(code, "ci_status_application_not_found");
-                assert_eq!(
-                    message,
-                    "Could not find the application associated with this Git repo.\n\tEither you're not in the correct working folder for your application, or there's a misconfiguration."
-                );
-            }
-            _ => panic!("it should be returning ResponseError"),
-        }
+        let error = response.unwrap_err();
+        matches!(
+            error,
+            WKError::APIError(APIError::CIStatusApplicationNotFound)
+        );
+
+        assert_eq!(
+            format!("{error}"),
+            "Could not find the application associated with this Git repo.\n\tEither you're not in the correct working folder for your application, or there's a misconfiguration."
+        );
     }
 
     #[tokio::test]
     async fn test_fetch_ci_status_failed_with_no_builds_associated_with_this_branch_error_should_return_ok_response(
     ) {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_client = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -523,14 +497,8 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = gql_client
-            .post_graphql::<CiStatusQuery, _>(
-                server.base_url(),
-                ci_status_query::Variables {
-                    repo_url: "https://valid_repo_url.com".to_string(),
-                    branch: "main".to_string(),
-                },
-            )
+        let response = wk_client
+            .fetch_ci_status("https://valid_repo_url.com", "main")
             .await;
 
         mock.assert();

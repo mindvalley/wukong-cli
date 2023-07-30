@@ -10,8 +10,10 @@ pub struct ChangelogsQuery;
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use crate::{error::APIError, graphql::GQLClient, WKClient, WKConfig};
+    use crate::{
+        error::{APIError, WKError},
+        WKClient, WKConfig,
+    };
     use httpmock::prelude::*;
 
     fn setup_wk_client(api_url: &str) -> WKClient {
@@ -65,11 +67,10 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_fetch_changelog_list_failed_with_application_not_found_error_should_return_response_error(
+    async fn test_fetch_changelog_list_failed_with_application_not_found_error_should_return_application_not_found_error(
     ) {
         let server = MockServer::start();
-        // let wk_client = setup_wk_client(&server.base_url());
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_client = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -97,38 +98,32 @@ mod test {
                 .body(api_resp);
         });
 
-        // let response = wk_client
-        //     .fetch_changelogs("valid-application", "prod", "green", "main-build-1234")
-        //     .await;
-        let response = gql_client
-            .post_graphql::<ChangelogsQuery, _>(
-                server.base_url(),
-                changelogs_query::Variables {
-                    application: "invalid-application".to_string(),
-                    namespace: "prod".to_string(),
-                    version: "green".to_string(),
-                    build_artifact_name: "main-build-1234".to_string(),
-                },
-            )
+        let response = wk_client
+            .fetch_changelogs("invalid-application", "prod", "green", "main-build-1234")
             .await;
 
         mock.assert();
         assert!(response.is_err());
 
-        match response.as_ref().unwrap_err() {
-            APIError::ResponseError { code, message } => {
-                assert_eq!(code, "application_not_found");
-                assert_eq!(message, "Application `invalid-application` not found.");
+        let error = response.unwrap_err();
+        match &error {
+            WKError::APIError(APIError::ApplicationNotFound { application }) => {
+                assert_eq!(application, "invalid-application");
             }
-            _ => panic!("it should be returning ResponseError"),
-        }
+            _ => panic!("it should be returning APIError::ApplicationNotFound"),
+        };
+
+        assert_eq!(
+            format!("{error}"),
+            "Application `invalid-application` not found."
+        );
     }
 
     #[tokio::test]
-    async fn test_fetch_changelog_list_failed_with_unable_to_determine_changelog_error_should_return_response_error(
+    async fn test_fetch_changelog_list_failed_with_unable_to_determine_changelog_error_should_return_unable_to_determine_changelog_error(
     ) {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_client = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -157,41 +152,35 @@ mod test {
         });
 
         let invalid_build_number = "invalid-build-1234";
-        let response = gql_client
-            .post_graphql::<ChangelogsQuery, _>(
-                server.base_url(),
-                changelogs_query::Variables {
-                    application: "valid-application".to_string(),
-                    namespace: "prod".to_string(),
-                    version: "green".to_string(),
-                    build_artifact_name: invalid_build_number.to_string(),
-                },
-            )
+        let response = wk_client
+            .fetch_changelogs("valid-application", "prod", "green", invalid_build_number)
             .await;
 
         mock.assert();
         assert!(response.is_err());
 
-        match response.as_ref().unwrap_err() {
-            APIError::ResponseError { code, message } => {
-                assert_eq!(code, "unable_to_determine_changelog");
-                assert_eq!(
-                    message,
-                    &format!(
-                        "Unable to determine the changelog for {}.",
-                        invalid_build_number
-                    )
-                );
+        let error = response.unwrap_err();
+        match &error {
+            WKError::APIError(APIError::UnableToDetermineChangelog { build }) => {
+                assert_eq!(build, invalid_build_number);
             }
-            _ => panic!("it should be returning ResponseError"),
-        }
+            _ => panic!("it should be returning APIError::UnableToDetermineChangelog"),
+        };
+
+        assert_eq!(
+            format!("{error}"),
+            format!(
+                "Unable to determine the changelog for {}.",
+                invalid_build_number
+            )
+        );
     }
 
     #[tokio::test]
     async fn test_fetch_changelog_list_failed_with_comparing_same_build_error_should_return_changelog_comparing_same_build_error(
     ) {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_client = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -220,24 +209,22 @@ mod test {
         });
 
         let same_build_number = "same-build-1234";
-        let response = gql_client
-            .post_graphql::<ChangelogsQuery, _>(
-                server.base_url(),
-                changelogs_query::Variables {
-                    application: "valid-application".to_string(),
-                    namespace: "prod".to_string(),
-                    version: "green".to_string(),
-                    build_artifact_name: same_build_number.to_string(),
-                },
-            )
+        let response = wk_client
+            .fetch_changelogs("valid-application", "prod", "green", same_build_number)
             .await;
 
         mock.assert();
         assert!(response.is_err());
 
+        let error = response.unwrap_err();
         assert!(matches!(
-            response.as_ref().unwrap_err(),
-            APIError::ChangelogComparingSameBuild
+            error,
+            WKError::APIError(APIError::ChangelogComparingSameBuild)
         ));
+
+        assert_eq!(
+            format!("{error}"),
+            "The selected build number is the same as the current deployed version. So there is no changelog."
+        );
     }
 }

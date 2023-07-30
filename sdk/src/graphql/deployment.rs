@@ -34,16 +34,25 @@ pub struct ExecuteCdPipeline;
 
 #[cfg(test)]
 mod test {
-    use crate::{error::APIError, graphql::GQLClient};
+    use crate::{
+        error::{APIError, WKError},
+        WKClient, WKConfig,
+    };
 
-    use super::*;
     use base64::Engine;
     use httpmock::prelude::*;
+
+    fn setup_wk_client(api_url: &str) -> WKClient {
+        WKClient::new(WKConfig {
+            api_url: api_url.to_string(),
+            access_token: "test_access_token".to_string(),
+        })
+    }
 
     #[tokio::test]
     async fn test_fetch_cd_pipeline_list_success_should_return_cd_pipeline_list() {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_client = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -80,14 +89,7 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = gql_client
-            .post_graphql::<CdPipelinesQuery, _>(
-                server.base_url(),
-                cd_pipelines_query::Variables {
-                    application: "valid-application".to_string(),
-                },
-            )
-            .await;
+        let response = wk_client.fetch_cd_pipelines("valid-application").await;
 
         mock.assert();
         assert!(response.is_ok());
@@ -97,10 +99,10 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_fetch_cd_pipeline_list_failed_with_application_not_found_error_should_return_response_error(
+    async fn test_fetch_cd_pipeline_list_failed_with_application_not_found_error_should_return_application_not_found_error(
     ) {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_client = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -128,31 +130,29 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = gql_client
-            .post_graphql::<CdPipelinesQuery, _>(
-                server.base_url(),
-                cd_pipelines_query::Variables {
-                    application: "invalid-application".to_string(),
-                },
-            )
-            .await;
+        let response = wk_client.fetch_cd_pipelines("invalid-application").await;
 
         mock.assert();
         assert!(response.is_err());
 
-        match response.as_ref().unwrap_err() {
-            APIError::ResponseError { code, message } => {
-                assert_eq!(code, "application_not_found");
-                assert_eq!(message, "Application `invalid-application` not found.");
+        let error = response.unwrap_err();
+        match &error {
+            WKError::APIError(APIError::ApplicationNotFound { application }) => {
+                assert_eq!(application, "invalid-application");
             }
-            _ => panic!("it should be returning ResponseError"),
-        }
+            _ => panic!("it should be returning APIError::ApplicationNotFound",),
+        };
+
+        assert_eq!(
+            format!("{error}"),
+            "Application `invalid-application` not found."
+        );
     }
 
     #[tokio::test]
     async fn test_fetch_cd_pipeline_for_rollback_success_should_return_cd_pipeline() {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_client = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -180,15 +180,8 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = gql_client
-            .post_graphql::<CdPipelineForRollbackQuery, _>(
-                server.base_url(),
-                cd_pipeline_for_rollback_query::Variables {
-                    application: "invalid-application".to_string(),
-                    namespace: "prod".to_string(),
-                    version: "green".to_string(),
-                },
-            )
+        let response = wk_client
+            .fetch_previous_cd_pipeline_build("valid-application", "prod", "green")
             .await;
 
         mock.assert();
@@ -206,7 +199,7 @@ mod test {
     #[tokio::test]
     async fn test_execute_cd_pipeline_success_should_return_deployment_url() {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_client = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -224,21 +217,17 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = gql_client
-            .post_graphql::<ExecuteCdPipeline, _>(
-                server.base_url(),
-                execute_cd_pipeline::Variables {
-                    application: "valid-application".to_string(),
-                    build_number: 0,
-                    build_artifact_name: Some("main-build-100".to_string()),
-                    namespace: "prod".to_string(),
-                    version: "green".to_string(),
-                    changelogs: Some(
-                        base64::engine::general_purpose::STANDARD
-                            .encode("This is a changelog.\n\nThis is a new changelog.\n"),
-                    ),
-                    send_to_slack: true,
-                },
+        let response = wk_client
+            .deploy_cd_pipeline_build(
+                "valid-application",
+                "prod",
+                "green",
+                "main-build-100",
+                Some(
+                    base64::engine::general_purpose::STANDARD
+                        .encode("This is a changelog.\n\nThis is a new changelog.\n"),
+                ),
+                true,
             )
             .await;
 
@@ -250,10 +239,10 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_execute_cd_pipeline_list_failed_with_deploy_for_this_build_is_currently_running_error_should_return_response_error(
+    async fn test_execute_cd_pipeline_list_failed_with_deploy_for_this_build_is_currently_running_error_should_return_duplicate_deployment_error(
     ) {
         let server = MockServer::start();
-        let gql_client = GQLClient::with_authorization("test_access_token").unwrap();
+        let wk_client = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -281,33 +270,32 @@ mod test {
                 .body(api_resp);
         });
 
-        let response = gql_client
-            .post_graphql::<ExecuteCdPipeline, _>(
-                server.base_url(),
-                execute_cd_pipeline::Variables {
-                    application: "valid-application".to_string(),
-                    build_number: 0,
-                    build_artifact_name: Some("main-build-100".to_string()),
-                    namespace: "prod".to_string(),
-                    version: "green".to_string(),
-                    changelogs: Some(
-                        base64::engine::general_purpose::STANDARD
-                            .encode("This is a changelog.\n\nThis is a new changelog.\n"),
-                    ),
-                    send_to_slack: true,
-                },
+        let response = wk_client
+            .deploy_cd_pipeline_build(
+                "valid-application",
+                "prod",
+                "green",
+                "main-build-100",
+                Some(
+                    base64::engine::general_purpose::STANDARD
+                        .encode("This is a changelog.\n\nThis is a new changelog.\n"),
+                ),
+                true,
             )
             .await;
 
         mock.assert();
         assert!(response.is_err());
 
-        match response.as_ref().unwrap_err() {
-            APIError::ResponseError { code, message } => {
-                assert_eq!(code, "deploy_for_this_build_is_currently_running");
-                assert_eq!(message, "Cannot submit this deployment request, since there is another running deployment with the same arguments is running on Spinnaker.\nYou can wait a few minutes and submit the deployment again.");
-            }
-            _ => panic!("it should be returning ResponseError"),
-        }
+        let error = response.unwrap_err();
+        assert!(matches!(
+            error,
+            WKError::APIError(APIError::DuplicatedDeployment)
+        ));
+
+        assert_eq!(
+            format!("{error}"),
+            "Cannot submit this deployment request, since there is another running deployment with the same arguments is running on Spinnaker.\nYou can wait a few minutes and submit the deployment again."
+        );
     }
 }

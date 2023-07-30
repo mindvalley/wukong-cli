@@ -1,8 +1,10 @@
+#[cfg(not(doctest))]
 mod utils;
 
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, AttributeArgs, ItemFn};
+#[cfg(not(doctest))]
 use utils::attribute_args_ext::AttributeArgsExt;
 
 #[proc_macro_attribute]
