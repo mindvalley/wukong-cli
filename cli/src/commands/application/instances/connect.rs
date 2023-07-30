@@ -97,10 +97,7 @@ pub async fn handle_connect(
     let config = Config::load_from_default_path()?;
     let mut wk_client = WKClient::new(&config)?;
 
-    if !has_permission(&mut wk_client, &application, &namespace, &version)
-        .await
-        .unwrap()
-    {
+    if !has_permission(&mut wk_client, &application, &namespace, &version).await? {
         check_permission_loader.finish_and_clear();
         eprintln!("You don't have permission to connect to this instance.");
         eprintln!("Please check with your team manager to get approval first.");

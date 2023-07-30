@@ -1,12 +1,30 @@
 # Changelog
 
-## [Unreleased](https://github.com/mindvalley/wukong-cli/tree/HEAD)
+## [1.1.0](https://github.com/mindvalley/wukong-cli/tree/1.1.0) (2023-07-20)
 
-[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/1.0.2...HEAD)
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/1.0.3...1.1.0)
+
+**Implemented enhancements:**
+
+- PXP-567: \[CLI\] Crash when entering interactive session too long [\#119](https://github.com/mindvalley/wukong-cli/pull/119) ([jk-gan](https://github.com/jk-gan))
+- PXP-568: \[CLI\] Make the application instances connect interactive [\#118](https://github.com/mindvalley/wukong-cli/pull/118) ([mfauzaan](https://github.com/mfauzaan))
+
+**Merged pull requests:**
+
+- Update README.md [\#122](https://github.com/mindvalley/wukong-cli/pull/122) ([onimsha](https://github.com/onimsha))
+- Bump version to 1.1.0 [\#121](https://github.com/mindvalley/wukong-cli/pull/121) ([onimsha](https://github.com/onimsha))
+
+## [1.0.3](https://github.com/mindvalley/wukong-cli/tree/1.0.3) (2023-07-11)
+
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/1.0.2...1.0.3)
 
 **Fixed bugs:**
 
 - PXP-564: \[CLI\] Polling GraphQLquery for livebook status instead of subscription [\#117](https://github.com/mindvalley/wukong-cli/pull/117) ([jk-gan](https://github.com/jk-gan))
+
+**Merged pull requests:**
+
+- Bump version and update dependencies [\#120](https://github.com/mindvalley/wukong-cli/pull/120) ([onimsha](https://github.com/onimsha))
 
 ## [1.0.2](https://github.com/mindvalley/wukong-cli/tree/1.0.2) (2023-07-03)
 

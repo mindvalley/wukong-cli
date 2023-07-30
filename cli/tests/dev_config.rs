@@ -454,12 +454,15 @@ config :application, Application.Repo"#,
 #[test]
 #[serial]
 fn test_wukong_dev_config_diff_when_config_not_found() {
+    let server = MockServer::start();
     let (wk_temp, elixir_temp) = setup();
+    let wk_config_file = mock_user_config(&wk_temp, server.base_url());
 
     let cmd = common::wukong_raw_command()
         .arg("dev")
         .arg("config")
         .arg("diff")
+        .env("WUKONG_DEV_CONFIG_FILE", wk_config_file.path())
         .assert()
         .failure();
 

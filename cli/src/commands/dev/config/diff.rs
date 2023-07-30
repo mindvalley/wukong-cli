@@ -1,3 +1,6 @@
+use super::utils::{
+    extract_secret_infos, get_local_config_path, get_secret_config_files, get_updated_configs,
+};
 use crate::{
     auth::vault,
     commands::{dev::config::utils::make_path_relative, Context},
@@ -10,10 +13,6 @@ use crate::{
 use dialoguer::console::{style, Style};
 use owo_colors::OwoColorize;
 use similar::{ChangeTag, TextDiff};
-
-use super::utils::{
-    extract_secret_infos, get_local_config_path, get_secret_config_files, get_updated_configs,
-};
 use wukong_telemetry::*;
 use wukong_telemetry_macro::*;
 
