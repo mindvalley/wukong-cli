@@ -105,7 +105,7 @@ impl ClapApp {
                 deployment.handle_command(get_context(self)?).await
             }
             CommandGroup::Config(config) => config.handle_command(),
-            CommandGroup::Dev(dev) => dev.handle_command(get_context(self)?).await,
+            CommandGroup::Dev(dev) => dev.handle_command(self).await,
         }
     }
 }

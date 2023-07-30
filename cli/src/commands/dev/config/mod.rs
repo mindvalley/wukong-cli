@@ -9,7 +9,10 @@ use lint::handle_config_lint;
 use pull::handle_config_pull;
 use push::handle_config_push;
 
-use crate::{commands::Context, error::WKCliError};
+use crate::{
+    commands::{get_context, ClapApp},
+    error::WKCliError,
+};
 use clap::{Args, Subcommand};
 use std::path::PathBuf;
 
@@ -40,11 +43,13 @@ pub enum ConfigSubcommand {
 }
 
 impl Config {
-    pub async fn handle_command(&self, context: Context) -> Result<bool, WKCliError> {
+    pub async fn handle_command(&self, clap_app: &ClapApp) -> Result<bool, WKCliError> {
         match &self.subcommand {
-            ConfigSubcommand::Push => handle_config_push(context).await,
-            ConfigSubcommand::Diff => handle_config_diff(context).await,
-            ConfigSubcommand::Pull { path } => handle_config_pull(context, path).await,
+            ConfigSubcommand::Push => handle_config_push(get_context(clap_app)?).await,
+            ConfigSubcommand::Diff => handle_config_diff(get_context(clap_app)?).await,
+            ConfigSubcommand::Pull { path } => {
+                handle_config_pull(get_context(clap_app)?, path).await
+            }
             ConfigSubcommand::Lint { path } => handle_config_lint(path),
         }
     }
