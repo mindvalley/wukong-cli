@@ -23,8 +23,6 @@
   <img alt="Wukong CLI" src="./.github/img/wukong_help.png">
 </div>
 
-<p align="center">This is a <strong>Work In Progress 🚧</strong>.</p>
-
 ## The Idea
 
 The Wukong CLI is a set of tools to manages Mindvalley DevOps resources. Its goal is to provide a one-stop shop for developers to interact with the Mindvalley DevOps ecosystem. By centralizing different tasks on different tools into a single CLI, It will solve these problems when it comes to adopting DevOps practices:
@@ -35,14 +33,14 @@ The Wukong CLI is a set of tools to manages Mindvalley DevOps resources. Its goa
 > **Note**
 > You can read more from [here](https://mindvalley.atlassian.net/wiki/spaces/PXP/pages/450396161/PD2+-+A+Swiss-army+Knife+CLI+For+Mindvalley+Developers)
 
-## KNOWN ISSUE  
+## KNOWN ISSUE
 
-* Currently the Jenkins sometimes does not return the list of changes during build, so the CLI is not able to determine the CHANGELOG properly. We are working on a solution in the future release.  
+- Currently the Jenkins sometimes does not return the list of changes during build, so the CLI is not able to determine the CHANGELOG properly. We are working on a solution in the future release.
 
-## GUIDES  
+## GUIDES
 
-* [How to use the Vault integration with Elixir projects](guides/elixir_working_with_secrets_in_bunker.md).  
-* [How to use the Vault integration with arbitrary secrets](guides/working_with_generic_secrets_in_bunker.md).  
+- [How to use the Vault integration with Elixir projects](guides/elixir_working_with_secrets_in_bunker.md).
+- [How to use the Vault integration with arbitrary secrets](guides/working_with_generic_secrets_in_bunker.md).
 
 ## Get Started for Development
 
