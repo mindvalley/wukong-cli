@@ -24,7 +24,7 @@ pub async fn handle_login() -> Result<bool, WKCliError> {
 
     // "Log in with a new account" is selected
     let new_config = if selection == login_selections.len() - 1 {
-        login_and_create_config(Config::default()).await?
+        login_and_create_config(config).await?
     } else {
         // check access token expiry
         let mut current_config = config.clone();
