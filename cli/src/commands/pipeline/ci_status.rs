@@ -57,7 +57,7 @@ pub async fn handle_ci_status(
     fetch_loader.set_message("Fetching ci status ...");
 
     let config = Config::load_from_default_path()?;
-    let wk_client = WKClient::new(&config);
+    let mut wk_client = WKClient::new(&config)?;
 
     let ci_status_resp = wk_client
         .fetch_ci_status(&repo_url, &branch)

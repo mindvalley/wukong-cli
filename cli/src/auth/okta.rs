@@ -26,7 +26,7 @@ const EXPIRY_REMAINING_TIME_IN_MINS: i64 = 5;
 struct OktaClaims;
 impl AdditionalClaims for OktaClaims {}
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TokenInfo {
     pub id_token: String,
     pub access_token: String,
@@ -34,6 +34,7 @@ pub struct TokenInfo {
     pub refresh_token: String,
 }
 
+#[derive(Debug, Clone)]
 pub struct OktaAuth {
     pub account: String,
     pub subject: String,

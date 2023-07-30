@@ -75,7 +75,7 @@ pub async fn handle_init() -> Result<bool, WKCliError> {
     let fetch_loader = new_spinner();
     fetch_loader.set_message("Fetching application list...");
 
-    let wk_client = WKClient::new(&new_config);
+    let mut wk_client = WKClient::new(&new_config)?;
 
     let applications_data: Vec<String> = wk_client
         .fetch_applications()

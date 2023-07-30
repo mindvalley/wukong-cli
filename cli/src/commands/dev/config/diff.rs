@@ -39,7 +39,7 @@ pub async fn handle_config_diff(context: Context) -> Result<bool, WKCliError> {
     }
 
     let mut config = Config::load_from_default_path()?;
-    let wk_client = WKClient::new(&config);
+    let wk_client = WKClient::new(&config)?;
     let vault_token = vault::get_token_or_login(&mut config).await?;
 
     let updated_configs = get_updated_configs(&wk_client, &vault_token, &extracted_infos).await?;

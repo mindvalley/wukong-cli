@@ -16,7 +16,7 @@ pub async fn handle_list(context: Context) -> Result<bool, WKCliError> {
     fetch_loader.set_message("Fetching pipelines list ...");
 
     let config = Config::load_from_default_path()?;
-    let wk_client = WKClient::new(&config);
+    let mut wk_client = WKClient::new(&config)?;
 
     let pipelines_data = wk_client
         .fetch_pipelines(&context.current_application)

@@ -72,10 +72,7 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
 
         generated_func = quote! {
             #visibility #asyncness fn #fn_ident(#fn_inputs) #fn_output {
-                let current_sub = match self.sub.clone() {
-                    Some(sub) => sub,
-                    None => "unknown".to_string(),
-                };
+                let current_sub = self.sub.clone();
 
                 let now = std::time::Instant::now();
 

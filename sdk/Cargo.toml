@@ -6,11 +6,6 @@ edition = "2021"
 [features]
 prod = []
 
-[profile.release]
-strip = true
-lto = true
-
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
@@ -102,9 +97,6 @@ assert_cmd = "2.0.8"
 git2 = "0.16.1"
 serial_test = "2.0.0"
 
-
-[profile.dev.package.insta]
-opt-level = 3
 
 [package.metadata.cross.build.env]
 passthrough = ["WUKONG_HONEYCOMB_API_KEY", "OKTA_CLIENT_ID", "WUKONG_API_URL"]

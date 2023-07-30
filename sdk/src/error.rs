@@ -22,12 +22,8 @@ pub enum WKError {
     ConfigError(#[from] ConfigError),
     #[error("Failed to discover OpenID Provider")]
     OpenIDDiscoveryError,
-    #[error("You are un-authenticated.")]
-    UnAuthenticated,
-    #[error("You are un-initialised.")]
-    UnInitialised,
-    #[error(transparent)]
-    AuthError(#[from] AuthError),
+    // #[error(transparent)]
+    // AuthError(#[from] AuthError),
     #[error(transparent)]
     DeploymentError(#[from] DeploymentError),
     #[error(transparent)]
@@ -44,15 +40,15 @@ pub enum WKError {
     Timeout,
 }
 
-#[derive(Debug, ThisError)]
-pub enum AuthError {
-    #[error("Refresh token expired: {message}")]
-    RefreshTokenExpired { message: String },
-    #[error("OpenID Connect Error: {message}")]
-    OpenIDConnectError { message: String },
-    #[error("Failed to discover OpenID Provider")]
-    OpenIDDiscoveryError,
-}
+// #[derive(Debug, ThisError)]
+// pub enum AuthError {
+//     #[error("Refresh token expired: {message}")]
+//     RefreshTokenExpired { message: String },
+//     #[error("OpenID Connect Error: {message}")]
+//     OpenIDConnectError { message: String },
+//     #[error("Failed to discover OpenID Provider")]
+//     OpenIDDiscoveryError,
+// }
 
 #[derive(Debug, ThisError)]
 pub enum APIError {
@@ -66,11 +62,6 @@ pub enum APIError {
     UnAuthorized,
     #[error("API Error: Request to {domain} timed out.")]
     Timeout { domain: String },
-    // Error during refreshing tokens
-    // #[error(transparent)]
-    // AuthError(#[from] AuthError),
-    // #[error(transparent)]
-    // ConfigError(#[from] ConfigError),
     #[error("Failed to get data from GraphQL response.")]
     MissingResponseData,
     #[error("The selected build number is the same as the current deployed version. So there is no changelog.")]

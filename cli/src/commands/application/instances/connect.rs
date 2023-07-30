@@ -95,7 +95,7 @@ pub async fn handle_connect(
         .set_message("Checking your permission to connect to the remote instance...");
 
     let config = Config::load_from_default_path()?;
-    let mut wk_client = WKClient::new(&config);
+    let mut wk_client = WKClient::new(&config)?;
 
     if !has_permission(&mut wk_client, &application, &namespace, &version)
         .await

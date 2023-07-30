@@ -670,11 +670,6 @@ impl WKClient {
     }
 }
 
-fn setup_gql_client(access_token: &Option<String>) -> Result<GQLClient, WKError> {
-    GQLClient::with_authorization(
-        access_token
-            .as_ref()
-            .ok_or(WKError::APIError(APIError::UnAuthenticated))?,
-    )
-    .map_err(|err| err.into())
+fn setup_gql_client(access_token: &str) -> Result<GQLClient, WKError> {
+    GQLClient::with_authorization(access_token).map_err(|err| err.into())
 }

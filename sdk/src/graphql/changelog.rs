@@ -17,7 +17,7 @@ mod test {
     fn setup_wk_client(api_url: &str) -> WKClient {
         WKClient::new(WKConfig {
             api_url: api_url.to_string(),
-            access_token: Some("test_access_token".to_string()),
+            access_token: "test_access_token".to_string(),
         })
     }
 

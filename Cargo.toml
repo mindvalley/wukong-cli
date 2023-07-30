@@ -1,2 +1,9 @@
+[profile.release]
+strip = true
+lto = true
+
+[profile.dev.package.insta]
+opt-level = 3
+
 [workspace]
 members = ["cli", "sdk", "telemetry", "telemetry-macro"]

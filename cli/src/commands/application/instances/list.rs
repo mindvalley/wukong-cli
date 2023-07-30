@@ -32,7 +32,7 @@ pub async fn handle_list(
     loader.set_message("Checking your permission to connect to the remote instance...");
 
     let config = Config::load_from_default_path()?;
-    let mut wk_client = WKClient::new(&config);
+    let mut wk_client = WKClient::new(&config)?;
 
     let application = context.current_application;
 
