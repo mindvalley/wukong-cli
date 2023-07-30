@@ -27,8 +27,10 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
             #[allow(clippy::too_many_arguments)]
             #visibility #asyncness fn #fn_ident(#fn_inputs) #fn_output {
                 let current_application = context.current_application.clone();
-                // SAFETY: the sub can't be None since it is checked in the caller
-                let current_sub = context.sub.as_ref().expect("Current sub must not be None for command event telemetry.").clone();
+                let current_sub = match context.sub {
+                    Some(sub) => sub,
+                    None => "unknown".to_string(),
+                };
 
                 TelemetryData::new(
                     TelemetryEvent::Command {

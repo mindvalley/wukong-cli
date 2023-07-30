@@ -20,13 +20,6 @@ pub enum WKCliError {
     UnInitialised,
     #[error(transparent)]
     ReqwestError(#[from] reqwest::Error),
-    #[error("No config file found!")]
-    DevConfigNotFound,
-    #[error("Invalid secret path in the config file.")]
-    InvalidSecretPath {
-        config_path: String,
-        annotation: String,
-    },
     // #[error(transparent)]
     // Base64(#[from] base64::DecodeError),
     #[error("Error parsing \"{value}\"")]
@@ -43,12 +36,12 @@ pub enum WKCliError {
     ConfigError(#[from] ConfigError),
     #[error(transparent)]
     DeploymentError(#[from] DeploymentError),
-    #[error(transparent)]
-    VaultError(#[from] VaultError),
+    // #[error(transparent)]
+    // VaultError(#[from] VaultError),
     #[error(transparent)]
     DevConfigError(#[from] DevConfigError),
-    #[error(transparent)]
-    GCloudError(#[from] GCloudError),
+    // #[error(transparent)]
+    // GCloudError(#[from] GCloudError),
     // #[error(transparent)]
     // ExtractError(#[from] ExtractError),
     #[error(transparent)]
@@ -167,39 +160,39 @@ pub enum DeploymentError {
 }
 
 // Vault Service Error
-#[derive(Debug, ThisError)]
-pub enum VaultError {
-    // #[error(transparent)]
-    // ReqwestError(#[from] reqwest::Error),
-    #[error("API Response Error: {message}")]
-    ResponseError { code: String, message: String },
-    #[error("Invalid credentials. Please try again.")]
-    AuthenticationFailed,
-    #[error("You are un-initialised.")]
-    UnInitialised,
-    #[error(transparent)]
-    Io(#[from] ::std::io::Error),
-    #[error("Secret not found.")]
-    SecretNotFound,
-    #[error("API token not found.")]
-    ApiTokenNotFound,
-    #[error("Invalid API token.")]
-    ApiTokenInvalid,
-    #[error("Permission denied.")]
-    PermissionDenied,
-    #[error(transparent)]
-    ConfigError(#[from] ConfigError),
-}
+// #[derive(Debug, ThisError)]
+// pub enum VaultError {
+//     // #[error(transparent)]
+//     // ReqwestError(#[from] reqwest::Error),
+//     #[error("API Response Error: {message}")]
+//     ResponseError { code: String, message: String },
+//     #[error("Invalid credentials. Please try again.")]
+//     AuthenticationFailed,
+//     #[error("You are un-initialised.")]
+//     UnInitialised,
+//     #[error(transparent)]
+//     Io(#[from] ::std::io::Error),
+//     #[error("Secret not found.")]
+//     SecretNotFound,
+//     #[error("API token not found.")]
+//     ApiTokenNotFound,
+//     #[error("Invalid API token.")]
+//     ApiTokenInvalid,
+//     #[error("Permission denied.")]
+//     PermissionDenied,
+//     #[error(transparent)]
+//     ConfigError(#[from] ConfigError),
+// }
 
 // GCloud Service Error
-#[derive(Debug, ThisError)]
-pub enum GCloudError {
-    #[error(transparent)]
-    Io(#[from] ::std::io::Error),
-    // #[error(transparent)]
-    // GoogleLogging2Error(#[from] google_logging2::Error),
-}
-
+// #[derive(Debug, ThisError)]
+// pub enum GCloudError {
+//     #[error(transparent)]
+//     Io(#[from] ::std::io::Error),
+//     // #[error(transparent)]
+//     // GoogleLogging2Error(#[from] google_logging2::Error),
+// }
+//
 // Secret Extractor Error
 // #[derive(Debug, ThisError)]
 // pub enum ExtractError {
@@ -214,16 +207,16 @@ impl WKCliError {
         match self {
             WKCliError::WKSdkError(WKError::APIError(error)) => {
                 match error {
-                    APIError::ResponseError { code, .. } if code == "unable_to_get_pipeline" => Some(
+                    APIError::UnableToGetPipeline { .. } => Some(
                         String::from("Please check your pipeline's name. It could be invalid."),
                     ),
-                    APIError::ResponseError { code, .. } if code == "unable_to_get_pipelines" => Some(
+                        APIError::UnableToGetPipelines { .. } => Some(
                         String::from("Please check your application's name. It could be invalid."),
                     ),
-                    APIError::ResponseError { code, .. } if code == "application_not_found" => Some(
-                        String::from("Please check your repo url. It's unrecognized by wukong."),
+                    APIError::ApplicationNotFound { .. } => Some(
+                        String::from("Please check your application or your repo url. It's unrecognized by wukong."),
                     ),
-                    APIError::ResponseError { code, .. } if code == "ci_status_application_not_found" => Some(format!(
+                    APIError::CIStatusApplicationNotFound => Some(format!(
     r#"You can follow these steps to remedy this error:  
 1. Confirm that you're in the correct working folder.
 2. If you're not, consider moving to the right location and run {} command again.
@@ -266,19 +259,7 @@ If none of the above steps work for you, please contact the following people on 
                 )),
                 _ => None,
             },
-            WKCliError::VaultError(VaultError::ConfigError(error)) => match error {
-                    ConfigError::NotFound { .. } => Some(String::from(
-                        "Run \"wukong init\" to initialise Wukong's configuration.",
-                    )),
-                    ConfigError::PermissionDenied { path, .. } => Some(format!(
-                        "Run \"chmod +rw {path}\" to provide read and write permissions."
-                    )),
-                    // ConfigError::BadTomlData(_) => Some(
-                    //     "Check if your config.toml file is in valid TOML format.\nThis usually happen when the config file is accidentally modified or there is a breaking change to the cli config in the new version.\nYou may want to run \"wukong init\" to re-initialise configuration again.".to_string()
-                    // ),
-                    _ => None,
-                },
-            // WKCliError::AuthError(AuthError::RefreshTokenExpired { .. }) => Some("Your refresh token is expired. Run \"wukong login\" to authenticate again.".to_string()),
+            WKCliError::AuthError(AuthError::OktaRefreshTokenExpired { .. }) => Some("Your refresh token is expired. Run \"wukong login\" to authenticate again.".to_string()),
             _ => None,
         }
     }

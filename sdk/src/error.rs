@@ -1,4 +1,3 @@
-use owo_colors::OwoColorize;
 use thiserror::Error as ThisError;
 
 #[derive(Debug, ThisError)]
@@ -65,17 +64,29 @@ pub enum APIError {
     UnAuthenticated,
     #[error("API Error: You are un-authorized.")]
     UnAuthorized,
-    #[error("The selected build number is the same as the current deployed version. So there is no changelog.")]
-    ChangelogComparingSameBuild,
     #[error("API Error: Request to {domain} timed out.")]
     Timeout { domain: String },
     // Error during refreshing tokens
-    #[error(transparent)]
-    AuthError(#[from] AuthError),
-    #[error(transparent)]
-    ConfigError(#[from] ConfigError),
+    // #[error(transparent)]
+    // AuthError(#[from] AuthError),
+    // #[error(transparent)]
+    // ConfigError(#[from] ConfigError),
     #[error("Failed to get data from GraphQL response.")]
     MissingResponseData,
+    #[error("The selected build number is the same as the current deployed version. So there is no changelog.")]
+    ChangelogComparingSameBuild,
+    #[error("Unable to get pipelines for application `{application}`.")]
+    UnableToGetPipelines { application: String },
+    #[error("Unable to get pipeline `{pipeline}`.")]
+    UnableToGetPipeline { pipeline: String },
+    #[error("Could not find the application associated with this Git repo.\n\tEither you're not in the correct working folder for your application, or there's a misconfiguration.")]
+    CIStatusApplicationNotFound,
+    #[error("Application `{application}` not found.")]
+    ApplicationNotFound { application: String },
+    #[error("Unable to determine the changelog for {build}.")]
+    UnableToDetermineChangelog { build: String },
+    #[error("Cannot submit this deployment request, since there is another running deployment with the same arguments is running on Spinnaker.\nYou can wait a few minutes and submit the deployment again.")]
+    DuplicatedDeployment,
 }
 
 #[derive(Debug, ThisError)]
@@ -178,91 +189,4 @@ pub enum GCloudError {
 pub enum ExtractError {
     #[error("Bad TOML data.")]
     BadTomlData(#[from] toml::de::Error),
-}
-
-impl WKError {
-    /// Try to second-guess what the user was trying to do, depending on what
-    /// went wrong.
-    pub fn suggestion(&self) -> Option<String> {
-        match self {
-            WKError::UnAuthenticated => Some(String::from(
-                "Your access token is invalid. Run \"wukong login\" to authenticate with your okta account.",
-            )),
-            WKError::UnInitialised => Some(String::from(
-                "Run \"wukong init\" to initialise Wukong's configuration before running other commands.",
-            )),
-            WKError::ConfigError(error) => match error {
-                ConfigError::NotFound { .. } => Some(String::from(
-                    "Run \"wukong init\" to initialise Wukong's configuration.",
-                )),
-                ConfigError::PermissionDenied { path, .. } => Some(format!(
-                    "Run \"chmod +rw {path}\" to provide read and write permissions."
-                )),
-                ConfigError::BadTomlData(_) => Some(
-                    "Check if your config.toml file is in valid TOML format.\nThis usually happen when the config file is accidentally modified or there is a breaking change to the cli config in the new version.\nYou may want to run \"wukong init\" to re-initialise configuration again.".to_string()
-                ),
-                _ => None,
-            },
-            WKError::APIError(error) => match error {
-                APIError::ResponseError { code, .. } if code == "unable_to_get_pipeline" => Some(
-                    String::from("Please check your pipeline's name. It could be invalid."),
-                ),
-                APIError::ResponseError { code, .. } if code == "unable_to_get_pipelines" => Some(
-                    String::from("Please check your application's name. It could be invalid."),
-                ),
-                APIError::ResponseError { code, .. } if code == "application_not_found" => Some(
-                    String::from("Please check your repo url. It's unrecognized by wukong."),
-                ),
-                APIError::ResponseError { code, .. } if code == "ci_status_application_not_found" => Some(format!(
-        r#"You can follow these steps to remedy this error:  
-    1. Confirm that you're in the correct working folder.
-    2. If you're not, consider moving to the right location and run {} command again.
-If none of the above steps work for you, please contact the following people on Slack for assistance: @alex.tuan / @jk-gan / @Fadhil"#,
-        "wukong pipeline ci-status".yellow()
-                )),
-                APIError::UnAuthenticated => Some(
-                    "Run \"wukong login\" to authenticate with your okta account.".to_string()
-                ),
-                APIError::UnAuthorized => Some(
-                    "Your token might be invalid/expired. Run \"wukong login\" to authenticate with your okta account.".to_string()
-                ),
-                _ => None,
-            },
-             WKError::ApplicationInstanceError(error) => match error {
-                ApplicationInstanceError::VersionNotAvailable { version, .. } => Some(
-                    format!(
-                    "You can try to check the following:
-    * Whether your application is supporting this {version} version. 
-    * Contact Wukong dev team to check if there is any k8s configuration enabled for this version. "
-                )),
-                ApplicationInstanceError::NamespaceNotAvailable { .. } => Some(
-                    "You may want to contact Wukong dev team to check if there is any k8s configuration for your application.".to_string()
-                ),
-                _ => None,
-            },
-            WKError::DevConfigError(error) => match error {
-                DevConfigError::ConfigSecretNotFound=> Some(
-                    "Run \"wukong config dev pull\" to pull the latest dev config.\n".to_string()
-               ),
-                DevConfigError::InvalidSecretPath { config_path, annotation } => Some(format!(
-                    "Please check the {annotation} in the config file: {config_path}"
-                )),
-                _ => None,
-            },
-            WKError::AuthError(AuthError::RefreshTokenExpired { .. }) => Some("Your refresh token is expired. Run \"wukong login\" to authenticate again.".to_string()),
-            WKError::VaultError(VaultError::ConfigError(error)) => match error {
-                    ConfigError::NotFound { .. } => Some(String::from(
-                        "Run \"wukong init\" to initialise Wukong's configuration.",
-                    )),
-                    ConfigError::PermissionDenied { path, .. } => Some(format!(
-                        "Run \"chmod +rw {path}\" to provide read and write permissions."
-                    )),
-                    ConfigError::BadTomlData(_) => Some(
-                        "Check if your config.toml file is in valid TOML format.\nThis usually happen when the config file is accidentally modified or there is a breaking change to the cli config in the new version.\nYou may want to run \"wukong init\" to re-initialise configuration again.".to_string()
-                    ),
-                    _ => None,
-                },
-            _ => None,
-        }
-    }
 }

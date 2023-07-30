@@ -2,7 +2,7 @@ use crate::{
     auth::vault,
     commands::{dev::config::utils::make_path_relative, Context},
     config::Config,
-    error::WKCliError,
+    error::{DevConfigError, WKCliError},
     loader::new_spinner,
     utils::line::Line,
     wukong_client::WKClient,
@@ -28,7 +28,7 @@ pub async fn handle_config_diff(context: Context) -> Result<bool, WKCliError> {
     loader.finish_and_clear();
 
     if extracted_infos.is_empty() {
-        return Err(WKCliError::DevConfigNotFound);
+        return Err(WKCliError::DevConfigError(DevConfigError::ConfigNotFound));
     }
 
     if extracted_infos.len() != 1 {

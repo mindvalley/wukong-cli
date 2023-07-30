@@ -151,11 +151,7 @@ impl GQLClient {
 
 impl WKClient {
     pub async fn fetch_applications(&self) -> Result<applications_query::ResponseData, WKError> {
-        let gql_client = GQLClient::with_authorization(
-            self.access_token
-                .as_ref()
-                .ok_or(APIError::UnAuthenticated)?,
-        )?;
+        let gql_client = setup_gql_client(&self.access_token)?;
 
         gql_client
             .post_graphql::<ApplicationsQuery, _>(&self.api_url, applications_query::Variables)
@@ -167,11 +163,7 @@ impl WKClient {
         &self,
         name: &str,
     ) -> Result<application_query::ResponseData, WKError> {
-        let gql_client = GQLClient::with_authorization(
-            self.access_token
-                .as_ref()
-                .ok_or(APIError::UnAuthenticated)?,
-        )?;
+        let gql_client = setup_gql_client(&self.access_token)?;
 
         gql_client
             .post_graphql::<ApplicationQuery, _>(
@@ -188,11 +180,7 @@ impl WKClient {
         &self,
         application: &str,
     ) -> Result<pipelines_query::ResponseData, WKError> {
-        let gql_client = GQLClient::with_authorization(
-            self.access_token
-                .as_ref()
-                .ok_or(APIError::UnAuthenticated)?,
-        )?;
+        let gql_client = setup_gql_client(&self.access_token)?;
 
         gql_client
             .post_graphql::<PipelinesQuery, _>(
@@ -202,22 +190,20 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| match &err {
-                APIError::ResponseError { code: _, message } => match message.as_str() {
-                    "unable_to_get_pipelines" => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: format!(
-                            "Unable to get pipelines for application `{application}`."
-                        ),
-                    }
-                    .into(),
-                    _ => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: format!("{err}"),
-                    }
-                    .into(),
-                },
-                _ => err.into(),
+            .map_err(|err| {
+                match &err {
+                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                        "unable_to_get_pipelines" => APIError::UnableToGetPipelines {
+                            application: application.to_string(),
+                        },
+                        _ => APIError::ResponseError {
+                            code: message.to_string(),
+                            message: format!("{err}"),
+                        },
+                    },
+                    _ => err,
+                }
+                .into()
             })
     }
 
@@ -225,11 +211,7 @@ impl WKClient {
         &self,
         name: &str,
     ) -> Result<pipeline_query::ResponseData, WKError> {
-        let gql_client = GQLClient::with_authorization(
-            self.access_token
-                .as_ref()
-                .ok_or(APIError::UnAuthenticated)?,
-        )?;
+        let gql_client = setup_gql_client(&self.access_token)?;
 
         gql_client
             .post_graphql::<PipelineQuery, _>(
@@ -239,20 +221,20 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| match &err {
-                APIError::ResponseError { code: _, message } => match message.as_str() {
-                    "unable_to_get_pipeline" => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: format!("Unable to get pipeline `{name}`."),
-                    }
-                    .into(),
-                    _ => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: format!("{err}"),
-                    }
-                    .into(),
-                },
-                _ => err.into(),
+            .map_err(|err| {
+                match &err {
+                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                        "unable_to_get_pipeline" => APIError::UnableToGetPipeline {
+                            pipeline: name.to_string(),
+                        },
+                        _ => APIError::ResponseError {
+                            code: message.to_string(),
+                            message: format!("{err}"),
+                        },
+                    },
+                    _ => err,
+                }
+                .into()
             })
     }
 
@@ -260,11 +242,7 @@ impl WKClient {
         &self,
         name: &str,
     ) -> Result<multi_branch_pipeline_query::ResponseData, WKError> {
-        let gql_client = GQLClient::with_authorization(
-            self.access_token
-                .as_ref()
-                .ok_or(APIError::UnAuthenticated)?,
-        )?;
+        let gql_client = setup_gql_client(&self.access_token)?;
 
         gql_client
             .post_graphql::<MultiBranchPipelineQuery, _>(
@@ -274,20 +252,20 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| match &err {
-                APIError::ResponseError { code: _, message } => match message.as_str() {
-                    "unable_to_get_pipeline" => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: format!("Unable to get pipeline `{name}`."),
-                    }
-                    .into(),
-                    _ => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: format!("{err}"),
-                    }
-                    .into(),
-                },
-                _ => err.into(),
+            .map_err(|err| {
+                match &err {
+                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                        "unable_to_get_pipeline" => APIError::UnableToGetPipeline {
+                            pipeline: name.to_string(),
+                        },
+                        _ => APIError::ResponseError {
+                            code: message.to_string(),
+                            message: format!("{err}"),
+                        },
+                    },
+                    _ => err,
+                }
+                .into()
             })
     }
 
@@ -297,11 +275,7 @@ impl WKClient {
         repo_url: &str,
         branch: &str,
     ) -> Result<ci_status_query::ResponseData, WKError> {
-        let gql_client = GQLClient::with_authorization(
-            self.access_token
-                .as_ref()
-                .ok_or(APIError::UnAuthenticated)?,
-        )?;
+        let gql_client = setup_gql_client(&self.access_token)?;
 
         let response = gql_client
             .post_graphql::<CiStatusQuery, _>(
@@ -317,12 +291,10 @@ impl WKClient {
             match err {
                 APIError::ResponseError { code: _, message } => {
                     if message == "application_not_found" {
-                        return Err(APIError::ResponseError {
-                            code: "ci_status_application_not_found".to_string(),
-                            message: "Could not find the application associated with this Git repo.\n\tEither you're not in the correct working folder for your application, or there's a misconfiguration.".to_string()
-                        }.into());
+                        return Err(APIError::CIStatusApplicationNotFound.into());
                     }
 
+                    // we don't want this to be an error
                     if message == "no_builds_associated_with_this_branch" {
                         return Ok(ci_status_query::ResponseData { ci_status: None });
                     }
@@ -338,11 +310,7 @@ impl WKClient {
         &self,
         application: &str,
     ) -> Result<cd_pipelines_query::ResponseData, WKError> {
-        let gql_client = GQLClient::with_authorization(
-            self.access_token
-                .as_ref()
-                .ok_or(APIError::UnAuthenticated)?,
-        )?;
+        let gql_client = setup_gql_client(&self.access_token)?;
 
         gql_client
             .post_graphql::<CdPipelinesQuery, _>(
@@ -352,20 +320,20 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| match &err {
-                APIError::ResponseError { code: _, message } => match message.as_str() {
-                    "application_not_found" => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: format!("Application `{application}` not found."),
-                    }
-                    .into(),
-                    _ => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: format!("{err}"),
-                    }
-                    .into(),
-                },
-                _ => err.into(),
+            .map_err(|err| {
+                match &err {
+                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                        "application_not_found" => APIError::ApplicationNotFound {
+                            application: application.to_string(),
+                        },
+                        _ => APIError::ResponseError {
+                            code: message.to_string(),
+                            message: format!("{err}"),
+                        },
+                    },
+                    _ => err,
+                }
+                .into()
             })
     }
 
@@ -376,11 +344,7 @@ impl WKClient {
         namespace: &str,
         version: &str,
     ) -> Result<cd_pipeline_query::ResponseData, WKError> {
-        let gql_client = GQLClient::with_authorization(
-            self.access_token
-                .as_ref()
-                .ok_or(APIError::UnAuthenticated)?,
-        )?;
+        let gql_client = setup_gql_client(&self.access_token)?;
 
         gql_client
             .post_graphql::<CdPipelineQuery, _>(
@@ -392,20 +356,20 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| match &err {
-                APIError::ResponseError { code: _, message } => match message.as_str() {
-                    "application_not_found" => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: format!("Application `{application}` not found."),
-                    }
-                    .into(),
-                    _ => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: format!("{err}"),
-                    }
-                    .into(),
-                },
-                _ => err.into(),
+            .map_err(|err| {
+                match &err {
+                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                        "application_not_found" => APIError::ApplicationNotFound {
+                            application: application.to_string(),
+                        },
+                        _ => APIError::ResponseError {
+                            code: message.to_string(),
+                            message: format!("{err}"),
+                        },
+                    },
+                    _ => err,
+                }
+                .into()
             })
     }
 
@@ -416,11 +380,7 @@ impl WKClient {
         version: &str,
         build_artifact_name: &str,
     ) -> Result<changelogs_query::ResponseData, WKError> {
-        let gql_client = GQLClient::with_authorization(
-            self.access_token
-                .as_ref()
-                .ok_or(APIError::UnAuthenticated)?,
-        )?;
+        let gql_client = setup_gql_client(&self.access_token)?;
 
         gql_client
             .post_graphql::<ChangelogsQuery, _>(
@@ -433,28 +393,24 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| match &err {
-                APIError::ResponseError { code: _, message } => match message.as_str() {
-                    "application_not_found" => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: format!("Application `{application}` not found."),
-                    }
-                    .into(),
-                    "unable_to_determine_changelog" => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: format!(
-                            "Unable to determine the changelog for {build_artifact_name}."
-                        ),
-                    }
-                    .into(),
-                    "comparing_same_build" => APIError::ChangelogComparingSameBuild.into(),
-                    _ => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: format!("{err}"),
-                    }
-                    .into(),
-                },
-                _ => err.into(),
+            .map_err(|err| {
+                match &err {
+                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                        "application_not_found" => APIError::ApplicationNotFound {
+                            application: application.to_string(),
+                        },
+                        "unable_to_determine_changelog" => APIError::UnableToDetermineChangelog {
+                            build: build_artifact_name.to_string(),
+                        },
+                        "comparing_same_build" => APIError::ChangelogComparingSameBuild,
+                        _ => APIError::ResponseError {
+                            code: message.to_string(),
+                            message: format!("{err}"),
+                        },
+                    },
+                    _ => err,
+                }
+                .into()
             })
     }
 
@@ -467,11 +423,7 @@ impl WKClient {
         changelogs: Option<String>,
         send_to_slack: bool,
     ) -> Result<execute_cd_pipeline::ResponseData, WKError> {
-        let gql_client = GQLClient::with_authorization(
-            self.access_token
-                .as_ref()
-                .ok_or(APIError::UnAuthenticated)?,
-        )?;
+        let gql_client = setup_gql_client(&self.access_token)?;
 
         gql_client
             .post_graphql::<ExecuteCdPipeline, _>(
@@ -487,23 +439,23 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| match &err {
-                APIError::ResponseError { code: _, message } => match message.as_str() {
-                    "application_not_found" => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: format!("Application `{application}` not found."),
-                    }.into(),
-                    "deploy_for_this_build_is_currently_running" => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: "Cannot submit this deployment request, since there is another running deployment with the same arguments is running on Spinnaker.\nYou can wait a few minutes and submit the deployment again.".to_string()
-                    }.into(),
-                    _ => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: format!("{err}"),
-                    }
-                    .into(),
-                },
-                _ => err.into(),
+            .map_err(|err| {
+                match &err {
+                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                        "application_not_found" => APIError::ApplicationNotFound {
+                            application: application.to_string(),
+                        },
+                        "deploy_for_this_build_is_currently_running" => {
+                            APIError::DuplicatedDeployment
+                        }
+                        _ => APIError::ResponseError {
+                            code: message.to_string(),
+                            message: format!("{err}"),
+                        },
+                    },
+                    _ => err,
+                }
+                .into()
             })
     }
 
@@ -513,11 +465,7 @@ impl WKClient {
         namespace: &str,
         version: &str,
     ) -> Result<cd_pipeline_for_rollback_query::ResponseData, WKError> {
-        let gql_client = GQLClient::with_authorization(
-            self.access_token
-                .as_ref()
-                .ok_or(APIError::UnAuthenticated)?,
-        )?;
+        let gql_client = setup_gql_client(&self.access_token)?;
 
         gql_client
             .post_graphql::<CdPipelineForRollbackQuery, _>(
@@ -529,20 +477,20 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| match &err {
-                APIError::ResponseError { code: _, message } => match message.as_str() {
-                    "application_not_found" => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: format!("Application `{application}` not found."),
-                    }
-                    .into(),
-                    _ => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: format!("{err}"),
-                    }
-                    .into(),
-                },
-                _ => err.into(),
+            .map_err(|err| {
+                match &err {
+                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                        "application_not_found" => APIError::ApplicationNotFound {
+                            application: application.to_string(),
+                        },
+                        _ => APIError::ResponseError {
+                            code: message.to_string(),
+                            message: format!("{err}"),
+                        },
+                    },
+                    _ => err,
+                }
+                .into()
             })
     }
 
@@ -552,11 +500,7 @@ impl WKClient {
         namespace: &str,
         version: &str,
     ) -> Result<is_authorized_query::ResponseData, WKError> {
-        let gql_client = GQLClient::with_authorization(
-            self.access_token
-                .as_ref()
-                .ok_or(APIError::UnAuthenticated)?,
-        )?;
+        let gql_client = setup_gql_client(&self.access_token)?;
 
         gql_client
             .post_graphql::<IsAuthorizedQuery, _>(
@@ -577,11 +521,7 @@ impl WKClient {
         namespace: &str,
         version: &str,
     ) -> Result<kubernetes_pods_query::ResponseData, WKError> {
-        let gql_client = GQLClient::with_authorization(
-            self.access_token
-                .as_ref()
-                .ok_or(APIError::UnAuthenticated)?,
-        )?;
+        let gql_client = setup_gql_client(&self.access_token)?;
 
         gql_client
             .post_graphql::<KubernetesPodsQuery, _>(
@@ -593,20 +533,21 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| match &err {
-                APIError::ResponseError { code: _, message } => match message.as_str() {
-                    "Unauthorized" => APIError::ResponseError {
-                        code: message.clone(),
-                        message: message.to_string(),
-                    }
-                    .into(),
-                    _ => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: format!("{err}"),
-                    }
-                    .into(),
-                },
-                _ => err.into(),
+            .map_err(|err| {
+                match &err {
+                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                        "Unauthorized" => APIError::ResponseError {
+                            code: message.clone(),
+                            message: message.to_string(),
+                        },
+                        _ => APIError::ResponseError {
+                            code: message.to_string(),
+                            message: format!("{err}"),
+                        },
+                    },
+                    _ => err,
+                }
+                .into()
             })
     }
 
@@ -616,11 +557,7 @@ impl WKClient {
         namespace: &str,
         version: &str,
     ) -> Result<livebook_resource_query::ResponseData, WKError> {
-        let gql_client = GQLClient::with_authorization(
-            self.access_token
-                .as_ref()
-                .ok_or(APIError::UnAuthenticated)?,
-        )?;
+        let gql_client = setup_gql_client(&self.access_token)?;
 
         gql_client
             .post_graphql::<LivebookResourceQuery, _>(
@@ -643,11 +580,7 @@ impl WKClient {
         name: &str,
         port: i64,
     ) -> Result<deploy_livebook::ResponseData, WKError> {
-        let gql_client = GQLClient::with_authorization(
-            self.access_token
-                .as_ref()
-                .ok_or(APIError::UnAuthenticated)?,
-        )?;
+        let gql_client = setup_gql_client(&self.access_token)?;
 
         gql_client
             .post_graphql::<DeployLivebook, _>(
@@ -661,20 +594,21 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| match &err {
-                APIError::ResponseError { code: _, message } => match message.as_str() {
-                    "Unauthorized" => APIError::ResponseError {
-                        code: message.clone(),
-                        message: message.to_string(),
-                    }
-                    .into(),
-                    _ => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: format!("{err}"),
-                    }
-                    .into(),
-                },
-                _ => err.into(),
+            .map_err(|err| {
+                match &err {
+                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                        "Unauthorized" => APIError::ResponseError {
+                            code: message.clone(),
+                            message: message.to_string(),
+                        },
+                        _ => APIError::ResponseError {
+                            code: message.to_string(),
+                            message: format!("{err}"),
+                        },
+                    },
+                    _ => err,
+                }
+                .into()
             })
     }
 
@@ -684,11 +618,7 @@ impl WKClient {
         namespace: &str,
         version: &str,
     ) -> Result<destroy_livebook::ResponseData, WKError> {
-        let gql_client = GQLClient::with_authorization(
-            self.access_token
-                .as_ref()
-                .ok_or(APIError::UnAuthenticated)?,
-        )?;
+        let gql_client = setup_gql_client(&self.access_token)?;
 
         gql_client
             .post_graphql::<DestroyLivebook, _>(
@@ -700,20 +630,21 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| match &err {
-                APIError::ResponseError { code: _, message } => match message.as_str() {
-                    "Unauthorized" => APIError::ResponseError {
-                        code: message.clone(),
-                        message: message.to_string(),
-                    }
-                    .into(),
-                    _ => APIError::ResponseError {
-                        code: message.to_string(),
-                        message: format!("{err}"),
-                    }
-                    .into(),
-                },
-                _ => err.into(),
+            .map_err(|err| {
+                match &err {
+                    APIError::ResponseError { code: _, message } => match message.as_str() {
+                        "Unauthorized" => APIError::ResponseError {
+                            code: message.clone(),
+                            message: message.to_string(),
+                        },
+                        _ => APIError::ResponseError {
+                            code: message.to_string(),
+                            message: format!("{err}"),
+                        },
+                    },
+                    _ => err,
+                }
+                .into()
             })
     }
 
@@ -723,11 +654,7 @@ impl WKClient {
         namespace: &str,
         version: &str,
     ) -> Result<application_with_k8s_cluster_query::ResponseData, WKError> {
-        let gql_client = GQLClient::with_authorization(
-            self.access_token
-                .as_ref()
-                .ok_or(APIError::UnAuthenticated)?,
-        )?;
+        let gql_client = setup_gql_client(&self.access_token)?;
 
         gql_client
             .post_graphql::<ApplicationWithK8sClusterQuery, _>(
@@ -741,4 +668,13 @@ impl WKClient {
             .await
             .map_err(|err| err.into())
     }
+}
+
+fn setup_gql_client(access_token: &Option<String>) -> Result<GQLClient, WKError> {
+    GQLClient::with_authorization(
+        access_token
+            .as_ref()
+            .ok_or(WKError::APIError(APIError::UnAuthenticated))?,
+    )
+    .map_err(|err| err.into())
 }

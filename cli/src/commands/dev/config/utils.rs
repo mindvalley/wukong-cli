@@ -10,7 +10,10 @@ use wukong_sdk::secret_extractors::{
 };
 
 use super::diff::has_diff;
-use crate::{error::WKCliError, wukong_client::WKClient};
+use crate::{
+    error::{DevConfigError, WKCliError},
+    wukong_client::WKClient,
+};
 
 pub async fn get_updated_configs<'a>(
     wk_client: &WKClient,
@@ -49,10 +52,12 @@ pub async fn get_updated_configs<'a>(
             let remote_config = match remote_secrets.get(&info.name) {
                 Some(config) => config,
                 None => {
-                    return Err(WKCliError::InvalidSecretPath {
-                        config_path: make_path_relative(config_path),
-                        annotation: info.key.to_string(),
-                    });
+                    return Err(WKCliError::DevConfigError(
+                        DevConfigError::InvalidSecretPath {
+                            config_path: make_path_relative(config_path),
+                            annotation: info.key.to_string(),
+                        },
+                    ));
                 }
             };
 
