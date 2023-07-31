@@ -15,5 +15,5 @@ syn = { version = "1.0", features = ["full", "extra-traits"] }
 quote = "1.0"
 proc-macro2 = "1.0"
 
-[package.metadata.cross.build.env]
+[build.env]
 passthrough = ["WUKONG_HONEYCOMB_API_KEY", "OKTA_CLIENT_ID", "WUKONG_API_URL"]
