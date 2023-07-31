@@ -97,8 +97,8 @@ assert_cmd = "2.0.8"
 git2 = "0.16.1"
 serial_test = "2.0.0"
 
-[build.env]
-passthrough = ["WUKONG_HONEYCOMB_API_KEY", "OKTA_CLIENT_ID", "WUKONG_API_URL"]
+# [build.env]
+# passthrough = ["WUKONG_HONEYCOMB_API_KEY", "OKTA_CLIENT_ID", "WUKONG_API_URL"]
 
 # [package.metadata.cross.target.x86_64-unknown-linux-gnu]
 # pre-build = [
