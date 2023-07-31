@@ -66,3 +66,20 @@ insta = { version = "1.28.0", features = ["filters"] }
 assert_cmd = "2.0.8"
 git2 = "0.16.1"
 serial_test = "2.0.0"
+
+[package.metadata.cross.build.env]
+passthrough = ["WUKONG_HONEYCOMB_API_KEY", "OKTA_CLIENT_ID", "WUKONG_API_URL"]
+
+[package.metadata.cross.target.x86_64-unknown-linux-gnu]
+pre-build = [
+  "apt update -y && apt install -y unzip",
+  "curl -sSLO https://github.com/protocolbuffers/protobuf/releases/download/v22.3/protoc-22.3-linux-x86_64.zip",
+  "unzip protoc-22.3-linux-x86_64.zip -d /usr",
+]
+
+[package.metadata.cross.target.x86_64-unknown-linux-musl]
+pre-build = [
+  "apt update -y && apt install -y unzip",
+  "curl -sSLO https://github.com/protocolbuffers/protobuf/releases/download/v22.3/protoc-22.3-linux-x86_64.zip",
+  "unzip protoc-22.3-linux-x86_64.zip -d /usr",
+]
