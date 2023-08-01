@@ -359,7 +359,7 @@ pub async fn handle_execute(
         println!(
             "{} {} `{}`.\n",
             "✔".green(),
-            "Step 3: You've selected build artifact".bold(),
+            "Step 4: You've selected build artifact".bold(),
             selected_build.green()
         );
     } else {
@@ -482,7 +482,7 @@ pub async fn handle_execute(
                     BuildSelectionLayout::TwoColumns { data } => {
                         Select::with_theme(&ColorfulTheme::default())
                             .with_prompt(
-                                "Step 3: Please choose the build artifact you want to deploy",
+                                "Step 4: Please choose the build artifact you want to deploy",
                             )
                             .default(0)
                             .items(&data[..])
@@ -491,7 +491,7 @@ pub async fn handle_execute(
                     BuildSelectionLayout::ThreeColumns { data } => {
                         Select::with_theme(&ColorfulTheme::default())
                             .with_prompt(
-                                "Step 3: Please choose the build artifact you want to deploy (* is the current deployed build)",
+                                "Step 4: Please choose the build artifact you want to deploy (* is the current deployed build)",
                             )
                             .default(0)
                             .items(&data[..])
@@ -593,7 +593,7 @@ pub async fn handle_execute(
             .collect::<Vec<&str>>()
             .join("\n");
 
-        println!("{}", "Step 4: Review your deployment".bold());
+        println!("{}", "Step 5: Review your deployment".bold());
         println!("Please review your deployment CHANGELOG before execute it.\n");
         println!("{cleaned_changelog}");
 
