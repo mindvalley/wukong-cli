@@ -10,7 +10,7 @@ use crate::{
     output::colored_println,
     telemetry::{self, TelemetryData, TelemetryEvent},
 };
-use dialoguer::{theme::ColorfulTheme, Confirm, Select};
+use dialoguer::{theme::ColorfulTheme, Select};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use log::debug;
 use owo_colors::OwoColorize;
@@ -32,10 +32,6 @@ struct KubernetesPod {
     name: String,
     ready: bool,
     is_livebook: Option<bool>,
-}
-
-fn capitalize_first_letter(o: &str) -> String {
-    o[0..1].to_uppercase() + &o[1..]
 }
 
 #[wukong_telemetry(command_event = "application_instances_connect")]
@@ -70,7 +66,7 @@ pub async fn handle_connect(
             "{} {} `{}` {}\n",
             "✔".green(),
             "Step 1: You've selected".bold(),
-            capitalize_first_letter(&namespace).green(),
+            namespace.green(),
             "namespace.".bold()
         );
     }
@@ -85,40 +81,9 @@ pub async fn handle_connect(
             "{} {} `{}` {}\n",
             "✔".green(),
             "Step 2: You've selected".bold(),
-            capitalize_first_letter(&version).green(),
+            version.green(),
             "version.".bold()
         );
-    }
-
-    let mut client = QueryClient::from_default_config()?;
-
-    println!(
-        "{} {} {} {}",
-        "✔".green(),
-        "Step 3: Checking the status of the latest".bold(),
-        capitalize_first_letter(&version).green(),
-        "deployment...".bold()
-    );
-
-    let deployment_status =
-        get_deployment_status(&mut client, &application, &namespace, &version).await?;
-
-    println!("Deployment status: {}\n", deployment_status);
-
-    if deployment_status != "SUCCEEDED" {
-        let agree_to_continue = Confirm::with_theme(&ColorfulTheme::default())
-                .with_prompt(
-                    format!(
-                    "It seems the {0} deployment is not in a stable state, are you still want to proceed with the {0} deployment ?",
-                        capitalize_first_letter(&version).green(),
-                    )
-                )
-                .default(false)
-                .interact()?;
-
-        if !agree_to_continue {
-            return Ok(false);
-        }
     }
 
     let check_permission_progress_bar = new_spinner_progress_bar();
@@ -126,6 +91,8 @@ pub async fn handle_connect(
     check_permission_progress_bar.set_prefix("[1/2]");
     check_permission_progress_bar
         .set_message("Checking your permission to connect to the remote instance...");
+
+    let mut client = QueryClient::from_default_config()?;
 
     if !has_permission(&mut client, &application, &namespace, &version).await? {
         check_permission_progress_bar.finish_and_clear();
@@ -329,36 +296,6 @@ pub async fn handle_connect(
     }
 
     Ok(true)
-}
-
-async fn get_deployment_status(
-    client: &mut QueryClient,
-    application: &str,
-    namespace: &str,
-    version: &str,
-) -> Result<String, CliError> {
-    let deployments = client
-        .fetch_cd_pipeline(application, namespace, version)
-        .await?
-        .data
-        .unwrap()
-        .cd_pipeline;
-
-    let latest_deployment = deployments
-        .iter()
-        .find(|deployment| deployment.last_successfully_deployed_artifact.is_some());
-
-    if latest_deployment.is_none() {
-        Ok(String::from("TERMINAL"))
-    } else {
-        let deployment_status = latest_deployment.unwrap().status.clone();
-
-        if deployment_status.is_none() {
-            Ok(String::from("TERMINAL"))
-        } else {
-            Ok(deployment_status.unwrap())
-        }
-    }
 }
 
 async fn cleanup_previous_livebook_instance(
