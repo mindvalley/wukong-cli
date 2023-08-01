@@ -313,21 +313,36 @@ pub async fn handle_execute(
         println!("You've selected `{selected_version}` as the deployment version.\n");
     }
 
+    let inverse_version = if selected_version.to_lowercase() == "green" {
+        "blue".to_string()
+    } else {
+        "green".to_string()
+    };
+
+    println!(
+        "{} {} {} {}",
+        "✔".green(),
+        "Step 3: Checking the status of the latest".bold(),
+        capitalize_first_letter(&inverse_version).green(),
+        "deployment...".bold()
+    );
+
     let deployment_status = get_deployment_status(
         &mut client,
         &current_application,
-        &selected_namespace,
-        &selected_version,
+        &selected_namespace.to_lowercase(),
+        &inverse_version,
     )
     .await?;
 
-    println!("Deployment status: {}\n", deployment_status);
+    println!("Deployment status: {}\n", deployment_status.bold());
 
     if deployment_status != "SUCCEEDED" {
         let agree_to_continue = Confirm::with_theme(&ColorfulTheme::default())
                 .with_prompt(
                     format!(
-                    "It seems the {0} deployment is not in a stable state, are you still want to proceed with the {0} deployment ?",
+                    "It seems the {} deployment is not in a stable state, are you still want to proceed with the {} deployment ?",
+                        capitalize_first_letter(&inverse_version).green(),
                         capitalize_first_letter(&selected_version).green(),
                     )
                 )
