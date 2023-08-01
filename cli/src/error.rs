@@ -20,8 +20,6 @@ pub enum WKCliError {
     UnInitialised,
     #[error(transparent)]
     ReqwestError(#[from] reqwest::Error),
-    // #[error(transparent)]
-    // Base64(#[from] base64::DecodeError),
     #[error("Error parsing \"{value}\"")]
     ChronoParseError {
         value: String,
@@ -36,14 +34,8 @@ pub enum WKCliError {
     ConfigError(#[from] ConfigError),
     #[error(transparent)]
     DeploymentError(#[from] DeploymentError),
-    // #[error(transparent)]
-    // VaultError(#[from] VaultError),
     #[error(transparent)]
     DevConfigError(#[from] DevConfigError),
-    // #[error(transparent)]
-    // GCloudError(#[from] GCloudError),
-    // #[error(transparent)]
-    // ExtractError(#[from] ExtractError),
     #[error(transparent)]
     ApplicationInstanceError(#[from] ApplicationInstanceError),
     #[error("Operation timeout")]
@@ -78,36 +70,6 @@ pub enum AuthError {
     VaultResponseError { code: String, message: String },
 }
 
-// #[derive(Debug, ThisError)]
-// pub enum AuthError {
-//     #[error("Refresh token expired: {message}")]
-//     RefreshTokenExpired { message: String },
-//     #[error("OpenID Connect Error: {message}")]
-//     OpenIDConnectError { message: String },
-//     #[error("Failed to discover OpenID Provider")]
-//     OpenIDDiscoveryError,
-// }
-
-// #[derive(Debug, ThisError)]
-// pub enum APIError {
-//     // #[error(transparent)]
-//     // ReqwestError(#[from] reqwest::Error),
-//     #[error("API Response Error: {message}")]
-//     ResponseError { code: String, message: String },
-//     #[error("API Error: You are un-authenticated.")]
-//     UnAuthenticated,
-//     #[error("API Error: You are un-authorized.")]
-//     UnAuthorized,
-//     #[error("The selected build number is the same as the current deployed version. So there is no changelog.")]
-//     ChangelogComparingSameBuild,
-//     #[error("API Error: Request to {domain} timed out.")]
-//     Timeout { domain: String },
-//     // #[error(transparent)]
-//     // WebsocketError(#[from] async_tungstenite::tungstenite::Error),
-//     // #[error(transparent)]
-//     // GraphqlWSError(#[from] graphql_ws_client::Error),
-// }
-//
 #[derive(Debug, ThisError)]
 pub enum DevConfigError {
     #[error("No config files found!")]
@@ -159,47 +121,6 @@ pub enum DeploymentError {
     },
 }
 
-// Vault Service Error
-// #[derive(Debug, ThisError)]
-// pub enum VaultError {
-//     // #[error(transparent)]
-//     // ReqwestError(#[from] reqwest::Error),
-//     #[error("API Response Error: {message}")]
-//     ResponseError { code: String, message: String },
-//     #[error("Invalid credentials. Please try again.")]
-//     AuthenticationFailed,
-//     #[error("You are un-initialised.")]
-//     UnInitialised,
-//     #[error(transparent)]
-//     Io(#[from] ::std::io::Error),
-//     #[error("Secret not found.")]
-//     SecretNotFound,
-//     #[error("API token not found.")]
-//     ApiTokenNotFound,
-//     #[error("Invalid API token.")]
-//     ApiTokenInvalid,
-//     #[error("Permission denied.")]
-//     PermissionDenied,
-//     #[error(transparent)]
-//     ConfigError(#[from] ConfigError),
-// }
-
-// GCloud Service Error
-// #[derive(Debug, ThisError)]
-// pub enum GCloudError {
-//     #[error(transparent)]
-//     Io(#[from] ::std::io::Error),
-//     // #[error(transparent)]
-//     // GoogleLogging2Error(#[from] google_logging2::Error),
-// }
-//
-// Secret Extractor Error
-// #[derive(Debug, ThisError)]
-// pub enum ExtractError {
-// #[error("Bad TOML data.")]
-// BadTomlData(#[from] toml::de::Error),
-// }
-
 impl WKCliError {
     /// Try to second-guess what the user was trying to do, depending on what
     /// went wrong.
@@ -215,6 +136,12 @@ impl WKCliError {
                     ),
                     APIError::ApplicationNotFound { .. } => Some(
                         String::from("Please check your application or your repo url. It's unrecognized by wukong."),
+                    ),
+                    APIError::NamespaceNotFound { .. } => Some(
+                        String::from("Please check your namespace value. It could be invalid."),
+                    ),
+                    APIError::VersionNotFound { .. } => Some(
+                        String::from("Please check your version value. It could be invalid."),
                     ),
                     APIError::CIStatusApplicationNotFound => Some(format!(
     r#"You can follow these steps to remedy this error:  

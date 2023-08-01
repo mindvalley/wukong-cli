@@ -34,7 +34,11 @@ async fn handle_error(response: reqwest::Response) -> Result<(), VaultError> {
     }
 }
 
+/// Functions from Vault service.
 impl WKClient {
+    /// Get secrets from Vault.
+    ///
+    /// It will return [`WKError::VaultError`] if the response is not success.
     pub async fn get_secrets(
         &self,
         api_token: &str,
@@ -59,6 +63,9 @@ impl WKClient {
         }
     }
 
+    /// Get secret by `key` value from Vault.
+    ///
+    /// It will return [`WKError::VaultError`] if the response is not success.
     pub async fn get_secret(
         &self,
         api_token: &str,
@@ -71,6 +78,9 @@ impl WKClient {
         Ok(secret.to_string())
     }
 
+    /// Update secret on Vault.
+    ///
+    /// It will return [`WKError::VaultError`] if the response is not success.
     pub async fn update_secret(
         &self,
         api_token: &str,
@@ -78,19 +88,13 @@ impl WKClient {
         data: &HashMap<&str, &str>,
     ) -> Result<bool, WKError> {
         let vault_client = VaultClient::new();
-        // let progress_bar = new_spinner_progress_bar();
-        // progress_bar.set_message("Updating secrets... ");
 
         let response = vault_client
             .update_secret(api_token, path, data)
             .await
             .map_err(<reqwest::Error as Into<APIError>>::into)?;
 
-        // progress_bar.finish_and_clear();
-
-        if response.status().is_success() {
-            // colored_println!("Successfully updated the secrets.");
-        } else {
+        if !response.status().is_success() {
             handle_error(response).await?;
         }
 

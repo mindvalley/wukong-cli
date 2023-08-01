@@ -10,6 +10,7 @@ use crate::{
     config::Config,
     error::{DevConfigError, WKCliError},
     loader::new_spinner,
+    output::colored_println,
     wukong_client::WKClient,
 };
 
@@ -105,9 +106,14 @@ async fn update_secrets(
     secrets_ref.insert(&secret_info.name, &local_config_string);
 
     if agree_to_update {
+        let loader = new_spinner();
+        loader.set_message("Updating secrets... ");
+
         wk_client
             .update_secret(vault_token, &secret_info.src, &secrets_ref)
             .await?;
+
+        colored_println!("Successfully updated the secrets.");
     }
 
     Ok(())

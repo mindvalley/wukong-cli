@@ -194,7 +194,9 @@ impl GCloudClient {
     }
 }
 
+/// Functions from Google Cloud service.
 impl WKClient {
+    /// Get log entries from Google Cloud.
     pub async fn get_gcloud_log_entries(
         &self,
         optons: LogEntriesOptions,

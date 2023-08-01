@@ -78,6 +78,10 @@ pub enum APIError {
     UnableToDetermineChangelog { build: String },
     #[error("Cannot submit this deployment request, since there is another running deployment with the same arguments is running on Spinnaker.\nYou can wait a few minutes and submit the deployment again.")]
     DuplicatedDeployment,
+    #[error("Namespace `{namespace}` not found.")]
+    NamespaceNotFound { namespace: String },
+    #[error("Version `{version}` not found.")]
+    VersionNotFound { version: String },
 }
 
 #[derive(Debug, ThisError)]
