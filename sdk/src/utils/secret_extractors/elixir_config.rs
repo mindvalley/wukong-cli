@@ -14,6 +14,7 @@ use std::path::Path;
 ///
 /// Extract to
 /// ```rust
+/// # use super::SecretExtractor;
 /// SecretInfo {
 ///     key: "vault:secret/wukong-cli/development#dev.secret.exs",
 ///     provider: "bunker",

@@ -18,6 +18,7 @@ use toml::Value;
 ///
 /// Extract to
 /// ```rust
+/// # use super::SecretExtractor;
 /// SecretInfo {
 ///     key: "dotenv",
 ///     provider: "bunker",
