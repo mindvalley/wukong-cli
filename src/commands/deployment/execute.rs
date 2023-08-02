@@ -319,26 +319,29 @@ pub async fn handle_execute(
         "green".to_string()
     };
 
-    println!(
-        "{} {} {} {}",
-        "✔".green(),
-        "Step 3: Checking the status of the latest".bold(),
-        capitalize_first_letter(&inverse_version).green(),
-        "deployment...".bold()
-    );
+    if inverse_version == "green" && has_green_version
+        || inverse_version == "blue" && has_blue_version
+    {
+        println!(
+            "{} {} {} {}",
+            "✔".green(),
+            "Step 3: Checking the status of the latest".bold(),
+            capitalize_first_letter(&inverse_version).green(),
+            "deployment...".bold()
+        );
 
-    let deployment_status = get_deployment_status(
-        &mut client,
-        &current_application,
-        &selected_namespace.to_lowercase(),
-        &inverse_version,
-    )
-    .await?;
+        let deployment_status = get_deployment_status(
+            &mut client,
+            &current_application,
+            &selected_namespace.to_lowercase(),
+            &inverse_version,
+        )
+        .await?;
 
-    println!("Deployment status: {}\n", deployment_status.bold());
+        println!("Deployment status: {}\n", deployment_status.bold());
 
-    if deployment_status != "SUCCEEDED" {
-        let agree_to_continue = Confirm::with_theme(&ColorfulTheme::default())
+        if deployment_status != "SUCCEEDED" {
+            let agree_to_continue = Confirm::with_theme(&ColorfulTheme::default())
                 .with_prompt(
                     format!(
                     "It seems the {} deployment is not in a stable state, are you still want to proceed with the {} deployment ?",
@@ -349,8 +352,9 @@ pub async fn handle_execute(
                 .default(false)
                 .interact()?;
 
-        if !agree_to_continue {
-            return Ok(false);
+            if !agree_to_continue {
+                return Ok(false);
+            }
         }
     }
 
