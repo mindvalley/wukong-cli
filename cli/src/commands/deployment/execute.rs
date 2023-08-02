@@ -143,6 +143,10 @@ struct Commit {
     message_headline: String,
 }
 
+fn capitalize_first_letter(o: &str) -> String {
+    o[0..1].to_uppercase() + &o[1..]
+}
+
 #[wukong_telemetry(command_event = "deployment_execute")]
 pub async fn handle_execute(
     context: Context,
@@ -311,12 +315,66 @@ pub async fn handle_execute(
         println!("You've selected `{selected_version}` as the deployment version.\n");
     }
 
+    let inverse_version = if selected_version.to_lowercase() == "green" {
+        "blue".to_string()
+    } else {
+        "green".to_string()
+    };
+
+    if inverse_version == "green" && has_green_version
+        || inverse_version == "blue" && has_blue_version
+    {
+        println!(
+            "{} {} {} {}",
+            "✔".green(),
+            "Step 3: Checking the status of the latest".bold(),
+            capitalize_first_letter(&inverse_version).green(),
+            "deployment...".bold()
+        );
+
+        let deployment_status = get_deployment_status(
+            &mut client,
+            &current_application,
+            &selected_namespace.to_lowercase(),
+            &inverse_version,
+        )
+        .await?;
+
+        println!("Deployment status: {}\n", deployment_status.bold());
+
+        if deployment_status != "SUCCEEDED" {
+            let agree_to_continue = Confirm::with_theme(&ColorfulTheme::default())
+                .with_prompt(
+                    format!(
+                    "It seems the {} deployment is not in a stable state, are you still want to proceed with the {} deployment ?",
+                        capitalize_first_letter(&inverse_version).green(),
+                        capitalize_first_letter(&selected_version).green(),
+                    )
+                )
+                .default(false)
+                .interact()?;
+
+            if !agree_to_continue {
+                return Ok(false);
+            }
+        }
+    } else {
+        println!(
+            "{} {} {} {}",
+            "✔".green(),
+            "Step 3: Skipping checking the status of the latest deployment because there is no"
+                .bold(),
+            capitalize_first_letter(&inverse_version).green(),
+            "deployment...".bold()
+        );
+    }
+
     if let Some(artifact) = artifact {
         selected_build = artifact.to_string();
         println!(
             "{} {} `{}`.\n",
             "✔".green(),
-            "Step 3: You've selected build artifact".bold(),
+            "Step 4: You've selected build artifact".bold(),
             selected_build.green()
         );
     } else {
@@ -437,7 +495,7 @@ pub async fn handle_execute(
                     BuildSelectionLayout::TwoColumns { data } => {
                         Select::with_theme(&ColorfulTheme::default())
                             .with_prompt(
-                                "Step 3: Please choose the build artifact you want to deploy",
+                                "Step 4: Please choose the build artifact you want to deploy",
                             )
                             .default(0)
                             .items(&data[..])
@@ -446,7 +504,7 @@ pub async fn handle_execute(
                     BuildSelectionLayout::ThreeColumns { data } => {
                         Select::with_theme(&ColorfulTheme::default())
                             .with_prompt(
-                                "Step 3: Please choose the build artifact you want to deploy (* is the current deployed build)",
+                                "Step 4: Please choose the build artifact you want to deploy (* is the current deployed build)",
                             )
                             .default(0)
                             .items(&data[..])
@@ -548,7 +606,7 @@ pub async fn handle_execute(
             .collect::<Vec<&str>>()
             .join("\n");
 
-        println!("{}", "Step 4: Review your deployment".bold());
+        println!("{}", "Step 5: Review your deployment".bold());
         println!("Please review your deployment CHANGELOG before execute it.\n");
         println!("{cleaned_changelog}");
 
@@ -625,4 +683,34 @@ fn generate_two_columns_build_selection(cd_pipeline: &CdPipelineWithBuilds) -> V
         .iter_mut()
         .for_each(|each| each.left_width = width);
     two_columns
+}
+
+async fn get_deployment_status(
+    client: &mut QueryClient,
+    application: &str,
+    namespace: &str,
+    version: &str,
+) -> Result<String, CliError> {
+    let deployments = client
+        .fetch_cd_pipeline(application, namespace, version)
+        .await?
+        .data
+        .unwrap()
+        .cd_pipeline;
+
+    let latest_deployment = deployments
+        .iter()
+        .find(|deployment| deployment.last_successfully_deployed_artifact.is_some());
+
+    if latest_deployment.is_none() {
+        Ok(String::from("TERMINAL"))
+    } else {
+        let deployment_status = latest_deployment.unwrap().status.clone();
+
+        if deployment_status.is_none() {
+            Ok(String::from("TERMINAL"))
+        } else {
+            Ok(deployment_status.unwrap())
+        }
+    }
 }
