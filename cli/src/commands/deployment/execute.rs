@@ -333,7 +333,7 @@ pub async fn handle_execute(
         );
 
         let deployment_status = get_deployment_status(
-            &mut client,
+            &mut wk_client,
             &current_application,
             &selected_namespace.to_lowercase(),
             &inverse_version,
@@ -686,16 +686,14 @@ fn generate_two_columns_build_selection(cd_pipeline: &CdPipelineWithBuilds) -> V
 }
 
 async fn get_deployment_status(
-    client: &mut QueryClient,
+    wk_client: &mut WKClient,
     application: &str,
     namespace: &str,
     version: &str,
-) -> Result<String, CliError> {
-    let deployments = client
+) -> Result<String, WKCliError> {
+    let deployments = wk_client
         .fetch_cd_pipeline(application, namespace, version)
         .await?
-        .data
-        .unwrap()
         .cd_pipeline;
 
     let latest_deployment = deployments
