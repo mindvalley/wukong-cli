@@ -356,6 +356,15 @@ pub async fn handle_execute(
                 return Ok(false);
             }
         }
+    } else {
+        println!(
+            "{} {} {} {}",
+            "✔".green(),
+            "Step 3: Skipping checking the status of the latest deployment because there is no"
+                .bold(),
+            capitalize_first_letter(&inverse_version).green(),
+            "deployment...".bold()
+        );
     }
 
     if let Some(artifact) = artifact {
