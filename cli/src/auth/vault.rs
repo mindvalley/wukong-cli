@@ -52,7 +52,8 @@ pub async fn get_token_or_login(config: &mut Config) -> Result<String, WKCliErro
     let client = reqwest::Client::new();
 
     match &config.vault {
-        Some(vault_config) => match verify_token(&client, &vault_config.api_token).await {
+        Some(vault_config) => match verify_token(&client, &BASE_URL, &vault_config.api_token).await
+        {
             Ok(_) => {
                 let token = vault_config.api_token.clone();
 
@@ -65,7 +66,8 @@ pub async fn get_token_or_login(config: &mut Config) -> Result<String, WKCliErro
                         "Authenticating the user... You may need to check your device for an MFA notification.",
                     );
 
-                    let renew_token_resp = renew_token(&client, &vault_config.api_token).await?;
+                    let renew_token_resp =
+                        renew_token(&client, &BASE_URL, &vault_config.api_token).await?;
                     let new_expiry_time =
                         calculate_expiry_time(renew_token_resp.auth.lease_duration);
 
@@ -92,7 +94,7 @@ pub async fn get_token_or_login(config: &mut Config) -> Result<String, WKCliErro
                 loader.set_message("Authenticating the user... You may need to check your device for an MFA notification.");
 
                 let email = &auth_config.account;
-                let login_resp = login(&client, email, &password).await?;
+                let login_resp = login(&client, &BASE_URL, email, &password).await?;
 
                 loader.finish_and_clear();
                 let expiry_time = calculate_expiry_time(login_resp.auth.lease_duration);
@@ -121,7 +123,7 @@ pub async fn get_token_or_login(config: &mut Config) -> Result<String, WKCliErro
         );
 
             let email = &auth_config.account;
-            let login_resp = login(&client, email, &password).await?;
+            let login_resp = login(&client, &BASE_URL, email, &password).await?;
 
             loader.finish_and_clear();
             let expiry_time = calculate_expiry_time(login_resp.auth.lease_duration);
@@ -138,13 +140,14 @@ pub async fn get_token_or_login(config: &mut Config) -> Result<String, WKCliErro
     }
 }
 
-pub async fn login(
+async fn login(
     client: &reqwest::Client,
+    base_url: &str,
     email: &str,
     password: &str,
 ) -> Result<Login, WKCliError> {
     debug!("Login user ...");
-    let url = format!("{}{}/{}", BASE_URL.as_str(), LOGIN_URL, email);
+    let url = format!("{}{}/{}", base_url, LOGIN_URL, email);
 
     let response = client
         .post(url)
@@ -164,9 +167,13 @@ pub async fn login(
     response.json::<Login>().await.map_err(|err| err.into())
 }
 
-pub async fn verify_token(client: &reqwest::Client, api_token: &str) -> Result<bool, WKCliError> {
+async fn verify_token(
+    client: &reqwest::Client,
+    base_url: &str,
+    api_token: &str,
+) -> Result<bool, WKCliError> {
     debug!("Verifying token ...");
-    let url = format!("{}{}", BASE_URL.as_str(), VERIFY_TOKEN_URL);
+    let url = format!("{}{}", base_url, VERIFY_TOKEN_URL);
     let loader = new_spinner();
     loader.set_message("Verifying the token...");
 
@@ -190,9 +197,13 @@ pub async fn verify_token(client: &reqwest::Client, api_token: &str) -> Result<b
     Ok(true)
 }
 
-pub async fn renew_token(client: &reqwest::Client, api_token: &str) -> Result<Renew, WKCliError> {
+async fn renew_token(
+    client: &reqwest::Client,
+    base_url: &str,
+    api_token: &str,
+) -> Result<Renew, WKCliError> {
     debug!("Renewing token ...");
-    let url = format!("{}{}", BASE_URL.as_str(), RENEW_TOKEN_URL);
+    let url = format!("{}{}", base_url, RENEW_TOKEN_URL);
 
     let response = client
         .post(url)
@@ -244,3 +255,145 @@ async fn handle_error(status: StatusCode, message: String) -> WKCliError {
         .into(),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use httpmock::prelude::*;
+
+    #[tokio::test]
+    async fn test_login() {
+        let server = MockServer::start();
+
+        let email = "test@example.com";
+        let password = "test_password";
+
+        let api_resp = r#"
+            {
+              "auth": {
+                "client_token": "test_token",
+                "lease_duration": 0
+                }
+            }"#;
+
+        let mock_server = server.mock(|when, then| {
+            when.method(POST)
+                .path_contains(email)
+                .path_contains(LOGIN_URL)
+                .body(format!("password={}", password));
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+
+        let client = reqwest::Client::new();
+        let response = login(&client, &server.base_url(), email, password).await;
+
+        mock_server.assert();
+        assert!(response.is_ok());
+
+        let login_data = response.unwrap();
+        assert_eq!(login_data.auth.client_token, "test_token");
+    }
+
+    #[tokio::test]
+    async fn test_login_failed_with_bad_credentials() {
+        let server = MockServer::start();
+
+        let email = "test@example.com";
+        let password = "wrong_password";
+
+        let api_resp = r#"
+            {
+              "errors": ["Okta auth failed"]
+            }"#;
+
+        let mock_server = server.mock(|when, then| {
+            when.method(POST)
+                .path_contains(LOGIN_URL)
+                .path_contains(email)
+                .body(format!("password={}", password));
+            then.status(400)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+
+        let client = reqwest::Client::new();
+        let response = login(&client, &server.base_url(), email, password).await;
+
+        mock_server.assert();
+
+        assert!(response.is_err());
+        matches!(
+            response.unwrap_err(),
+            WKCliError::AuthError(AuthError::VaultAuthenticationFailed)
+        );
+    }
+
+    #[tokio::test]
+    async fn test_verify_token() {
+        let server = MockServer::start();
+
+        let api_token = "secret_token";
+
+        let api_resp = r#"
+            {
+              "data": {
+                "expire_time": "2019-12-10T10:10:10.000000Z",
+                "issue_time": "2019-10-10T10:10:10.000000Z"
+                }
+            }"#;
+
+        let mock_server = server.mock(|when, then| {
+            when.method(GET)
+                .path_contains(VERIFY_TOKEN_URL)
+                .header("X-Vault-Token", api_token);
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+
+        let client = reqwest::Client::new();
+        let response = verify_token(&client, &server.base_url(), api_token).await;
+
+        mock_server.assert();
+        assert!(response.is_ok());
+
+        assert!(response.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_renew_token() {
+        let server = MockServer::start();
+
+        let api_token = "test_token";
+        let api_resp = r#"
+            {
+              "auth": {
+                "client_token": "test_token",
+                "lease_duration": 0
+                }
+            }"#;
+
+        let mock_server = server.mock(|when, then| {
+            when.method(POST)
+                .path_contains(RENEW_TOKEN_URL)
+                .body(format!("increment={}", "24h"))
+                .header("X-Vault-Token", api_token);
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+
+        let client = reqwest::Client::new();
+        let response = renew_token(&client, &server.base_url(), api_token).await;
+
+        mock_server.assert();
+        assert!(response.is_ok());
+
+        let renew_data = response.unwrap();
+        assert_eq!(renew_data.auth.client_token, "test_token");
+        assert_eq!(renew_data.auth.lease_duration, 0);
+    }
+}
+

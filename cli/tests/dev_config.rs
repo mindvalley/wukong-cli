@@ -7,7 +7,9 @@ use assert_fs::{
 use httpmock::{Method::GET, MockServer};
 use serial_test::serial;
 use std::env;
-use wukong_sdk::services::vault::client::VaultClient;
+
+const VERIFY_TOKEN_URL: &str = "/v1/auth/token/lookup-self";
+const FETCH_SECRETS_URL: &str = "/v1/secret/data";
 
 fn setup() -> (assert_fs::TempDir, assert_fs::TempDir) {
     let wk_temp = assert_fs::TempDir::new().unwrap();
@@ -34,7 +36,7 @@ fn verify_token_mock(server: &MockServer) -> httpmock::Mock {
 
     server.mock(|when, then| {
         when.method(GET)
-            .path_contains(VaultClient::VERIFY_TOKEN)
+            .path_contains(VERIFY_TOKEN_URL)
             .header("X-Vault-Token", "valid_vault_api_token");
         then.status(200)
             .header("content-type", "application/json; charset=UTF-8")
@@ -70,7 +72,7 @@ fn get_secret_mock<'a>(server: &'a MockServer, custom_data: Option<&'a str>) -> 
     );
 
     server.mock(|when, then| {
-        when.method(GET).path_contains(VaultClient::FETCH_SECRETS);
+        when.method(GET).path_contains(FETCH_SECRETS_URL);
         then.status(200)
             .header("content-type", "application/json; charset=UTF-8")
             .body(secret_api_resp);

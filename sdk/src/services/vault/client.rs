@@ -57,9 +57,6 @@ impl Default for VaultClient {
 }
 
 impl VaultClient {
-    pub const LOGIN: &str = "/v1/auth/okta/login";
-    pub const RENEW_TOKEN: &str = "/v1/auth/token/renew-self";
-    pub const VERIFY_TOKEN: &str = "/v1/auth/token/lookup-self";
     pub const FETCH_SECRETS: &str = "/v1/secret/data";
     pub const UPDATE_SECRET: &str = "/v1/secret/data";
 
@@ -83,60 +80,12 @@ impl VaultClient {
         self
     }
 
-    pub async fn login(
-        &self,
-        email: &str,
-        password: &str,
-    ) -> Result<reqwest::Response, reqwest::Error> {
-        let url = format!("{}{}/{}", self.base_url, Self::LOGIN, email);
-
-        let response = self
-            .client
-            .post(url)
-            .form(&[("password", password)])
-            .send()
-            .await?;
-
-        Ok(response)
-    }
-
-    pub async fn renew_token(
-        &self,
-        api_token: &str,
-        extend_duration: Option<&str>,
-    ) -> Result<reqwest::Response, reqwest::Error> {
-        let url = format!("{}{}", self.base_url, Self::RENEW_TOKEN);
-
-        let response = self
-            .client
-            .post(url)
-            .header("X-Vault-Token", api_token)
-            .form(&[("increment", extend_duration.unwrap_or("24h"))])
-            .send()
-            .await?;
-
-        Ok(response)
-    }
-
     pub async fn fetch_secrets(
         &self,
         api_token: &str,
         path: &str,
     ) -> Result<reqwest::Response, reqwest::Error> {
         let url = format!("{}{}/{}", self.base_url, Self::FETCH_SECRETS, path);
-
-        let response = self
-            .client
-            .get(url)
-            .header("X-Vault-Token", api_token)
-            .send()
-            .await?;
-
-        Ok(response)
-    }
-
-    pub async fn verify_token(&self, api_token: &str) -> Result<reqwest::Response, reqwest::Error> {
-        let url = format!("{}{}", self.base_url, Self::VERIFY_TOKEN);
 
         let response = self
             .client
@@ -177,115 +126,6 @@ impl VaultClient {
 mod tests {
     use super::*;
     use httpmock::prelude::*;
-
-    #[tokio::test]
-    async fn test_login() {
-        let server = MockServer::start();
-
-        let email = "test@example.com";
-        let password = "test_password";
-
-        let api_resp = r#"
-            {
-              "auth": {
-                "client_token": "test_token",
-                "lease_duration": 0
-                }
-            }"#;
-
-        let mock_server = server.mock(|when, then| {
-            when.method(POST)
-                .path_contains(email)
-                .path_contains(VaultClient::LOGIN)
-                .body(format!("password={}", password));
-            then.status(200)
-                .header("content-type", "application/json; charset=UTF-8")
-                .body(api_resp);
-        });
-
-        let vault_client = VaultClient::new().with_base_url(server.base_url());
-        let response = vault_client.login(email, password).await;
-
-        mock_server.assert();
-        assert!(response.is_ok());
-
-        let response = response.unwrap();
-        assert_eq!(response.status(), 200);
-
-        let login_data = response.json::<Login>().await.unwrap();
-        assert_eq!(login_data.auth.client_token, "test_token");
-    }
-
-    #[tokio::test]
-    async fn test_login_failed_with_bad_credentials() {
-        let server = MockServer::start();
-
-        let email = "test@example.com";
-        let password = "wrong_password";
-
-        let api_resp = r#"
-            {
-              "errors": ["Okta auth failed"]
-            }"#;
-
-        let mock_server = server.mock(|when, then| {
-            when.method(POST)
-                .path_contains(VaultClient::LOGIN)
-                .path_contains(email)
-                .body(format!("password={}", password));
-            then.status(400)
-                .header("content-type", "application/json; charset=UTF-8")
-                .body(api_resp);
-        });
-
-        let vault_client = VaultClient::new().with_base_url(server.base_url());
-        let response = vault_client.login(email, password).await;
-
-        mock_server.assert();
-
-        let response = response.unwrap();
-        assert_eq!(response.status(), 400);
-    }
-
-    #[tokio::test]
-    async fn test_verify_token() {
-        let server = MockServer::start();
-
-        let api_token = "secret_token";
-
-        let api_resp = r#"
-            {
-              "data": {
-                "expire_time": "2019-12-10T10:10:10.000000Z",
-                "issue_time": "2019-10-10T10:10:10.000000Z"
-                }
-            }"#;
-
-        let mock_server = server.mock(|when, then| {
-            when.method(GET)
-                .path_contains(VaultClient::VERIFY_TOKEN)
-                .header("X-Vault-Token", api_token);
-            then.status(200)
-                .header("content-type", "application/json; charset=UTF-8")
-                .body(api_resp);
-        });
-
-        let vault_client = VaultClient::new().with_base_url(server.base_url());
-        let response = vault_client.verify_token(api_token).await;
-
-        mock_server.assert();
-        assert!(response.is_ok());
-
-        let response = response.unwrap();
-        assert_eq!(response.status(), 200);
-
-        let verify_token = response.json::<VerifyToken>().await.unwrap();
-
-        assert!(
-            !verify_token.data.expire_time.is_empty(),
-            "Value should not be None"
-        );
-    }
 
     #[tokio::test]
     async fn test_fetch_secrets() {
@@ -359,40 +199,6 @@ mod tests {
         let response = vault_client
             .update_secret(api_token, path, &update_data)
             .await;
-
-        mock_server.assert();
-        assert!(response.is_ok());
-
-        let response = response.unwrap();
-        assert_eq!(response.status(), 200);
-    }
-
-    #[tokio::test]
-    async fn test_renew_token() {
-        let server = MockServer::start();
-
-        let api_token = "test_token";
-        let api_resp = r#"
-            {
-              "auth": {
-                "client_token": "test_token",
-                "lease_duration": 0
-                }
-            }"#;
-
-        let mock_server = server.mock(|when, then| {
-            when.method(POST)
-                .path_contains(VaultClient::RENEW_TOKEN)
-                .body(format!("increment={}", "24h"))
-                .header("X-Vault-Token", api_token);
-            then.status(200)
-                .header("content-type", "application/json; charset=UTF-8")
-                .body(api_resp);
-        });
-
-        let vault_client = VaultClient::new().with_base_url(server.base_url());
-
-        let response = vault_client.renew_token(api_token, None).await;
 
         mock_server.assert();
         assert!(response.is_ok());
