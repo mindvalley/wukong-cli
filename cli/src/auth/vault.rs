@@ -396,4 +396,3 @@ mod tests {
         assert_eq!(renew_data.auth.lease_duration, 0);
     }
 }
-
