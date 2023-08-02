@@ -17,17 +17,17 @@ use toml::Value;
 /// ```
 ///
 /// Extract to
-/// ```rust
-/// # use super::SecretExtractor;
+/// ```
+/// # use wukong_sdk::secret_extractors::SecretInfo;
 /// SecretInfo {
-///     key: "dotenv",
-///     provider: "bunker",
-///     kind: "generic",
-///     src: "wukong-cli/development",
-///     dst: ".env",
-///     name: "dotenv",
-///     annotated_file: "/a/b/c/.wukong.toml"
-/// }
+///     key: "dotenv".to_string(),
+///     provider: "bunker".to_string(),
+///     kind: "generic".to_string(),
+///     src: "wukong-cli/development".to_string(),
+///     destination_file: ".env".to_string(),
+///     name: "dotenv".to_string(),
+///     annotated_file: "/a/b/c/.wukong.toml".into()
+/// };
 /// ```
 pub struct WKTomlConfigExtractor;
 

@@ -13,17 +13,17 @@ use std::path::Path;
 /// ```
 ///
 /// Extract to
-/// ```rust
-/// # use super::SecretExtractor;
+/// ```
+/// # use wukong_sdk::secret_extractors::SecretInfo;
 /// SecretInfo {
-///     key: "vault:secret/wukong-cli/development#dev.secret.exs",
-///     provider: "bunker",
-///     kind: "elixir_config",
-///     src: "wukong-cli/development",
-///     dst: "local/dev/secrets.exs",
-///     name: "dev.secret.exs",
-///     annotated_file: "/a/b/c/dev.exs"
-/// }
+///     key: "vault:secret/wukong-cli/development#dev.secret.exs".to_string(),
+///     provider: "bunker".to_string(),
+///     kind: "elixir_config".to_string(),
+///     src: "wukong-cli/development".to_string(),
+///     destination_file: "local/dev/secrets.exs".to_string(),
+///     name: "dev.secret.exs".to_string(),
+///     annotated_file: "/a/b/c/dev.exs".into()
+/// };
 /// ```
 pub struct ElixirConfigExtractor;
 impl SecretExtractor for ElixirConfigExtractor {
