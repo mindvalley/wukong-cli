@@ -4,23 +4,30 @@ use owo_colors::OwoColorize;
 use std::path::Path;
 use toml::Value;
 
-// at /a/b/c/.wukong.toml
-// [secrets.dotenv]
-// provider = "bunker"
-// kind = "generic"
-// src = "vault:secret/wukong-cli/development#dotenv"
-// dst = ".env"
-//
-// Extract to
-// SecretInfo {
-//     key: "dotenv",
-//     provider: "bunker",
-//     kind: "generic",
-//     src: "wukong-cli/development",
-//     dst: ".env",
-//     name: "dotenv",
-//     annotated_file: /a/b/c/.wukong.toml
-// }
+/// Extract secret configs from `.wukong.toml` file.
+///
+/// For example,
+/// ```toml
+/// # at /a/b/c/.wukong.toml
+/// [secrets.dotenv]
+/// provider = "bunker"
+/// kind = "generic"
+/// src = "vault:secret/wukong-cli/development#dotenv"
+/// dst = ".env"
+/// ```
+///
+/// Extract to
+/// ```rust
+/// SecretInfo {
+///     key: "dotenv",
+///     provider: "bunker",
+///     kind: "generic",
+///     src: "wukong-cli/development",
+///     dst: ".env",
+///     name: "dotenv",
+///     annotated_file: "/a/b/c/.wukong.toml"
+/// }
+/// ```
 pub struct WKTomlConfigExtractor;
 
 impl SecretExtractor for WKTomlConfigExtractor {

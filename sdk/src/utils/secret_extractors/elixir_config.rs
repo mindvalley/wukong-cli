@@ -3,20 +3,27 @@ use crate::{error::ExtractError, utils::annotations::read_vault_annotation};
 use super::{SecretExtractor, SecretInfo};
 use std::path::Path;
 
-// at /a/b/c/dev.exs
-// # wukong.mindvalley.dev/config-secrets-location: vault:secret/wukong-cli/development#dev.secret.exs
-// import_config("local/dev.secrets.exs")
-//
-// Extract to
-// SecretInfo {
-//     key: "vault:secret/wukong-cli/development#dev.secret.exs",
-//     provider: "bunker",
-//     kind: "elixir_config",
-//     src: "wukong-cli/development",
-//     dst: "local/dev/secrets.exs",
-//     name: "dev.secret.exs",
-//     annotated_file: /a/b/c/dev.exs
-// }
+/// Extract secret annotations from elixir config file.
+///
+/// For example,
+/// ```elixir
+/// # at /a/b/c/dev.exs
+/// # wukong.mindvalley.dev/config-secrets-location: vault:secret/wukong-cli/development#dev.secret.exs
+/// import_config("local/dev.secrets.exs")
+/// ```
+///
+/// Extract to
+/// ```rust
+/// SecretInfo {
+///     key: "vault:secret/wukong-cli/development#dev.secret.exs",
+///     provider: "bunker",
+///     kind: "elixir_config",
+///     src: "wukong-cli/development",
+///     dst: "local/dev/secrets.exs",
+///     name: "dev.secret.exs",
+///     annotated_file: "/a/b/c/dev.exs"
+/// }
+/// ```
 pub struct ElixirConfigExtractor;
 impl SecretExtractor for ElixirConfigExtractor {
     fn extract(file: &Path) -> Result<Vec<SecretInfo>, ExtractError> {
