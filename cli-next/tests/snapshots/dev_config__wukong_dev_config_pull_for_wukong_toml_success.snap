@@ -1,0 +1,8 @@
+---
+source: tests/dev_config.rs
+expression: "std::str::from_utf8(&output.stderr).unwrap()"
+---
+
+🔍 1 annotation(s) found in [TEMP_DIR]/.wukong.toml
+	[32mCreated[39m [TEMP_DIR]/.env
+

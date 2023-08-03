@@ -5175,6 +5175,57 @@ dependencies = [
 ]
 
 [[package]]
+name = "wukong-next"
+version = "2.0.0-dev"
+dependencies = [
+ "aion",
+ "assert_cmd",
+ "assert_fs",
+ "base64 0.21.2",
+ "chrono",
+ "chrono-tz",
+ "clap 4.3.19",
+ "clap-verbosity-flag",
+ "clap_complete",
+ "criterion",
+ "dialoguer",
+ "dirs 5.0.1",
+ "edit",
+ "git2",
+ "httpmock",
+ "human-panic",
+ "ignore",
+ "indicatif",
+ "insta",
+ "log",
+ "miette",
+ "once_cell",
+ "openidconnect 3.3.0",
+ "owo-colors",
+ "prost",
+ "prost-types",
+ "rayon",
+ "regex",
+ "reqwest",
+ "rexpect",
+ "serde",
+ "serial_test",
+ "similar",
+ "tabled",
+ "thiserror",
+ "time-humanize",
+ "tokio",
+ "toml",
+ "tonic",
+ "url 2.4.0",
+ "webbrowser",
+ "wukong-sdk",
+ "wukong-telemetry",
+ "wukong-telemetry-macro",
+ "yup-oauth2",
+]
+
+[[package]]
 name = "wukong-sdk"
 version = "1.1.3"
 dependencies = [
