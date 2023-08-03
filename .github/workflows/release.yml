@@ -120,7 +120,7 @@ jobs:
           cp "target/${{ matrix.job.target }}/release/${BIN_NAME}" "$ARCHIVE_DIR"
 
           # Completions
-          cp -r completions/{bash,fish,zsh} "$ARCHIVE_DIR/completions"
+          cp -r ./cli/completions/{bash,fish,zsh} "$ARCHIVE_DIR/completions"
 
           # base compressed package
           pushd "${PKG_STAGING}/" >/dev/null
