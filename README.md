@@ -23,8 +23,6 @@
   <img alt="Wukong CLI" src="./.github/img/wukong_help.png">
 </div>
 
-<p align="center">This is a <strong>Work In Progress 🚧</strong>.</p>
-
 ## The Idea
 
 The Wukong CLI is a set of tools to manages Mindvalley DevOps resources. Its goal is to provide a one-stop shop for developers to interact with the Mindvalley DevOps ecosystem. By centralizing different tasks on different tools into a single CLI, It will solve these problems when it comes to adopting DevOps practices:
@@ -32,14 +30,17 @@ The Wukong CLI is a set of tools to manages Mindvalley DevOps resources. Its goa
 - Knowledge Gaps: Learning to use a new tool can be painful. Each tool has a unique UI & UX, as well as different workflows.
 - Getting Lost in the ecosystem: It’s completely normal for a company to have 20+ different DevOps tools, so knowing which tool to use and remember where to access it can be a problem. After all developers are having enough trouble dealing with their day to day tasks.
 
-## KNOWN ISSUE  
+> **Note**
+> You can read more from [here](https://mindvalley.atlassian.net/wiki/spaces/PXP/pages/450396161/PD2+-+A+Swiss-army+Knife+CLI+For+Mindvalley+Developers)
 
-* Currently the Jenkins sometimes does not return the list of changes during build, so the CLI is not able to determine the CHANGELOG properly. We are working on a solution in the future release.  
+## KNOWN ISSUE
 
-## GUIDES  
+- Currently the Jenkins sometimes does not return the list of changes during build, so the CLI is not able to determine the CHANGELOG properly. We are working on a solution in the future release.
 
-* [How to use the Vault integration with Elixir projects](guides/elixir_working_with_secrets_in_bunker.md).  
-* [How to use the Vault integration with arbitrary secrets](guides/working_with_generic_secrets_in_bunker.md).  
+## GUIDES
+
+- [How to use the Vault integration with Elixir projects](guides/elixir_working_with_secrets_in_bunker.md).
+- [How to use the Vault integration with arbitrary secrets](guides/working_with_generic_secrets_in_bunker.md).
 
 ## Get Started for Development
 

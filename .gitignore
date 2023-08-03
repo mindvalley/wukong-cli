@@ -9,9 +9,9 @@
 .DS_Store
 
 # Added by cargo
-/target
+*/target/
 
-/crates/*/target/
+sdk/crates/*/target/
 
 # env
 /src/env/local.toml
