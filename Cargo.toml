@@ -6,4 +6,4 @@ lto = true
 opt-level = 3
 
 [workspace]
-members = ["cli", "cli-next", "sdk", "telemetry", "telemetry-macro"]
+members = ["cli", "sdk", "telemetry", "telemetry-macro"]

@@ -1,6 +1,0 @@
----
-source: cli/tests/wukong.rs
-expression: "std::str::from_utf8(&output.stdout).unwrap()"
----
-wukong 1.1.3
-
