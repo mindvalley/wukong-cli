@@ -70,39 +70,36 @@ impl Painter {
             .borders(Borders::ALL)
             .style(Style::default());
 
-        let header_area = Paragraph::new(Text::styled("Header", Style::default().fg(Color::White)))
-            .block(header_block);
+        let header_area =
+            Paragraph::new(Text::styled("", Style::default().fg(Color::White))).block(header_block);
 
         f.render_widget(header_area, chunks[0]);
 
         let logs_block = Block::default()
+            .title(" Logs ")
             .borders(Borders::ALL)
             .style(Style::default().fg(Color::LightGreen));
-        let logs_area =
-            Paragraph::new(Text::styled("Logs", Style::default().fg(Color::LightGreen)))
-                .block(logs_block);
+        let logs_area = Paragraph::new(Text::styled("", Style::default().fg(Color::LightGreen)))
+            .block(logs_block);
 
         f.render_widget(logs_area, chunks[1]);
 
         let builds_block = Block::default()
+            .title(" Build Artifacts ")
             .borders(Borders::ALL)
             .style(Style::default().fg(Color::LightYellow));
 
-        let builds_area = Paragraph::new(Text::styled(
-            "Build Artifacts",
-            Style::default().fg(Color::LightYellow),
-        ))
-        .block(builds_block);
+        let builds_area = Paragraph::new(Text::styled("", Style::default().fg(Color::LightYellow)))
+            .block(builds_block);
 
         let deployment_block = Block::default()
+            .title(" Deployment ")
             .borders(Borders::ALL)
             .style(Style::default().fg(Color::LightBlue));
 
-        let deployment_area = Paragraph::new(Text::styled(
-            "Deployment",
-            Style::default().fg(Color::LightBlue),
-        ))
-        .block(deployment_block);
+        let deployment_area =
+            Paragraph::new(Text::styled("", Style::default().fg(Color::LightBlue)))
+                .block(deployment_block);
 
         let bottom_chunks = Layout::default()
             .direction(Direction::Horizontal)

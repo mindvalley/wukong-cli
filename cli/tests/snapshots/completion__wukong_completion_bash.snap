@@ -1,5 +1,5 @@
 ---
-source: tests/completion.rs
+source: cli/tests/completion.rs
 expression: "std::str::from_utf8(&output.stdout).unwrap()"
 ---
 _wukong() {
@@ -42,6 +42,9 @@ _wukong() {
                 ;;
             wukong,pipeline)
                 cmd="wukong__pipeline"
+                ;;
+            wukong,tui)
+                cmd="wukong__tui"
                 ;;
             wukong__application,help)
                 cmd="wukong__application__help"
@@ -220,6 +223,9 @@ _wukong() {
             wukong__help,pipeline)
                 cmd="wukong__help__pipeline"
                 ;;
+            wukong__help,tui)
+                cmd="wukong__help__tui"
+                ;;
             wukong__help__application,info)
                 cmd="wukong__help__application__info"
                 ;;
@@ -308,7 +314,7 @@ _wukong() {
 
     case "${cmd}" in
         wukong)
-            opts="-a -v -q -h -V --application --verbose --quiet --help --version init application pipeline deployment dev config login completion help"
+            opts="-a -v -q -h -V --application --verbose --quiet --help --version init application pipeline deployment dev config login completion tui help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -1348,7 +1354,7 @@ _wukong() {
             return 0
             ;;
         wukong__help)
-            opts="init application pipeline deployment dev config login completion help"
+            opts="init application pipeline deployment dev config login completion tui help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -1753,6 +1759,20 @@ _wukong() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
+        wukong__help__tui)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
         wukong__init)
             opts="-a -v -q -h --application --verbose --quiet --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
@@ -1944,6 +1964,28 @@ _wukong() {
         wukong__pipeline__list)
             opts="-a -v -q -h --application --verbose --quiet --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                --application)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                -a)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__tui)
+            opts="-a -v -q -h --application --verbose --quiet --help"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
