@@ -4,7 +4,9 @@ use clap_verbosity_flag::{LogLevel, Verbosity};
 use log::debug;
 
 use crate::{
-    commands::{completion::handle_completion, init::handle_init, login::handle_login},
+    commands::{
+        completion::handle_completion, init::handle_init, login::handle_login, tui::handle_tui,
+    },
     config::Config,
     error::WKCliError,
 };
@@ -17,6 +19,7 @@ mod dev;
 mod init;
 mod login;
 mod pipeline;
+mod tui;
 
 #[derive(Debug, Default)]
 pub struct Context {
@@ -87,6 +90,8 @@ pub enum CommandGroup {
         #[arg(value_enum)]
         shell: Shell,
     },
+    /// Start TUI session
+    Tui,
 }
 
 impl ClapApp {
@@ -106,6 +111,7 @@ impl ClapApp {
             }
             CommandGroup::Config(config) => config.handle_command(),
             CommandGroup::Dev(dev) => dev.handle_command(self).await,
+            CommandGroup::Tui => handle_tui().await,
         }
     }
 }
