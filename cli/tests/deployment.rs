@@ -116,7 +116,8 @@ fn test_wukong_deployment_list_should_failed_when_unauthenticated() {
 application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
 okta_client_id = "valid-okta-client-id"
-    "#.to_string()
+    "#
+            .to_string()
             .as_str(),
         )
         .unwrap();
