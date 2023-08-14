@@ -45,7 +45,7 @@ fn verify_token_mock(server: &MockServer) -> httpmock::Mock {
 }
 
 fn get_secret_mock<'a>(server: &'a MockServer, custom_data: Option<&'a str>) -> httpmock::Mock<'a> {
-    let data = custom_data.unwrap_or_else(|| r#"
+    let data = custom_data.unwrap_or(r#"
         {
           "b.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5",
           "c.secret.exs": "use Mix.Config\n\nconfig :application, Application.Repo,\n  adapter: Ecto.Adapters.Postgres,\n  username: System.get_env(\"DB_USER\"),\n  password: System.get_env(\"DB_PASS\"),\n  database: \"application_dev\",\n  hostname: \"localhost\",\n  pool_size: 100,\n  queue_target: 5",
@@ -370,8 +370,8 @@ fn test_wukong_dev_config_diff_when_secret_file_not_found() {
     let output = cmd.get_output();
 
     insta::with_settings!({filters => vec![
-        (format!("{}", wk_temp.path().to_str().unwrap()).as_str(), "[TEMP_DIR]"),
-        (format!("{}", elixir_temp.path().to_str().unwrap()).as_str(), "[TEMP_DIR]"),
+        (wk_temp.path().to_str().unwrap().to_string().as_str(), "[TEMP_DIR]"),
+        (elixir_temp.path().to_str().unwrap().to_string().as_str(), "[TEMP_DIR]"),
     ]}, {
         insta::assert_snapshot!(std::str::from_utf8(&output.stderr).unwrap());
     });
@@ -553,7 +553,7 @@ dst = ".env"
     let output = cmd.get_output();
 
     insta::with_settings!({filters => vec![
-        (format!("{}", elixir_temp.path().to_str().unwrap()).as_str(), "[TEMP_DIR]"),
+        (elixir_temp.path().to_str().unwrap().to_string().as_str(), "[TEMP_DIR]"),
     ]}, {
         insta::assert_snapshot!(std::str::from_utf8(&output.stderr).unwrap());
     });
@@ -658,7 +658,7 @@ config :phoenix, :json_library, Jason
     let output = cmd.get_output();
 
     insta::with_settings!({filters => vec![
-        (format!("{}", elixir_temp.path().to_str().unwrap()).as_str(), "[TEMP_DIR]"),
+        (elixir_temp.path().to_str().unwrap().to_string().as_str(), "[TEMP_DIR]"),
     ]}, {
         insta::assert_snapshot!(std::str::from_utf8(&output.stderr).unwrap());
     });
@@ -722,7 +722,7 @@ config :phoenix, :json_library, Jason
     let output = cmd.get_output();
 
     insta::with_settings!({filters => vec![
-        (format!("{}", wk_temp.path().to_str().unwrap()).as_str(), "[TEMP_DIR]"),
+        (wk_temp.path().to_str().unwrap().to_string().as_str(), "[TEMP_DIR]"),
         (r"\d+(.\d+)ms|\d+(.\d+)s", "[DURATION]"),
     ]}, {
         insta::assert_snapshot!(std::str::from_utf8(&output.stderr).unwrap());
@@ -784,7 +784,7 @@ config :phoenix, :json_library, Jason
     let output = cmd.get_output();
 
     insta::with_settings!({filters => vec![
-        (format!("{}", wk_temp.path().to_str().unwrap()).as_str(), "[TEMP_DIR]"),
+        (wk_temp.path().to_str().unwrap().to_string().as_str(), "[TEMP_DIR]"),
         (r"\d+(.\d+)ms|\d+(.\d+)s", "[DURATION]"),
     ]}, {
         insta::assert_snapshot!(std::str::from_utf8(&output.stderr).unwrap());

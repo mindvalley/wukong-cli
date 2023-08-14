@@ -269,7 +269,7 @@ dst = ".env"
         let file_path = subdir.join("config.exs");
         let config_content = "Some test content";
 
-        let mut file = File::create(&file_path)?;
+        let mut file = File::create(file_path)?;
         writeln!(file, "{}", config_content)?;
 
         let destination_file = "config/config.exs";

@@ -120,21 +120,21 @@ mod test {
         let old_secret_config = "first line\nsecond line\nthird line";
         let new_secret_config = "first line\nnew second line\nthird line";
 
-        assert_eq!(has_diff(old_secret_config, new_secret_config), true);
+        assert!(has_diff(old_secret_config, new_secret_config));
 
         let old_secret_config = "first line\nsecond line\nthird line";
         let new_secret_config = "first line\nsecond line\nthird line";
 
-        assert_eq!(has_diff(old_secret_config, new_secret_config), false);
+        assert!(!has_diff(old_secret_config, new_secret_config));
 
         let old_secret_config = "first line\nsecond line";
         let new_secret_config = "first line\nsecond line\nthird line";
 
-        assert_eq!(has_diff(old_secret_config, new_secret_config), true);
+        assert!(has_diff(old_secret_config, new_secret_config));
 
         let old_secret_config = "first line\nsecond line\nthird line";
         let new_secret_config = "first line\nsecond line";
 
-        assert_eq!(has_diff(old_secret_config, new_secret_config), true);
+        assert!(has_diff(old_secret_config, new_secret_config));
     }
 }

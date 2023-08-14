@@ -195,7 +195,7 @@ config :phoenix, :json_library, Jason
         parser
             .set_language(elixir_lang)
             .expect("error loading elixir grammar");
-        let parse_tree = parser.parse(&source, None).unwrap();
+        let parse_tree = parser.parse(source, None).unwrap();
         let rule = UseImportConfigWithFileExistsChecking::new(elixir_lang);
         let lint_result = rule.run(&parse_tree, source.to_string(), "config/dev.exs");
 
