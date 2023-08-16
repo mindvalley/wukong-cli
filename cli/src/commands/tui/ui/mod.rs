@@ -1,13 +1,13 @@
 use clap::crate_version;
 use ratatui::{
     prelude::{Backend, Constraint, Direction, Layout, Rect},
-    style::{self, Color, Style},
+    style::{self, Color, Modifier, Style},
     text::{Line, Span, Text},
-    widgets::{Block, Borders, Clear, ListItem, Padding, Paragraph, Wrap},
+    widgets::{Block, Borders, Cell, Clear, Padding, Paragraph, Row, Table, Wrap},
     Frame,
 };
 
-use super::{app::App, hotkey::HotKey, CurrentScreen};
+use super::{action::Action, app::App, CurrentScreen};
 
 pub fn draw<B>(frame: &mut Frame<B>, app: &App)
 where
@@ -82,31 +82,32 @@ where
     .wrap(Wrap { trim: true })
     .block(application_block);
 
-    let hotkeys = vec![HotKey::SelectNamespace, HotKey::Quit]
-        .into_iter()
-        .map(|hotkey| {
-            Line::from(vec![
-                Span::styled(
-                    format!("<{}>", hotkey.keycode()),
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(style::Modifier::BOLD),
-                ),
-                Span::raw(format!(" {}", hotkey.desc())),
-            ])
-        })
-        .collect::<Vec<_>>();
-
-    let view_controls_block = Block::default()
-        .borders(Borders::RIGHT | Borders::TOP | Borders::BOTTOM)
-        .style(Style::default());
-
-    let view_controls_area = Paragraph::new(hotkeys)
-        .block(view_controls_block)
-        .wrap(Wrap { trim: true });
+    let help_menu = prepare_help_menu(&app.actions);
+    // let hotkeys = vec![HotKey::SelectNamespace, HotKey::Quit]
+    //     .into_iter()
+    //     .map(|hotkey| {
+    //         Line::from(vec![
+    //             Span::styled(
+    //                 format!("<{}>", hotkey.keycode()),
+    //                 Style::default()
+    //                     .fg(Color::Cyan)
+    //                     .add_modifier(style::Modifier::BOLD),
+    //             ),
+    //             Span::raw(format!(" {}", hotkey.desc())),
+    //         ])
+    //     })
+    //     .collect::<Vec<_>>();
+    //
+    // let view_controls_block = Block::default()
+    //     .borders(Borders::RIGHT | Borders::TOP | Borders::BOTTOM)
+    //     .style(Style::default());
+    //
+    // let view_controls_area = Paragraph::new(hotkeys)
+    //     .block(view_controls_block)
+    //     .wrap(Wrap { trim: true });
 
     frame.render_widget(application_area, top_left);
-    frame.render_widget(view_controls_area, top_right);
+    frame.render_widget(help_menu, top_right);
 
     let logs_block = Block::default()
         .title(" Logs ")
@@ -217,4 +218,26 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
             .as_ref(),
         )
         .split(popup_layout[1])[1] // Return the middle chunk
+}
+
+fn prepare_help_menu(actions: &Vec<Action>) -> Table {
+    let key_style = Style::default()
+        .fg(Color::LightCyan)
+        .add_modifier(Modifier::BOLD);
+    let desc_style = Style::default().fg(Color::White);
+
+    let rows = actions
+        .iter()
+        .map(|action| {
+            Row::new(vec![
+                Cell::from(Span::styled(action.keys()[0].to_string(), key_style)),
+                Cell::from(Span::styled(action.to_string(), desc_style)),
+            ])
+        })
+        .collect::<Vec<_>>();
+
+    Table::new(rows)
+        .block(Block::default().borders(Borders::TOP | Borders::BOTTOM | Borders::RIGHT))
+        .widths(&[Constraint::Length(4), Constraint::Min(20)])
+        .column_spacing(1)
 }

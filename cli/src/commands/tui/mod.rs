@@ -1,22 +1,25 @@
+use std::time::Duration;
+
 use crate::{config::Config, error::WKCliError};
-use clap::crate_version;
 use crossterm::{
     event::{self, DisableMouseCapture, Event, KeyCode},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use ratatui::{
-    prelude::{Alignment, Backend, Constraint, CrosstermBackend, Direction, Layout, Rect},
-    style::{self, Color, Modifier, Style},
-    text::{Line, Span, Text},
-    widgets::{Block, Borders, Clear, List, ListItem, ListState, Padding, Paragraph, Wrap},
-    Frame, Terminal,
+    prelude::{Backend, CrosstermBackend},
+    widgets::ListState,
+    Terminal,
 };
 
-use self::{app::App, hotkey::HotKey};
+use self::{
+    app::{App, AppReturn},
+    events::EventManager,
+};
 
+mod action;
 mod app;
-mod hotkey;
+mod events;
 mod ui;
 
 pub enum CurrentScreen {
@@ -81,8 +84,8 @@ impl<T> StatefulList<T> {
 
 pub async fn handle_tui() -> Result<bool, WKCliError> {
     let config = Config::load_from_default_path()?;
-
     let mut app = App::new(&config);
+
     start_ui(&mut app)?;
 
     Ok(true)
@@ -90,63 +93,81 @@ pub async fn handle_tui() -> Result<bool, WKCliError> {
 
 pub fn start_ui(app: &mut App) -> std::io::Result<bool> {
     let mut stdout = std::io::stdout();
-    enable_raw_mode().expect("failed to enable raw mode");
+    enable_raw_mode()?;
     execute!(stdout, EnterAlternateScreen).expect("unable to enter alternate screen");
 
-    let mut terminal =
-        Terminal::new(CrosstermBackend::new(stdout)).expect("creating terminal failed");
+    let mut terminal = Terminal::new(CrosstermBackend::new(stdout))?;
+
+    let tick_rate = Duration::from_millis(200);
+    let event_manager = EventManager::new();
+    event_manager.spawn_event_listen_thread(tick_rate);
+
+    // let network_manager = NetworkManager::new();
+    // network_manager.spawn_network_thread();
 
     loop {
         terminal.draw(|frame| ui::draw(frame, &app))?;
-        if let Event::Key(key) = event::read()? {
-            if app.state.show_namespace_selection {
-                if let CurrentScreen::Main = app.current_screen {
-                    match key.code {
-                        KeyCode::Up => {
-                            app.namespace_selections.previous();
-                        }
-                        KeyCode::Down => {
-                            app.namespace_selections.next();
-                        }
-                        KeyCode::Enter => {
-                            app.state.current_namespace = app
-                                .namespace_selections
-                                .items
-                                .get(app.namespace_selections.state.selected().unwrap())
-                                .unwrap()
-                                .clone();
 
-                            app.state.show_namespace_selection = false;
-                        }
-                        KeyCode::Char('q') => {
-                            app.state.show_namespace_selection = false;
-                        }
-                        _ => {}
-                    }
-                }
-            } else {
-                match app.current_screen {
-                    CurrentScreen::Main => match key.code {
-                        KeyCode::Char('q') => {
-                            app.current_screen = CurrentScreen::Exiting;
-                        }
-                        KeyCode::Char('n') => {
-                            app.state.show_namespace_selection = true;
-                        }
-                        _ => {}
-                    },
-                    CurrentScreen::Exiting => match key.code {
-                        KeyCode::Char('y') => {
-                            break;
-                        }
-                        KeyCode::Char('n') => {
-                            app.current_screen = CurrentScreen::Main;
-                        }
-                        _ => {}
-                    },
-                }
+        let result = match event_manager.next().unwrap() {
+            events::Event::Input(key) => {
+                todo!()
             }
+            events::Event::Tick => app.update(),
+        };
+
+        if result == AppReturn::Exit {
+            break;
         }
+
+        // if let Event::Key(key) = event::read()? {
+        //     if app.state.show_namespace_selection {
+        //         if let CurrentScreen::Main = app.current_screen {
+        //             match key.code {
+        //                 KeyCode::Up => {
+        //                     app.namespace_selections.previous();
+        //                 }
+        //                 KeyCode::Down => {
+        //                     app.namespace_selections.next();
+        //                 }
+        //                 KeyCode::Enter => {
+        //                     app.state.current_namespace = app
+        //                         .namespace_selections
+        //                         .items
+        //                         .get(app.namespace_selections.state.selected().unwrap())
+        //                         .unwrap()
+        //                         .clone();
+        //
+        //                     app.state.show_namespace_selection = false;
+        //                 }
+        //                 KeyCode::Char('q') => {
+        //                     app.state.show_namespace_selection = false;
+        //                 }
+        //                 _ => {}
+        //             }
+        //         }
+        //     } else {
+        //         match app.current_screen {
+        //             CurrentScreen::Main => match key.code {
+        //                 KeyCode::Char('q') => {
+        //                     app.current_screen = CurrentScreen::Exiting;
+        //                 }
+        //                 KeyCode::Char('n') => {
+        //                     app.state.show_namespace_selection = true;
+        //                 }
+        //                 _ => {}
+        //             },
+        //             CurrentScreen::Exiting => match key.code {
+        //                 KeyCode::Char('y') => {
+        //                     break;
+        //                 }
+        //                 KeyCode::Char('n') => {
+        //                     app.current_screen = CurrentScreen::Main;
+        //                 }
+        //                 _ => {}
+        //             },
+        //         }
+        //     }
+        // }
     }
 
     // post-run

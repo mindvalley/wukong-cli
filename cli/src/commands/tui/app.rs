@@ -1,6 +1,12 @@
 use crate::config::Config;
 
-use super::{CurrentScreen, StatefulList};
+use super::{action::Action, CurrentScreen, StatefulList};
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum AppReturn {
+    Exit,
+    Continue,
+}
 
 pub struct State {
     pub current_application: String,
@@ -12,6 +18,7 @@ pub struct App {
     pub state: State,
     pub namespace_selections: StatefulList<String>,
     pub current_screen: CurrentScreen,
+    pub actions: Vec<Action>,
 }
 
 impl App {
@@ -28,6 +35,11 @@ impl App {
             },
             namespace_selections,
             current_screen: CurrentScreen::Main,
+            actions: vec![Action::SelectNamespace, Action::Quit],
         }
+    }
+
+    pub fn update(&mut self) -> AppReturn {
+        AppReturn::Continue
     }
 }
