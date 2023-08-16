@@ -24,7 +24,7 @@ mod ui;
 
 pub enum CurrentScreen {
     Main,
-    Exiting,
+    NamespaceSelection,
 }
 
 pub struct StatefulList<T> {
@@ -106,68 +106,16 @@ pub fn start_ui(app: &mut App) -> std::io::Result<bool> {
     // network_manager.spawn_network_thread();
 
     loop {
-        terminal.draw(|frame| ui::draw(frame, &app))?;
+        terminal.draw(|frame| ui::draw(frame, app))?;
 
         let result = match event_manager.next().unwrap() {
-            events::Event::Input(key) => {
-                todo!()
-            }
+            events::Event::Input(key) => app.handle_input(key),
             events::Event::Tick => app.update(),
         };
 
         if result == AppReturn::Exit {
             break;
         }
-
-        // if let Event::Key(key) = event::read()? {
-        //     if app.state.show_namespace_selection {
-        //         if let CurrentScreen::Main = app.current_screen {
-        //             match key.code {
-        //                 KeyCode::Up => {
-        //                     app.namespace_selections.previous();
-        //                 }
-        //                 KeyCode::Down => {
-        //                     app.namespace_selections.next();
-        //                 }
-        //                 KeyCode::Enter => {
-        //                     app.state.current_namespace = app
-        //                         .namespace_selections
-        //                         .items
-        //                         .get(app.namespace_selections.state.selected().unwrap())
-        //                         .unwrap()
-        //                         .clone();
-        //
-        //                     app.state.show_namespace_selection = false;
-        //                 }
-        //                 KeyCode::Char('q') => {
-        //                     app.state.show_namespace_selection = false;
-        //                 }
-        //                 _ => {}
-        //             }
-        //         }
-        //     } else {
-        //         match app.current_screen {
-        //             CurrentScreen::Main => match key.code {
-        //                 KeyCode::Char('q') => {
-        //                     app.current_screen = CurrentScreen::Exiting;
-        //                 }
-        //                 KeyCode::Char('n') => {
-        //                     app.state.show_namespace_selection = true;
-        //                 }
-        //                 _ => {}
-        //             },
-        //             CurrentScreen::Exiting => match key.code {
-        //                 KeyCode::Char('y') => {
-        //                     break;
-        //                 }
-        //                 KeyCode::Char('n') => {
-        //                     app.current_screen = CurrentScreen::Main;
-        //                 }
-        //                 _ => {}
-        //             },
-        //         }
-        //     }
-        // }
     }
 
     // post-run

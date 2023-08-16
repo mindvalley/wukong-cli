@@ -1,6 +1,9 @@
 use crate::config::Config;
 
-use super::{action::Action, CurrentScreen, StatefulList};
+use super::{
+    action::Action, events::key::Key, ui::namespace_selection::NamespaceSelectionWidget,
+    CurrentScreen, StatefulList,
+};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum AppReturn {
@@ -41,5 +44,21 @@ impl App {
 
     pub fn update(&mut self) -> AppReturn {
         AppReturn::Continue
+    }
+
+    pub fn handle_input(&mut self, key: Key) -> AppReturn {
+        if let CurrentScreen::NamespaceSelection = self.current_screen {
+            NamespaceSelectionWidget::handle_input(key, self);
+            return AppReturn::Continue;
+        }
+
+        match Action::from_key(key) {
+            Some(Action::SelectNamespace) => {
+                self.current_screen = CurrentScreen::NamespaceSelection;
+                AppReturn::Continue
+            }
+            Some(Action::Quit) => AppReturn::Exit,
+            None => AppReturn::Continue,
+        }
     }
 }

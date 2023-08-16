@@ -1,11 +1,13 @@
 use std::{sync::mpsc, thread, time::Duration};
 
-use crossterm::event::{self, KeyEvent};
+use crossterm::event::{self};
+
+use self::key::Key;
 
 pub mod key;
 
 pub enum Event {
-    Input(KeyEvent),
+    Input(Key),
     Tick,
 }
 
@@ -29,7 +31,7 @@ impl EventManager {
                 // poll for tick rate duration, if no event, sent tick event.
                 if event::poll(tick_rate).unwrap() {
                     if let event::Event::Key(key) = event::read().unwrap() {
-                        event_tx.send(Event::Input(key)).unwrap();
+                        event_tx.send(Event::Input(key.into())).unwrap();
                     }
                 }
 
