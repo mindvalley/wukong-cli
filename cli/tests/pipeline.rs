@@ -102,14 +102,13 @@ fn test_wukong_pipeline_list_should_failed_when_unauthenticated() {
 
     config_file
         .write_str(
-            format!(
-                r#"
+            r#"
 [core]
 application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
 okta_client_id = "valid-okta-client-id"
-"#,
-            )
+"#
+            .to_string()
             .as_str(),
         )
         .unwrap();
