@@ -128,7 +128,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
         terminal.draw(|frame| ui::draw(frame, &mut app))?;
 
         let result = match event_manager.next().unwrap() {
-            events::Event::Input(key) => app.handle_input(key),
+            events::Event::Input(key) => app.handle_input(key).await,
             events::Event::Tick => app.update(),
         };
 

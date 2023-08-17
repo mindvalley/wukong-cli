@@ -31,6 +31,7 @@ impl NetworkManager {
 
         match network_event {
             NetworkEvent::FetchBuilds => {
+                app.state.is_fetching_builds = true;
                 let config = Config::load_from_default_path()?;
                 let mut wk_client = WKClient::new(&config)?;
 
@@ -63,7 +64,11 @@ impl NetworkManager {
                             }
                         })
                         .collect();
+                } else {
+                    app.state.builds = vec![];
                 }
+
+                app.state.is_fetching_builds = false;
             }
         }
 

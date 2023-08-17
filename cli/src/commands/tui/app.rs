@@ -19,6 +19,7 @@ pub struct State {
     pub current_application: String,
     pub current_namespace: String,
     pub show_namespace_selection: bool,
+    pub is_fetching_builds: bool,
     pub builds: Vec<Build>,
 }
 
@@ -50,6 +51,7 @@ impl App {
                 current_application: config.core.application.clone(),
                 current_namespace: String::from("prod"),
                 show_namespace_selection: false,
+                is_fetching_builds: true,
                 builds: vec![],
             },
             namespace_selections,
@@ -63,9 +65,9 @@ impl App {
         AppReturn::Continue
     }
 
-    pub fn handle_input(&mut self, key: Key) -> AppReturn {
+    pub async fn handle_input(&mut self, key: Key) -> AppReturn {
         if let CurrentScreen::NamespaceSelection = self.current_screen {
-            NamespaceSelectionWidget::handle_input(key, self);
+            NamespaceSelectionWidget::handle_input(key, self).await;
             return AppReturn::Continue;
         }
 

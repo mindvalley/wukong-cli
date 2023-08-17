@@ -6,7 +6,11 @@ use ratatui::{
     Frame,
 };
 
-use crate::commands::tui::{app::App, events::key::Key, CurrentScreen};
+use crate::commands::tui::{
+    app::App,
+    events::{key::Key, network::NetworkEvent},
+    CurrentScreen,
+};
 
 use super::centered_rect;
 
@@ -47,18 +51,24 @@ impl NamespaceSelectionWidget {
         frame.render_stateful_widget(items, area, &mut app.namespace_selections.state);
     }
 
-    pub fn handle_input(key: Key, app: &mut App) {
+    pub async fn handle_input(key: Key, app: &mut App) {
         match key {
             Key::Up => app.namespace_selections.previous(),
             Key::Down => app.namespace_selections.next(),
             Key::Esc | Key::Char('q') => app.current_screen = CurrentScreen::Main,
             Key::Enter => {
-                app.state.current_namespace = app
+                let selected = app
                     .namespace_selections
                     .items
                     .get(app.namespace_selections.state.selected().unwrap())
                     .unwrap()
                     .clone();
+
+                if app.state.current_namespace != selected {
+                    app.state.current_namespace = selected;
+
+                    app.dispatch(NetworkEvent::FetchBuilds).await;
+                }
 
                 app.current_screen = CurrentScreen::Main;
             }
