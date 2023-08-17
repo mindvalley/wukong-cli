@@ -1,18 +1,17 @@
 use ratatui::{
-    prelude::Constraint,
+    prelude::{Backend, Constraint, Rect},
     style::{Color, Modifier, Style},
     text::Span,
     widgets::{Block, Borders, Cell, Row, Table},
+    Frame,
 };
 
 use crate::commands::tui::app::App;
 
-pub struct HelpWidget {
-    pub widget: Table<'static>,
-}
+pub struct HelpWidget;
 
 impl HelpWidget {
-    pub fn new(app: &App) -> Self {
+    pub fn draw<B: Backend>(app: &App, frame: &mut Frame<B>, rect: Rect) {
         let key_style = Style::default()
             .fg(Color::LightCyan)
             .add_modifier(Modifier::BOLD);
@@ -29,11 +28,11 @@ impl HelpWidget {
             })
             .collect::<Vec<_>>();
 
-        Self {
-            widget: Table::new(rows)
-                .block(Block::default().borders(Borders::TOP | Borders::BOTTOM | Borders::RIGHT))
-                .widths(&[Constraint::Length(4), Constraint::Min(20)])
-                .column_spacing(1),
-        }
+        let widget = Table::new(rows)
+            .block(Block::default().borders(Borders::TOP | Borders::BOTTOM | Borders::RIGHT))
+            .widths(&[Constraint::Length(4), Constraint::Min(20)])
+            .column_spacing(1);
+
+        frame.render_widget(widget, rect);
     }
 }

@@ -1,18 +1,18 @@
 use clap::crate_version;
 use ratatui::{
+    prelude::{Backend, Rect},
     style::{self, Color, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Padding, Paragraph, Wrap},
+    Frame,
 };
 
 use crate::commands::tui::app::App;
 
-pub struct ApplicationWidget {
-    pub widget: Paragraph<'static>,
-}
+pub struct ApplicationWidget;
 
 impl ApplicationWidget {
-    pub fn new(app: &App) -> Self {
+    pub fn draw<B: Backend>(app: &App, frame: &mut Frame<B>, rect: Rect) {
         let current_application = app.state.current_application.clone();
         let current_namespace = app.state.current_namespace.clone();
 
@@ -53,8 +53,6 @@ impl ApplicationWidget {
         .wrap(Wrap { trim: true })
         .block(application_block);
 
-        Self {
-            widget: application_widget,
-        }
+        frame.render_widget(application_widget, rect);
     }
 }

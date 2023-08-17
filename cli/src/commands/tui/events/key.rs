@@ -23,12 +23,6 @@ pub enum Key {
     Unknown,
 }
 
-impl Key {
-    pub fn is_exit(&self) -> bool {
-        matches!(self, Key::Char('q'))
-    }
-}
-
 impl Display for Key {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {

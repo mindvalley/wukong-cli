@@ -1,25 +1,23 @@
 use std::{fmt::Display, slice::Iter};
 
-use crossterm::event::KeyCode;
-
 use super::events::key::Key;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Action {
-    SelectNamespace,
+    OpenNamespaceSelection,
     Quit,
 }
 
 impl Action {
     // iterator for enum https://stackoverflow.com/a/21376984
     pub fn iterator() -> Iter<'static, Action> {
-        static ACTIONS: [Action; 2] = [Action::SelectNamespace, Action::Quit];
+        static ACTIONS: [Action; 2] = [Action::OpenNamespaceSelection, Action::Quit];
         ACTIONS.iter()
     }
 
     pub fn keys(&self) -> &[Key] {
         match self {
-            Action::SelectNamespace => &[Key::Char('n')],
+            Action::OpenNamespaceSelection => &[Key::Char('n')],
             Action::Quit => &[Key::Char('q')],
         }
     }
@@ -34,7 +32,7 @@ impl Action {
 impl Display for Action {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Action::SelectNamespace => write!(f, "Select namespace"),
+            Action::OpenNamespaceSelection => write!(f, "Select namespace"),
             Action::Quit => write!(f, "Quit"),
         }
     }

@@ -1,25 +1,26 @@
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
 use crate::{config::Config, error::WKCliError};
 use crossterm::{
-    event::{self, DisableMouseCapture, Event, KeyCode},
+    event::DisableMouseCapture,
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use ratatui::{
-    prelude::{Backend, CrosstermBackend},
-    widgets::ListState,
-    Terminal,
-};
+use ratatui::{prelude::CrosstermBackend, widgets::ListState, Terminal};
+use tokio::sync::Mutex;
 
 use self::{
     app::{App, AppReturn},
-    events::EventManager,
+    events::{
+        network::{NetworkEvent, NetworkManager},
+        EventManager,
+    },
 };
 
 mod action;
 mod app;
 mod events;
+// mod network;
 mod ui;
 
 pub enum CurrentScreen {
@@ -84,14 +85,24 @@ impl<T> StatefulList<T> {
 
 pub async fn handle_tui() -> Result<bool, WKCliError> {
     let config = Config::load_from_default_path()?;
-    let mut app = App::new(&config);
 
-    start_ui(&mut app)?;
+    let (sender, mut receiver) = tokio::sync::mpsc::channel::<NetworkEvent>(100);
+
+    let app = Arc::new(Mutex::new(App::new(&config, sender)));
+
+    let mut network_manager = NetworkManager::new(app.clone());
+    tokio::spawn(async move {
+        while let Some(network_event) = receiver.recv().await {
+            let _ = network_manager.handle_network_event(network_event).await;
+        }
+    });
+
+    start_ui(&app).await?;
 
     Ok(true)
 }
 
-pub fn start_ui(app: &mut App) -> std::io::Result<bool> {
+pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
     let mut stdout = std::io::stdout();
     enable_raw_mode()?;
     execute!(stdout, EnterAlternateScreen).expect("unable to enter alternate screen");
@@ -102,11 +113,19 @@ pub fn start_ui(app: &mut App) -> std::io::Result<bool> {
     let event_manager = EventManager::new();
     event_manager.spawn_event_listen_thread(tick_rate);
 
-    // let network_manager = NetworkManager::new();
-    // network_manager.spawn_network_thread();
+    let mut the_first_frame = true;
 
     loop {
-        terminal.draw(|frame| ui::draw(frame, app))?;
+        let mut app = app.lock().await;
+
+        if the_first_frame {
+            // fetch data on the first frame
+            app.dispatch(NetworkEvent::FetchBuilds).await;
+
+            the_first_frame = false;
+        }
+
+        terminal.draw(|frame| ui::draw(frame, &mut app))?;
 
         let result = match event_manager.next().unwrap() {
             events::Event::Input(key) => app.handle_input(key),

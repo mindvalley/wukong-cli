@@ -1,8 +1,8 @@
 use ratatui::{
-    prelude::{Alignment, Rect},
+    prelude::{Alignment, Backend},
     style::{Color, Modifier, Style},
-    text::{Line, Text},
-    widgets::{Block, Borders, List, ListItem, Paragraph},
+    text::Line,
+    widgets::{Block, Borders, Clear, List, ListItem},
     Frame,
 };
 
@@ -10,12 +10,10 @@ use crate::commands::tui::{app::App, events::key::Key, CurrentScreen};
 
 use super::centered_rect;
 
-pub struct NamespaceSelectionWidget {
-    pub widget: Rect,
-}
+pub struct NamespaceSelectionWidget;
 
 impl NamespaceSelectionWidget {
-    pub fn new(app: &App, items: Vec<ListItem>, frame_rect: Rect) -> Self {
+    pub fn draw<B: Backend>(app: &mut App, frame: &mut Frame<B>) {
         let items: Vec<ListItem> = app
             .namespace_selections
             .items
@@ -43,9 +41,10 @@ impl NamespaceSelectionWidget {
             )
             .highlight_symbol(">> ");
 
-        let area = centered_rect(60, 25, frame_rect);
+        let area = centered_rect(60, 25, frame.size());
 
-        Self { widget: area }
+        frame.render_widget(Clear, area);
+        frame.render_stateful_widget(items, area, &mut app.namespace_selections.state);
     }
 
     pub fn handle_input(key: Key, app: &mut App) {

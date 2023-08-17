@@ -1,7 +1,11 @@
+use tokio::sync::mpsc::Sender;
+
 use crate::config::Config;
 
 use super::{
-    action::Action, events::key::Key, ui::namespace_selection::NamespaceSelectionWidget,
+    action::Action,
+    events::{key::Key, network::NetworkEvent},
+    ui::namespace_selection::NamespaceSelectionWidget,
     CurrentScreen, StatefulList,
 };
 
@@ -15,6 +19,7 @@ pub struct State {
     pub current_application: String,
     pub current_namespace: String,
     pub show_namespace_selection: bool,
+    pub builds: Vec<Build>,
 }
 
 pub struct App {
@@ -22,10 +27,20 @@ pub struct App {
     pub namespace_selections: StatefulList<String>,
     pub current_screen: CurrentScreen,
     pub actions: Vec<Action>,
+    pub network_event_sender: Sender<NetworkEvent>,
+}
+
+pub struct Build {
+    pub name: String,
+    pub commits: Vec<Commit>,
+}
+pub struct Commit {
+    pub id: String,
+    pub message_headline: String,
 }
 
 impl App {
-    pub fn new(config: &Config) -> Self {
+    pub fn new(config: &Config, sender: Sender<NetworkEvent>) -> Self {
         let mut namespace_selections =
             StatefulList::with_items(vec![String::from("prod"), String::from("staging")]);
         namespace_selections.select(0);
@@ -35,10 +50,12 @@ impl App {
                 current_application: config.core.application.clone(),
                 current_namespace: String::from("prod"),
                 show_namespace_selection: false,
+                builds: vec![],
             },
             namespace_selections,
             current_screen: CurrentScreen::Main,
-            actions: vec![Action::SelectNamespace, Action::Quit],
+            actions: vec![Action::OpenNamespaceSelection, Action::Quit],
+            network_event_sender: sender,
         }
     }
 
@@ -53,12 +70,18 @@ impl App {
         }
 
         match Action::from_key(key) {
-            Some(Action::SelectNamespace) => {
+            Some(Action::OpenNamespaceSelection) => {
                 self.current_screen = CurrentScreen::NamespaceSelection;
                 AppReturn::Continue
             }
             Some(Action::Quit) => AppReturn::Exit,
             None => AppReturn::Continue,
+        }
+    }
+
+    pub async fn dispatch(&mut self, network_event: NetworkEvent) {
+        if let Err(e) = self.network_event_sender.send(network_event).await {
+            println!("Error from network event: {}", e)
         }
     }
 }
