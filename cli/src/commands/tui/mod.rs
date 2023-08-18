@@ -89,6 +89,7 @@ pub async fn handle_tui() -> Result<bool, WKCliError> {
     let (sender, mut receiver) = tokio::sync::mpsc::channel::<NetworkEvent>(100);
 
     let app = Arc::new(Mutex::new(App::new(&config, sender)));
+    let app_ui = Arc::clone(&app);
 
     let mut network_manager = NetworkManager::new(app.clone());
     tokio::spawn(async move {
@@ -97,7 +98,7 @@ pub async fn handle_tui() -> Result<bool, WKCliError> {
         }
     });
 
-    start_ui(&app).await?;
+    start_ui(&app_ui).await?;
 
     Ok(true)
 }

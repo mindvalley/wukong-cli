@@ -24,7 +24,6 @@ impl BuildsWidget {
                 Style::default().fg(Color::White),
             ))
             .block(builds_block);
-
             frame.render_widget(loading_widget, rect);
         } else {
             let rows = app

@@ -27,24 +27,25 @@ impl NetworkManager {
         &mut self,
         network_event: NetworkEvent,
     ) -> Result<(), WKCliError> {
-        let mut app = self.app.lock().await;
-
         match network_event {
             NetworkEvent::FetchBuilds => {
+                let mut app = self.app.lock().await;
+                let application = app.state.current_application.clone();
+                let namespace = app.state.current_namespace.clone();
                 app.state.is_fetching_builds = true;
+
+                drop(app);
+
                 let config = Config::load_from_default_path()?;
                 let mut wk_client = WKClient::new(&config)?;
 
                 let cd_pipeline_data = wk_client
-                    .fetch_cd_pipeline(
-                        &app.state.current_application,
-                        &app.state.current_namespace,
-                        "green",
-                    )
+                    .fetch_cd_pipeline(&application, &namespace, "green")
                     .await?
                     .cd_pipeline;
 
                 if let Some(cd_pipeline_data) = cd_pipeline_data {
+                    let mut app = self.app.lock().await;
                     app.state.builds = cd_pipeline_data
                         .jenkins_builds
                         .into_iter()
@@ -65,9 +66,11 @@ impl NetworkManager {
                         })
                         .collect();
                 } else {
+                    let mut app = self.app.lock().await;
                     app.state.builds = vec![];
                 }
 
+                let mut app = self.app.lock().await;
                 app.state.is_fetching_builds = false;
             }
         }

@@ -1,4 +1,4 @@
-use std::{sync::mpsc, thread, time::Duration};
+use std::{sync::mpsc, time::Duration};
 
 use crossterm::event::{self};
 
@@ -27,7 +27,7 @@ impl EventManager {
 
     pub fn spawn_event_listen_thread(&self, tick_rate: Duration) {
         let event_sender = self.sender.clone();
-        thread::spawn(move || {
+        tokio::spawn(async move {
             loop {
                 // poll for tick rate duration, if no event, sent tick event.
                 if event::poll(tick_rate).unwrap() {
