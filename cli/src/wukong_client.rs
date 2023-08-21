@@ -1,4 +1,4 @@
-use crate::{auth, config::Config, error::WKCliError, loader::new_spinner};
+use crate::{auth, config::Config, error::WKCliError};
 use log::debug;
 use std::collections::HashMap;
 use wukong_sdk::{
@@ -45,13 +45,9 @@ impl WKClient {
         if auth::okta::need_tokens_refresh(&self.config)? {
             debug!("Access token expired. Refreshing tokens...");
 
-            let refresh_token_loader = new_spinner();
-            refresh_token_loader.set_message("Refreshing tokens...");
-
             let mut updated_config = self.config.clone();
 
             let new_tokens = auth::okta::refresh_tokens(&self.config).await?;
-            refresh_token_loader.finish_and_clear();
             updated_config.auth = Some(new_tokens.clone().into());
 
             // update config file
