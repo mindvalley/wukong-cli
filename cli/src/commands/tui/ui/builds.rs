@@ -2,7 +2,7 @@ use ratatui::{
     prelude::{Backend, Constraint, Rect},
     style::{Color, Style},
     text::{Line, Span, Text},
-    widgets::{Block, Borders, Cell, Paragraph, Row, Table},
+    widgets::{Block, Borders, Cell, Padding, Paragraph, Row, Table},
     Frame,
 };
 
@@ -16,6 +16,7 @@ impl BuildsWidget {
         let builds_block = Block::default()
             .title(" Build Artifacts ")
             .borders(Borders::ALL)
+            .padding(Padding::new(1, 1, 1, 1))
             .style(Style::default().fg(Color::LightYellow));
 
         if app.state.is_fetching_builds {
