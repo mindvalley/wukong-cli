@@ -3,7 +3,10 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 use crate::{
-    commands::tui::app::{App, Build, Commit, Deployment},
+    commands::tui::{
+        app::{App, Build, Commit, Deployment},
+        StatefulList,
+    },
     config::Config,
     error::WKCliError,
     wukong_client::WKClient,
@@ -78,6 +81,7 @@ impl NetworkManager {
                 let mut app = self.app.lock().await;
                 let application = app.state.current_application.clone();
                 app.state.is_fetching_deployments = true;
+                app.state.is_checking_namespaces = true;
 
                 drop(app);
 
@@ -108,6 +112,31 @@ impl NetworkManager {
                     .collect();
 
                 app.state.is_fetching_deployments = false;
+
+                // we only know the available namespaces after the deployments is fetched
+                // so update namespace selections here
+                let has_prod_namespace = app
+                    .state
+                    .deployments
+                    .iter()
+                    .any(|pipeline| pipeline.environment == "prod");
+                let has_staging_namespace = app
+                    .state
+                    .deployments
+                    .iter()
+                    .any(|pipeline| pipeline.environment == "staging");
+                let mut selections = vec![];
+                if has_prod_namespace {
+                    selections.push(String::from("prod"));
+                }
+                if has_staging_namespace {
+                    selections.push(String::from("staging"));
+                }
+
+                let mut namespace_selections = StatefulList::with_items(selections);
+                namespace_selections.select(0);
+                app.namespace_selections = namespace_selections;
+                app.state.is_checking_namespaces = false;
             }
         }
 

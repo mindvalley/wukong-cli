@@ -1,8 +1,8 @@
 use ratatui::{
     prelude::{Alignment, Backend},
     style::{Color, Modifier, Style},
-    text::Line,
-    widgets::{Block, Borders, Clear, List, ListItem},
+    text::{Line, Text},
+    widgets::{Block, Borders, Clear, List, ListItem, Paragraph},
     Frame,
 };
 
@@ -34,21 +34,30 @@ impl NamespaceSelectionWidget {
             .title_alignment(Alignment::Center)
             .style(Style::default().bg(Color::Black));
 
-        // Create a List from all list items and highlight the currently selected one
-        let items = List::new(items)
-            .block(popup_block)
-            .highlight_style(
-                Style::default()
-                    .fg(Color::Black)
-                    .bg(Color::LightGreen)
-                    .add_modifier(Modifier::BOLD),
-            )
-            .highlight_symbol(">> ");
-
         let area = centered_rect(60, 25, frame.size());
-
         frame.render_widget(Clear, area);
-        frame.render_stateful_widget(items, area, &mut app.namespace_selections.state);
+
+        if app.state.is_checking_namespaces {
+            let loading_widget = Paragraph::new(Text::styled(
+                "Loading...",
+                Style::default().fg(Color::White),
+            ))
+            .block(popup_block);
+            frame.render_widget(loading_widget, area);
+        } else {
+            // Create a List from all list items and highlight the currently selected one
+            let items = List::new(items)
+                .block(popup_block)
+                .highlight_style(
+                    Style::default()
+                        .fg(Color::Black)
+                        .bg(Color::LightGreen)
+                        .add_modifier(Modifier::BOLD),
+                )
+                .highlight_symbol(">> ");
+
+            frame.render_stateful_widget(items, area, &mut app.namespace_selections.state);
+        }
     }
 
     pub async fn handle_input(key: Key, app: &mut App) {

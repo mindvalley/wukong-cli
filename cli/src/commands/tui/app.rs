@@ -23,6 +23,7 @@ pub struct State {
     // loading state
     pub is_fetching_builds: bool,
     pub is_fetching_deployments: bool,
+    pub is_checking_namespaces: bool,
 
     // fetch data
     pub builds: Vec<Build>,
@@ -71,6 +72,7 @@ impl App {
                 show_namespace_selection: false,
                 is_fetching_builds: true,
                 is_fetching_deployments: true,
+                is_checking_namespaces: true,
                 builds: vec![],
                 deployments: vec![],
             },
