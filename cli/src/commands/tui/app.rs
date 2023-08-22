@@ -1,3 +1,4 @@
+use ratatui::widgets::ScrollbarState;
 use tokio::sync::mpsc::Sender;
 use wukong_sdk::services::gcloud::google::logging::v2::LogEntry;
 
@@ -31,6 +32,11 @@ pub struct State {
     pub builds: Vec<Build>,
     pub deployments: Vec<Deployment>,
     pub log_entries: Vec<LogEntry>,
+    // ui controls
+    pub logs_vertical_scroll_state: ScrollbarState,
+    pub logs_horizontal_scroll_state: ScrollbarState,
+    pub logs_vertical_scroll: usize,
+    pub logs_horizontal_scroll: usize,
 }
 
 pub struct App {
@@ -80,6 +86,11 @@ impl App {
                 builds: vec![],
                 deployments: vec![],
                 log_entries: vec![],
+
+                logs_vertical_scroll_state: ScrollbarState::default(),
+                logs_horizontal_scroll_state: ScrollbarState::default(),
+                logs_vertical_scroll: 0,
+                logs_horizontal_scroll: 0,
             },
             namespace_selections,
             current_screen: CurrentScreen::Main,
@@ -104,7 +115,51 @@ impl App {
                 AppReturn::Continue
             }
             Some(Action::Quit) => AppReturn::Exit,
-            None => AppReturn::Continue,
+            // TODO: just for prototype purpose
+            // we will need to track current selected panel to apply the event
+            None => match key {
+                Key::Up | Key::Char('k') => {
+                    self.state.logs_vertical_scroll =
+                        self.state.logs_vertical_scroll.saturating_sub(5);
+                    self.state.logs_vertical_scroll_state = self
+                        .state
+                        .logs_vertical_scroll_state
+                        .position(self.state.logs_vertical_scroll as u16);
+
+                    AppReturn::Continue
+                }
+                Key::Down | Key::Char('j') => {
+                    self.state.logs_vertical_scroll =
+                        self.state.logs_vertical_scroll.saturating_add(5);
+                    self.state.logs_vertical_scroll_state = self
+                        .state
+                        .logs_vertical_scroll_state
+                        .position(self.state.logs_vertical_scroll as u16);
+
+                    AppReturn::Continue
+                }
+                Key::Left | Key::Char('h') => {
+                    self.state.logs_horizontal_scroll =
+                        self.state.logs_horizontal_scroll.saturating_sub(5);
+                    self.state.logs_horizontal_scroll_state = self
+                        .state
+                        .logs_horizontal_scroll_state
+                        .position(self.state.logs_horizontal_scroll as u16);
+
+                    AppReturn::Continue
+                }
+                Key::Right | Key::Char('l') => {
+                    self.state.logs_horizontal_scroll =
+                        self.state.logs_horizontal_scroll.saturating_add(5);
+                    self.state.logs_horizontal_scroll_state = self
+                        .state
+                        .logs_horizontal_scroll_state
+                        .position(self.state.logs_horizontal_scroll as u16);
+
+                    AppReturn::Continue
+                }
+                _ => AppReturn::Continue,
+            },
         }
     }
 

@@ -2,7 +2,9 @@ use ratatui::{
     prelude::{Alignment, Backend, Constraint, Direction, Layout, Margin, Rect},
     style::{Color, Style},
     text::{Line, Text},
-    widgets::{Block, Borders, Padding, Paragraph},
+    widgets::{
+        Block, Borders, Padding, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState,
+    },
     Frame,
 };
 
@@ -11,7 +13,7 @@ use crate::commands::tui::app::App;
 pub struct LogsWidget;
 
 impl LogsWidget {
-    pub fn draw<B: Backend>(app: &App, frame: &mut Frame<B>, rect: Rect) {
+    pub fn draw<B: Backend>(app: &mut App, frame: &mut Frame<B>, rect: Rect) {
         let [info, logs_area] = *Layout::default()
             .direction(Direction::Vertical)
             .constraints([Constraint::Min(1), Constraint::Percentage(99)].as_ref())
@@ -41,18 +43,50 @@ impl LogsWidget {
             ))
             .block(Block::default().padding(Padding::new(1, 1, 0, 0)));
             frame.render_widget(loading_widget, logs_area);
-        } else {
-            let log_entries: Vec<Line> = app
-                .state
-                .log_entries
-                .iter()
-                .map(|log| Line::from(format!("{}", log.clone())))
-                .collect();
-
-            let widget = Paragraph::new(log_entries)
-                .block(Block::default().padding(Padding::new(1, 1, 0, 0)))
-                .style(Style::default().fg(Color::White));
-            frame.render_widget(widget, logs_area);
+            return;
         }
+
+        let log_entries: Vec<Line> = app
+            .state
+            .log_entries
+            .iter()
+            .map(|log| Line::from(format!("{}", log.clone())))
+            .collect();
+
+        app.state
+            .logs_vertical_scroll_state
+            .content_length(log_entries.len() as u16);
+
+        let widget = Paragraph::new(log_entries)
+            .block(Block::default().padding(Padding::new(1, 1, 0, 0)))
+            .style(Style::default().fg(Color::White))
+            .scroll((
+                app.state.logs_vertical_scroll as u16,
+                app.state.logs_horizontal_scroll as u16,
+            ));
+        frame.render_widget(widget, logs_area);
+
+        frame.render_stateful_widget(
+            Scrollbar::default()
+                .orientation(ScrollbarOrientation::VerticalRight)
+                .begin_symbol(Some("↑"))
+                .end_symbol(Some("↓")),
+            logs_area.inner(&Margin {
+                vertical: 3,
+                horizontal: 3,
+            }),
+            &mut app.state.logs_vertical_scroll_state,
+        );
+        frame.render_stateful_widget(
+            Scrollbar::default()
+                .orientation(ScrollbarOrientation::HorizontalBottom)
+                .begin_symbol(Some("↑"))
+                .end_symbol(Some("↓")),
+            logs_area.inner(&Margin {
+                vertical: 3,
+                horizontal: 3,
+            }),
+            &mut app.state.logs_horizontal_scroll_state,
+        );
     }
 }
