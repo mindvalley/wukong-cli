@@ -123,6 +123,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
             // fetch data on the first frame
             app.dispatch(NetworkEvent::FetchDeployments).await;
             app.dispatch(NetworkEvent::FetchBuilds).await;
+            app.dispatch(NetworkEvent::FetchGCloudLogs).await;
 
             the_first_frame = false;
         }

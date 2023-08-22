@@ -52,7 +52,7 @@ pub async fn handle_logs(
     if let Some(application_data) = application_resp {
         if let Some(cluster) = application_data.k8s_cluster {
             let filter = generate_filter(
-                version,
+                &version.to_string(),
                 &cluster.cluster_name,
                 &cluster.k8s_namespace,
                 since,
@@ -218,8 +218,8 @@ static TIMESTAMP_DAY_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\d+d$").unw
 static TIMESTAMP_HOUR_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\d+h$").unwrap());
 static TIMESTAMP_MINUTE_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\d+m$").unwrap());
 
-fn generate_filter(
-    version: &ApplicationVersion,
+pub fn generate_filter(
+    version: &str,
     cluster_name: &str,
     namespace_name: &str,
     since: &Option<String>,
@@ -255,7 +255,7 @@ fn generate_filter(
     }
 
     filter.push_str(" AND ");
-    filter.push_str(&format!("resource.labels.pod_name:{}", version.to_string()));
+    filter.push_str(&format!("resource.labels.pod_name:{}", version));
 
     Ok(filter)
 }

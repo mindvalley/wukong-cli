@@ -2,6 +2,7 @@ mod info;
 mod instances;
 mod logs;
 
+pub use self::logs::generate_filter;
 use self::logs::handle_logs;
 use clap::{command, Args, Subcommand, ValueEnum};
 
