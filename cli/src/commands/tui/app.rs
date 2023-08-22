@@ -1,4 +1,5 @@
 use tokio::sync::mpsc::Sender;
+use wukong_sdk::services::gcloud::google::logging::v2::LogEntry;
 
 use crate::config::Config;
 
@@ -24,10 +25,12 @@ pub struct State {
     pub is_fetching_builds: bool,
     pub is_fetching_deployments: bool,
     pub is_checking_namespaces: bool,
+    pub is_fetching_logs: bool,
 
     // fetch data
     pub builds: Vec<Build>,
     pub deployments: Vec<Deployment>,
+    pub log_entries: Vec<LogEntry>,
 }
 
 pub struct App {
@@ -73,8 +76,10 @@ impl App {
                 is_fetching_builds: true,
                 is_fetching_deployments: true,
                 is_checking_namespaces: true,
+                is_fetching_logs: true,
                 builds: vec![],
                 deployments: vec![],
+                log_entries: vec![],
             },
             namespace_selections,
             current_screen: CurrentScreen::Main,

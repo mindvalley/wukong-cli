@@ -16,7 +16,7 @@ impl BuildsWidget {
         let builds_block = Block::default()
             .title(" Build Artifacts ")
             .borders(Borders::ALL)
-            .padding(Padding::new(1, 1, 1, 1))
+            .padding(Padding::new(1, 1, 0, 0))
             .style(Style::default().fg(Color::LightYellow));
 
         if app.state.is_fetching_builds {

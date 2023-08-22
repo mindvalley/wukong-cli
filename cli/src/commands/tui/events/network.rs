@@ -1,11 +1,16 @@
 use std::sync::Arc;
 
 use tokio::sync::Mutex;
+use wukong_sdk::services::gcloud::LogEntriesOptions;
 
 use crate::{
-    commands::tui::{
-        app::{App, Build, Commit, Deployment},
-        StatefulList,
+    auth,
+    commands::{
+        application::generate_filter,
+        tui::{
+            app::{App, Build, Commit, Deployment},
+            StatefulList,
+        },
     },
     config::Config,
     error::WKCliError,
@@ -16,6 +21,7 @@ use crate::{
 pub enum NetworkEvent {
     FetchBuilds,
     FetchDeployments,
+    FetchGCloudLogs,
 }
 
 pub struct NetworkManager {
@@ -137,6 +143,69 @@ impl NetworkManager {
                 namespace_selections.select(0);
                 app.namespace_selections = namespace_selections;
                 app.state.is_checking_namespaces = false;
+            }
+            NetworkEvent::FetchGCloudLogs => {
+                let mut app = self.app.lock().await;
+                let application = app.state.current_application.clone();
+                let namespace = app.state.current_namespace.clone();
+                let version = "green";
+                app.state.is_fetching_logs = true;
+                drop(app);
+
+                let config = Config::load_from_default_path()?;
+                let mut wk_client = WKClient::new(&config)?;
+
+                let gcloud_access_token = auth::google_cloud::get_token_or_login().await;
+
+                let application_resp = wk_client
+                    .fetch_application_with_k8s_cluster(&application, &namespace, &version)
+                    .await?
+                    .application;
+
+                if let Some(application_data) = application_resp {
+                    if let Some(cluster) = application_data.k8s_cluster {
+                        let filter = generate_filter(
+                            version,
+                            &cluster.cluster_name,
+                            &cluster.k8s_namespace,
+                            &None,
+                            &None,
+                            &true,
+                        )?;
+                        let resource_names =
+                            vec![format!("projects/{}", cluster.google_project_id)];
+
+                        let log = wk_client
+                            .get_gcloud_log_entries(
+                                LogEntriesOptions {
+                                    resource_names: Some(resource_names),
+                                    page_size: Some(500),
+                                    filter: Some(filter),
+                                    ..Default::default()
+                                },
+                                gcloud_access_token,
+                            )
+                            .await?;
+
+                        let mut app = self.app.lock().await;
+                        app.state.log_entries = log.entries.unwrap_or_default();
+                    }
+                }
+
+                let mut app = self.app.lock().await;
+                app.state.is_fetching_logs = false;
+
+                // let log = wk_client
+                //     .get_gcloud_log_entries(
+                //         LogEntriesOptions {
+                //             resource_names: Some(resource_names),
+                //             page_size: Some(*limit),
+                //             filter: Some(filter),
+                //             ..Default::default()
+                //         },
+                //         gcloud_access_token,
+                //     )
+                //     .await?;
             }
         }
 

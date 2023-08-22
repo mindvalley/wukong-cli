@@ -24,9 +24,12 @@ impl DeploymentWidget {
                 "Loading...",
                 Style::default().fg(Color::White),
             ))
-            .block(deployments_block.padding(Padding::new(1, 1, 1, 1)));
+            .block(deployments_block.padding(Padding::new(1, 1, 0, 0)));
             frame.render_widget(loading_widget, rect);
         } else {
+            let widget = Paragraph::new(Text::raw("")).block(deployments_block);
+            frame.render_widget(widget, rect);
+
             let green_versions: Vec<&Deployment> = app
                 .state
                 .deployments
@@ -61,16 +64,13 @@ impl DeploymentWidget {
                 blue_rows = setup_rows(blue);
             }
 
-            let widget = Paragraph::new(Text::raw("")).block(deployments_block);
-            frame.render_widget(widget, rect);
-
             let green_block = Block::default()
                 .title(" Green ")
                 .borders(Borders::ALL)
                 .padding(Padding::new(1, 1, 0, 0));
             let green_widget = Table::new(green_rows)
                 .block(green_block)
-                .widths(&[Constraint::Min(20), Constraint::Min(20)])
+                .widths(&[Constraint::Min(20), Constraint::Min(40)])
                 .column_spacing(1);
             let blue_block = Block::default()
                 .title(" Blue ")
@@ -78,7 +78,7 @@ impl DeploymentWidget {
                 .padding(Padding::new(1, 1, 0, 0));
             let blue_widget = Table::new(blue_rows)
                 .block(blue_block)
-                .widths(&[Constraint::Min(20), Constraint::Min(20)])
+                .widths(&[Constraint::Min(20), Constraint::Min(40)])
                 .column_spacing(1);
 
             // if both versions are exist, split the screen
