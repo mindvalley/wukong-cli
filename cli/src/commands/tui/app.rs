@@ -19,8 +19,15 @@ pub struct State {
     pub current_application: String,
     pub current_namespace: String,
     pub show_namespace_selection: bool,
+
+    // loading state
     pub is_fetching_builds: bool,
+    pub is_fetching_deployments: bool,
+    pub is_checking_namespaces: bool,
+
+    // fetch data
     pub builds: Vec<Build>,
+    pub deployments: Vec<Deployment>,
 }
 
 pub struct App {
@@ -40,6 +47,18 @@ pub struct Commit {
     pub message_headline: String,
 }
 
+pub struct Deployment {
+    pub name: String,
+    pub environment: String,
+    pub version: String,
+    pub enabled: bool,
+    pub deployed_ref: Option<String>,
+    pub build_artifact: Option<String>,
+    pub deployed_by: Option<String>,
+    pub last_deployed_at: Option<i64>,
+    pub status: Option<String>,
+}
+
 impl App {
     pub fn new(config: &Config, sender: Sender<NetworkEvent>) -> Self {
         let mut namespace_selections =
@@ -52,7 +71,10 @@ impl App {
                 current_namespace: String::from("prod"),
                 show_namespace_selection: false,
                 is_fetching_builds: true,
+                is_fetching_deployments: true,
+                is_checking_namespaces: true,
                 builds: vec![],
+                deployments: vec![],
             },
             namespace_selections,
             current_screen: CurrentScreen::Main,

@@ -3,7 +3,10 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 use crate::{
-    commands::tui::app::{App, Build, Commit},
+    commands::tui::{
+        app::{App, Build, Commit, Deployment},
+        StatefulList,
+    },
     config::Config,
     error::WKCliError,
     wukong_client::WKClient,
@@ -12,6 +15,7 @@ use crate::{
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NetworkEvent {
     FetchBuilds,
+    FetchDeployments,
 }
 
 pub struct NetworkManager {
@@ -72,6 +76,67 @@ impl NetworkManager {
 
                 let mut app = self.app.lock().await;
                 app.state.is_fetching_builds = false;
+            }
+            NetworkEvent::FetchDeployments => {
+                let mut app = self.app.lock().await;
+                let application = app.state.current_application.clone();
+                app.state.is_fetching_deployments = true;
+                app.state.is_checking_namespaces = true;
+
+                drop(app);
+
+                let config = Config::load_from_default_path()?;
+                let mut wk_client = WKClient::new(&config)?;
+
+                let cd_pipelines_data = wk_client
+                    .fetch_cd_pipelines(&application)
+                    .await?
+                    .cd_pipelines;
+
+                let mut app = self.app.lock().await;
+                app.state.deployments = cd_pipelines_data
+                    .into_iter()
+                    .map(|pipeline| Deployment {
+                        name: pipeline.name,
+                        environment: pipeline.environment,
+                        version: pipeline.version,
+                        enabled: pipeline.enabled,
+                        deployed_ref: pipeline
+                            .deployed_ref
+                            .map(|deployed_ref| deployed_ref[..7].to_string()),
+                        build_artifact: pipeline.build_artifact,
+                        deployed_by: pipeline.deployed_by,
+                        last_deployed_at: pipeline.last_deployment,
+                        status: pipeline.status,
+                    })
+                    .collect();
+
+                app.state.is_fetching_deployments = false;
+
+                // we only know the available namespaces after the deployments is fetched
+                // so update namespace selections here
+                let has_prod_namespace = app
+                    .state
+                    .deployments
+                    .iter()
+                    .any(|pipeline| pipeline.environment == "prod");
+                let has_staging_namespace = app
+                    .state
+                    .deployments
+                    .iter()
+                    .any(|pipeline| pipeline.environment == "staging");
+                let mut selections = vec![];
+                if has_prod_namespace {
+                    selections.push(String::from("prod"));
+                }
+                if has_staging_namespace {
+                    selections.push(String::from("staging"));
+                }
+
+                let mut namespace_selections = StatefulList::with_items(selections);
+                namespace_selections.select(0);
+                app.namespace_selections = namespace_selections;
+                app.state.is_checking_namespaces = false;
             }
         }
 

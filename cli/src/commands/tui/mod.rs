@@ -121,6 +121,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
 
         if the_first_frame {
             // fetch data on the first frame
+            app.dispatch(NetworkEvent::FetchDeployments).await;
             app.dispatch(NetworkEvent::FetchBuilds).await;
 
             the_first_frame = false;
