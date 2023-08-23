@@ -1,6 +1,7 @@
 pub mod application;
 pub mod changelog;
 pub mod deployment;
+pub mod github_pipeline;
 pub mod kubernetes;
 pub mod pipeline;
 
@@ -14,6 +15,7 @@ use self::{
         cd_pipeline_for_rollback_query, cd_pipeline_query, cd_pipelines_query, execute_cd_pipeline,
         CdPipelineForRollbackQuery, CdPipelineQuery, CdPipelinesQuery, ExecuteCdPipeline,
     },
+    github_pipeline::{github_pipelines_query, GithubPipelinesQuery},
     kubernetes::{
         deploy_livebook, destroy_livebook, is_authorized_query, kubernetes_pods_query,
         livebook_resource_query, DeployLivebook, DestroyLivebook, IsAuthorizedQuery,
@@ -303,6 +305,14 @@ impl QueryClient {
         name: &str,
     ) -> Result<Response<pipeline_query::ResponseData>, APIError> {
         PipelineQuery::fetch(self, name).await
+    }
+
+    #[wukong_telemetry(api_event = "fetch_github_pipeline_list")]
+    pub async fn fetch_github_pipeline_list(
+        &mut self,
+        application: &str,
+    ) -> Result<Response<github_pipelines_query::ResponseData>, APIError> {
+        GithubPipelinesQuery::fetch(self, application).await
     }
 
     #[wukong_telemetry(api_event = "fetch_multi_branch_pipeline")]
