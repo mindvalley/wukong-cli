@@ -163,7 +163,7 @@ impl App {
         }
     }
 
-    pub async fn dispatch(&mut self, network_event: NetworkEvent) {
+    pub async fn dispatch(&self, network_event: NetworkEvent) {
         if let Err(e) = self.network_event_sender.send(network_event).await {
             println!("Error from network event: {}", e)
         }

@@ -12,7 +12,7 @@ use tokio::sync::Mutex;
 use self::{
     app::{App, AppReturn},
     events::{
-        network::{NetworkEvent, NetworkManager},
+        network::{handle_network_event, NetworkEvent},
         EventManager,
     },
 };
@@ -20,7 +20,6 @@ use self::{
 mod action;
 mod app;
 mod events;
-// mod network;
 mod ui;
 
 pub enum CurrentScreen {
@@ -91,10 +90,12 @@ pub async fn handle_tui() -> Result<bool, WKCliError> {
     let app = Arc::new(Mutex::new(App::new(&config, sender)));
     let app_ui = Arc::clone(&app);
 
-    let mut network_manager = NetworkManager::new(app.clone());
     tokio::spawn(async move {
         while let Some(network_event) = receiver.recv().await {
-            let _ = network_manager.handle_network_event(network_event).await;
+            let app = Arc::clone(&app);
+            tokio::spawn(async move {
+                let _ = handle_network_event(app, network_event).await;
+            });
         }
     });
 
