@@ -126,24 +126,6 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
             app_ref.dispatch(NetworkEvent::FetchDeployments).await;
             app_ref.dispatch(NetworkEvent::FetchBuilds).await;
 
-            // let app = Arc::clone(&app);
-            // tokio::spawn(async move {
-            //     loop {
-            //         let app_ref = app.lock().await;
-            //         // Poll every 10 seconds
-            //         let poll_interval_ms = 10_000;
-            //         let elapsed = app_ref
-            //             .state
-            //             .instant_since_last_log_entries_poll
-            //             .elapsed()
-            //             .as_millis();
-            //
-            //         if !app_ref.state.is_fetching_logs && elapsed >= poll_interval_ms {
-            //             app_ref.dispatch(NetworkEvent::FetchGCloudLogs).await;
-            //         }
-            //     }
-            // });
-
             the_first_frame = false;
         }
 

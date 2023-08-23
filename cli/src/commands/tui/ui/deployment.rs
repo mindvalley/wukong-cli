@@ -29,8 +29,7 @@ impl DeploymentWidget {
             return;
         }
 
-        let widget = Paragraph::new(Text::raw("")).block(deployments_block);
-        frame.render_widget(widget, rect);
+        frame.render_widget(deployments_block, rect);
 
         let green_versions: Vec<&Deployment> = app
             .state

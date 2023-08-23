@@ -29,7 +29,7 @@ pub struct State {
     pub is_fetching_deployments: bool,
     pub is_checking_namespaces: bool,
     pub is_fetching_log_entries: bool,
-    pub start_polling: bool,
+    pub start_polling_log_entries: bool,
 
     // fetch data
     pub builds: Vec<Build>,
@@ -89,7 +89,7 @@ impl App {
                 is_fetching_deployments: false,
                 is_checking_namespaces: false,
                 is_fetching_log_entries: false,
-                start_polling: false,
+                start_polling_log_entries: false,
                 builds: vec![],
                 deployments: vec![],
                 log_entries: vec![],
@@ -116,13 +116,19 @@ impl App {
             .elapsed()
             .as_millis();
 
-        if !self.state.start_polling || elapsed >= poll_interval_ms {
-            if !self.state.start_polling {
+        if !self.state.start_polling_log_entries || elapsed >= poll_interval_ms {
+            if !self.state.start_polling_log_entries {
                 // only to show loader on the first call
                 self.state.is_fetching_log_entries = true;
+
+                // reset scroll state, it could be triggered when user switch namespace
+                self.state.logs_vertical_scroll_state = ScrollbarState::default();
+                self.state.logs_horizontal_scroll_state = ScrollbarState::default();
+                self.state.logs_vertical_scroll = 0;
+                self.state.logs_horizontal_scroll = 0;
             }
 
-            self.state.start_polling = true;
+            self.state.start_polling_log_entries = true;
             self.state.instant_since_last_log_entries_poll = Instant::now();
             self.dispatch(NetworkEvent::FetchGCloudLogs).await;
         }

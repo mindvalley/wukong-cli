@@ -17,8 +17,7 @@ impl LogsWidget {
             .borders(Borders::ALL)
             .padding(Padding::new(1, 1, 0, 0))
             .style(Style::default().fg(Color::LightGreen));
-        let widget = Paragraph::new(Text::raw("")).block(logs_block);
-        frame.render_widget(widget, rect);
+        frame.render_widget(logs_block, rect);
 
         let [info, logs_area] = *Layout::default()
             .direction(Direction::Vertical)
@@ -63,29 +62,25 @@ impl LogsWidget {
             first_color = !first_color;
         }
 
-        app.state
+        app.state.logs_vertical_scroll_state = app
+            .state
             .logs_vertical_scroll_state
             .content_length(log_entries.len() as u16);
 
-        let widget = Paragraph::new(log_entries)
-            .block(
-                Block::default()
-                    // .borders(Borders::ALL)
-                    .padding(Padding::new(1, 1, 0, 0)),
-            )
+        let paragraph = Paragraph::new(log_entries)
+            .block(Block::default().padding(Padding::new(1, 1, 0, 0)))
             .wrap(Wrap { trim: true })
-            // .style(Style::default().fg(Color::White))
             .scroll((app.state.logs_vertical_scroll as u16, 0));
 
-        frame.render_widget(widget, logs_area);
+        frame.render_widget(paragraph, logs_area);
         frame.render_stateful_widget(
             Scrollbar::default()
                 .orientation(ScrollbarOrientation::VerticalRight)
                 .begin_symbol(Some("↑"))
                 .end_symbol(Some("↓")),
             rect.inner(&Margin {
-                vertical: 10,
-                horizontal: 0,
+                vertical: 1,
+                horizontal: 1,
             }),
             &mut app.state.logs_vertical_scroll_state,
         );

@@ -79,7 +79,7 @@ impl NamespaceSelectionWidget {
                     app.dispatch(NetworkEvent::FetchBuilds).await;
                     // to re-trigger the polling
                     app.state.is_fetching_log_entries = true;
-                    app.state.start_polling = false;
+                    app.state.start_polling_log_entries = false;
                 }
 
                 app.current_screen = CurrentScreen::Main;
