@@ -74,7 +74,10 @@ impl LogsWidget {
                 .orientation(ScrollbarOrientation::VerticalRight)
                 .begin_symbol(Some("↑"))
                 .end_symbol(Some("↓")),
-            rect,
+            rect.inner(&Margin {
+                vertical: 10,
+                horizontal: 0,
+            }),
             &mut app.state.logs_vertical_scroll_state,
         );
         // frame.render_stateful_widget(

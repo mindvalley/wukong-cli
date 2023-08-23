@@ -169,7 +169,7 @@ pub async fn handle_network_event(
                         .get_gcloud_log_entries(
                             LogEntriesOptions {
                                 resource_names: Some(resource_names),
-                                page_size: Some(100),
+                                page_size: Some(500),
                                 filter: Some(filter),
                                 ..Default::default()
                             },
@@ -180,10 +180,12 @@ pub async fn handle_network_event(
                     let mut app_ref = app.lock().await;
                     app_ref.state.log_entries = log.entries.unwrap_or_default();
                 }
+            } else {
+                let mut app_ref = app.lock().await;
+                app_ref.state.log_entries = vec![];
             }
 
             let mut app_ref = app.lock().await;
-            app_ref.state.instant_since_last_log_entries_poll = std::time::Instant::now();
             app_ref.state.is_fetching_log_entries = false;
         }
     }

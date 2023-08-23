@@ -77,6 +77,9 @@ impl NamespaceSelectionWidget {
                     app.state.current_namespace = selected;
 
                     app.dispatch(NetworkEvent::FetchBuilds).await;
+                    // to re-trigger the polling
+                    app.state.is_fetching_log_entries = true;
+                    app.state.start_polling = false;
                 }
 
                 app.current_screen = CurrentScreen::Main;

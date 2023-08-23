@@ -123,6 +123,7 @@ impl App {
             }
 
             self.state.start_polling = true;
+            self.state.instant_since_last_log_entries_poll = Instant::now();
             self.dispatch(NetworkEvent::FetchGCloudLogs).await;
         }
 
