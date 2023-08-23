@@ -2,7 +2,7 @@ use ratatui::{
     prelude::{Alignment, Backend, Constraint, Direction, Layout, Margin, Rect},
     style::{Color, Style},
     text::{Line, Text},
-    widgets::{Block, Borders, Padding, Paragraph, Scrollbar, ScrollbarOrientation},
+    widgets::{Block, Borders, Padding, Paragraph, Scrollbar, ScrollbarOrientation, Wrap},
     Frame,
 };
 
@@ -45,12 +45,23 @@ impl LogsWidget {
             return;
         }
 
-        let log_entries: Vec<Line> = app
-            .state
-            .log_entries
-            .iter()
-            .map(|log| Line::from(format!("{}", log.clone())))
-            .collect();
+        let mut log_entries = vec![];
+        let mut first_color = true;
+        for log in &app.state.log_entries {
+            if first_color {
+                log_entries.push(Line::styled(
+                    format!("{}", log),
+                    Style::default().fg(Color::White),
+                ));
+            } else {
+                log_entries.push(Line::styled(
+                    format!("{}", log),
+                    Style::default().fg(Color::LightCyan),
+                ));
+            }
+
+            first_color = !first_color;
+        }
 
         app.state
             .logs_vertical_scroll_state
@@ -62,11 +73,9 @@ impl LogsWidget {
                     // .borders(Borders::ALL)
                     .padding(Padding::new(1, 1, 0, 0)),
             )
-            .style(Style::default().fg(Color::White))
-            .scroll((
-                app.state.logs_vertical_scroll as u16,
-                app.state.logs_horizontal_scroll as u16,
-            ));
+            .wrap(Wrap { trim: true })
+            // .style(Style::default().fg(Color::White))
+            .scroll((app.state.logs_vertical_scroll as u16, 0));
 
         frame.render_widget(widget, logs_area);
         frame.render_stateful_widget(
@@ -80,16 +89,5 @@ impl LogsWidget {
             }),
             &mut app.state.logs_vertical_scroll_state,
         );
-        // frame.render_stateful_widget(
-        //     Scrollbar::default()
-        //         .orientation(ScrollbarOrientation::HorizontalBottom)
-        //         .begin_symbol(Some("↑"))
-        //         .end_symbol(Some("↓")),
-        //     logs_area.inner(&Margin {
-        //         vertical: 3,
-        //         horizontal: 3,
-        //     }),
-        //     &mut app.state.logs_horizontal_scroll_state,
-        // );
     }
 }
