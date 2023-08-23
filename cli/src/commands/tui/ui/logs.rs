@@ -2,7 +2,7 @@ use ratatui::{
     prelude::{Alignment, Backend, Constraint, Direction, Layout, Margin, Rect},
     style::{Color, Style},
     text::{Line, Text},
-    widgets::{Block, Borders, Padding, Paragraph, Scrollbar, ScrollbarOrientation, Wrap},
+    widgets::{Block, Borders, Padding, Paragraph, Wrap},
     Frame,
 };
 
@@ -73,16 +73,5 @@ impl LogsWidget {
             .scroll((app.state.logs_vertical_scroll as u16, 0));
 
         frame.render_widget(paragraph, logs_area);
-        frame.render_stateful_widget(
-            Scrollbar::default()
-                .orientation(ScrollbarOrientation::VerticalRight)
-                .begin_symbol(Some("↑"))
-                .end_symbol(Some("↓")),
-            rect.inner(&Margin {
-                vertical: 1,
-                horizontal: 1,
-            }),
-            &mut app.state.logs_vertical_scroll_state,
-        );
     }
 }
