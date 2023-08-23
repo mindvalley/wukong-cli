@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use ratatui::widgets::ScrollbarState;
 use tokio::sync::mpsc::Sender;
 use wukong_sdk::services::gcloud::google::logging::v2::LogEntry;
@@ -26,7 +28,8 @@ pub struct State {
     pub is_fetching_builds: bool,
     pub is_fetching_deployments: bool,
     pub is_checking_namespaces: bool,
-    pub is_fetching_logs: bool,
+    pub is_fetching_log_entries: bool,
+    pub start_polling: bool,
 
     // fetch data
     pub builds: Vec<Build>,
@@ -37,6 +40,9 @@ pub struct State {
     pub logs_horizontal_scroll_state: ScrollbarState,
     pub logs_vertical_scroll: usize,
     pub logs_horizontal_scroll: usize,
+
+    // For log entries polling
+    pub instant_since_last_log_entries_poll: Instant,
 }
 
 pub struct App {
@@ -79,10 +85,11 @@ impl App {
                 current_application: config.core.application.clone(),
                 current_namespace: String::from("prod"),
                 show_namespace_selection: false,
-                is_fetching_builds: true,
-                is_fetching_deployments: true,
-                is_checking_namespaces: true,
-                is_fetching_logs: true,
+                is_fetching_builds: false,
+                is_fetching_deployments: false,
+                is_checking_namespaces: false,
+                is_fetching_log_entries: false,
+                start_polling: false,
                 builds: vec![],
                 deployments: vec![],
                 log_entries: vec![],
@@ -91,6 +98,7 @@ impl App {
                 logs_horizontal_scroll_state: ScrollbarState::default(),
                 logs_vertical_scroll: 0,
                 logs_horizontal_scroll: 0,
+                instant_since_last_log_entries_poll: Instant::now(),
             },
             namespace_selections,
             current_screen: CurrentScreen::Main,
@@ -99,7 +107,25 @@ impl App {
         }
     }
 
-    pub fn update(&mut self) -> AppReturn {
+    pub async fn update(&mut self) -> AppReturn {
+        // Poll every 10 seconds
+        let poll_interval_ms = 10_000;
+        let elapsed = self
+            .state
+            .instant_since_last_log_entries_poll
+            .elapsed()
+            .as_millis();
+
+        if !self.state.start_polling || elapsed >= poll_interval_ms {
+            if !self.state.start_polling {
+                // only to show loader on the first call
+                self.state.is_fetching_log_entries = true;
+            }
+
+            self.state.start_polling = true;
+            self.dispatch(NetworkEvent::FetchGCloudLogs).await;
+        }
+
         AppReturn::Continue
     }
 

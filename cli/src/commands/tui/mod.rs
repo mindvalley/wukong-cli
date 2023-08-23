@@ -111,6 +111,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
 
     let mut terminal = Terminal::new(CrosstermBackend::new(stdout))?;
 
+    // The lower the tick_rate, the higher the FPS, but also the higher the CPU usage.
     let tick_rate = Duration::from_millis(200);
     let event_manager = EventManager::new();
     event_manager.spawn_event_listen_thread(tick_rate);
@@ -118,22 +119,39 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
     let mut the_first_frame = true;
 
     loop {
-        let mut app = app.lock().await;
+        let mut app_ref = app.lock().await;
 
         if the_first_frame {
             // fetch data on the first frame
-            app.dispatch(NetworkEvent::FetchDeployments).await;
-            app.dispatch(NetworkEvent::FetchBuilds).await;
-            app.dispatch(NetworkEvent::FetchGCloudLogs).await;
+            app_ref.dispatch(NetworkEvent::FetchDeployments).await;
+            app_ref.dispatch(NetworkEvent::FetchBuilds).await;
+
+            // let app = Arc::clone(&app);
+            // tokio::spawn(async move {
+            //     loop {
+            //         let app_ref = app.lock().await;
+            //         // Poll every 10 seconds
+            //         let poll_interval_ms = 10_000;
+            //         let elapsed = app_ref
+            //             .state
+            //             .instant_since_last_log_entries_poll
+            //             .elapsed()
+            //             .as_millis();
+            //
+            //         if !app_ref.state.is_fetching_logs && elapsed >= poll_interval_ms {
+            //             app_ref.dispatch(NetworkEvent::FetchGCloudLogs).await;
+            //         }
+            //     }
+            // });
 
             the_first_frame = false;
         }
 
-        terminal.draw(|frame| ui::draw(frame, &mut app))?;
+        terminal.draw(|frame| ui::draw(frame, &mut app_ref))?;
 
         let result = match event_manager.next().unwrap() {
-            events::Event::Input(key) => app.handle_input(key).await,
-            events::Event::Tick => app.update(),
+            events::Event::Input(key) => app_ref.handle_input(key).await,
+            events::Event::Tick => app_ref.update().await,
         };
 
         if result == AppReturn::Exit {

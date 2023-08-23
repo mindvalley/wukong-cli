@@ -17,6 +17,7 @@ use crate::{
     wukong_client::WKClient,
 };
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NetworkEvent {
     FetchBuilds,
@@ -136,11 +137,10 @@ pub async fn handle_network_event(
             app_ref.state.is_checking_namespaces = false;
         }
         NetworkEvent::FetchGCloudLogs => {
-            let mut app_ref = app.lock().await;
+            let app_ref = app.lock().await;
             let application = app_ref.state.current_application.clone();
             let namespace = app_ref.state.current_namespace.clone();
             let version = "green";
-            app_ref.state.is_fetching_logs = true;
             drop(app_ref);
 
             let config = Config::load_from_default_path()?;
@@ -183,7 +183,8 @@ pub async fn handle_network_event(
             }
 
             let mut app_ref = app.lock().await;
-            app_ref.state.is_fetching_logs = false;
+            app_ref.state.instant_since_last_log_entries_poll = std::time::Instant::now();
+            app_ref.state.is_fetching_log_entries = false;
         }
     }
 
