@@ -28,7 +28,7 @@ pub async fn handle_list(context: Context) -> Result<bool, CliError> {
     let github_pipelines = get_github_pipelines(&mut client, &application).await?;
 
     if github_pipelines.is_empty() {
-        let jenkins_pipelines = get_jenkins_pipeline(&mut client, &application).await?;
+        let jenkins_pipelines = get_jenkins_pipelines(&mut client, &application).await?;
         pipelines.extend(jenkins_pipelines);
     } else {
         pipelines.extend(github_pipelines);
@@ -87,7 +87,7 @@ async fn get_github_pipelines(
     Ok(pipelines)
 }
 
-async fn get_jenkins_pipeline(
+async fn get_jenkins_pipelines(
     client: &mut QueryClient,
     application: &str,
 ) -> Result<Vec<PipelineData>, CliError> {
