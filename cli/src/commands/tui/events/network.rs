@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use tokio::sync::Mutex;
-use wukong_sdk::services::gcloud::{LogEntries, LogEntriesOptions};
+use wukong_sdk::services::gcloud::{google::logging::v2::LogEntry, LogEntries, LogEntriesOptions};
 
 use crate::{
     auth,
@@ -179,39 +179,11 @@ pub async fn handle_network_event(
                         &mut wk_client,
                     )
                     .await?;
-                    let mut app_ref = app.lock().await;
-                    if !app_ref.state.log_entries.is_empty() {
-                        app_ref
-                            .state
-                            .log_entries
-                            .extend(log.entries.clone().unwrap_or_default());
-                    } else {
-                        app_ref.state.log_entries = log.entries.clone().unwrap_or_default();
-                    }
-                    drop(app_ref);
+                    let mut next_page_token = log.next_page_token.clone();
+                    update_logs_entries(Arc::clone(&app), log.entries).await;
 
                     let app = Arc::clone(&app);
-                    loop {
-                        if log.next_page_token.is_none()
-                            || log.next_page_token == Some("".to_string())
-                        {
-                            let mut app_ref = app.lock().await;
-                            if let Some(entries) = log.entries {
-                                if !entries.is_empty() {
-                                    app_ref.state.last_log_entry_timestamp = Some(
-                                        entries
-                                            .last()
-                                            .unwrap()
-                                            .timestamp
-                                            .clone()
-                                            .unwrap_or_default()
-                                            .to_string(),
-                                    );
-                                }
-                            }
-                            break;
-                        }
-
+                    while next_page_token.is_some() && next_page_token != Some("".to_string()) {
                         log = fetch_log_entries(
                             Some(resource_names.clone()),
                             Some(500),
@@ -223,10 +195,10 @@ pub async fn handle_network_event(
                         .await
                         .unwrap();
 
-                        let mut app_ref = app.lock().await;
-                        if let Some(entries) = log.entries.clone() {
-                            app_ref.state.log_entries.extend(entries);
-                        }
+                        // update next_page_token value
+                        next_page_token = log.next_page_token.clone();
+
+                        update_logs_entries(Arc::clone(&app), log.entries).await;
                     }
                 }
             } else {
@@ -263,4 +235,37 @@ async fn fetch_log_entries(
             gcloud_access_token,
         )
         .await
+}
+
+async fn update_logs_entries(app: Arc<Mutex<App>>, log_entries: Option<Vec<LogEntry>>) {
+    if let Some(entries) = log_entries {
+        if !entries.is_empty() {
+            let mut app_ref = app.lock().await;
+
+            app_ref.state.last_log_entry_timestamp = Some(
+                entries
+                    .last()
+                    .unwrap()
+                    .timestamp
+                    .clone()
+                    .unwrap_or_default()
+                    .to_string(),
+            );
+
+            entries.into_iter().for_each(|entry| {
+                if app_ref
+                    .state
+                    .log_entries_hash_map
+                    .get(&entry.insert_id)
+                    .is_none()
+                {
+                    app_ref.state.log_entries_ids.push(entry.insert_id.clone());
+                    app_ref
+                        .state
+                        .log_entries_hash_map
+                        .insert(entry.insert_id.clone(), entry);
+                }
+            });
+        }
+    }
 }

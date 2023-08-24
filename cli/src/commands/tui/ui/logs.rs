@@ -30,7 +30,7 @@ impl LogsWidget {
         let title = Block::default()
             .title(format!(
                 "Use arrow keys or h j k l to scroll ◄ ▲ ▼ ►. Total {} logs.",
-                app.state.log_entries.len()
+                app.state.log_entries_ids.len()
             ))
             .title_alignment(Alignment::Center)
             .style(Style::default().fg(Color::DarkGray));
@@ -49,21 +49,38 @@ impl LogsWidget {
 
         let mut log_entries = vec![];
         let mut first_color = true;
-        for log in &app.state.log_entries {
-            if first_color {
-                log_entries.push(Line::styled(
-                    format!("{}", log),
-                    Style::default().fg(Color::White),
-                ));
-            } else {
-                log_entries.push(Line::styled(
-                    format!("{}", log),
-                    Style::default().fg(Color::LightCyan),
-                ));
-            }
+        for id in &app.state.log_entries_ids {
+            if let Some(log) = app.state.log_entries_hash_map.get(id) {
+                if first_color {
+                    log_entries.push(Line::styled(
+                        format!("{}", log),
+                        Style::default().fg(Color::White),
+                    ));
+                } else {
+                    log_entries.push(Line::styled(
+                        format!("{}", log),
+                        Style::default().fg(Color::LightCyan),
+                    ));
+                }
 
-            first_color = !first_color;
+                first_color = !first_color;
+            }
         }
+        // for log in &app.state.log_entries {
+        //     if first_color {
+        //         log_entries.push(Line::styled(
+        //             format!("{}", log),
+        //             Style::default().fg(Color::White),
+        //         ));
+        //     } else {
+        //         log_entries.push(Line::styled(
+        //             format!("{}", log),
+        //             Style::default().fg(Color::LightCyan),
+        //         ));
+        //     }
+        //
+        //     first_color = !first_color;
+        // }
 
         app.state.logs_vertical_scroll_state = app
             .state

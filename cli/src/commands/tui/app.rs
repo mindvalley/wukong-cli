@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::{collections::HashMap, time::Instant};
 
 use ratatui::widgets::ScrollbarState;
 use tokio::sync::mpsc::Sender;
@@ -35,6 +35,8 @@ pub struct State {
     pub builds: Vec<Build>,
     pub deployments: Vec<Deployment>,
     pub log_entries: Vec<LogEntry>,
+    pub log_entries_hash_map: HashMap<String, LogEntry>,
+    pub log_entries_ids: Vec<String>,
     // pub log_entries_next_page_token: Option<String>,
     pub last_log_entry_timestamp: Option<String>,
     // ui controls
@@ -96,6 +98,8 @@ impl App {
                 deployments: vec![],
                 log_entries: vec![],
                 last_log_entry_timestamp: None,
+                log_entries_hash_map: HashMap::new(),
+                log_entries_ids: vec![],
 
                 logs_vertical_scroll_state: ScrollbarState::default(),
                 logs_horizontal_scroll_state: ScrollbarState::default(),
