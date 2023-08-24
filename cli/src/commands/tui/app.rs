@@ -35,6 +35,8 @@ pub struct State {
     pub builds: Vec<Build>,
     pub deployments: Vec<Deployment>,
     pub log_entries: Vec<LogEntry>,
+    // pub log_entries_next_page_token: Option<String>,
+    pub last_log_entry_timestamp: Option<String>,
     // ui controls
     pub logs_vertical_scroll_state: ScrollbarState,
     pub logs_horizontal_scroll_state: ScrollbarState,
@@ -93,6 +95,7 @@ impl App {
                 builds: vec![],
                 deployments: vec![],
                 log_entries: vec![],
+                last_log_entry_timestamp: None,
 
                 logs_vertical_scroll_state: ScrollbarState::default(),
                 logs_horizontal_scroll_state: ScrollbarState::default(),
@@ -110,6 +113,7 @@ impl App {
     pub async fn update(&mut self) -> AppReturn {
         // Poll every 10 seconds
         let poll_interval_ms = 10_000;
+        // let poll_interval_ms = 100000_000;
         let elapsed = self
             .state
             .instant_since_last_log_entries_poll

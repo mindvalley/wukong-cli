@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use tokio::sync::Mutex;
-use wukong_sdk::services::gcloud::LogEntriesOptions;
+use wukong_sdk::services::gcloud::{LogEntries, LogEntriesOptions};
 
 use crate::{
     auth,
@@ -141,6 +141,11 @@ pub async fn handle_network_event(
             let application = app_ref.state.current_application.clone();
             let namespace = app_ref.state.current_namespace.clone();
             let version = "green";
+            let since = match app_ref.state.last_log_entry_timestamp.clone() {
+                Some(t) => Some(t),
+                None => Some("1m".to_string()),
+            };
+
             drop(app_ref);
 
             let config = Config::load_from_default_path()?;
@@ -159,26 +164,70 @@ pub async fn handle_network_event(
                         version,
                         &cluster.cluster_name,
                         &cluster.k8s_namespace,
-                        &None,
+                        &since,
                         &None,
                         &true,
                     )?;
                     let resource_names = vec![format!("projects/{}", cluster.google_project_id)];
 
-                    let log = wk_client
-                        .get_gcloud_log_entries(
-                            LogEntriesOptions {
-                                resource_names: Some(resource_names),
-                                page_size: Some(500),
-                                filter: Some(filter),
-                                ..Default::default()
-                            },
-                            gcloud_access_token,
-                        )
-                        .await?;
-
+                    let mut log = fetch_log_entries(
+                        Some(resource_names.clone()),
+                        Some(500),
+                        Some(filter.clone()),
+                        None,
+                        gcloud_access_token.clone(),
+                        &mut wk_client,
+                    )
+                    .await?;
                     let mut app_ref = app.lock().await;
-                    app_ref.state.log_entries = log.entries.unwrap_or_default();
+                    if !app_ref.state.log_entries.is_empty() {
+                        app_ref
+                            .state
+                            .log_entries
+                            .extend(log.entries.clone().unwrap_or_default());
+                    } else {
+                        app_ref.state.log_entries = log.entries.clone().unwrap_or_default();
+                    }
+                    drop(app_ref);
+
+                    let app = Arc::clone(&app);
+                    loop {
+                        if log.next_page_token.is_none()
+                            || log.next_page_token == Some("".to_string())
+                        {
+                            let mut app_ref = app.lock().await;
+                            if let Some(entries) = log.entries {
+                                if !entries.is_empty() {
+                                    app_ref.state.last_log_entry_timestamp = Some(
+                                        entries
+                                            .last()
+                                            .unwrap()
+                                            .timestamp
+                                            .clone()
+                                            .unwrap_or_default()
+                                            .to_string(),
+                                    );
+                                }
+                            }
+                            break;
+                        }
+
+                        log = fetch_log_entries(
+                            Some(resource_names.clone()),
+                            Some(500),
+                            Some(filter.clone()),
+                            log.next_page_token.clone(),
+                            gcloud_access_token.clone(),
+                            &mut wk_client,
+                        )
+                        .await
+                        .unwrap();
+
+                        let mut app_ref = app.lock().await;
+                        if let Some(entries) = log.entries.clone() {
+                            app_ref.state.log_entries.extend(entries);
+                        }
+                    }
                 }
             } else {
                 let mut app_ref = app.lock().await;
@@ -191,4 +240,27 @@ pub async fn handle_network_event(
     }
 
     Ok(())
+}
+
+async fn fetch_log_entries(
+    resource_names: Option<Vec<String>>,
+    page_size: Option<i32>,
+    filter: Option<String>,
+    page_token: Option<String>,
+    gcloud_access_token: String,
+    wk_client: &mut WKClient,
+) -> Result<LogEntries, WKCliError> {
+    wk_client
+        .get_gcloud_log_entries(
+            LogEntriesOptions {
+                resource_names,
+                page_size,
+                filter,
+                page_token,
+                // order_by: todo!(),
+                ..Default::default()
+            },
+            gcloud_access_token,
+        )
+        .await
 }
