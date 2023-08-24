@@ -226,7 +226,6 @@ async fn fetch_log_entries(
                 page_size,
                 filter,
                 page_token,
-                // order_by: todo!(),
                 ..Default::default()
             },
             gcloud_access_token,

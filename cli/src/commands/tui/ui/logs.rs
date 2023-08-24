@@ -66,21 +66,6 @@ impl LogsWidget {
                 first_color = !first_color;
             }
         }
-        // for log in &app.state.log_entries {
-        //     if first_color {
-        //         log_entries.push(Line::styled(
-        //             format!("{}", log),
-        //             Style::default().fg(Color::White),
-        //         ));
-        //     } else {
-        //         log_entries.push(Line::styled(
-        //             format!("{}", log),
-        //             Style::default().fg(Color::LightCyan),
-        //         ));
-        //     }
-        //
-        //     first_color = !first_color;
-        // }
 
         app.state.logs_vertical_scroll_state = app
             .state
