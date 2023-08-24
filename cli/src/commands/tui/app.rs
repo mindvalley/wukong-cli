@@ -34,7 +34,6 @@ pub struct State {
     // fetch data
     pub builds: Vec<Build>,
     pub deployments: Vec<Deployment>,
-    pub log_entries: Vec<LogEntry>,
     pub log_entries_hash_map: HashMap<String, LogEntry>,
     pub log_entries_ids: Vec<String>,
     // pub log_entries_next_page_token: Option<String>,
@@ -96,7 +95,6 @@ impl App {
                 start_polling_log_entries: false,
                 builds: vec![],
                 deployments: vec![],
-                log_entries: vec![],
                 last_log_entry_timestamp: None,
                 log_entries_hash_map: HashMap::new(),
                 log_entries_ids: vec![],

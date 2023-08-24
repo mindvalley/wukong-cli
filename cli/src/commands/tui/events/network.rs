@@ -201,9 +201,6 @@ pub async fn handle_network_event(
                         update_logs_entries(Arc::clone(&app), log.entries).await;
                     }
                 }
-            } else {
-                let mut app_ref = app.lock().await;
-                app_ref.state.log_entries = vec![];
             }
 
             let mut app_ref = app.lock().await;
