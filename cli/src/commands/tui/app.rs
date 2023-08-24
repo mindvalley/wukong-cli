@@ -43,9 +43,14 @@ pub struct State {
     pub logs_horizontal_scroll_state: ScrollbarState,
     pub logs_vertical_scroll: usize,
     pub logs_horizontal_scroll: usize,
+    pub logs_enable_auto_scroll_to_bottom: bool,
 
     // For log entries polling
     pub instant_since_last_log_entries_poll: Instant,
+
+    // ui state
+    pub logs_widget_height: u16,
+    pub logs_widget_width: u16,
 }
 
 pub struct App {
@@ -93,6 +98,8 @@ impl App {
                 is_checking_namespaces: false,
                 is_fetching_log_entries: false,
                 start_polling_log_entries: false,
+                logs_enable_auto_scroll_to_bottom: true,
+
                 builds: vec![],
                 deployments: vec![],
                 last_log_entry_timestamp: None,
@@ -104,6 +111,9 @@ impl App {
                 logs_vertical_scroll: 0,
                 logs_horizontal_scroll: 0,
                 instant_since_last_log_entries_poll: Instant::now(),
+
+                logs_widget_width: 0,
+                logs_widget_height: 0,
             },
             namespace_selections,
             current_screen: CurrentScreen::Main,
@@ -164,6 +174,8 @@ impl App {
                         .logs_vertical_scroll_state
                         .position(self.state.logs_vertical_scroll as u16);
 
+                    self.state.logs_enable_auto_scroll_to_bottom = false;
+
                     AppReturn::Continue
                 }
                 Key::Down | Key::Char('j') => {
@@ -173,6 +185,8 @@ impl App {
                         .state
                         .logs_vertical_scroll_state
                         .position(self.state.logs_vertical_scroll as u16);
+
+                    self.state.logs_enable_auto_scroll_to_bottom = false;
 
                     AppReturn::Continue
                 }
@@ -184,6 +198,8 @@ impl App {
                         .logs_horizontal_scroll_state
                         .position(self.state.logs_horizontal_scroll as u16);
 
+                    self.state.logs_enable_auto_scroll_to_bottom = false;
+
                     AppReturn::Continue
                 }
                 Key::Right | Key::Char('l') => {
@@ -193,6 +209,8 @@ impl App {
                         .state
                         .logs_horizontal_scroll_state
                         .position(self.state.logs_horizontal_scroll as u16);
+
+                    self.state.logs_enable_auto_scroll_to_bottom = false;
 
                     AppReturn::Continue
                 }

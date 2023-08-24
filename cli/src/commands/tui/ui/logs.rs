@@ -2,7 +2,7 @@ use ratatui::{
     prelude::{Alignment, Backend, Constraint, Direction, Layout, Margin, Rect},
     style::{Color, Style},
     text::{Line, Text},
-    widgets::{Block, Borders, Padding, Paragraph, Wrap},
+    widgets::{Block, Borders, Padding, Paragraph, Scrollbar, ScrollbarOrientation},
     Frame,
 };
 
@@ -12,6 +12,9 @@ pub struct LogsWidget;
 
 impl LogsWidget {
     pub fn draw<B: Backend>(app: &mut App, frame: &mut Frame<B>, rect: Rect) {
+        app.state.logs_widget_width = rect.width;
+        app.state.logs_widget_height = rect.height;
+
         let logs_block = Block::default()
             .title(" Logs ")
             .borders(Borders::ALL)
@@ -74,9 +77,26 @@ impl LogsWidget {
 
         let paragraph = Paragraph::new(log_entries)
             .block(Block::default().padding(Padding::new(1, 1, 0, 0)))
-            .wrap(Wrap { trim: true })
-            .scroll((app.state.logs_vertical_scroll as u16, 0));
+            // we can't use wrap if we want to scroll to bottom
+            // because we don't know the state of the render
+            // waiting this https://github.com/ratatui-org/ratatui/issues/136
+            // .wrap(Wrap { trim: true })
+            .scroll((
+                app.state.logs_vertical_scroll as u16,
+                app.state.logs_horizontal_scroll as u16,
+            ));
 
         frame.render_widget(paragraph, logs_area);
+        frame.render_stateful_widget(
+            Scrollbar::default()
+                .orientation(ScrollbarOrientation::VerticalRight)
+                .begin_symbol(None)
+                .end_symbol(None),
+            logs_area.inner(&Margin {
+                vertical: 1,
+                horizontal: 0,
+            }),
+            &mut app.state.logs_vertical_scroll_state,
+        );
     }
 }
