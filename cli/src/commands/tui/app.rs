@@ -115,7 +115,6 @@ impl App {
     pub async fn update(&mut self) -> AppReturn {
         // Poll every 10 seconds
         let poll_interval_ms = 10_000;
-        // let poll_interval_ms = 100000_000;
         let elapsed = self
             .state
             .instant_since_last_log_entries_poll
