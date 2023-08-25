@@ -15,7 +15,10 @@ use self::{
         cd_pipeline_for_rollback_query, cd_pipeline_query, cd_pipelines_query, execute_cd_pipeline,
         CdPipelineForRollbackQuery, CdPipelineQuery, CdPipelinesQuery, ExecuteCdPipeline,
     },
-    github_pipeline::{github_pipelines_query, GithubPipelinesQuery},
+    github_pipeline::{
+        github_cd_pipeline_query, github_pipelines_query, GithubCdPipelineQuery,
+        GithubPipelinesQuery,
+    },
     kubernetes::{
         deploy_livebook, destroy_livebook, is_authorized_query, kubernetes_pods_query,
         livebook_resource_query, DeployLivebook, DestroyLivebook, IsAuthorizedQuery,
@@ -373,6 +376,16 @@ impl QueryClient {
         version: &str,
     ) -> Result<Response<cd_pipeline_query::ResponseData>, APIError> {
         CdPipelineQuery::fetch(self, application, namespace, version).await
+    }
+
+    #[wukong_telemetry(api_event = "fetch_github_cd_pipeline")]
+    pub async fn fetch_github_cd_pipeline(
+        &mut self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<Response<github_cd_pipeline_query::ResponseData>, APIError> {
+        GithubCdPipelineQuery::fetch(self, application, namespace, version).await
     }
 
     #[wukong_telemetry(api_event = "fetch_cd_pipeline_for_rollback")]
