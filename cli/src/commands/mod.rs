@@ -44,7 +44,7 @@ pub struct ClapApp {
     pub verbose: Verbosity<ErrorLevel>,
 
     /// Use the Canary channel API
-    #[arg(long)]
+    #[arg(long, global = true)]
     canary: bool,
 }
 
