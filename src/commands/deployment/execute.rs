@@ -394,9 +394,26 @@ pub async fn handle_execute(
             &selected_namespace.to_lowercase(),
             &selected_version.to_lowercase(),
         )
-        .await?;
+        .await;
 
-        if github_cd_pipeline.is_none() {
+        if github_cd_pipeline.is_ok() {
+            let github_cd_pipeline_cd = github_cd_pipeline.unwrap();
+
+            if github_cd_pipeline_cd.is_none() {
+                let jenkins_cd_pipeline = get_jenkins_cd_pipeline(
+                    &mut client,
+                    &current_application,
+                    &selected_namespace.to_lowercase(),
+                    &selected_version.to_lowercase(),
+                )
+                .await?;
+
+                cd_pipeline_data = jenkins_cd_pipeline;
+                pipeline_type = PipelineType::Jenkins;
+            } else {
+                cd_pipeline_data = github_cd_pipeline_cd;
+            }
+        } else {
             let jenkins_cd_pipeline = get_jenkins_cd_pipeline(
                 &mut client,
                 &current_application,
@@ -407,8 +424,6 @@ pub async fn handle_execute(
 
             cd_pipeline_data = jenkins_cd_pipeline;
             pipeline_type = PipelineType::Jenkins;
-        } else {
-            cd_pipeline_data = github_cd_pipeline;
         }
 
         selected_build = match cd_pipeline_data {
@@ -429,12 +444,15 @@ pub async fn handle_execute(
                         }
                     } else {
                         BuildSelectionLayout::TwoColumns {
-                            data: generate_two_columns_build_selection(&cd_pipeline),
+                            data: generate_two_columns_build_selection(
+                                &pipeline_type,
+                                &cd_pipeline,
+                            ),
                         }
                     }
                 } else {
                     BuildSelectionLayout::TwoColumns {
-                        data: generate_two_columns_build_selection(&cd_pipeline),
+                        data: generate_two_columns_build_selection(&pipeline_type, &cd_pipeline),
                     }
                 };
 
@@ -708,35 +726,63 @@ fn generate_three_columns_build_selection(
     build_selection
 }
 
-fn generate_two_columns_build_selection(cd_pipeline: &CdPipelineWithBuilds) -> Vec<TwoColumns> {
+fn generate_two_columns_build_selection(
+    pipeline_type: &PipelineType,
+    cd_pipeline: &CdPipelineWithBuilds,
+) -> Vec<TwoColumns> {
     let mut width = 0;
 
-    let mut two_columns: Vec<TwoColumns> = cd_pipeline
-        .github_builds
-        .iter()
-        .map(|build| {
-            let commits: Vec<String> = build
-                .commits
-                .iter()
-                .map(|commit| commit.message_headline.clone())
-                .collect();
+    let mut two_columns: Vec<TwoColumns> = match pipeline_type {
+        PipelineType::Github => cd_pipeline
+            .github_builds
+            .iter()
+            .map(|build| {
+                let commits: Vec<String> = build
+                    .commits
+                    .iter()
+                    .map(|commit| commit.message_headline.clone())
+                    .collect();
 
-            let build_artifact_name = build.build_artifact_name.clone();
-            if build_artifact_name.len() > width {
-                width = build_artifact_name.len();
-            }
+                let build_artifact_name = build.build_artifact_name.clone();
+                if build_artifact_name.len() > width {
+                    width = build_artifact_name.len();
+                }
 
-            TwoColumns {
-                left: build_artifact_name,
-                right: commits,
-                left_width: 0,
-            }
-        })
-        .collect();
+                TwoColumns {
+                    left: build_artifact_name,
+                    right: commits,
+                    left_width: 0,
+                }
+            })
+            .collect(),
+        PipelineType::Jenkins => cd_pipeline
+            .jenkins_builds
+            .iter()
+            .map(|build| {
+                let commits: Vec<String> = build
+                    .commits
+                    .iter()
+                    .map(|commit| commit.message_headline.clone())
+                    .collect();
+
+                let build_artifact_name = build.build_artifact_name.clone();
+                if build_artifact_name.len() > width {
+                    width = build_artifact_name.len();
+                }
+
+                TwoColumns {
+                    left: build_artifact_name,
+                    right: commits,
+                    left_width: 0,
+                }
+            })
+            .collect(),
+    };
 
     two_columns
         .iter_mut()
         .for_each(|each| each.left_width = width);
+
     two_columns
 }
 
