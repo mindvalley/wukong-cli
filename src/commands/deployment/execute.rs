@@ -404,6 +404,7 @@ pub async fn handle_execute(
                 &selected_version.to_lowercase(),
             )
             .await?;
+
             cd_pipeline_data = jenkins_cd_pipeline;
             pipeline_type = PipelineType::Jenkins;
         } else {
