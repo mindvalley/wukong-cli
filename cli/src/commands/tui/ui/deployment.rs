@@ -86,7 +86,10 @@ impl DeploymentWidget {
                 let [top, bottom] = *Layout::default()
                     .direction(Direction::Vertical)
                     .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
-                    .split(rect.inner(&Margin { vertical: 1, horizontal: 1 }))
+                    .split(rect.inner(&Margin {
+                        vertical: 1,
+                        horizontal: 1,
+                    }))
                 else {
                     return;
                 };
