@@ -36,7 +36,7 @@ pub struct ExecuteCdPipeline;
 mod test {
     use crate::{
         error::{APIError, WKError},
-        WKClient, WKConfig,
+        ApiChannel, WKClient, WKConfig,
     };
 
     use base64::Engine;
@@ -46,6 +46,7 @@ mod test {
         WKClient::new(WKConfig {
             api_url: api_url.to_string(),
             access_token: "test_access_token".to_string(),
+            channel: ApiChannel::Stable,
         })
     }
 

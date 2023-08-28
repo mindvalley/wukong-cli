@@ -42,7 +42,7 @@ pub async fn handle_config_pull(context: Context, path: &Path) -> Result<bool, W
     let extracted_infos = extract_secret_infos(secret_config_files)?;
 
     let mut config = Config::load_from_default_path()?;
-    let wk_client = WKClient::new(&config)?;
+    let wk_client = WKClient::for_channel(&config, &context.channel)?;
     let vault_token = vault::get_token_or_login(&mut config).await?;
 
     let mut has_error = false;

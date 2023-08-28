@@ -1,4 +1,8 @@
-use crate::{auth, config::Config, error::WKCliError};
+use crate::{
+    auth,
+    config::{self, ApiChannel, Config},
+    error::WKCliError,
+};
 use log::debug;
 use std::collections::HashMap;
 use wukong_sdk::{
@@ -27,14 +31,27 @@ pub struct WKClient {
     config: Config,
 }
 
+impl From<config::ApiChannel> for wukong_sdk::ApiChannel {
+    fn from(channel: config::ApiChannel) -> Self {
+        match channel {
+            config::ApiChannel::Canary => wukong_sdk::ApiChannel::Canary,
+            config::ApiChannel::Stable => wukong_sdk::ApiChannel::Stable,
+        }
+    }
+}
 impl WKClient {
     pub fn new(config: &Config) -> Result<Self, WKCliError> {
+        Self::for_channel(config, &config.core.channel)
+    }
+
+    pub fn for_channel(config: &Config, channel: &ApiChannel) -> Result<Self, WKCliError> {
         let auth_config = config.auth.as_ref().ok_or(WKCliError::UnAuthenticated)?;
 
         Ok(Self {
             inner: WKSdkClient::new(WKConfig {
                 api_url: config.core.wukong_api_url.clone(),
                 access_token: auth_config.id_token.clone(),
+                channel: channel.clone().into(),
             }),
             sub: auth_config.subject.clone(),
             config: config.clone(),

@@ -7,7 +7,7 @@ use crate::{
     commands::{
         completion::handle_completion, init::handle_init, login::handle_login, tui::handle_tui,
     },
-    config::Config,
+    config::{ApiChannel, Config},
     error::WKCliError,
 };
 
@@ -23,8 +23,9 @@ mod tui;
 
 #[derive(Debug, Default)]
 pub struct Context {
-    current_application: String,
-    sub: Option<String>,
+    pub current_application: String,
+    pub sub: Option<String>,
+    pub channel: ApiChannel,
 }
 
 /// A Swiss-army Knife CLI For Mindvalley Developers
@@ -41,6 +42,10 @@ pub struct ClapApp {
 
     #[command(flatten)]
     pub verbose: Verbosity<ErrorLevel>,
+
+    /// Use the Canary channel API
+    #[arg(long)]
+    canary: bool,
 }
 
 #[derive(Debug)]
@@ -130,6 +135,14 @@ fn get_context(clap_app: &ClapApp) -> Result<Context, WKCliError> {
             }
         },
         sub: config.auth.map(|auth_config| auth_config.subject),
+        // if the `--canary` flag is used, then the CLI will use the Canary channel API,
+        // otherwise, use whatever channel is configured in the config file
+        channel: if clap_app.canary {
+            ApiChannel::Canary
+        } else {
+            let config = Config::load_from_default_path()?;
+            config.core.channel
+        },
     };
 
     Ok(context)
