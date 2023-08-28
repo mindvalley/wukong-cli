@@ -410,8 +410,6 @@ pub async fn handle_execute(
             cd_pipeline_data = github_cd_pipeline;
         }
 
-        println!("cd_pipeline_data: {:?}", cd_pipeline_data);
-
         selected_build = match cd_pipeline_data {
             Some(cd_pipeline) => {
                 let build_selections = if let Some(build_artifact) =
