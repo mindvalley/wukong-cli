@@ -165,7 +165,7 @@ pub async fn handle_execute(
     fetch_loader.set_message("Checking available CD pipelines ...");
 
     let config = Config::load_from_default_path()?;
-    let mut wk_client = WKClient::new(&config)?;
+    let mut wk_client = WKClient::for_channel(&config, &context.channel)?;
 
     let cd_pipelines_data = wk_client
         .fetch_cd_pipelines(&current_application)

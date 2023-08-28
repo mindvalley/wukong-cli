@@ -20,7 +20,7 @@ pub async fn handle_describe(context: Context, name: &str) -> Result<bool, WKCli
     fetch_loader.set_message("Fetching pipeline data ...");
 
     let config = Config::load_from_default_path()?;
-    let mut wk_client = WKClient::new(&config)?;
+    let mut wk_client = WKClient::for_channel(&config, &context.channel)?;
 
     let pipeline = wk_client.fetch_pipeline(name).await?.pipeline;
 
