@@ -64,9 +64,8 @@ impl GithubCdPipelineQuery {
 
         let response = client
             .call_api::<Self>(variables, |_, error| match error.message.as_str() {
-                "application_not_found" => Err(APIError::ResponseError {
-                    code: error.message,
-                    message: format!("Application `{application}` not found."),
+                "application_not_found" => Err(APIError::ResponseError { code: "ci_status_application_not_found".to_string(), message: 
+    "Could not find the application associated with this Git repo.\n\tEither you're not in the correct working folder for your application, or there's a misconfiguration.".to_string()
                 }),
                 _ => Err(APIError::ResponseError {
                     code: error.message.clone(),
