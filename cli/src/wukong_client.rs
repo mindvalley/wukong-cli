@@ -40,10 +40,6 @@ impl From<config::ApiChannel> for wukong_sdk::ApiChannel {
     }
 }
 impl WKClient {
-    pub fn new(config: &Config) -> Result<Self, WKCliError> {
-        Self::for_channel(config, &config.core.channel)
-    }
-
     pub fn for_channel(config: &Config, channel: &ApiChannel) -> Result<Self, WKCliError> {
         let auth_config = config.auth.as_ref().ok_or(WKCliError::UnAuthenticated)?;
 
