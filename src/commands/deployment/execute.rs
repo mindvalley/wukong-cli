@@ -444,26 +444,19 @@ pub async fn handle_execute(
                 {
                     if build_artifact.contains("-build-") {
                         let build_selection: Vec<ThreeColumns> =
-                            generate_three_columns_build_selection(
-                                &pipeline_type,
-                                &cd_pipeline,
-                                build_artifact,
-                            );
+                            generate_three_columns_build_selection(&cd_pipeline, build_artifact);
 
                         BuildSelectionLayout::ThreeColumns {
                             data: build_selection,
                         }
                     } else {
                         BuildSelectionLayout::TwoColumns {
-                            data: generate_two_columns_build_selection(
-                                &pipeline_type,
-                                &cd_pipeline,
-                            ),
+                            data: generate_two_columns_build_selection(&cd_pipeline),
                         }
                     }
                 } else {
                     BuildSelectionLayout::TwoColumns {
-                        data: generate_two_columns_build_selection(&pipeline_type, &cd_pipeline),
+                        data: generate_two_columns_build_selection(&cd_pipeline),
                     }
                 };
 
@@ -649,146 +642,86 @@ fn get_selected_build(
 }
 
 fn generate_three_columns_build_selection(
-    pipeline_type: &PipelineType,
     cd_pipeline: &CdPipelineWithBuilds,
     build_artifact: &str,
 ) -> Vec<ThreeColumns> {
     let mut width = 0;
-    let mut build_selection: Vec<ThreeColumns> = Vec::new();
 
-    match pipeline_type {
-        PipelineType::Github => {
-            let github_builds: Vec<ThreeColumns> = cd_pipeline
-                .github_builds
-                .iter()
-                .map(|build| {
-                    let commits: Vec<String> = build
-                        .commits
-                        .iter()
-                        .map(|commit| commit.message_headline.clone())
-                        .collect();
-
-                    let build_artifact_name = build.build_artifact_name.clone();
-                    if build_artifact_name.len() > width {
-                        width = build_artifact_name.len();
-                    }
-
-                    if *build_artifact == build_artifact_name {
-                        ThreeColumns {
-                            left: build_artifact_name,
-                            middle: "*".to_string(),
-                            right: commits,
-                            left_width: 0,
-                        }
-                    } else {
-                        ThreeColumns {
-                            left: build_artifact_name,
-                            middle: "".to_string(),
-                            right: commits,
-                            left_width: 0,
-                        }
-                    }
-                })
-                .collect();
-
-            build_selection.extend(github_builds)
-        }
-        PipelineType::Jenkins => {
-            let jenkins_builds: Vec<ThreeColumns> = cd_pipeline
-                .jenkins_builds
-                .iter()
-                .map(|build| {
-                    let commits: Vec<String> = build
-                        .commits
-                        .iter()
-                        .map(|commit| commit.message_headline.clone())
-                        .collect();
-
-                    let build_artifact_name = build.build_artifact_name.clone();
-                    if build_artifact_name.len() > width {
-                        width = build_artifact_name.len();
-                    }
-
-                    if *build_artifact == build_artifact_name {
-                        ThreeColumns {
-                            left: build_artifact_name,
-                            middle: "*".to_string(),
-                            right: commits,
-                            left_width: 0,
-                        }
-                    } else {
-                        ThreeColumns {
-                            left: build_artifact_name,
-                            middle: "".to_string(),
-                            right: commits,
-                            left_width: 0,
-                        }
-                    }
-                })
-                .collect();
-            build_selection.extend(jenkins_builds)
-        }
+    let cd_builds = if cd_pipeline.github_builds.is_empty() {
+        &cd_pipeline.jenkins_builds
+    } else {
+        &cd_pipeline.github_builds
     };
 
-    build_selection.iter_mut().for_each(|build| {
+    let mut three_columns: Vec<ThreeColumns> = cd_builds
+        .iter()
+        .map(|build| {
+            let commits: Vec<String> = build
+                .commits
+                .iter()
+                .map(|commit| commit.message_headline.clone())
+                .collect();
+
+            let build_artifact_name = build.build_artifact_name.clone();
+            if build_artifact_name.len() > width {
+                width = build_artifact_name.len();
+            }
+
+            if *build_artifact == build_artifact_name {
+                ThreeColumns {
+                    left: build_artifact_name,
+                    middle: "*".to_string(),
+                    right: commits,
+                    left_width: 0,
+                }
+            } else {
+                ThreeColumns {
+                    left: build_artifact_name,
+                    middle: "".to_string(),
+                    right: commits,
+                    left_width: 0,
+                }
+            }
+        })
+        .collect();
+
+    three_columns.iter_mut().for_each(|build| {
         build.left_width = width;
     });
 
-    build_selection
+    three_columns
 }
 
-fn generate_two_columns_build_selection(
-    pipeline_type: &PipelineType,
-    cd_pipeline: &CdPipelineWithBuilds,
-) -> Vec<TwoColumns> {
+fn generate_two_columns_build_selection(cd_pipeline: &CdPipelineWithBuilds) -> Vec<TwoColumns> {
     let mut width = 0;
 
-    let mut two_columns: Vec<TwoColumns> = match pipeline_type {
-        PipelineType::Github => cd_pipeline
-            .github_builds
-            .iter()
-            .map(|build| {
-                let commits: Vec<String> = build
-                    .commits
-                    .iter()
-                    .map(|commit| commit.message_headline.clone())
-                    .collect();
-
-                let build_artifact_name = build.build_artifact_name.clone();
-                if build_artifact_name.len() > width {
-                    width = build_artifact_name.len();
-                }
-
-                TwoColumns {
-                    left: build_artifact_name,
-                    right: commits,
-                    left_width: 0,
-                }
-            })
-            .collect(),
-        PipelineType::Jenkins => cd_pipeline
-            .jenkins_builds
-            .iter()
-            .map(|build| {
-                let commits: Vec<String> = build
-                    .commits
-                    .iter()
-                    .map(|commit| commit.message_headline.clone())
-                    .collect();
-
-                let build_artifact_name = build.build_artifact_name.clone();
-                if build_artifact_name.len() > width {
-                    width = build_artifact_name.len();
-                }
-
-                TwoColumns {
-                    left: build_artifact_name,
-                    right: commits,
-                    left_width: 0,
-                }
-            })
-            .collect(),
+    let cd_builds = if cd_pipeline.github_builds.is_empty() {
+        &cd_pipeline.jenkins_builds
+    } else {
+        &cd_pipeline.github_builds
     };
+
+    let mut two_columns: Vec<TwoColumns> = cd_builds
+        .iter()
+        .map(|build| {
+            let commits: Vec<String> = build
+                .commits
+                .iter()
+                .map(|commit| commit.message_headline.clone())
+                .collect();
+
+            let build_artifact_name = build.build_artifact_name.clone();
+            if build_artifact_name.len() > width {
+                width = build_artifact_name.len();
+            }
+
+            TwoColumns {
+                left: build_artifact_name,
+                right: commits,
+                left_width: 0,
+            }
+        })
+        .collect();
 
     two_columns
         .iter_mut()
