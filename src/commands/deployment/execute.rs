@@ -113,12 +113,12 @@ struct CdPipelineWithBuilds {
     last_deployed_at: Option<i64>,
     last_successfully_deployed_artifact: Option<String>,
     status: Option<String>,
-    jenkins_builds: Vec<JenkinsBuild>,
-    github_builds: Vec<JenkinsBuild>,
+    jenkins_builds: Vec<CdPipelineBuild>,
+    github_builds: Vec<CdPipelineBuild>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct JenkinsBuild {
+struct CdPipelineBuild {
     build_duration: Option<i64>,
     build_number: i64,
     build_artifact_name: String,
@@ -846,7 +846,7 @@ async fn get_jenkins_cd_pipeline(
                         })
                         .collect();
 
-                    JenkinsBuild {
+                    CdPipelineBuild {
                         build_duration: build.build_duration,
                         build_number: build.build_number,
                         build_branch: build.build_branch,
@@ -911,7 +911,7 @@ async fn get_github_cd_pipeline(
                         })
                         .collect();
 
-                    JenkinsBuild {
+                    CdPipelineBuild {
                         build_duration: build.build_duration,
                         build_number: build.build_number,
                         build_branch: build.build_branch,
