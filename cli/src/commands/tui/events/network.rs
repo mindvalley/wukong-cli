@@ -7,7 +7,7 @@ use crate::{
         app::{App, Build, Commit, Deployment},
         StatefulList,
     },
-    config::Config,
+    config::{ApiChannel, Config},
     error::WKCliError,
     wukong_client::WKClient,
 };
@@ -30,7 +30,11 @@ impl NetworkManager {
     pub async fn handle_network_event(
         &mut self,
         network_event: NetworkEvent,
+        channel: &ApiChannel,
     ) -> Result<(), WKCliError> {
+        let config = Config::load_from_default_path()?;
+        let mut wk_client = WKClient::for_channel(&config, channel)?;
+
         match network_event {
             NetworkEvent::FetchBuilds => {
                 let mut app = self.app.lock().await;
@@ -39,9 +43,6 @@ impl NetworkManager {
                 app.state.is_fetching_builds = true;
 
                 drop(app);
-
-                let config = Config::load_from_default_path()?;
-                let mut wk_client = WKClient::new(&config)?;
 
                 let cd_pipeline_data = wk_client
                     .fetch_cd_pipeline(&application, &namespace, "green")
@@ -84,9 +85,6 @@ impl NetworkManager {
                 app.state.is_checking_namespaces = true;
 
                 drop(app);
-
-                let config = Config::load_from_default_path()?;
-                let mut wk_client = WKClient::new(&config)?;
 
                 let cd_pipelines_data = wk_client
                     .fetch_cd_pipelines(&application)

@@ -58,7 +58,6 @@ pub struct Config {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
-#[serde(rename_all = "lowercase")]
 pub enum ApiChannel {
     Canary,
     #[default]
@@ -71,7 +70,6 @@ pub struct CoreConfig {
     pub application: String,
     pub wukong_api_url: String,
     pub okta_client_id: String,
-    pub channel: ApiChannel,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -106,7 +104,6 @@ impl Default for Config {
                 application: "".to_string(),
                 wukong_api_url: WUKONG_API_URL.to_string(),
                 okta_client_id: OKTA_CLIENT_ID.to_string(),
-                channel: ApiChannel::Stable,
             },
             auth: None,
             vault: None,

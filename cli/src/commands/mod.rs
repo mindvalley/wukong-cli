@@ -102,9 +102,15 @@ pub enum CommandGroup {
 impl ClapApp {
     pub async fn execute(&self) -> Result<bool, WKCliError> {
         debug!("current cli version: {}", crate_version!());
+        let channel = if self.canary {
+            ApiChannel::Canary
+        } else {
+            ApiChannel::Stable
+        };
+        debug!("API channel: {:?}", channel);
 
         match &self.command_group {
-            CommandGroup::Init => handle_init().await,
+            CommandGroup::Init => handle_init(channel).await,
             CommandGroup::Completion { shell } => handle_completion(*shell),
             CommandGroup::Login => handle_login().await,
             CommandGroup::Application(application) => {
@@ -116,7 +122,7 @@ impl ClapApp {
             }
             CommandGroup::Config(config) => config.handle_command(),
             CommandGroup::Dev(dev) => dev.handle_command(self).await,
-            CommandGroup::Tui => handle_tui().await,
+            CommandGroup::Tui => handle_tui(channel).await,
         }
     }
 }
@@ -136,12 +142,11 @@ fn get_context(clap_app: &ClapApp) -> Result<Context, WKCliError> {
         },
         sub: config.auth.map(|auth_config| auth_config.subject),
         // if the `--canary` flag is used, then the CLI will use the Canary channel API,
-        // otherwise, use whatever channel is configured in the config file
+        // otherwise, it will use the Stable channel API.
         channel: if clap_app.canary {
             ApiChannel::Canary
         } else {
-            let config = Config::load_from_default_path()?;
-            config.core.channel
+            ApiChannel::Stable
         },
     };
 
