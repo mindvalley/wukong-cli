@@ -1,10 +1,10 @@
 #!/bin/bash
 # we always want to use latest wukong version to generate completions
-if ! command -v ./target/release/wukong > /dev/null 2>&1; then
+if ! command -v ../target/release/wukong > /dev/null 2>&1; then
   echo "ERROR: wukong command is not available."
   exit 1
 else
-  wukong_command=./target/release/wukong
+  wukong_command=../target/release/wukong
 fi
 
 cd "$(dirname "$0")"

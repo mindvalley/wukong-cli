@@ -35,6 +35,7 @@ Options:
                                    `-vvv` show debug
                                    `-vvvv` show trace
   -q, --quiet...                   Do not print log message
+      --canary                     Use the Canary channel API
   -h, --help                       Print help
   -V, --version                    Print version
 
