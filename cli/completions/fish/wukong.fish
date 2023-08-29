@@ -7,6 +7,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_use_subcommand" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_use_subcommand" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_use_subcommand" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_use_subcommand" -s V -l version -d 'Print version'
 complete -c wukong -n "__fish_use_subcommand" -f -a "init" -d 'Initialize Wukong\'s configurations'
@@ -17,6 +18,7 @@ complete -c wukong -n "__fish_use_subcommand" -f -a "dev" -d 'This command group
 complete -c wukong -n "__fish_use_subcommand" -f -a "config" -d 'This command group contains the commands to view & interact with Wukong\'s configurations'
 complete -c wukong -n "__fish_use_subcommand" -f -a "login" -d 'Login to start using wukong command'
 complete -c wukong -n "__fish_use_subcommand" -f -a "completion" -d 'Generate wukong cli completions for your shell to stdout'
+complete -c wukong -n "__fish_use_subcommand" -f -a "tui" -d 'Start TUI session'
 complete -c wukong -n "__fish_use_subcommand" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
 complete -c wukong -n "__fish_seen_subcommand_from init" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
 complete -c wukong -n "__fish_seen_subcommand_from init" -s v -l verbose -d 'Use verbos output. More output per occurrence.
@@ -27,6 +29,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from init" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from init" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from init" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from application; and not __fish_seen_subcommand_from info; and not __fish_seen_subcommand_from logs; and not __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from help" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
 complete -c wukong -n "__fish_seen_subcommand_from application; and not __fish_seen_subcommand_from info; and not __fish_seen_subcommand_from logs; and not __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from help" -s v -l verbose -d 'Use verbos output. More output per occurrence.
@@ -37,6 +40,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from application; and not __fish_seen_subcommand_from info; and not __fish_seen_subcommand_from logs; and not __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from help" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from application; and not __fish_seen_subcommand_from info; and not __fish_seen_subcommand_from logs; and not __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from help" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from application; and not __fish_seen_subcommand_from info; and not __fish_seen_subcommand_from logs; and not __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from help" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from application; and not __fish_seen_subcommand_from info; and not __fish_seen_subcommand_from logs; and not __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from help" -f -a "info" -d 'Show the application’s relevant informations'
 complete -c wukong -n "__fish_seen_subcommand_from application; and not __fish_seen_subcommand_from info; and not __fish_seen_subcommand_from logs; and not __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from help" -f -a "logs" -d 'Getting the logs of the applications from the Google Cloud Logging'
@@ -51,6 +55,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from info" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from info" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from info" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -l namespace -d '(optional) The namespace to deploy to' -r -f -a "{prod	,staging	}"
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -l version -d '(optional) The version that the deployment will perform against' -r -f -a "{blue	,green	}"
@@ -70,6 +75,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from connect; and not __fish_seen_subcommand_from help" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from connect; and not __fish_seen_subcommand_from help" -s v -l verbose -d 'Use verbos output. More output per occurrence.
@@ -80,6 +86,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from connect; and not __fish_seen_subcommand_from help" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from connect; and not __fish_seen_subcommand_from help" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from connect; and not __fish_seen_subcommand_from help" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from connect; and not __fish_seen_subcommand_from help" -f -a "list" -d 'Listing the currently running Elixir instances, normally under a GKE Pod'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from connect; and not __fish_seen_subcommand_from help" -f -a "connect" -d 'Start the interactive session to connect to the remote Elixir instance'
@@ -95,6 +102,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from list" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from list" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from list" -s h -l help -d 'Print help (see more with \'--help\')'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from connect" -l namespace -d '(optional) The namespace to list the running instances' -r -f -a "{prod	,staging	}"
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from connect" -l version -d '(optional) The version of the application to filter the returning running instances' -r -f -a "{blue	,green	}"
@@ -107,6 +115,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from connect" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from connect" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from connect" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from connect; and not __fish_seen_subcommand_from help" -f -a "list" -d 'Listing the currently running Elixir instances, normally under a GKE Pod'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from connect; and not __fish_seen_subcommand_from help" -f -a "connect" -d 'Start the interactive session to connect to the remote Elixir instance'
@@ -126,6 +135,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from describe; and not __fish_seen_subcommand_from ci-status; and not __fish_seen_subcommand_from help" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from describe; and not __fish_seen_subcommand_from ci-status; and not __fish_seen_subcommand_from help" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from describe; and not __fish_seen_subcommand_from ci-status; and not __fish_seen_subcommand_from help" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from describe; and not __fish_seen_subcommand_from ci-status; and not __fish_seen_subcommand_from help" -f -a "list" -d 'List the current pipelines of the application'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from describe; and not __fish_seen_subcommand_from ci-status; and not __fish_seen_subcommand_from help" -f -a "describe" -d 'Show the details of a pipeline'
@@ -140,6 +150,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from list" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from list" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from list" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from describe" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from describe" -s v -l verbose -d 'Use verbos output. More output per occurrence.
@@ -150,6 +161,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from describe" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from describe" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from describe" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from ci-status" -l repo-url -d 'Repository url' -r
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from ci-status" -l branch -d 'Branch name' -r
@@ -162,6 +174,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from ci-status" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from ci-status" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from ci-status" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from describe; and not __fish_seen_subcommand_from ci-status; and not __fish_seen_subcommand_from help" -f -a "list" -d 'List the current pipelines of the application'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from describe; and not __fish_seen_subcommand_from ci-status; and not __fish_seen_subcommand_from help" -f -a "describe" -d 'Show the details of a pipeline'
@@ -176,6 +189,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from execute; and not __fish_seen_subcommand_from rollback; and not __fish_seen_subcommand_from help" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from execute; and not __fish_seen_subcommand_from rollback; and not __fish_seen_subcommand_from help" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from execute; and not __fish_seen_subcommand_from rollback; and not __fish_seen_subcommand_from help" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from execute; and not __fish_seen_subcommand_from rollback; and not __fish_seen_subcommand_from help" -f -a "list" -d 'List the current available deployment pipelines of an application'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from execute; and not __fish_seen_subcommand_from rollback; and not __fish_seen_subcommand_from help" -f -a "execute" -d 'Start the deployment pipeline'
@@ -190,6 +204,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from list" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from list" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from list" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from execute" -l namespace -d 'The namespace to deploy to' -r -f -a "{prod	,staging	}"
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from execute" -l version -d 'The version that the deployment will perform against' -r -f -a "{blue	,green	}"
@@ -203,6 +218,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from execute" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from execute" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from execute" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from rollback" -l namespace -d 'The namespace to deploy to' -r -f -a "{prod	,staging	}"
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from rollback" -l version -d 'The version that the deployment will perform against' -r -f -a "{blue	,green	}"
@@ -215,6 +231,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from rollback" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from rollback" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from rollback" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from execute; and not __fish_seen_subcommand_from rollback; and not __fish_seen_subcommand_from help" -f -a "list" -d 'List the current available deployment pipelines of an application'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from execute; and not __fish_seen_subcommand_from rollback; and not __fish_seen_subcommand_from help" -f -a "execute" -d 'Start the deployment pipeline'
@@ -229,6 +246,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from help" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from help" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from help" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from help" -f -a "config" -d 'This command group contains the commands to interact with the config secrets with bunker'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
@@ -241,6 +259,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from push; and not __fish_seen_subcommand_from diff; and not __fish_seen_subcommand_from pull; and not __fish_seen_subcommand_from lint; and not __fish_seen_subcommand_from help" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from push; and not __fish_seen_subcommand_from diff; and not __fish_seen_subcommand_from pull; and not __fish_seen_subcommand_from lint; and not __fish_seen_subcommand_from help" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from push; and not __fish_seen_subcommand_from diff; and not __fish_seen_subcommand_from pull; and not __fish_seen_subcommand_from lint; and not __fish_seen_subcommand_from help" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from push; and not __fish_seen_subcommand_from diff; and not __fish_seen_subcommand_from pull; and not __fish_seen_subcommand_from lint; and not __fish_seen_subcommand_from help" -f -a "push" -d 'Push the current configuration changes to the Bunker'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from push; and not __fish_seen_subcommand_from diff; and not __fish_seen_subcommand_from pull; and not __fish_seen_subcommand_from lint; and not __fish_seen_subcommand_from help" -f -a "diff" -d 'Show changes between the local configuration and the Bunker'
@@ -256,6 +275,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from push" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from push" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from push" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from diff" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from diff" -s v -l verbose -d 'Use verbos output. More output per occurrence.
@@ -266,6 +286,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from diff" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from diff" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from diff" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from pull" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from pull" -s v -l verbose -d 'Use verbos output. More output per occurrence.
@@ -276,6 +297,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from pull" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from pull" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from pull" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from lint" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from lint" -s v -l verbose -d 'Use verbos output. More output per occurrence.
@@ -286,6 +308,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from lint" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from lint" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from lint" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from push; and not __fish_seen_subcommand_from diff; and not __fish_seen_subcommand_from pull; and not __fish_seen_subcommand_from lint; and not __fish_seen_subcommand_from help" -f -a "push" -d 'Push the current configuration changes to the Bunker'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from push; and not __fish_seen_subcommand_from diff; and not __fish_seen_subcommand_from pull; and not __fish_seen_subcommand_from lint; and not __fish_seen_subcommand_from help" -f -a "diff" -d 'Show changes between the local configuration and the Bunker'
@@ -307,6 +330,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from config; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from set; and not __fish_seen_subcommand_from get; and not __fish_seen_subcommand_from help" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from config; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from set; and not __fish_seen_subcommand_from get; and not __fish_seen_subcommand_from help" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from config; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from set; and not __fish_seen_subcommand_from get; and not __fish_seen_subcommand_from help" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from config; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from set; and not __fish_seen_subcommand_from get; and not __fish_seen_subcommand_from help" -f -a "list" -d 'List the configurations'
 complete -c wukong -n "__fish_seen_subcommand_from config; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from set; and not __fish_seen_subcommand_from get; and not __fish_seen_subcommand_from help" -f -a "set" -d 'Set the value of a configuration'
@@ -321,6 +345,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from list" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from list" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from list" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set" -s v -l verbose -d 'Use verbos output. More output per occurrence.
@@ -331,6 +356,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from get" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from get" -s v -l verbose -d 'Use verbos output. More output per occurrence.
@@ -341,6 +367,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from get" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from get" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from get" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from set; and not __fish_seen_subcommand_from get; and not __fish_seen_subcommand_from help" -f -a "list" -d 'List the configurations'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from set; and not __fish_seen_subcommand_from get; and not __fish_seen_subcommand_from help" -f -a "set" -d 'Set the value of a configuration'
@@ -355,6 +382,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from login" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from login" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from login" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from completion" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
 complete -c wukong -n "__fish_seen_subcommand_from completion" -s v -l verbose -d 'Use verbos output. More output per occurrence.
@@ -365,16 +393,29 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from completion" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from completion" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from completion" -s h -l help -d 'Print help'
-complete -c wukong -n "__fish_seen_subcommand_from help; and not __fish_seen_subcommand_from init; and not __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from login; and not __fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from help" -f -a "init" -d 'Initialize Wukong\'s configurations'
-complete -c wukong -n "__fish_seen_subcommand_from help; and not __fish_seen_subcommand_from init; and not __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from login; and not __fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from help" -f -a "application" -d 'This command group contains the commands to interact with an application’s configurations'
-complete -c wukong -n "__fish_seen_subcommand_from help; and not __fish_seen_subcommand_from init; and not __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from login; and not __fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from help" -f -a "pipeline" -d 'This command group contains the commands to view & interact with an application’s pipeline'
-complete -c wukong -n "__fish_seen_subcommand_from help; and not __fish_seen_subcommand_from init; and not __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from login; and not __fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from help" -f -a "deployment" -d 'This command group contains the commands to view and interact with the Continuous Delivery pipeline of an application'
-complete -c wukong -n "__fish_seen_subcommand_from help; and not __fish_seen_subcommand_from init; and not __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from login; and not __fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from help" -f -a "dev" -d 'This command group contains the commands to interact with the local development environment'
-complete -c wukong -n "__fish_seen_subcommand_from help; and not __fish_seen_subcommand_from init; and not __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from login; and not __fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from help" -f -a "config" -d 'This command group contains the commands to view & interact with Wukong\'s configurations'
-complete -c wukong -n "__fish_seen_subcommand_from help; and not __fish_seen_subcommand_from init; and not __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from login; and not __fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from help" -f -a "login" -d 'Login to start using wukong command'
-complete -c wukong -n "__fish_seen_subcommand_from help; and not __fish_seen_subcommand_from init; and not __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from login; and not __fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from help" -f -a "completion" -d 'Generate wukong cli completions for your shell to stdout'
-complete -c wukong -n "__fish_seen_subcommand_from help; and not __fish_seen_subcommand_from init; and not __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from login; and not __fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
+complete -c wukong -n "__fish_seen_subcommand_from tui" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
+complete -c wukong -n "__fish_seen_subcommand_from tui" -s v -l verbose -d 'Use verbos output. More output per occurrence.
+
+By default, it\'ll only report errors.
+`-v` show warnings
+`-vv` show info
+`-vvv` show debug
+`-vvvv` show trace'
+complete -c wukong -n "__fish_seen_subcommand_from tui" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from tui" -l canary -d 'Use the Canary channel API'
+complete -c wukong -n "__fish_seen_subcommand_from tui" -s h -l help -d 'Print help'
+complete -c wukong -n "__fish_seen_subcommand_from help; and not __fish_seen_subcommand_from init; and not __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from login; and not __fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from tui; and not __fish_seen_subcommand_from help" -f -a "init" -d 'Initialize Wukong\'s configurations'
+complete -c wukong -n "__fish_seen_subcommand_from help; and not __fish_seen_subcommand_from init; and not __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from login; and not __fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from tui; and not __fish_seen_subcommand_from help" -f -a "application" -d 'This command group contains the commands to interact with an application’s configurations'
+complete -c wukong -n "__fish_seen_subcommand_from help; and not __fish_seen_subcommand_from init; and not __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from login; and not __fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from tui; and not __fish_seen_subcommand_from help" -f -a "pipeline" -d 'This command group contains the commands to view & interact with an application’s pipeline'
+complete -c wukong -n "__fish_seen_subcommand_from help; and not __fish_seen_subcommand_from init; and not __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from login; and not __fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from tui; and not __fish_seen_subcommand_from help" -f -a "deployment" -d 'This command group contains the commands to view and interact with the Continuous Delivery pipeline of an application'
+complete -c wukong -n "__fish_seen_subcommand_from help; and not __fish_seen_subcommand_from init; and not __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from login; and not __fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from tui; and not __fish_seen_subcommand_from help" -f -a "dev" -d 'This command group contains the commands to interact with the local development environment'
+complete -c wukong -n "__fish_seen_subcommand_from help; and not __fish_seen_subcommand_from init; and not __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from login; and not __fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from tui; and not __fish_seen_subcommand_from help" -f -a "config" -d 'This command group contains the commands to view & interact with Wukong\'s configurations'
+complete -c wukong -n "__fish_seen_subcommand_from help; and not __fish_seen_subcommand_from init; and not __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from login; and not __fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from tui; and not __fish_seen_subcommand_from help" -f -a "login" -d 'Login to start using wukong command'
+complete -c wukong -n "__fish_seen_subcommand_from help; and not __fish_seen_subcommand_from init; and not __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from login; and not __fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from tui; and not __fish_seen_subcommand_from help" -f -a "completion" -d 'Generate wukong cli completions for your shell to stdout'
+complete -c wukong -n "__fish_seen_subcommand_from help; and not __fish_seen_subcommand_from init; and not __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from login; and not __fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from tui; and not __fish_seen_subcommand_from help" -f -a "tui" -d 'Start TUI session'
+complete -c wukong -n "__fish_seen_subcommand_from help; and not __fish_seen_subcommand_from init; and not __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from login; and not __fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from tui; and not __fish_seen_subcommand_from help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
 complete -c wukong -n "__fish_seen_subcommand_from help; and __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from info; and not __fish_seen_subcommand_from logs; and not __fish_seen_subcommand_from instances" -f -a "info" -d 'Show the application’s relevant informations'
 complete -c wukong -n "__fish_seen_subcommand_from help; and __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from info; and not __fish_seen_subcommand_from logs; and not __fish_seen_subcommand_from instances" -f -a "logs" -d 'Getting the logs of the applications from the Google Cloud Logging'
 complete -c wukong -n "__fish_seen_subcommand_from help; and __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from info; and not __fish_seen_subcommand_from logs; and not __fish_seen_subcommand_from instances" -f -a "instances" -d 'This command group contains the commands to interact with an application’s instances'

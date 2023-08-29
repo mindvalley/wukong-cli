@@ -1,5 +1,5 @@
 ---
-source: tests/dev.rs
+source: cli/tests/dev.rs
 expression: "std::str::from_utf8(&output.stdout).unwrap()"
 ---
 This command group contains the commands to interact with the local development environment
@@ -23,5 +23,6 @@ Options:
                                    `-vvv` show debug
                                    `-vvvv` show trace
   -q, --quiet...                   Do not print log message
+      --canary                     Use the Canary channel API
   -h, --help                       Print help
 

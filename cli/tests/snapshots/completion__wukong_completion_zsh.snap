@@ -37,6 +37,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 '-V[Print version]' \
@@ -70,6 +71,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -94,6 +96,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 ":: :_wukong__application_commands" \
@@ -126,6 +129,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -163,6 +167,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -187,6 +192,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 ":: :_wukong__application__instances_commands" \
@@ -221,6 +227,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help (see more with '\''--help'\'')]' \
 '--help[Print help (see more with '\''--help'\'')]' \
 && ret=0
@@ -247,6 +254,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -359,6 +367,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 ":: :_wukong__pipeline_commands" \
@@ -391,6 +400,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -415,6 +425,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 ':name -- The pipeline name:' \
@@ -442,6 +453,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -502,6 +514,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 ":: :_wukong__deployment_commands" \
@@ -534,6 +547,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -561,6 +575,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -587,6 +602,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -647,6 +663,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 ":: :_wukong__dev_commands" \
@@ -679,6 +696,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 ":: :_wukong__dev__config_commands" \
@@ -711,6 +729,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -735,6 +754,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -759,6 +779,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 '::path -- The path to the project:_files' \
@@ -784,6 +805,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 '::path -- The path to the project:_files' \
@@ -905,6 +927,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 ":: :_wukong__config_commands" \
@@ -937,6 +960,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -961,6 +985,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 ':config_name -- The config name:(application wukong-api-url okta-client-id)' \
@@ -987,6 +1012,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 ':config_name -- The config name:(application wukong-api-url okta-client-id)' \
@@ -1048,6 +1074,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
@@ -1072,6 +1099,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 ':shell:(bash elvish fish powershell zsh)' \
@@ -1097,6 +1125,7 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
+'--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
