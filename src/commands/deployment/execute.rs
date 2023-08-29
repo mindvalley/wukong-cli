@@ -397,9 +397,22 @@ pub async fn handle_execute(
         .await;
 
         if github_cd_pipeline.is_ok() {
-            let github_cd_pipeline_cd = github_cd_pipeline.unwrap();
+            if let Ok(github_cd_pipeline_cd) = github_cd_pipeline {
+                if github_cd_pipeline_cd.is_none() {
+                    let jenkins_cd_pipeline = get_jenkins_cd_pipeline(
+                        &mut client,
+                        &current_application,
+                        &selected_namespace.to_lowercase(),
+                        &selected_version.to_lowercase(),
+                    )
+                    .await?;
 
-            if github_cd_pipeline_cd.is_none() {
+                    cd_pipeline_data = jenkins_cd_pipeline;
+                    pipeline_type = PipelineType::Jenkins;
+                } else {
+                    cd_pipeline_data = github_cd_pipeline_cd;
+                }
+            } else {
                 let jenkins_cd_pipeline = get_jenkins_cd_pipeline(
                     &mut client,
                     &current_application,
@@ -410,8 +423,6 @@ pub async fn handle_execute(
 
                 cd_pipeline_data = jenkins_cd_pipeline;
                 pipeline_type = PipelineType::Jenkins;
-            } else {
-                cd_pipeline_data = github_cd_pipeline_cd;
             }
         } else {
             let jenkins_cd_pipeline = get_jenkins_cd_pipeline(
