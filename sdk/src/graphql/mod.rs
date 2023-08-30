@@ -89,7 +89,7 @@ impl<'a> GQLClientBuilder<'a> {
         if let ApiChannel::Canary = self.channel {
             headers.insert(
                 "MV-Canary-Stage",
-                header::HeaderValue::from_str("Always").unwrap(),
+                header::HeaderValue::from_str("always").unwrap(),
             );
         }
 
