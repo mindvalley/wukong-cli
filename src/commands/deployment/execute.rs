@@ -1,7 +1,7 @@
 use super::{DeploymentNamespace, DeploymentVersion};
 use crate::{
     commands::Context,
-    error::{CliError, DeploymentError},
+    error::{APIError, CliError, DeploymentError},
     graphql::QueryClient,
     loader::new_spinner_progress_bar,
     output::colored_println,
@@ -386,7 +386,7 @@ pub async fn handle_execute(
         progress_bar.set_message("Fetching available build artifacts ...");
 
         let cd_pipeline_data: Option<CdPipelineWithBuilds>;
-        let mut pipeline_type = PipelineType::Github;
+        let pipeline_type;
 
         let github_cd_pipeline = get_github_cd_pipeline(
             &mut client,
@@ -394,37 +394,9 @@ pub async fn handle_execute(
             &selected_namespace.to_lowercase(),
             &selected_version.to_lowercase(),
         )
-        .await;
+        .await?;
 
-        if github_cd_pipeline.is_ok() {
-            if let Ok(github_cd_pipeline_cd) = github_cd_pipeline {
-                if github_cd_pipeline_cd.is_none() {
-                    let jenkins_cd_pipeline = get_jenkins_cd_pipeline(
-                        &mut client,
-                        &current_application,
-                        &selected_namespace.to_lowercase(),
-                        &selected_version.to_lowercase(),
-                    )
-                    .await?;
-
-                    cd_pipeline_data = jenkins_cd_pipeline;
-                    pipeline_type = PipelineType::Jenkins;
-                } else {
-                    cd_pipeline_data = github_cd_pipeline_cd;
-                }
-            } else {
-                let jenkins_cd_pipeline = get_jenkins_cd_pipeline(
-                    &mut client,
-                    &current_application,
-                    &selected_namespace.to_lowercase(),
-                    &selected_version.to_lowercase(),
-                )
-                .await?;
-
-                cd_pipeline_data = jenkins_cd_pipeline;
-                pipeline_type = PipelineType::Jenkins;
-            }
-        } else {
+        if github_cd_pipeline.is_none() {
             let jenkins_cd_pipeline = get_jenkins_cd_pipeline(
                 &mut client,
                 &current_application,
@@ -435,6 +407,9 @@ pub async fn handle_execute(
 
             cd_pipeline_data = jenkins_cd_pipeline;
             pipeline_type = PipelineType::Jenkins;
+        } else {
+            cd_pipeline_data = github_cd_pipeline;
+            pipeline_type = PipelineType::Github;
         }
 
         selected_build = match cd_pipeline_data {
@@ -831,12 +806,16 @@ async fn get_github_cd_pipeline(
     namespace: &str,
     version: &str,
 ) -> Result<Option<CdPipelineWithBuilds>, CliError> {
-    let github_cd_pipeline = client
+    let github_cd_pipeline = match client
         .fetch_github_cd_pipeline(application, namespace, version)
-        .await?
-        .data
-        .unwrap()
-        .cd_pipeline;
+        .await
+    {
+        Ok(github_cd_pipeline) => github_cd_pipeline.data.unwrap().cd_pipeline,
+        Err(APIError::ResponseError { code, .. }) if code == "Unable to get workflow" => {
+            return Ok(None)
+        }
+        Err(err) => return Err(err.into()),
+    };
 
     match github_cd_pipeline {
         None => Ok(None),

@@ -21,7 +21,7 @@ impl GithubPipelinesQuery {
 
         let response = client
             .call_api::<Self>(variables, |_, error| {
-                if error.message == "unable_to_get_github_pipelines" {
+                if error.message == "Unable to get workflow" {
                     return Err(APIError::ResponseError {
                         code: error.message,
                         message: format!(
