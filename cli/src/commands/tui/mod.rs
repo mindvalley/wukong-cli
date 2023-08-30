@@ -1,6 +1,9 @@
 use std::{sync::Arc, time::Duration};
 
-use crate::{config::Config, error::WKCliError};
+use crate::{
+    config::{ApiChannel, Config},
+    error::WKCliError,
+};
 use crossterm::{
     event::DisableMouseCapture,
     execute,
@@ -82,7 +85,7 @@ impl<T> StatefulList<T> {
     }
 }
 
-pub async fn handle_tui() -> Result<bool, WKCliError> {
+pub async fn handle_tui(channel: ApiChannel) -> Result<bool, WKCliError> {
     let config = Config::load_from_default_path()?;
 
     let (sender, mut receiver) = tokio::sync::mpsc::channel::<NetworkEvent>(100);
@@ -90,11 +93,15 @@ pub async fn handle_tui() -> Result<bool, WKCliError> {
     let app = Arc::new(Mutex::new(App::new(&config, sender)));
     let app_ui = Arc::clone(&app);
 
+    let arc_channel = Arc::new(channel);
+
     tokio::spawn(async move {
         while let Some(network_event) = receiver.recv().await {
             let app = Arc::clone(&app);
+            let arc_channel = Arc::clone(&arc_channel);
+
             tokio::spawn(async move {
-                let _ = handle_network_event(app, network_event).await;
+                let _ = handle_network_event(app, network_event, &arc_channel).await;
             });
         }
     });

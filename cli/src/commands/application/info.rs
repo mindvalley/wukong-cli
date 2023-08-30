@@ -6,7 +6,7 @@ use wukong_telemetry_macro::*;
 #[wukong_telemetry(command_event = "application_info")]
 pub async fn handle_info(context: Context) -> Result<bool, WKCliError> {
     let config = Config::load_from_default_path()?;
-    let mut wk_client = WKClient::new(&config)?;
+    let mut wk_client = WKClient::for_channel(&config, &context.channel)?;
 
     let application_resp = wk_client
         .fetch_application(&context.current_application) // SAFERY: the application is checked on the caller so it will always be Some(x) here

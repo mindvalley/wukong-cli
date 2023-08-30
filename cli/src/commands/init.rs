@@ -1,6 +1,6 @@
 use crate::{
     auth,
-    config::Config,
+    config::{ApiChannel, Config},
     error::{AuthError, ConfigError, WKCliError},
     loader::new_spinner,
     output::colored_println,
@@ -9,7 +9,7 @@ use crate::{
 use dialoguer::{theme::ColorfulTheme, Select};
 use log::debug;
 
-pub async fn handle_init() -> Result<bool, WKCliError> {
+pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
 
     let config = match Config::load_from_default_path() {
@@ -75,7 +75,7 @@ pub async fn handle_init() -> Result<bool, WKCliError> {
     let fetch_loader = new_spinner();
     fetch_loader.set_message("Fetching application list...");
 
-    let mut wk_client = WKClient::new(&new_config)?;
+    let mut wk_client = WKClient::for_channel(&new_config, &channel)?;
 
     let applications_data: Vec<String> = wk_client
         .fetch_applications()
