@@ -93,11 +93,15 @@ pub async fn handle_tui(channel: ApiChannel) -> Result<bool, WKCliError> {
     let app = Arc::new(Mutex::new(App::new(&config, sender)));
     let app_ui = Arc::clone(&app);
 
+    let arc_channel = Arc::new(channel);
+
     tokio::spawn(async move {
         while let Some(network_event) = receiver.recv().await {
             let app = Arc::clone(&app);
+            let arc_channel = Arc::clone(&arc_channel);
+
             tokio::spawn(async move {
-                let _ = handle_network_event(app, network_event, &channel).await;
+                let _ = handle_network_event(app, network_event, &arc_channel).await;
             });
         }
     });

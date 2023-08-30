@@ -25,28 +25,27 @@ pub enum NetworkEvent {
     FetchGCloudLogs,
 }
 
-    pub async fn handle_network_event(
-        &mut self,
-        app: Arc<Mutex<App>>,
-        network_event: NetworkEvent,
-        channel: &ApiChannel,
-    ) -> Result<(), WKCliError> {
-        let config = Config::load_from_default_path()?;
-        let mut wk_client = WKClient::for_channel(&config, channel)?;
+pub async fn handle_network_event(
+    app: Arc<Mutex<App>>,
+    network_event: NetworkEvent,
+    channel: &ApiChannel,
+) -> Result<(), WKCliError> {
+    let config = Config::load_from_default_path()?;
+    let mut wk_client = WKClient::for_channel(&config, channel)?;
 
-        match network_event {
-            NetworkEvent::FetchBuilds => {
-                let mut app_ref = self.app.lock().await;
-                let application = app_ref.state.current_application.clone();
-                let namespace = app_ref.state.current_namespace.clone();
-                app_ref.state.is_fetching_builds = true;
+    match network_event {
+        NetworkEvent::FetchBuilds => {
+            let mut app_ref = app.lock().await;
+            let application = app_ref.state.current_application.clone();
+            let namespace = app_ref.state.current_namespace.clone();
+            app_ref.state.is_fetching_builds = true;
 
-                drop(app_ref);
+            drop(app_ref);
 
-                let cd_pipeline_data = wk_client
-                    .fetch_cd_pipeline(&application, &namespace, "green")
-                    .await?
-                    .cd_pipeline;
+            let cd_pipeline_data = wk_client
+                .fetch_cd_pipeline(&application, &namespace, "green")
+                .await?
+                .cd_pipeline;
 
             if let Some(cd_pipeline_data) = cd_pipeline_data {
                 let mut app_ref = app.lock().await;
@@ -84,9 +83,6 @@ pub enum NetworkEvent {
             app_ref.state.is_checking_namespaces = true;
 
             drop(app_ref);
-
-            let config = Config::load_from_default_path()?;
-            let mut wk_client = WKClient::new(&config)?;
 
             let cd_pipelines_data = wk_client
                 .fetch_cd_pipelines(&application)
@@ -149,9 +145,6 @@ pub enum NetworkEvent {
             };
 
             drop(app_ref);
-
-            let config = Config::load_from_default_path()?;
-            let mut wk_client = WKClient::new(&config)?;
 
             let gcloud_access_token = auth::google_cloud::get_token_or_login().await;
 
