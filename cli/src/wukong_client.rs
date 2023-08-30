@@ -8,10 +8,10 @@ use std::collections::HashMap;
 use wukong_sdk::{
     graphql::{
         application_query, application_with_k8s_cluster_query, applications_query,
-        cd_pipeline_for_rollback_query, cd_pipeline_query, cd_pipelines_query, changelogs_query,
-        ci_status_query, deploy_livebook, destroy_livebook, execute_cd_pipeline,
-        github_pipeline::github_cd_pipeline_query, is_authorized_query, kubernetes_pods_query,
-        livebook_resource_query, multi_branch_pipeline_query, pipeline_query, pipelines_query,
+        cd_pipeline_for_rollback_query, cd_pipeline_github_query, cd_pipeline_query,
+        cd_pipelines_query, changelogs_query, ci_status_query, deploy_livebook, destroy_livebook,
+        execute_cd_pipeline, is_authorized_query, kubernetes_pods_query, livebook_resource_query,
+        multi_branch_pipeline_query, pipeline_query, pipelines_query,
     },
     services::{
         gcloud::{LogEntries, LogEntriesOptions},
@@ -139,16 +139,16 @@ impl WKClient {
         self.inner.fetch_cd_pipelines(application).await
     }
 
-    #[wukong_telemetry(api_event = "fetch_github_cd_pipeline")]
-    pub async fn fetch_github_cd_pipeline(
+    #[wukong_telemetry(api_event = "fetch_cd_pipeline_github")]
+    pub async fn fetch_cd_pipeline_github(
         &mut self,
         application: &str,
         namespace: &str,
         version: &str,
-    ) -> Result<github_cd_pipeline_query::ResponseData, WKCliError> {
+    ) -> Result<cd_pipeline_github_query::ResponseData, WKCliError> {
         self.check_and_refresh_tokens().await?;
         self.inner
-            .fetch_github_cd_pipeline(application, namespace, version)
+            .fetch_cd_pipeline_github(application, namespace, version)
             .await
     }
 

@@ -3,10 +3,10 @@ use graphql_client::GraphQLQuery;
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "src/graphql/schema.json",
-    query_path = "src/graphql/query/github_cd_pipeline.graphql",
+    query_path = "src/graphql/query/cd_pipeline_github.graphql",
     response_derives = "Debug, Serialize, Deserialize"
 )]
-pub struct GithubCdPipelineQuery;
+pub struct CdPipelineGithubQuery;
 
 #[cfg(test)]
 mod test {
@@ -25,7 +25,7 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_fetch_github_pipeline_success_should_return_github_pipeline() {
+    async fn test_fetch_cd_pipeline_github_success_should_return_pipeline_with_github_deployment() {
         let server = MockServer::start();
         let wk_client = setup_wk_client(&server.base_url());
 
@@ -76,7 +76,7 @@ mod test {
         });
 
         let response = wk_client
-            .fetch_github_cd_pipeline("valid-application", "staging", "blue")
+            .fetch_cd_pipeline_github("valid-application", "staging", "blue")
             .await;
 
         mock.assert();
@@ -88,7 +88,7 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_fetch_github_cd_pipeline_failed_with_github_workflow_not_found_error_should_return_unable_to_get_pipelines_error(
+    async fn test_fetch_cd_pipeline_github_failed_with_github_workflow_not_found_error_should_return_unable_to_get_pipelines_error(
     ) {
         let server = MockServer::start();
         let wk_client = setup_wk_client(&server.base_url());
@@ -126,7 +126,7 @@ mod test {
         });
 
         let response = wk_client
-            .fetch_github_cd_pipeline("github-pipeline-not-setup", "staging", "blue")
+            .fetch_cd_pipeline_github("github-pipeline-not-setup", "staging", "blue")
             .await;
 
         mock.assert();

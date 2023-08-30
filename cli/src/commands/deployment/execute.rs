@@ -802,13 +802,13 @@ async fn get_github_cd_pipeline(
     version: &str,
 ) -> Result<Option<CdPipelineWithBuilds>, WKCliError> {
     let github_cd_pipeline = match wk_client
-        .fetch_github_cd_pipeline(application, namespace, version)
+        .fetch_cd_pipeline_github(application, namespace, version)
         .await
     {
         Ok(data) => data.cd_pipeline,
         Err(WKCliError::WKSdkError(WKError::APIError(APIError::ResponseError {
             code, ..
-        }))) if code == "Unable to get workflow" => return Ok(None),
+        }))) if code == "Unable to get workflow" => None,
         Err(err) => return Err(err),
     };
 
