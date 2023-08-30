@@ -12,7 +12,7 @@ use tokio::sync::Mutex;
 use self::{
     app::{App, AppReturn},
     events::{
-        network::{NetworkEvent, NetworkManager},
+        network::{handle_network_event, NetworkEvent},
         EventManager,
     },
 };
@@ -20,7 +20,6 @@ use self::{
 mod action;
 mod app;
 mod events;
-// mod network;
 mod ui;
 
 pub enum CurrentScreen {
@@ -91,10 +90,12 @@ pub async fn handle_tui() -> Result<bool, WKCliError> {
     let app = Arc::new(Mutex::new(App::new(&config, sender)));
     let app_ui = Arc::clone(&app);
 
-    let mut network_manager = NetworkManager::new(app.clone());
     tokio::spawn(async move {
         while let Some(network_event) = receiver.recv().await {
-            let _ = network_manager.handle_network_event(network_event).await;
+            let app = Arc::clone(&app);
+            tokio::spawn(async move {
+                let _ = handle_network_event(app, network_event).await;
+            });
         }
     });
 
@@ -110,6 +111,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
 
     let mut terminal = Terminal::new(CrosstermBackend::new(stdout))?;
 
+    // The lower the tick_rate, the higher the FPS, but also the higher the CPU usage.
     let tick_rate = Duration::from_millis(200);
     let event_manager = EventManager::new();
     event_manager.spawn_event_listen_thread(tick_rate);
@@ -117,21 +119,21 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
     let mut the_first_frame = true;
 
     loop {
-        let mut app = app.lock().await;
+        let mut app_ref = app.lock().await;
 
         if the_first_frame {
             // fetch data on the first frame
-            app.dispatch(NetworkEvent::FetchDeployments).await;
-            app.dispatch(NetworkEvent::FetchBuilds).await;
+            app_ref.dispatch(NetworkEvent::FetchDeployments).await;
+            app_ref.dispatch(NetworkEvent::FetchBuilds).await;
 
             the_first_frame = false;
         }
 
-        terminal.draw(|frame| ui::draw(frame, &mut app))?;
+        terminal.draw(|frame| ui::draw(frame, &mut app_ref))?;
 
         let result = match event_manager.next().unwrap() {
-            events::Event::Input(key) => app.handle_input(key).await,
-            events::Event::Tick => app.update(),
+            events::Event::Input(key) => app_ref.handle_input(key).await,
+            events::Event::Tick => app_ref.update().await,
         };
 
         if result == AppReturn::Exit {

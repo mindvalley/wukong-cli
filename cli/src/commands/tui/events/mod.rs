@@ -27,12 +27,14 @@ impl EventManager {
 
     pub fn spawn_event_listen_thread(&self, tick_rate: Duration) {
         let event_sender = self.sender.clone();
-        tokio::spawn(async move {
+        std::thread::spawn(move || {
             loop {
                 // poll for tick rate duration, if no event, sent tick event.
                 if event::poll(tick_rate).unwrap() {
                     if let event::Event::Key(key) = event::read().unwrap() {
-                        event_sender.send(Event::Input(key.into())).unwrap();
+                        if event_sender.send(Event::Input(key.into())).is_err() {
+                            break;
+                        };
                     }
                 }
 
