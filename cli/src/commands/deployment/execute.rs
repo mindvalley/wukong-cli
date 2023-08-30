@@ -1,12 +1,5 @@
 use super::{DeploymentNamespace, DeploymentVersion};
-use crate::{
-    commands::Context,
-    error::{APIError, CliError, DeploymentError},
-    graphql::QueryClient,
-    loader::new_spinner_progress_bar,
-    output::colored_println,
-    telemetry::{self, TelemetryData, TelemetryEvent},
-};
+use crate::{commands::Context, error::DeploymentError, output::colored_println};
 use std::fmt::{self, Display};
 
 use base64::Engine;
@@ -18,16 +11,7 @@ use wukong_sdk::error::{APIError, WKError};
 use wukong_telemetry::*;
 use wukong_telemetry_macro::*;
 
-use crate::{
-    commands::Context,
-    config::Config,
-    error::{DeploymentError, WKCliError},
-    loader::new_spinner,
-    output::colored_println,
-    wukong_client::WKClient,
-};
-
-use super::{DeploymentNamespace, DeploymentVersion};
+use crate::{config::Config, error::WKCliError, loader::new_spinner, wukong_client::WKClient};
 
 enum BuildSelectionLayout {
     TwoColumns { data: Vec<TwoColumns> },
@@ -400,7 +384,7 @@ pub async fn handle_execute(
         let pipeline_type;
 
         let github_cd_pipeline = get_github_cd_pipeline(
-            &mut client,
+            &mut wk_client,
             &current_application,
             &selected_namespace.to_lowercase(),
             &selected_version.to_lowercase(),
@@ -415,7 +399,7 @@ pub async fn handle_execute(
                 .is_empty()
         {
             let jenkins_cd_pipeline = get_jenkins_cd_pipeline(
-                &mut client,
+                &mut wk_client,
                 &current_application,
                 &selected_namespace.to_lowercase(),
                 &selected_version.to_lowercase(),
@@ -749,16 +733,14 @@ async fn get_deployment_status(
 }
 
 async fn get_jenkins_cd_pipeline(
-    client: &mut QueryClient,
+    wk_client: &mut WKClient,
     application: &str,
     namespace: &str,
     version: &str,
-) -> Result<Option<CdPipelineWithBuilds>, CliError> {
-    let jenkins_cd_pipeline = client
+) -> Result<Option<CdPipelineWithBuilds>, WKCliError> {
+    let jenkins_cd_pipeline = wk_client
         .fetch_cd_pipeline(application, namespace, version)
         .await?
-        .data
-        .unwrap()
         .cd_pipeline;
 
     match jenkins_cd_pipeline {
@@ -814,20 +796,20 @@ async fn get_jenkins_cd_pipeline(
 }
 
 async fn get_github_cd_pipeline(
-    client: &mut QueryClient,
+    wk_client: &mut WKClient,
     application: &str,
     namespace: &str,
     version: &str,
-) -> Result<Option<CdPipelineWithBuilds>, CliError> {
-    let github_cd_pipeline = match client
+) -> Result<Option<CdPipelineWithBuilds>, WKCliError> {
+    let github_cd_pipeline = match wk_client
         .fetch_github_cd_pipeline(application, namespace, version)
         .await
     {
-        Ok(github_cd_pipeline) => github_cd_pipeline.data.unwrap().cd_pipeline,
-        Err(APIError::ResponseError { code, .. }) if code == "Unable to get workflow" => {
-            return Ok(None)
-        }
-        Err(err) => return Err(err.into()),
+        Ok(data) => data.cd_pipeline,
+        Err(WKCliError::WKSdkError(WKError::APIError(APIError::ResponseError {
+            code, ..
+        }))) if code == "Unable to get workflow" => return Ok(None),
+        Err(err) => return Err(err),
     };
 
     match github_cd_pipeline {

@@ -1,9 +1,11 @@
 pub mod application;
 pub mod changelog;
 pub mod deployment;
+pub mod github_pipeline;
 pub mod kubernetes;
 pub mod pipeline;
 
+use self::github_pipeline::{github_cd_pipeline_query, GithubCdPipelineQuery};
 pub use self::{
     application::{
         application_query, application_with_k8s_cluster_query, applications_query,
@@ -363,6 +365,43 @@ impl WKClient {
             .post_graphql::<CdPipelineQuery, _>(
                 &self.api_url,
                 cd_pipeline_query::Variables {
+                    application: application.to_string(),
+                    namespace: namespace.to_string(),
+                    version: version.to_string(),
+                },
+            )
+            .await
+            .map_err(|err| {
+                match &err {
+                    APIError::ResponseError { code, message: _ } => match code.as_str() {
+                        "application_not_found" => APIError::ApplicationNotFound {
+                            application: application.to_string(),
+                        },
+                        _ => err,
+                    },
+                    _ => err,
+                }
+                .into()
+            })
+    }
+
+    /// Fetch Github CD pipeline from Wukong API Proxy.
+    ///
+    /// It will return:
+    /// - [`WKError::APIError(APIError::ApplicationNotFound)`](APIError::ApplicationNotFound) if the `application` does not exist.
+    /// - [`WKError::APIError(APIError::ResponseError)`](APIError::ResponseError)  for the rest.
+    pub async fn fetch_github_cd_pipeline(
+        &self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<github_cd_pipeline_query::ResponseData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token)?;
+
+        gql_client
+            .post_graphql::<GithubCdPipelineQuery, _>(
+                &self.api_url,
+                github_cd_pipeline_query::Variables {
                     application: application.to_string(),
                     namespace: namespace.to_string(),
                     version: version.to_string(),
