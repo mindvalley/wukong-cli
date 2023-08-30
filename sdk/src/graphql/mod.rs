@@ -28,7 +28,7 @@ pub use self::{
 };
 use crate::{
     error::{APIError, WKError},
-    WKClient,
+    ApiChannel, WKClient,
 };
 use graphql_client::{GraphQLQuery, Response};
 use log::debug;
@@ -53,29 +53,63 @@ fn check_retry_and_auth_error(error: &graphql_client::Error) -> Option<APIError>
     }
 }
 
-pub struct GQLClient {
-    inner: reqwest::Client,
+pub struct GQLClientBuilder<'a> {
+    token: &'a str,
+    channel: &'a ApiChannel,
 }
 
-impl GQLClient {
-    fn with_authorization(token: &str) -> Result<Self, APIError> {
+impl<'a> Default for GQLClientBuilder<'a> {
+    fn default() -> Self {
+        Self {
+            token: Default::default(),
+            channel: &ApiChannel::Stable,
+        }
+    }
+}
+
+impl<'a> GQLClientBuilder<'a> {
+    pub fn with_token(mut self, token: &'a str) -> Self {
+        self.token = token;
+        self
+    }
+    pub fn with_channel(mut self, channel: &'a ApiChannel) -> Self {
+        self.channel = channel;
+        self
+    }
+
+    pub fn build(self) -> Result<GQLClient, APIError> {
         let mut headers = header::HeaderMap::new();
 
-        let auth_value = format!("Bearer {}", token);
+        let auth_value = format!("Bearer {}", self.token);
         headers.insert(
             header::AUTHORIZATION,
             header::HeaderValue::from_str(&auth_value).unwrap(),
         );
 
+        // if the channel is canary, we have to include the MV-Canary-Stage header
+        // so it will call the canary api
+        if let ApiChannel::Canary = self.channel {
+            headers.insert(
+                "MV-Canary-Stage",
+                header::HeaderValue::from_str("always").unwrap(),
+            );
+        }
+
         let reqwest_client = reqwest::Client::builder()
             .default_headers(headers)
             .build()?;
 
-        Ok(Self {
+        Ok(GQLClient {
             inner: reqwest_client,
         })
     }
+}
 
+pub struct GQLClient {
+    inner: reqwest::Client,
+}
+
+impl GQLClient {
     async fn post_graphql<Q, U>(
         &self,
         url: U,
@@ -91,6 +125,7 @@ impl GQLClient {
         debug!("url: {:?}", &url);
         debug!("query: \n{}", body.query);
 
+        debug!("reqwest client: {:#?}", self.inner);
         let request = self.inner.post(url.clone()).json(&body);
         debug!("request: {:#?}", request);
 
@@ -147,7 +182,7 @@ impl GQLClient {
 impl WKClient {
     /// Fetch supported applications from Wukong API Proxy.
     pub async fn fetch_applications(&self) -> Result<applications_query::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token)?;
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
         gql_client
             .post_graphql::<ApplicationsQuery, _>(&self.api_url, applications_query::Variables)
@@ -160,7 +195,7 @@ impl WKClient {
         &self,
         name: &str,
     ) -> Result<application_query::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token)?;
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
         gql_client
             .post_graphql::<ApplicationQuery, _>(
@@ -184,7 +219,7 @@ impl WKClient {
         &self,
         application: &str,
     ) -> Result<pipelines_query::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token)?;
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
         gql_client
             .post_graphql::<PipelinesQuery, _>(
@@ -217,7 +252,7 @@ impl WKClient {
         &self,
         name: &str,
     ) -> Result<pipeline_query::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token)?;
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
         gql_client
             .post_graphql::<PipelineQuery, _>(
@@ -250,7 +285,7 @@ impl WKClient {
         &self,
         name: &str,
     ) -> Result<multi_branch_pipeline_query::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token)?;
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
         gql_client
             .post_graphql::<MultiBranchPipelineQuery, _>(
@@ -284,7 +319,7 @@ impl WKClient {
         repo_url: &str,
         branch: &str,
     ) -> Result<ci_status_query::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token)?;
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
         let response = gql_client
             .post_graphql::<CiStatusQuery, _>(
@@ -324,7 +359,7 @@ impl WKClient {
         &self,
         application: &str,
     ) -> Result<cd_pipelines_query::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token)?;
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
         gql_client
             .post_graphql::<CdPipelinesQuery, _>(
@@ -359,7 +394,7 @@ impl WKClient {
         namespace: &str,
         version: &str,
     ) -> Result<cd_pipeline_query::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token)?;
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
         gql_client
             .post_graphql::<CdPipelineQuery, _>(
@@ -437,7 +472,7 @@ impl WKClient {
         version: &str,
         build_artifact_name: &str,
     ) -> Result<changelogs_query::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token)?;
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
         gql_client
             .post_graphql::<ChangelogsQuery, _>(
@@ -486,7 +521,7 @@ impl WKClient {
         changelogs: Option<String>,
         send_to_slack: bool,
     ) -> Result<execute_cd_pipeline::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token)?;
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
         gql_client
             .post_graphql::<ExecuteCdPipeline, _>(
@@ -531,7 +566,7 @@ impl WKClient {
         namespace: &str,
         version: &str,
     ) -> Result<cd_pipeline_for_rollback_query::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token)?;
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
         gql_client
             .post_graphql::<CdPipelineForRollbackQuery, _>(
@@ -570,7 +605,7 @@ impl WKClient {
         namespace: &str,
         version: &str,
     ) -> Result<is_authorized_query::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token)?;
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
         gql_client
             .post_graphql::<IsAuthorizedQuery, _>(
@@ -609,7 +644,7 @@ impl WKClient {
         namespace: &str,
         version: &str,
     ) -> Result<kubernetes_pods_query::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token)?;
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
         gql_client
             .post_graphql::<KubernetesPodsQuery, _>(
@@ -652,7 +687,7 @@ impl WKClient {
         namespace: &str,
         version: &str,
     ) -> Result<livebook_resource_query::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token)?;
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
         gql_client
             .post_graphql::<LivebookResourceQuery, _>(
@@ -677,7 +712,7 @@ impl WKClient {
         name: &str,
         port: i64,
     ) -> Result<deploy_livebook::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token)?;
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
         gql_client
             .post_graphql::<DeployLivebook, _>(
@@ -713,7 +748,7 @@ impl WKClient {
         namespace: &str,
         version: &str,
     ) -> Result<destroy_livebook::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token)?;
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
         gql_client
             .post_graphql::<DestroyLivebook, _>(
@@ -747,7 +782,7 @@ impl WKClient {
         namespace: &str,
         version: &str,
     ) -> Result<application_with_k8s_cluster_query::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token)?;
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
         gql_client
             .post_graphql::<ApplicationWithK8sClusterQuery, _>(
@@ -763,6 +798,10 @@ impl WKClient {
     }
 }
 
-fn setup_gql_client(access_token: &str) -> Result<GQLClient, WKError> {
-    GQLClient::with_authorization(access_token).map_err(|err| err.into())
+fn setup_gql_client(access_token: &str, channel: &ApiChannel) -> Result<GQLClient, WKError> {
+    GQLClientBuilder::default()
+        .with_token(access_token)
+        .with_channel(channel)
+        .build()
+        .map_err(|err| err.into())
 }

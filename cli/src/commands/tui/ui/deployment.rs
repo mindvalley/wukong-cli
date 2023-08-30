@@ -85,12 +85,15 @@ impl DeploymentWidget {
         // if both versions are exist, split the screen
         if has_green_version && has_blue_version {
             let [top, bottom] = *Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
-            .split(rect.inner(&Margin { vertical: 1, horizontal: 1 }))
-        else {
-            return;
-        };
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+                .split(rect.inner(&Margin {
+                    vertical: 1,
+                    horizontal: 1,
+                }))
+            else {
+                return;
+            };
             frame.render_widget(green_widget, top);
             frame.render_widget(blue_widget, bottom);
         } else if has_green_version {

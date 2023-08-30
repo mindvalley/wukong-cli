@@ -12,7 +12,7 @@ use crate::{
             StatefulList,
         },
     },
-    config::Config,
+    config::{ApiChannel, Config},
     error::WKCliError,
     wukong_client::WKClient,
 };
@@ -28,7 +28,11 @@ pub enum NetworkEvent {
 pub async fn handle_network_event(
     app: Arc<Mutex<App>>,
     network_event: NetworkEvent,
+    channel: &ApiChannel,
 ) -> Result<(), WKCliError> {
+    let config = Config::load_from_default_path()?;
+    let mut wk_client = WKClient::for_channel(&config, channel)?;
+
     match network_event {
         NetworkEvent::FetchBuilds => {
             let mut app_ref = app.lock().await;
@@ -37,9 +41,6 @@ pub async fn handle_network_event(
             app_ref.state.is_fetching_builds = true;
 
             drop(app_ref);
-
-            let config = Config::load_from_default_path()?;
-            let mut wk_client = WKClient::new(&config)?;
 
             let cd_pipeline_data = wk_client
                 .fetch_cd_pipeline(&application, &namespace, "green")
@@ -82,9 +83,6 @@ pub async fn handle_network_event(
             app_ref.state.is_checking_namespaces = true;
 
             drop(app_ref);
-
-            let config = Config::load_from_default_path()?;
-            let mut wk_client = WKClient::new(&config)?;
 
             let cd_pipelines_data = wk_client
                 .fetch_cd_pipelines(&application)
@@ -147,9 +145,6 @@ pub async fn handle_network_event(
             };
 
             drop(app_ref);
-
-            let config = Config::load_from_default_path()?;
-            let mut wk_client = WKClient::new(&config)?;
 
             let gcloud_access_token = auth::google_cloud::get_token_or_login().await;
 

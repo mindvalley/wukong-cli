@@ -57,6 +57,13 @@ pub struct Config {
     pub vault: Option<VaultConfig>,
 }
 
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+pub enum ApiChannel {
+    Canary,
+    #[default]
+    Stable,
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct CoreConfig {
     /// The current application name

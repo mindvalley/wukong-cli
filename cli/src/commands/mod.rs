@@ -7,7 +7,7 @@ use crate::{
     commands::{
         completion::handle_completion, init::handle_init, login::handle_login, tui::handle_tui,
     },
-    config::Config,
+    config::{ApiChannel, Config},
     error::WKCliError,
 };
 
@@ -23,8 +23,9 @@ mod tui;
 
 #[derive(Debug, Default)]
 pub struct Context {
-    current_application: String,
-    sub: Option<String>,
+    pub current_application: String,
+    pub sub: Option<String>,
+    pub channel: ApiChannel,
 }
 
 /// A Swiss-army Knife CLI For Mindvalley Developers
@@ -41,6 +42,10 @@ pub struct ClapApp {
 
     #[command(flatten)]
     pub verbose: Verbosity<ErrorLevel>,
+
+    /// Use the Canary channel API
+    #[arg(long, global = true)]
+    canary: bool,
 }
 
 #[derive(Debug)]
@@ -97,9 +102,15 @@ pub enum CommandGroup {
 impl ClapApp {
     pub async fn execute(&self) -> Result<bool, WKCliError> {
         debug!("current cli version: {}", crate_version!());
+        let channel = if self.canary {
+            ApiChannel::Canary
+        } else {
+            ApiChannel::Stable
+        };
+        debug!("API channel: {:?}", channel);
 
         match &self.command_group {
-            CommandGroup::Init => handle_init().await,
+            CommandGroup::Init => handle_init(channel).await,
             CommandGroup::Completion { shell } => handle_completion(*shell),
             CommandGroup::Login => handle_login().await,
             CommandGroup::Application(application) => {
@@ -111,7 +122,7 @@ impl ClapApp {
             }
             CommandGroup::Config(config) => config.handle_command(),
             CommandGroup::Dev(dev) => dev.handle_command(self).await,
-            CommandGroup::Tui => handle_tui().await,
+            CommandGroup::Tui => handle_tui(channel).await,
         }
     }
 }
@@ -130,6 +141,13 @@ fn get_context(clap_app: &ClapApp) -> Result<Context, WKCliError> {
             }
         },
         sub: config.auth.map(|auth_config| auth_config.subject),
+        // if the `--canary` flag is used, then the CLI will use the Canary channel API,
+        // otherwise, it will use the Stable channel API.
+        channel: if clap_app.canary {
+            ApiChannel::Canary
+        } else {
+            ApiChannel::Stable
+        },
     };
 
     Ok(context)

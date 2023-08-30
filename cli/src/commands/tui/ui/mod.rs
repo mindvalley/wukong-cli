@@ -23,35 +23,35 @@ where
 {
     // Create the layout sections.
     let [top, mid, bottom] = *Layout::default()
-            .direction(Direction::Vertical)
-            .constraints(
-                [
-                    Constraint::Ratio(1, 7),
-                    Constraint::Ratio(3, 7),
-                    Constraint::Ratio(3, 7),
-                ]
-                .as_ref(),
-            )
-            .split(frame.size())
-        else {
-            return;
-        };
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Ratio(1, 7),
+                Constraint::Ratio(3, 7),
+                Constraint::Ratio(3, 7),
+            ]
+            .as_ref(),
+        )
+        .split(frame.size())
+    else {
+        return;
+    };
 
     let [top_left, top_right] = *Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints([Constraint::Percentage(40), Constraint::Percentage(60)].as_ref())
-            .split(top)
-        else {
-            return;
-        };
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(40), Constraint::Percentage(60)].as_ref())
+        .split(top)
+    else {
+        return;
+    };
 
     let [bottom_left, bottom_right] = *Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
-            .split(bottom)
-        else {
-            return;
-        };
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+        .split(bottom)
+    else {
+        return;
+    };
 
     // TOP
     ApplicationWidget::draw(app, frame, top_left);
