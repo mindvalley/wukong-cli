@@ -431,7 +431,7 @@ impl WKClient {
         namespace: &str,
         version: &str,
     ) -> Result<github_cd_pipeline_query::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token)?;
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
         gql_client
             .post_graphql::<GithubCdPipelineQuery, _>(
