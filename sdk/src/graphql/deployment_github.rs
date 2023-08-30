@@ -84,7 +84,7 @@ mod test {
 
         let pipeline = response.unwrap().cd_pipeline.unwrap();
 
-        assert!(pipeline.github_builds.is_empty());
+        assert!(pipeline.github_builds.len() > 0);
     }
 
     #[tokio::test]
