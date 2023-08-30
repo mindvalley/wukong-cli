@@ -25,7 +25,7 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_fetch_cd_pipeline_github_success_should_return_pipeline_with_github_deployment() {
+    async fn test_fetch_cd_pipeline_github_success_should_return_pipeline_with_github_builds() {
         let server = MockServer::start();
         let wk_client = setup_wk_client(&server.base_url());
 
