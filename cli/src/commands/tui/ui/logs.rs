@@ -25,7 +25,10 @@ impl LogsWidget {
         let [info, logs_area] = *Layout::default()
             .direction(Direction::Vertical)
             .constraints([Constraint::Min(1), Constraint::Percentage(99)].as_ref())
-            .split(rect.inner(&Margin { vertical: 1, horizontal: 1 }))
+            .split(rect.inner(&Margin {
+                vertical: 1,
+                horizontal: 1,
+            }))
         else {
             return;
         };
