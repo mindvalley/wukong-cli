@@ -396,7 +396,13 @@ pub async fn handle_execute(
         )
         .await?;
 
-        if github_cd_pipeline.is_none() {
+        if github_cd_pipeline.is_none()
+            || github_cd_pipeline
+                .as_ref()
+                .unwrap()
+                .github_builds
+                .is_empty()
+        {
             let jenkins_cd_pipeline = get_jenkins_cd_pipeline(
                 &mut client,
                 &current_application,
