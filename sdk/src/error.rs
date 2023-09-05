@@ -177,6 +177,8 @@ pub enum GCloudError {
     Io(#[from] ::std::io::Error),
     #[error(transparent)]
     GoogleLogging2Error(#[from] google_logging2::Error),
+    #[error(transparent)]
+    ResponseError(#[from] tonic::Status),
 }
 
 // Secret Extractor Error

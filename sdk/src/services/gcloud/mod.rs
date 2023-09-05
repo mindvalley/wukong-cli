@@ -183,8 +183,7 @@ impl GCloudClient {
 
         let response = service
             .list_log_entries(Request::new(request))
-            .await
-            .unwrap()
+            .await?
             .into_inner();
 
         Ok(LogEntries {

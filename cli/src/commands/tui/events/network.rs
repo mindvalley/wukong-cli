@@ -165,7 +165,7 @@ pub async fn handle_network_event(
                     )?;
                     let resource_names = vec![format!("projects/{}", cluster.google_project_id)];
 
-                    let mut log = fetch_log_entries(
+                    let mut log = match fetch_log_entries(
                         Some(resource_names.clone()),
                         Some(500),
                         Some(filter.clone()),
@@ -173,7 +173,16 @@ pub async fn handle_network_event(
                         gcloud_access_token.clone(),
                         &mut wk_client,
                     )
-                    .await?;
+                    .await
+                    {
+                        Ok(data) => data,
+                        Err(error) => {
+                            let mut app_ref = app.lock().await;
+                            app_ref.state.has_log_errors = true;
+                            return Err(error);
+                        }
+                    };
+
                     let mut next_page_token = log.next_page_token.clone();
                     update_logs_entries(Arc::clone(&app), log.entries).await;
 
