@@ -111,8 +111,7 @@ struct CdPipelineWithBuilds {
     last_deployed_at: Option<i64>,
     last_successfully_deployed_artifact: Option<String>,
     status: Option<String>,
-    jenkins_builds: Vec<CdPipelineBuild>,
-    github_builds: Vec<CdPipelineBuild>,
+    builds: Vec<CdPipelineBuild>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -135,11 +134,6 @@ struct Commit {
     id: String,
     author: String,
     message_headline: String,
-}
-
-enum PipelineType {
-    Github,
-    Jenkins,
 }
 
 fn capitalize_first_letter(o: &str) -> String {
@@ -381,7 +375,6 @@ pub async fn handle_execute(
         progress_bar.set_message("Fetching available build artifacts ...");
 
         let cd_pipeline_data: Option<CdPipelineWithBuilds>;
-        let pipeline_type;
 
         let github_cd_pipeline = get_github_cd_pipeline(
             &mut wk_client,
@@ -391,13 +384,7 @@ pub async fn handle_execute(
         )
         .await?;
 
-        if github_cd_pipeline.is_none()
-            || github_cd_pipeline
-                .as_ref()
-                .unwrap()
-                .github_builds
-                .is_empty()
-        {
+        if github_cd_pipeline.is_none() || github_cd_pipeline.as_ref().unwrap().builds.is_empty() {
             let jenkins_cd_pipeline = get_jenkins_cd_pipeline(
                 &mut wk_client,
                 &current_application,
@@ -407,10 +394,8 @@ pub async fn handle_execute(
             .await?;
 
             cd_pipeline_data = jenkins_cd_pipeline;
-            pipeline_type = PipelineType::Jenkins;
         } else {
             cd_pipeline_data = github_cd_pipeline;
-            pipeline_type = PipelineType::Github;
         }
 
         selected_build = match cd_pipeline_data {
@@ -459,8 +444,7 @@ pub async fn handle_execute(
                     }
                 };
 
-                let selected_build =
-                    get_selected_build(pipeline_type, cd_pipeline, selected_build_index);
+                let selected_build = get_selected_build(cd_pipeline, selected_build_index);
 
                 println!(
                     "You've selected `{selected_build}` as the build artifact for this deployment. \n"
@@ -600,19 +584,10 @@ pub async fn handle_execute(
     Ok(true)
 }
 
-fn get_selected_build(
-    pipeline_type: PipelineType,
-    cd_pipeline: CdPipelineWithBuilds,
-    selected_build_index: usize,
-) -> String {
-    match pipeline_type {
-        PipelineType::Github => cd_pipeline.github_builds[selected_build_index]
-            .build_artifact_name
-            .to_owned(),
-        PipelineType::Jenkins => cd_pipeline.jenkins_builds[selected_build_index]
-            .build_artifact_name
-            .to_owned(),
-    }
+fn get_selected_build(cd_pipeline: CdPipelineWithBuilds, selected_build_index: usize) -> String {
+    cd_pipeline.builds[selected_build_index]
+        .build_artifact_name
+        .to_owned()
 }
 
 fn generate_three_columns_build_selection(
@@ -621,13 +596,8 @@ fn generate_three_columns_build_selection(
 ) -> Vec<ThreeColumns> {
     let mut width = 0;
 
-    let cd_builds = if cd_pipeline.github_builds.is_empty() {
-        &cd_pipeline.jenkins_builds
-    } else {
-        &cd_pipeline.github_builds
-    };
-
-    let mut three_columns: Vec<ThreeColumns> = cd_builds
+    let mut three_columns: Vec<ThreeColumns> = cd_pipeline
+        .builds
         .iter()
         .map(|build| {
             let commits: Vec<String> = build
@@ -669,13 +639,8 @@ fn generate_three_columns_build_selection(
 fn generate_two_columns_build_selection(cd_pipeline: &CdPipelineWithBuilds) -> Vec<TwoColumns> {
     let mut width = 0;
 
-    let cd_builds = if cd_pipeline.github_builds.is_empty() {
-        &cd_pipeline.jenkins_builds
-    } else {
-        &cd_pipeline.github_builds
-    };
-
-    let mut two_columns: Vec<TwoColumns> = cd_builds
+    let mut two_columns: Vec<TwoColumns> = cd_pipeline
+        .builds
         .iter()
         .map(|build| {
             let commits: Vec<String> = build
@@ -786,8 +751,7 @@ async fn get_jenkins_cd_pipeline(
                     .last_successfully_deployed_artifact,
                 last_deployed_at: jenkins_cd_pipeline.last_deployment,
                 status: jenkins_cd_pipeline.status,
-                github_builds: Vec::new(),
-                jenkins_builds,
+                builds: jenkins_builds,
             };
 
             Ok(Some(cd_pipeline_with_builds))
@@ -855,8 +819,7 @@ async fn get_github_cd_pipeline(
                     .last_successfully_deployed_artifact,
                 last_deployed_at: github_cd_pipeline.last_deployment,
                 status: github_cd_pipeline.status,
-                github_builds,
-                jenkins_builds: Vec::new(),
+                builds: github_builds,
             };
 
             Ok(Some(cd_pipeline_with_builds))
