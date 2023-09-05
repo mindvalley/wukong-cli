@@ -1,3 +1,5 @@
+use super::{DeploymentNamespace, DeploymentVersion};
+use crate::{commands::Context, error::DeploymentError, output::colored_println};
 use std::fmt::{self, Display};
 
 use base64::Engine;
@@ -9,16 +11,7 @@ use wukong_sdk::error::{APIError, WKError};
 use wukong_telemetry::*;
 use wukong_telemetry_macro::*;
 
-use crate::{
-    commands::Context,
-    config::Config,
-    error::{DeploymentError, WKCliError},
-    loader::new_spinner,
-    output::colored_println,
-    wukong_client::WKClient,
-};
-
-use super::{DeploymentNamespace, DeploymentVersion};
+use crate::{config::Config, error::WKCliError, loader::new_spinner, wukong_client::WKClient};
 
 enum BuildSelectionLayout {
     TwoColumns { data: Vec<TwoColumns> },
@@ -118,11 +111,11 @@ struct CdPipelineWithBuilds {
     last_deployed_at: Option<i64>,
     last_successfully_deployed_artifact: Option<String>,
     status: Option<String>,
-    jenkins_builds: Vec<JenkinsBuild>,
+    builds: Vec<CdPipelineBuild>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct JenkinsBuild {
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct CdPipelineBuild {
     build_duration: Option<i64>,
     build_number: i64,
     build_artifact_name: String,
@@ -136,7 +129,7 @@ struct JenkinsBuild {
     commits: Vec<Commit>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct Commit {
     id: String,
     author: String,
@@ -381,99 +374,38 @@ pub async fn handle_execute(
         let progress_bar = new_spinner();
         progress_bar.set_message("Fetching available build artifacts ...");
 
-        let cd_pipeline_data = wk_client
-            .fetch_cd_pipeline(
+        let cd_pipeline_data: Option<CdPipelineWithBuilds>;
+
+        let github_cd_pipeline = get_github_cd_pipeline(
+            &mut wk_client,
+            &current_application,
+            &selected_namespace.to_lowercase(),
+            &selected_version.to_lowercase(),
+        )
+        .await?;
+
+        if github_cd_pipeline.is_none() || github_cd_pipeline.as_ref().unwrap().builds.is_empty() {
+            let jenkins_cd_pipeline = get_jenkins_cd_pipeline(
+                &mut wk_client,
                 &current_application,
                 &selected_namespace.to_lowercase(),
                 &selected_version.to_lowercase(),
             )
-            .await?
-            .cd_pipeline;
+            .await?;
+
+            cd_pipeline_data = jenkins_cd_pipeline;
+        } else {
+            cd_pipeline_data = github_cd_pipeline;
+        }
 
         selected_build = match cd_pipeline_data {
-            Some(cd_pipeline_data) => {
-                let cd_pipeline = CdPipelineWithBuilds {
-                    name: cd_pipeline_data.name,
-                    version: cd_pipeline_data.version,
-                    enabled: cd_pipeline_data.enabled,
-                    deployed_ref: cd_pipeline_data.deployed_ref,
-                    build_artifact: cd_pipeline_data.build_artifact,
-                    last_successfully_deployed_artifact: cd_pipeline_data
-                        .last_successfully_deployed_artifact,
-                    last_deployed_at: cd_pipeline_data.last_deployment,
-                    status: cd_pipeline_data.status,
-                    jenkins_builds: cd_pipeline_data
-                        .jenkins_builds
-                        .into_iter()
-                        .map(|build| {
-                            let commits: Vec<Commit> = build
-                                .commits
-                                .into_iter()
-                                .map(|commit| Commit {
-                                    id: commit.id,
-                                    author: commit.author,
-                                    message_headline: commit.message_headline,
-                                })
-                                .collect();
-
-                            JenkinsBuild {
-                                build_duration: build.build_duration,
-                                build_number: build.build_number,
-                                build_branch: build.build_branch,
-                                build_url: build.build_url,
-                                build_artifact_name: build.build_artifact_name,
-                                name: build.name,
-                                result: build.result,
-                                timestamp: build.timestamp,
-                                total_duration: build.total_duration,
-                                wait_duration: build.wait_duration,
-                                commits,
-                            }
-                        })
-                        .collect(),
-                };
-
+            Some(cd_pipeline) => {
                 let build_selections = if let Some(build_artifact) =
                     &cd_pipeline.last_successfully_deployed_artifact
                 {
                     if build_artifact.contains("-build-") {
-                        let mut width = 0;
-                        let mut build_selection: Vec<ThreeColumns> = cd_pipeline
-                            .jenkins_builds
-                            .iter()
-                            .map(|build| {
-                                let commits: Vec<String> = build
-                                    .commits
-                                    .iter()
-                                    .map(|commit| commit.message_headline.clone())
-                                    .collect();
-
-                                let build_artifact_name = build.build_artifact_name.clone();
-                                if build_artifact_name.len() > width {
-                                    width = build_artifact_name.len();
-                                }
-
-                                if *build_artifact == build_artifact_name {
-                                    ThreeColumns {
-                                        left: build_artifact_name,
-                                        middle: "*".to_string(),
-                                        right: commits,
-                                        left_width: 0,
-                                    }
-                                } else {
-                                    ThreeColumns {
-                                        left: build_artifact_name,
-                                        middle: "".to_string(),
-                                        right: commits,
-                                        left_width: 0,
-                                    }
-                                }
-                            })
-                            .collect();
-
-                        build_selection.iter_mut().for_each(|build| {
-                            build.left_width = width;
-                        });
+                        let build_selection: Vec<ThreeColumns> =
+                            generate_three_columns_build_selection(&cd_pipeline, build_artifact);
 
                         BuildSelectionLayout::ThreeColumns {
                             data: build_selection,
@@ -512,8 +444,7 @@ pub async fn handle_execute(
                     }
                 };
 
-                let selected_build =
-                    &cd_pipeline.jenkins_builds[selected_build_index].build_artifact_name;
+                let selected_build = get_selected_build(cd_pipeline, selected_build_index);
 
                 println!(
                     "You've selected `{selected_build}` as the build artifact for this deployment. \n"
@@ -653,11 +584,63 @@ pub async fn handle_execute(
     Ok(true)
 }
 
+fn get_selected_build(cd_pipeline: CdPipelineWithBuilds, selected_build_index: usize) -> String {
+    cd_pipeline.builds[selected_build_index]
+        .build_artifact_name
+        .to_owned()
+}
+
+fn generate_three_columns_build_selection(
+    cd_pipeline: &CdPipelineWithBuilds,
+    build_artifact: &str,
+) -> Vec<ThreeColumns> {
+    let mut width = 0;
+
+    let mut three_columns: Vec<ThreeColumns> = cd_pipeline
+        .builds
+        .iter()
+        .map(|build| {
+            let commits: Vec<String> = build
+                .commits
+                .iter()
+                .map(|commit| commit.message_headline.clone())
+                .collect();
+
+            let build_artifact_name = build.build_artifact_name.clone();
+            if build_artifact_name.len() > width {
+                width = build_artifact_name.len();
+            }
+
+            if *build_artifact == build_artifact_name {
+                ThreeColumns {
+                    left: build_artifact_name,
+                    middle: "*".to_string(),
+                    right: commits,
+                    left_width: 0,
+                }
+            } else {
+                ThreeColumns {
+                    left: build_artifact_name,
+                    middle: "".to_string(),
+                    right: commits,
+                    left_width: 0,
+                }
+            }
+        })
+        .collect();
+
+    three_columns.iter_mut().for_each(|build| {
+        build.left_width = width;
+    });
+
+    three_columns
+}
+
 fn generate_two_columns_build_selection(cd_pipeline: &CdPipelineWithBuilds) -> Vec<TwoColumns> {
     let mut width = 0;
 
     let mut two_columns: Vec<TwoColumns> = cd_pipeline
-        .jenkins_builds
+        .builds
         .iter()
         .map(|build| {
             let commits: Vec<String> = build
@@ -682,6 +665,7 @@ fn generate_two_columns_build_selection(cd_pipeline: &CdPipelineWithBuilds) -> V
     two_columns
         .iter_mut()
         .for_each(|each| each.left_width = width);
+
     two_columns
 }
 
@@ -709,6 +693,136 @@ async fn get_deployment_status(
             Ok(String::from("TERMINAL"))
         } else {
             Ok(deployment_status.unwrap())
+        }
+    }
+}
+
+async fn get_jenkins_cd_pipeline(
+    wk_client: &mut WKClient,
+    application: &str,
+    namespace: &str,
+    version: &str,
+) -> Result<Option<CdPipelineWithBuilds>, WKCliError> {
+    let jenkins_cd_pipeline = wk_client
+        .fetch_cd_pipeline(application, namespace, version)
+        .await?
+        .cd_pipeline;
+
+    match jenkins_cd_pipeline {
+        None => Ok(None),
+        Some(jenkins_cd_pipeline) => {
+            let jenkins_builds = jenkins_cd_pipeline
+                .jenkins_builds
+                .into_iter()
+                .map(|build| {
+                    let commits: Vec<Commit> = build
+                        .commits
+                        .into_iter()
+                        .map(|commit| Commit {
+                            id: commit.id,
+                            author: commit.author,
+                            message_headline: commit.message_headline,
+                        })
+                        .collect();
+
+                    CdPipelineBuild {
+                        build_duration: build.build_duration,
+                        build_number: build.build_number,
+                        build_branch: build.build_branch,
+                        build_url: build.build_url,
+                        build_artifact_name: build.build_artifact_name,
+                        name: build.name,
+                        result: build.result,
+                        timestamp: build.timestamp,
+                        total_duration: build.total_duration,
+                        wait_duration: build.wait_duration,
+                        commits,
+                    }
+                })
+                .collect();
+
+            let cd_pipeline_with_builds = CdPipelineWithBuilds {
+                name: jenkins_cd_pipeline.name,
+                version: jenkins_cd_pipeline.version,
+                enabled: jenkins_cd_pipeline.enabled,
+                deployed_ref: jenkins_cd_pipeline.deployed_ref,
+                build_artifact: jenkins_cd_pipeline.build_artifact,
+                last_successfully_deployed_artifact: jenkins_cd_pipeline
+                    .last_successfully_deployed_artifact,
+                last_deployed_at: jenkins_cd_pipeline.last_deployment,
+                status: jenkins_cd_pipeline.status,
+                builds: jenkins_builds,
+            };
+
+            Ok(Some(cd_pipeline_with_builds))
+        }
+    }
+}
+
+async fn get_github_cd_pipeline(
+    wk_client: &mut WKClient,
+    application: &str,
+    namespace: &str,
+    version: &str,
+) -> Result<Option<CdPipelineWithBuilds>, WKCliError> {
+    let github_cd_pipeline = match wk_client
+        .fetch_cd_pipeline_github(application, namespace, version)
+        .await
+    {
+        Ok(data) => data.cd_pipeline,
+        Err(WKCliError::WKSdkError(WKError::APIError(APIError::ResponseError {
+            code, ..
+        }))) if code == "Unable to get workflow" => None,
+        Err(err) => return Err(err),
+    };
+
+    match github_cd_pipeline {
+        None => Ok(None),
+        Some(github_cd_pipeline) => {
+            let github_builds = github_cd_pipeline
+                .github_builds
+                .into_iter()
+                .map(|build| {
+                    let commits: Vec<Commit> = build
+                        .commits
+                        .into_iter()
+                        .map(|commit| Commit {
+                            id: commit.id,
+                            author: commit.author,
+                            message_headline: commit.message_headline,
+                        })
+                        .collect();
+
+                    CdPipelineBuild {
+                        build_duration: build.build_duration,
+                        build_number: build.build_number,
+                        build_branch: build.build_branch,
+                        build_url: build.build_url,
+                        build_artifact_name: build.build_artifact_name,
+                        name: build.name,
+                        result: build.result,
+                        timestamp: build.timestamp,
+                        total_duration: build.total_duration,
+                        wait_duration: build.wait_duration,
+                        commits,
+                    }
+                })
+                .collect();
+
+            let cd_pipeline_with_builds = CdPipelineWithBuilds {
+                name: github_cd_pipeline.name,
+                version: github_cd_pipeline.version,
+                enabled: github_cd_pipeline.enabled,
+                deployed_ref: github_cd_pipeline.deployed_ref,
+                build_artifact: github_cd_pipeline.build_artifact,
+                last_successfully_deployed_artifact: github_cd_pipeline
+                    .last_successfully_deployed_artifact,
+                last_deployed_at: github_cd_pipeline.last_deployment,
+                status: github_cd_pipeline.status,
+                builds: github_builds,
+            };
+
+            Ok(Some(cd_pipeline_with_builds))
         }
     }
 }

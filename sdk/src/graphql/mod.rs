@@ -1,6 +1,7 @@
 pub mod application;
 pub mod changelog;
 pub mod deployment;
+pub mod deployment_github;
 pub mod kubernetes;
 pub mod pipeline;
 
@@ -14,6 +15,7 @@ pub use self::{
         cd_pipeline_for_rollback_query, cd_pipeline_query, cd_pipelines_query, execute_cd_pipeline,
         CdPipelineForRollbackQuery, CdPipelineQuery, CdPipelinesQuery, ExecuteCdPipeline,
     },
+    deployment_github::{cd_pipeline_github_query, CdPipelineGithubQuery},
     kubernetes::{
         deploy_livebook, destroy_livebook, is_authorized_query, kubernetes_pods_query,
         livebook_resource_query, DeployLivebook, DestroyLivebook, IsAuthorizedQuery,
@@ -398,6 +400,43 @@ impl WKClient {
             .post_graphql::<CdPipelineQuery, _>(
                 &self.api_url,
                 cd_pipeline_query::Variables {
+                    application: application.to_string(),
+                    namespace: namespace.to_string(),
+                    version: version.to_string(),
+                },
+            )
+            .await
+            .map_err(|err| {
+                match &err {
+                    APIError::ResponseError { code, message: _ } => match code.as_str() {
+                        "application_not_found" => APIError::ApplicationNotFound {
+                            application: application.to_string(),
+                        },
+                        _ => err,
+                    },
+                    _ => err,
+                }
+                .into()
+            })
+    }
+
+    /// Fetch CD pipeline (Github) from Wukong API Proxy.
+    ///
+    /// It will return:
+    /// - [`WKError::APIError(APIError::ApplicationNotFound)`](APIError::ApplicationNotFound) if the `application` does not exist.
+    /// - [`WKError::APIError(APIError::ResponseError)`](APIError::ResponseError)  for the rest.
+    pub async fn fetch_cd_pipeline_github(
+        &self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<cd_pipeline_github_query::ResponseData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        gql_client
+            .post_graphql::<CdPipelineGithubQuery, _>(
+                &self.api_url,
+                cd_pipeline_github_query::Variables {
                     application: application.to_string(),
                     namespace: namespace.to_string(),
                     version: version.to_string(),

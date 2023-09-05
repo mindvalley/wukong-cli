@@ -1,0 +1,32 @@
+query CdPipelineGithubQuery($application: String!, $namespace: String!, $version:
+String!) {
+  cdPipeline(application: $application, namespace: $namespace, version: $version) {
+    deployedRef
+    buildArtifact
+    environment
+    enabled
+    lastDeployment
+    lastSuccessfullyDeployedArtifact
+    name
+    status
+    version
+    githubBuilds {
+      buildDuration
+      buildNumber
+      buildBranch
+      buildUrl
+      buildArtifactName
+      name
+      result
+      timestamp
+      totalDuration
+      waitDuration
+      commits {
+        id
+        author
+        message
+        messageHeadline
+      }
+    }
+  }
+}
