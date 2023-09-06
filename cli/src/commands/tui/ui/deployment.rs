@@ -124,7 +124,7 @@ fn humanize_timestamp(timestamp: &Option<i64>) -> String {
         )
         .unwrap();
 
-        let dt = DateTime::<Utc>::from_utc(naive, Utc).with_timezone(&Local);
+        let dt = DateTime::<Utc>::from_naive_utc_and_offset(naive, Utc).with_timezone(&Local);
         // convert to std::time::SystemTime as the HumanTime expecting this
         format!(
             "{}",

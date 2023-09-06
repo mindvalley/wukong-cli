@@ -276,7 +276,7 @@ async fn update_logs_entries(app: Arc<Mutex<App>>, log_entries: Option<Vec<LogEn
                 app_ref.state.logs_vertical_scroll_state = app_ref
                     .state
                     .logs_vertical_scroll_state
-                    .position(app_ref.state.log_entries_ids.len() as u16);
+                    .position(app_ref.state.log_entries_ids.len());
             }
         }
     }

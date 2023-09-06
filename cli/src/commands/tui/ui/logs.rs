@@ -86,7 +86,7 @@ impl LogsWidget {
         app.state.logs_vertical_scroll_state = app
             .state
             .logs_vertical_scroll_state
-            .content_length(log_entries.len() as u16);
+            .content_length(log_entries.len());
 
         let paragraph = Paragraph::new(log_entries)
             .block(Block::default().padding(Padding::new(1, 1, 0, 0)))
