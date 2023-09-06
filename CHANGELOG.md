@@ -1,5 +1,58 @@
 # Changelog
 
+## [2.0.0-alpha1](https://github.com/mindvalley/wukong-cli/tree/2.0.0-alpha1) (2023-09-06)
+
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/1.2.0...2.0.0-alpha1)
+
+**Implemented enhancements:**
+
+- PXP-594: Find a solution to support a canary api in the CLI [\#139](https://github.com/mindvalley/wukong-cli/pull/139) ([jk-gan](https://github.com/jk-gan))
+- PXP-579: \[CLI\] Implement the logs section [\#137](https://github.com/mindvalley/wukong-cli/pull/137) ([jk-gan](https://github.com/jk-gan))
+- PXP-581: \[CLI\] Implement the deployment section [\#134](https://github.com/mindvalley/wukong-cli/pull/134) ([jk-gan](https://github.com/jk-gan))
+- PXP-580: \[CLI\] Implement the build artifact section [\#133](https://github.com/mindvalley/wukong-cli/pull/133) ([jk-gan](https://github.com/jk-gan))
+
+**Fixed bugs:**
+
+- fix: fix errors from the latest dependencies [\#142](https://github.com/mindvalley/wukong-cli/pull/142) ([jk-gan](https://github.com/jk-gan))
+- PXP-604: handle permission error for the TUI [\#140](https://github.com/mindvalley/wukong-cli/pull/140) ([mfauzaan](https://github.com/mfauzaan))
+
+**Merged pull requests:**
+
+- Bump version and update to latest dependencies [\#141](https://github.com/mindvalley/wukong-cli/pull/141) ([onimsha](https://github.com/onimsha))
+- PXP-595: integrate github pipeline while fetching builds  [\#138](https://github.com/mindvalley/wukong-cli/pull/138) ([mfauzaan](https://github.com/mfauzaan))
+- chore\(deps\): bump rustls-webpki from 0.100.1 to 0.100.2 in /sdk [\#136](https://github.com/mindvalley/wukong-cli/pull/136) ([dependabot[bot]](https://github.com/apps/dependabot))
+- chore\(deps\): bump rustls-webpki from 0.100.1 to 0.100.2 [\#135](https://github.com/mindvalley/wukong-cli/pull/135) ([dependabot[bot]](https://github.com/apps/dependabot))
+- PXP-584: \[CLI\] Implement the hotkeys [\#132](https://github.com/mindvalley/wukong-cli/pull/132) ([jk-gan](https://github.com/jk-gan))
+- PXP-578: \[CLI\] Implement the headers section [\#131](https://github.com/mindvalley/wukong-cli/pull/131) ([jk-gan](https://github.com/jk-gan))
+- PXP-577: \[CLI\] Implement the command [\#130](https://github.com/mindvalley/wukong-cli/pull/130) ([jk-gan](https://github.com/jk-gan))
+- PXP-559: \[CLI\] Update the Github Actions workflows [\#129](https://github.com/mindvalley/wukong-cli/pull/129) ([jk-gan](https://github.com/jk-gan))
+- chore\(deps\): bump openssl from 0.10.54 to 0.10.55 in /sdk [\#128](https://github.com/mindvalley/wukong-cli/pull/128) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+## [1.2.0](https://github.com/mindvalley/wukong-cli/tree/1.2.0) (2023-08-03)
+
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/1.1.1...1.2.0)
+
+**Implemented enhancements:**
+
+- PXP-555: Refactoring code [\#126](https://github.com/mindvalley/wukong-cli/pull/126) ([jk-gan](https://github.com/jk-gan))
+
+**Merged pull requests:**
+
+- PXP-572: Handle blue/green deployment failure on deployment [\#127](https://github.com/mindvalley/wukong-cli/pull/127) ([mfauzaan](https://github.com/mfauzaan))
+
+## [1.1.1](https://github.com/mindvalley/wukong-cli/tree/1.1.1) (2023-07-21)
+
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/1.1.0...1.1.1)
+
+**Implemented enhancements:**
+
+- PXP-571: \[CLI\] Send telemetry data for new command groups [\#124](https://github.com/mindvalley/wukong-cli/pull/124) ([jk-gan](https://github.com/jk-gan))
+
+**Merged pull requests:**
+
+- Bump to version 1.1.1 [\#125](https://github.com/mindvalley/wukong-cli/pull/125) ([onimsha](https://github.com/onimsha))
+- Update CHANGELOG [\#123](https://github.com/mindvalley/wukong-cli/pull/123) ([onimsha](https://github.com/onimsha))
+
 ## [1.1.0](https://github.com/mindvalley/wukong-cli/tree/1.1.0) (2023-07-20)
 
 [Full Changelog](https://github.com/mindvalley/wukong-cli/compare/1.0.3...1.1.0)
