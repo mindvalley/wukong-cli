@@ -38,13 +38,14 @@ use std::{thread, time};
 
 // Check if the error is a timeout error or an authentication error.
 // For Timeout errors, we get the domain and return it as part of the Timeout error.
-fn check_retry_and_auth_error(error: &graphql_client::Error) -> Option<APIError> {
-    if error.message == "Unauthenticated" {
-        Some(APIError::UnAuthenticated)
-    } else if error.message.contains("request_timeout") {
+fn check_retry_and_auth_error(error_code: &str) -> Option<APIError> {
+    let error_code = error_code.to_lowercase();
+    if error_code == "unauthenticated" {
+        return Some(APIError::UnAuthenticated);
+    } else if error_code.contains("request_timeout") {
         // The Wukong API returns a message like "{{domain}_request_timeout}", so we need to extract the domain
         // from the message. The domain can be one of 'jenkins', 'spinnaker' or 'github'
-        let domain = error.message.split('_').next().unwrap();
+        let domain = error_code.split('_').next().unwrap();
         return Some(APIError::Timeout {
             domain: domain.to_string(),
         });
@@ -101,12 +102,14 @@ impl<'a> GQLClientBuilder<'a> {
 
         Ok(GQLClient {
             inner: reqwest_client,
+            error_handler: setup_error_handler(self.channel),
         })
     }
 }
 
 pub struct GQLClient {
     inner: reqwest::Client,
+    error_handler: Box<dyn ErrorHandler>,
 }
 
 impl GQLClient {
@@ -139,7 +142,9 @@ impl GQLClient {
             if let Some(errors) = response.errors.clone() {
                 let first_error = errors[0].clone();
 
-                match check_retry_and_auth_error(&first_error) {
+                match check_retry_and_auth_error(
+                    self.error_handler.extract_error_code(&first_error),
+                ) {
                     Some(APIError::UnAuthenticated) => return Err(APIError::UnAuthenticated),
                     Some(APIError::Timeout { domain }) => {
                         if retry_count == 3 {
@@ -804,4 +809,45 @@ fn setup_gql_client(access_token: &str, channel: &ApiChannel) -> Result<GQLClien
         .with_channel(channel)
         .build()
         .map_err(|err| err.into())
+}
+
+pub trait ErrorHandler: Send + Sync {
+    fn handle_error(&self, error: APIError) -> WKError;
+
+    fn extract_error_code(&self, error: &graphql_client::Error) -> &str;
+}
+
+pub struct DefaultErrorHandler;
+pub struct CanaryErrorHandler;
+
+impl ErrorHandler for DefaultErrorHandler {
+    fn handle_error(&self, error: APIError) -> WKError {
+        todo!()
+    }
+
+    fn extract_error_code(&self, error: &graphql_client::Error) -> &str {
+        &error.message
+    }
+}
+impl ErrorHandler for CanaryErrorHandler {
+    fn handle_error(&self, _error: APIError) -> WKError {
+        todo!()
+    }
+
+    fn extract_error_code(&self, error: &graphql_client::Error) -> &str {
+        if let Some(ref error_extensions) = error.extensions {
+            if let Some(error_code) = error_extensions.get("code") {
+                return error_code.as_str().unwrap_or_default();
+            }
+        }
+
+        ""
+    }
+}
+
+fn setup_error_handler(channel: &ApiChannel) -> Box<dyn ErrorHandler> {
+    match channel {
+        ApiChannel::Canary => Box::new(CanaryErrorHandler),
+        ApiChannel::Stable => Box::new(DefaultErrorHandler),
+    }
 }
