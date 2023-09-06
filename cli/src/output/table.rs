@@ -70,10 +70,11 @@ pub fn fmt_timestamp(o: &i64) -> String {
         // if WUKONG_DEV_TIMEZONE is set, use the timezone
         // normally this is only used for development and testing purpose
         if let Some(custom_timezone) = CUSTOM_TIMEZONE.as_ref() {
-            let dt = DateTime::<Utc>::from_utc(naive, Utc).with_timezone(custom_timezone);
+            let dt = DateTime::<Utc>::from_naive_utc_and_offset(naive, Utc)
+                .with_timezone(custom_timezone);
             format!("{}", dt.format("%Y %b %d %H:%M:%S %p"))
         } else {
-            let dt = DateTime::<Utc>::from_utc(naive, Utc).with_timezone(&Local);
+            let dt = DateTime::<Utc>::from_naive_utc_and_offset(naive, Utc).with_timezone(&Local);
             format!("{}", dt.format("%Y %b %d %H:%M:%S %p"))
         }
     }
@@ -115,14 +116,15 @@ pub fn fmt_human_timestamp(o: &i64) -> String {
         // if WUKONG_DEV_TIMEZONE is set, use the timezone
         // normally this is only used for development and testing purpose
         if let Some(custom_timezone) = CUSTOM_TIMEZONE.as_ref() {
-            let dt = DateTime::<Utc>::from_utc(naive, Utc).with_timezone(custom_timezone);
+            let dt = DateTime::<Utc>::from_naive_utc_and_offset(naive, Utc)
+                .with_timezone(custom_timezone);
             // convert to std::time::SystemTime as the HumanTime expecting this
             format!(
                 "{}",
                 HumanTime::from(Into::<std::time::SystemTime>::into(dt))
             )
         } else {
-            let dt = DateTime::<Utc>::from_utc(naive, Utc).with_timezone(&Local);
+            let dt = DateTime::<Utc>::from_naive_utc_and_offset(naive, Utc).with_timezone(&Local);
             // convert to std::time::SystemTime as the HumanTime expecting this
             format!(
                 "{}",

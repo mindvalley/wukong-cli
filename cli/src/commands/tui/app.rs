@@ -174,7 +174,7 @@ impl App {
                     self.state.logs_vertical_scroll_state = self
                         .state
                         .logs_vertical_scroll_state
-                        .position(self.state.logs_vertical_scroll as u16);
+                        .position(self.state.logs_vertical_scroll);
 
                     self.state.logs_enable_auto_scroll_to_bottom = false;
 
@@ -186,7 +186,7 @@ impl App {
                     self.state.logs_vertical_scroll_state = self
                         .state
                         .logs_vertical_scroll_state
-                        .position(self.state.logs_vertical_scroll as u16);
+                        .position(self.state.logs_vertical_scroll);
 
                     self.state.logs_enable_auto_scroll_to_bottom = false;
 
@@ -198,7 +198,7 @@ impl App {
                     self.state.logs_horizontal_scroll_state = self
                         .state
                         .logs_horizontal_scroll_state
-                        .position(self.state.logs_horizontal_scroll as u16);
+                        .position(self.state.logs_horizontal_scroll);
 
                     self.state.logs_enable_auto_scroll_to_bottom = false;
 
@@ -210,7 +210,7 @@ impl App {
                     self.state.logs_horizontal_scroll_state = self
                         .state
                         .logs_horizontal_scroll_state
-                        .position(self.state.logs_horizontal_scroll as u16);
+                        .position(self.state.logs_horizontal_scroll);
 
                     self.state.logs_enable_auto_scroll_to_bottom = false;
 
