@@ -81,7 +81,7 @@ impl Display for JobBuild {
             (self.timestamp % 1000) as u32 * 1_000_000,
         )
         .unwrap();
-        let started_at = DateTime::<Utc>::from_utc(naive, Utc);
+        let started_at = DateTime::<Utc>::from_naive_utc_and_offset(naive, Utc);
 
         let commit_msg = match self.commit_msg {
             Some(ref msg) => msg,
