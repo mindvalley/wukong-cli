@@ -676,8 +676,86 @@ impl ErrorHandler for DefaultErrorHandler {
     }
 }
 impl ErrorHandler for CanaryErrorHandler {
-    fn handle_error(&self, _error: &graphql_client::Error) -> APIError {
-        todo!()
+    fn handle_error(&self, error: &graphql_client::Error) -> APIError {
+        let error_code = self.extract_error_code(error);
+        match error_code {
+            "application_not_found" => APIError::ApplicationNotFound,
+            "application_namespace_not_found" => APIError::NamespaceNotFound,
+            "application_version_not_found" => APIError::VersionNotFound,
+            // "application_k8s_cluster_not_found" => {]
+            // "application_spinnaker_pipeline_not_found" => {}
+            // "application_config_error" => {}
+
+            // authentication
+            "unauthenticated" | "invalid_token" => APIError::UnAuthenticated,
+            "unauthorized" => APIError::UnAuthorized,
+
+            // pipeline
+            "pipeline_not_configured" | "pipeline_not_found" => APIError::UnableToGetPipeline,
+            // "pipeline_deployment_in_progress" => {}
+            // "pipeline_changelogs_not_provided" => {}
+
+            // k8s
+            // "k8s_destroy_livebook_failed" => {}
+            // "k8s_cluster_context_missing" => {}
+            // "k8s_kubeconfig_missing" => {}
+            // "k8s_service_not_found_or_deleted" => {}
+            // "k8s_ingress_not_found_or_deleted" => {}
+            // "k8s_issuer_not_found_or_deleted" => {}
+            // "k8s_pod_not_found_or_deleted" => {}
+            // "k8s_operation_timed_out" => {}
+            // "k8s_ingress_ip_not_found" => {}
+            // "k8s_cluster_ip_not_found" => {}
+            // "k8s_context_not_found" => {}
+            // "k8s_kubeconfig_not_found" => {}
+
+            // spinnaker
+            // "spinnaker_x509_failure" => {}
+            // "spinnaker_invalid_domain" => {}
+            // "spinnaker_timeout" => {}
+            // "spinnaker_error" => {}
+
+            // jenkins
+            // "jenkins_build_not_found" => {}
+            // "jenkins_invalid_domain" => {}
+            // "jenkins_timeout" => {}
+            // "jenkins_pipeline_not_found" => {}
+            // "jenkins_commit_id_not_found" => {}
+
+            // github
+            // "github_repo_name_not_found" => {}
+            // "github_error" => {}
+            // "github_invalid_domain" => {}
+            // "github_timeout" => {}
+            // "github_pr_not_found" => {}
+            // "github_ref_not_found" => {}
+            // "github_commit_history_not_found" => {}
+            // "github_workflow_not_found" => {}
+
+            // slack
+            // "slack_webhook_not_configured" => {}
+
+            // changelog
+            "changelog_unable_to_determine" => APIError::UnableToDetermineChangelog,
+
+            "unable_to_get_pipelines" => APIError::UnableToGetPipelines,
+            "unable_to_get_pipeline" => APIError::UnableToGetPipeline,
+            // "application_not_found" => APIError::ApplicationNotFound,
+            "application_config_not_defined" => APIError::ApplicationNotFound,
+            "unable_to_determine_changelog" => APIError::UnableToDetermineChangelog,
+            "comparing_same_build" => APIError::ChangelogComparingSameBuild,
+            "deploy_for_this_build_is_currently_running" => APIError::DuplicatedDeployment,
+            "k8s_cluster_namespace_config_not_defined" => APIError::NamespaceNotFound,
+            "k8s_cluster_version_config_not_defined" => APIError::VersionNotFound,
+            // "unauthorized" => APIError::ResponseError {
+            //     code: error_code.to_string(),
+            //     message: error_code.to_string(),
+            // },
+            _ => APIError::ResponseError {
+                code: error_code.to_string(),
+                message: format!("{:?}", error),
+            },
+        }
     }
 
     fn extract_error_code<'a>(&'a self, error: &'a graphql_client::Error) -> &'a str {
