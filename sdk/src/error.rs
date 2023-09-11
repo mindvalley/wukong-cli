@@ -82,6 +82,8 @@ pub enum APIError {
     NamespaceNotFound,
     #[error("Version not found.")]
     VersionNotFound,
+    #[error("Build not found.")]
+    BuildNotFound,
 }
 
 #[derive(Debug, ThisError)]

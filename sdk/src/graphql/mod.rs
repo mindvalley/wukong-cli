@@ -36,15 +36,17 @@ use reqwest::header;
 use std::fmt::Debug;
 use std::{thread, time};
 
-// Check if the error is a timeout error or an authentication error.
+// Check if the error is a timeout error.
 // For Timeout errors, we get the domain and return it as part of the Timeout error.
-fn check_retry_and_auth_error(error_code: &str) -> Option<APIError> {
+fn check_timeout_error(error_code: &str) -> Option<APIError> {
     let error_code = error_code.to_lowercase();
-    if error_code == "unauthenticated" {
-        return Some(APIError::UnAuthenticated);
-    } else if error_code.contains("request_timeout") {
-        // The Wukong API returns a message like "{{domain}_request_timeout}", so we need to extract the domain
-        // from the message. The domain can be one of 'jenkins', 'spinnaker' or 'github'
+
+    if error_code.contains("timeout") {
+        // The Wukong API returns a message like
+        // "{{domain}_request_timeout}" in stable channel or
+        // "{{domain}_timeout}" in canary channel,
+        // so we need to extract the domain from the message.
+        // The domain can be one of 'jenkins', 'spinnaker' or 'github'
         let domain = error_code.split('_').next().unwrap();
         return Some(APIError::Timeout {
             domain: domain.to_string(),
@@ -143,8 +145,7 @@ impl GQLClient {
                 let first_error = errors[0].clone();
 
                 let first_error_code = self.error_handler.extract_error_code(&first_error);
-                match check_retry_and_auth_error(first_error_code) {
-                    Some(APIError::UnAuthenticated) => return Err(APIError::UnAuthenticated),
+                match check_timeout_error(first_error_code) {
                     Some(APIError::Timeout { domain }) => {
                         if retry_count == 3 {
                             return Err(APIError::Timeout { domain });
@@ -301,15 +302,13 @@ impl WKClient {
 
         if let Err(err) = &response {
             match err {
-                APIError::ResponseError { code, message: _ } => {
-                    if code == "application_not_found" {
-                        return Err(APIError::CIStatusApplicationNotFound.into());
-                    }
-
-                    // we don't want this to be an error
-                    if code == "no_builds_associated_with_this_branch" {
-                        return Ok(ci_status_query::ResponseData { ci_status: None });
-                    }
+                // we want to show different suggestion, so we use different Error code here
+                APIError::ApplicationNotFound => {
+                    return Err(APIError::CIStatusApplicationNotFound.into());
+                }
+                // This shouldn't be an error on cli, we will display empty list instead
+                APIError::BuildNotFound => {
+                    return Ok(ci_status_query::ResponseData { ci_status: None });
                 }
                 _ => return response.map_err(|err| err.into()),
             }
@@ -650,7 +649,10 @@ pub struct CanaryErrorHandler;
 impl ErrorHandler for DefaultErrorHandler {
     fn handle_error(&self, error: &graphql_client::Error) -> APIError {
         let error_code = self.extract_error_code(error);
+        debug!("Error code: {error_code}");
+
         match error_code {
+            "unauthenticated" => APIError::UnAuthenticated,
             "unable_to_get_pipelines" => APIError::UnableToGetPipelines,
             "unable_to_get_pipeline" => APIError::UnableToGetPipeline,
             "application_not_found" => APIError::ApplicationNotFound,
@@ -660,6 +662,7 @@ impl ErrorHandler for DefaultErrorHandler {
             "deploy_for_this_build_is_currently_running" => APIError::DuplicatedDeployment,
             "k8s_cluster_namespace_config_not_defined" => APIError::NamespaceNotFound,
             "k8s_cluster_version_config_not_defined" => APIError::VersionNotFound,
+            "no_builds_associated_with_this_branch" => APIError::BuildNotFound,
             "unauthorized" => APIError::ResponseError {
                 code: error_code.to_string(),
                 message: error_code.to_string(),
@@ -678,6 +681,8 @@ impl ErrorHandler for DefaultErrorHandler {
 impl ErrorHandler for CanaryErrorHandler {
     fn handle_error(&self, error: &graphql_client::Error) -> APIError {
         let error_code = self.extract_error_code(error);
+        debug!("Error code: {error_code}");
+
         match error_code {
             "application_not_found" => APIError::ApplicationNotFound,
             "application_namespace_not_found" => APIError::NamespaceNotFound,
@@ -716,7 +721,7 @@ impl ErrorHandler for CanaryErrorHandler {
             // "spinnaker_error" => {}
 
             // jenkins
-            // "jenkins_build_not_found" => {}
+            "jenkins_build_not_found" => APIError::BuildNotFound,
             // "jenkins_invalid_domain" => {}
             // "jenkins_timeout" => {}
             // "jenkins_pipeline_not_found" => {}
@@ -737,20 +742,16 @@ impl ErrorHandler for CanaryErrorHandler {
 
             // changelog
             "changelog_unable_to_determine" => APIError::UnableToDetermineChangelog,
+            "changelog_same_commit" => APIError::ChangelogComparingSameBuild,
 
-            "unable_to_get_pipelines" => APIError::UnableToGetPipelines,
-            "unable_to_get_pipeline" => APIError::UnableToGetPipeline,
-            // "application_not_found" => APIError::ApplicationNotFound,
-            "application_config_not_defined" => APIError::ApplicationNotFound,
-            "unable_to_determine_changelog" => APIError::UnableToDetermineChangelog,
-            "comparing_same_build" => APIError::ChangelogComparingSameBuild,
-            "deploy_for_this_build_is_currently_running" => APIError::DuplicatedDeployment,
-            "k8s_cluster_namespace_config_not_defined" => APIError::NamespaceNotFound,
-            "k8s_cluster_version_config_not_defined" => APIError::VersionNotFound,
-            // "unauthorized" => APIError::ResponseError {
-            //     code: error_code.to_string(),
-            //     message: error_code.to_string(),
-            // },
+            // "unable_to_get_pipelines" => APIError::UnableToGetPipelines,
+            // "unable_to_get_pipeline" => APIError::UnableToGetPipeline,
+            // "application_config_not_defined" => APIError::ApplicationNotFound,
+            // "unable_to_determine_changelog" => APIError::UnableToDetermineChangelog,
+            // "comparing_same_build" => APIError::ChangelogComparingSameBuild,
+            // "deploy_for_this_build_is_currently_running" => APIError::DuplicatedDeployment,
+            // "k8s_cluster_namespace_config_not_defined" => APIError::NamespaceNotFound,
+            // "k8s_cluster_version_config_not_defined" => APIError::VersionNotFound,
             _ => APIError::ResponseError {
                 code: error_code.to_string(),
                 message: format!("{:?}", error),
