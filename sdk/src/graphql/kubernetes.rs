@@ -139,11 +139,8 @@ mod test {
         assert!(response.is_err());
 
         match response.as_ref().unwrap_err() {
-            WKError::APIError(APIError::ResponseError { code, message }) => {
-                assert_eq!(code, "Unauthorized");
-                assert_eq!(message, "Unauthorized")
-            }
-            _ => panic!("it should be returning ResponseError"),
+            WKError::APIError(APIError::UnAuthorized) => {}
+            _ => panic!("it should be returning APIError"),
         }
     }
 

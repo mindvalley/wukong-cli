@@ -131,16 +131,11 @@ mod test {
 
         let error = response.unwrap_err();
         match &error {
-            WKError::APIError(APIError::UnableToGetPipelines { application }) => {
-                assert_eq!(application, "invalid-application");
-            }
+            WKError::APIError(APIError::UnableToGetPipelines) => {}
             _ => panic!("it should be returning APIError::UnableToGetPipelines"),
         };
 
-        assert_eq!(
-            format!("{error}"),
-            "Unable to get pipelines for application `invalid-application`."
-        );
+        assert_eq!(format!("{error}"), "Unable to get pipelines.");
     }
 
     #[tokio::test]
@@ -228,16 +223,11 @@ mod test {
 
         let error = response.unwrap_err();
         match &error {
-            WKError::APIError(APIError::UnableToGetPipeline { pipeline }) => {
-                assert_eq!(pipeline, "invalid-pipeline");
-            }
+            WKError::APIError(APIError::UnableToGetPipeline) => {}
             _ => panic!("it should be returning APIError::UnableToGetPipeline"),
         };
 
-        assert_eq!(
-            format!("{error}"),
-            "Unable to get pipeline `invalid-pipeline`."
-        );
+        assert_eq!(format!("{error}"), "Unable to get pipeline.");
     }
 
     #[tokio::test]
@@ -349,16 +339,11 @@ mod test {
 
         let error = response.unwrap_err();
         match &error {
-            WKError::APIError(APIError::UnableToGetPipeline { pipeline }) => {
-                assert_eq!(pipeline, "invalid-pipeline");
-            }
+            WKError::APIError(APIError::UnableToGetPipeline) => {}
             _ => panic!("it should be returning APIError::UnableToGetPipeline"),
         };
 
-        assert_eq!(
-            format!("{error}"),
-            "Unable to get pipeline `invalid-pipeline`."
-        );
+        assert_eq!(format!("{error}"), "Unable to get pipeline.");
     }
 
     #[tokio::test]

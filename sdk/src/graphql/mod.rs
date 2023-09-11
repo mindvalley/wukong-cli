@@ -48,11 +48,11 @@ fn check_timeout_error(error_code: &str) -> Option<APIError> {
         // so we need to extract the domain from the message.
         // The domain can be one of 'jenkins', 'spinnaker' or 'github'
         let domain = error_code.split('_').next().unwrap();
-        return Some(APIError::Timeout {
+        Some(APIError::Timeout {
             domain: domain.to_string(),
-        });
+        })
     } else {
-        return None;
+        None
     }
 }
 
@@ -648,10 +648,11 @@ pub struct CanaryErrorHandler;
 
 impl ErrorHandler for DefaultErrorHandler {
     fn handle_error(&self, error: &graphql_client::Error) -> APIError {
-        let error_code = self.extract_error_code(error);
-        debug!("Error code: {error_code}");
+        let original_error_code = self.extract_error_code(error);
+        let lowercase_error_code = original_error_code.to_lowercase();
+        debug!("Error code: {original_error_code}");
 
-        match error_code {
+        match lowercase_error_code.as_str() {
             "unauthenticated" => APIError::UnAuthenticated,
             "unable_to_get_pipelines" => APIError::UnableToGetPipelines,
             "unable_to_get_pipeline" => APIError::UnableToGetPipeline,
@@ -663,13 +664,10 @@ impl ErrorHandler for DefaultErrorHandler {
             "k8s_cluster_namespace_config_not_defined" => APIError::NamespaceNotFound,
             "k8s_cluster_version_config_not_defined" => APIError::VersionNotFound,
             "no_builds_associated_with_this_branch" => APIError::BuildNotFound,
-            "unauthorized" => APIError::ResponseError {
-                code: error_code.to_string(),
-                message: error_code.to_string(),
-            },
+            "unauthorized" => APIError::UnAuthorized,
             _ => APIError::ResponseError {
-                code: error_code.to_string(),
-                message: format!("{:?}", error),
+                code: original_error_code.to_string(),
+                message: format!("{error}"),
             },
         }
     }
@@ -680,10 +678,11 @@ impl ErrorHandler for DefaultErrorHandler {
 }
 impl ErrorHandler for CanaryErrorHandler {
     fn handle_error(&self, error: &graphql_client::Error) -> APIError {
-        let error_code = self.extract_error_code(error);
-        debug!("Error code: {error_code}");
+        let original_error_code = self.extract_error_code(error);
+        let lowercase_error_code = original_error_code.to_lowercase();
+        debug!("Error code: {original_error_code}");
 
-        match error_code {
+        match lowercase_error_code.as_str() {
             "application_not_found" => APIError::ApplicationNotFound,
             "application_namespace_not_found" => APIError::NamespaceNotFound,
             "application_version_not_found" => APIError::VersionNotFound,
@@ -753,8 +752,8 @@ impl ErrorHandler for CanaryErrorHandler {
             // "k8s_cluster_namespace_config_not_defined" => APIError::NamespaceNotFound,
             // "k8s_cluster_version_config_not_defined" => APIError::VersionNotFound,
             _ => APIError::ResponseError {
-                code: error_code.to_string(),
-                message: format!("{:?}", error),
+                code: original_error_code.to_string(),
+                message: format!("{error}"),
             },
         }
     }
