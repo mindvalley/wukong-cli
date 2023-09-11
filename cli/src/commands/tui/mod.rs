@@ -133,6 +133,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
 
         terminal.draw(|frame| ui::draw(frame, &mut app_ref))?;
 
+        // move cursor to the top left corner to avoid screen scrolling:
         terminal.set_cursor(1 + 0, 1)?;
 
         let result = match event_manager.next().unwrap() {
@@ -144,8 +145,6 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
             break;
         }
 
-        // Delay UI request until first render, will have the effect of improving
-        // startup speed
         if is_first_render {
             // fetch data on the first frame
             app_ref.dispatch(NetworkEvent::FetchDeployments).await;
