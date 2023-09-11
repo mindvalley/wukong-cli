@@ -252,31 +252,19 @@ async fn update_logs_entries(app: Arc<Mutex<App>>, log_entries: Option<Vec<LogEn
                     .to_string(),
             );
 
-            entries.into_iter().for_each(|entry| {
-                if app_ref
-                    .state
-                    .log_entries_hash_map
-                    .get(&entry.insert_id)
-                    .is_none()
-                {
-                    app_ref.state.log_entries_ids.push(entry.insert_id.clone());
-                    app_ref
-                        .state
-                        .log_entries_hash_map
-                        .insert(entry.insert_id.clone(), entry);
-                }
-            });
+            app_ref.state.log_entries.extend(entries);
+            app_ref.state.log_entries_length = app_ref.state.log_entries.len();
 
             // Currently ratatui don't provide scroll to bottom function,
             // so we need to set the scroll to the bottom manually by this hack
             // waiting this https://github.com/fdehau/tui-rs/issues/89
             if app_ref.state.logs_enable_auto_scroll_to_bottom {
-                app_ref.state.logs_vertical_scroll = app_ref.state.log_entries_ids.len()
+                app_ref.state.logs_vertical_scroll = app_ref.state.log_entries_length
                     - (app_ref.state.logs_widget_height - 4) as usize;
                 app_ref.state.logs_vertical_scroll_state = app_ref
                     .state
                     .logs_vertical_scroll_state
-                    .position(app_ref.state.log_entries_ids.len());
+                    .position(app_ref.state.log_entries_length);
             }
         }
     }
