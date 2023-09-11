@@ -1,4 +1,4 @@
-use std::{collections::HashMap, time::Instant};
+use std::time::Instant;
 
 use ratatui::widgets::ScrollbarState;
 use tokio::sync::mpsc::Sender;
