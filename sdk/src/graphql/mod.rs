@@ -38,7 +38,7 @@ use std::{thread, time};
 
 // Check if the error is a timeout error.
 // For Timeout errors, we get the domain and return it as part of the Timeout error.
-fn check_timeout_error(error_code: &str) -> Option<APIError> {
+fn get_timeout_error(error_code: &str) -> Option<APIError> {
     let error_code = error_code.to_lowercase();
 
     if error_code.contains("timeout") {
@@ -145,7 +145,7 @@ impl GQLClient {
                 let first_error = errors[0].clone();
 
                 let first_error_code = self.error_handler.extract_error_code(&first_error);
-                match check_timeout_error(first_error_code) {
+                match get_timeout_error(first_error_code) {
                     Some(APIError::Timeout { domain }) => {
                         if retry_count == 3 {
                             return Err(APIError::Timeout { domain });
@@ -290,7 +290,7 @@ impl WKClient {
     ) -> Result<ci_status_query::ResponseData, WKError> {
         let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
-        let response = gql_client
+        gql_client
             .post_graphql::<CiStatusQuery, _>(
                 &self.api_url,
                 ci_status_query::Variables {
@@ -298,23 +298,8 @@ impl WKClient {
                     branch: branch.to_string(),
                 },
             )
-            .await;
-
-        if let Err(err) = &response {
-            match err {
-                // we want to show different suggestion, so we use different Error code here
-                APIError::ApplicationNotFound => {
-                    return Err(APIError::CIStatusApplicationNotFound.into());
-                }
-                // This shouldn't be an error on cli, we will display empty list instead
-                APIError::BuildNotFound => {
-                    return Ok(ci_status_query::ResponseData { ci_status: None });
-                }
-                _ => return response.map_err(|err| err.into()),
-            }
-        }
-
-        response.map_err(|err| err.into())
+            .await
+            .map_err(|err| err.into())
     }
 
     /// Fetch CD pipelines from Wukong API Proxy.
@@ -696,7 +681,7 @@ impl ErrorHandler for CanaryErrorHandler {
 
             // pipeline
             "pipeline_not_configured" | "pipeline_not_found" => APIError::UnableToGetPipeline,
-            // "pipeline_deployment_in_progress" => {}
+            "pipeline_deployment_in_progress" => APIError::DuplicatedDeployment,
             // "pipeline_changelogs_not_provided" => {}
 
             // k8s
@@ -723,7 +708,7 @@ impl ErrorHandler for CanaryErrorHandler {
             "jenkins_build_not_found" => APIError::BuildNotFound,
             // "jenkins_invalid_domain" => {}
             // "jenkins_timeout" => {}
-            // "jenkins_pipeline_not_found" => {}
+            "jenkins_pipeline_not_found" => APIError::UnableToGetPipeline,
             // "jenkins_commit_id_not_found" => {}
 
             // github
@@ -743,14 +728,6 @@ impl ErrorHandler for CanaryErrorHandler {
             "changelog_unable_to_determine" => APIError::UnableToDetermineChangelog,
             "changelog_same_commit" => APIError::ChangelogComparingSameBuild,
 
-            // "unable_to_get_pipelines" => APIError::UnableToGetPipelines,
-            // "unable_to_get_pipeline" => APIError::UnableToGetPipeline,
-            // "application_config_not_defined" => APIError::ApplicationNotFound,
-            // "unable_to_determine_changelog" => APIError::UnableToDetermineChangelog,
-            // "comparing_same_build" => APIError::ChangelogComparingSameBuild,
-            // "deploy_for_this_build_is_currently_running" => APIError::DuplicatedDeployment,
-            // "k8s_cluster_namespace_config_not_defined" => APIError::NamespaceNotFound,
-            // "k8s_cluster_version_config_not_defined" => APIError::VersionNotFound,
             _ => APIError::ResponseError {
                 code: original_error_code.to_string(),
                 message: format!("{error}"),
