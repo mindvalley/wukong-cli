@@ -29,7 +29,7 @@ mod test {
     use crate::{ApiChannel, WKClient, WKConfig};
     use httpmock::prelude::*;
 
-    fn setup_stable_wk_client(api_url: &str) -> WKClient {
+    fn setup_wk_client(api_url: &str) -> WKClient {
         WKClient::new(WKConfig {
             api_url: api_url.to_string(),
             access_token: "test_access_token".to_string(),
@@ -37,18 +37,10 @@ mod test {
         })
     }
 
-    fn setup_canary_wk_client(api_url: &str) -> WKClient {
-        WKClient::new(WKConfig {
-            api_url: api_url.to_string(),
-            access_token: "test_access_token".to_string(),
-            channel: ApiChannel::Canary,
-        })
-    }
-
     #[tokio::test]
     async fn test_fetch_application_success_should_return_correct_application_info() {
         let server = MockServer::start();
-        let wk_clinet = setup_stable_wk_client(&server.base_url());
+        let wk_clinet = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -102,7 +94,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_application_list_success_should_return_application_list() {
         let server = MockServer::start();
-        let wk_clinet = setup_stable_wk_client(&server.base_url());
+        let wk_clinet = setup_wk_client(&server.base_url());
 
         let api_resp = r#"
 {

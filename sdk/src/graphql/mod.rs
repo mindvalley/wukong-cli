@@ -738,3 +738,75 @@ fn setup_error_handler(channel: &ApiChannel) -> Box<dyn ErrorHandler> {
         ApiChannel::Stable => Box::new(DefaultErrorHandler),
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::{graphql::GQLClientBuilder, ApiChannel};
+    use graphql_client::Error;
+    use serde_json::json;
+
+    #[test]
+    fn test_stable_error_handler_extract_error_code() {
+        let gql_client = GQLClientBuilder::default()
+            .with_token("test_access_token")
+            .with_channel(&ApiChannel::Stable)
+            .build()
+            .unwrap();
+
+        let err = json!({
+          "locations": [
+            {
+              "column": 3,
+              "line": 2
+            }
+          ],
+          "message": "application_not_found",
+          "path": [
+            "ciStatus"
+          ]
+        });
+
+        let deserialized_error: Error = serde_json::from_value(err).unwrap();
+
+        assert_eq!(
+            gql_client
+                .error_handler
+                .extract_error_code(&deserialized_error),
+            "application_not_found"
+        );
+    }
+
+    #[test]
+    fn test_canary_error_handler_extract_error_code() {
+        let gql_client = GQLClientBuilder::default()
+            .with_token("test_access_token")
+            .with_channel(&ApiChannel::Canary)
+            .build()
+            .unwrap();
+
+        let err = json!({
+          "locations": [
+            {
+              "column": 3,
+              "line": 2
+            }
+          ],
+          "message": "Application not found",
+          "path": [
+            "ciStatus"
+          ],
+          "extensions": {
+            "code": "application_not_found"
+          }
+        });
+
+        let deserialized_error: Error = serde_json::from_value(err).unwrap();
+
+        assert_eq!(
+            gql_client
+                .error_handler
+                .extract_error_code(&deserialized_error),
+            "application_not_found"
+        );
+    }
+}
