@@ -134,7 +134,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
         terminal.draw(|frame| ui::draw(frame, &mut app_ref))?;
 
         // move cursor to the top left corner to avoid screen scrolling:
-        terminal.set_cursor(1 + 0, 1)?;
+        terminal.set_cursor(1, 1)?;
 
         let result = match event_manager.next().unwrap() {
             events::Event::Input(key) => app_ref.handle_input(key).await,
