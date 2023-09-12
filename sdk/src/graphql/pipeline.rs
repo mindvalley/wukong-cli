@@ -443,14 +443,11 @@ mod test {
             WKError::APIError(APIError::CIStatusApplicationNotFound)
         );
 
-        assert_eq!(
-            format!("{error}"),
-            "Could not find the application associated with this Git repo.\n\tEither you're not in the correct working folder for your application, or there's a misconfiguration."
-        );
+        assert_eq!(format!("{error}"), "Application not found.");
     }
 
     #[tokio::test]
-    async fn test_fetch_ci_status_failed_with_no_builds_associated_with_this_branch_error_should_return_ok_response(
+    async fn test_fetch_ci_status_failed_with_no_builds_associated_with_this_branch_error_should_return_build_not_build(
     ) {
         let server = MockServer::start();
         let wk_client = setup_wk_client(&server.base_url());
@@ -488,8 +485,11 @@ mod test {
             .await;
 
         mock.assert();
-        assert!(response.is_ok());
-        let ci_status = response.unwrap().ci_status;
-        assert!(ci_status.is_none());
+        assert!(response.is_err());
+
+        let error = response.unwrap_err();
+        matches!(error, WKError::APIError(APIError::BuildNotFound));
+
+        assert_eq!(format!("{error}"), "Build not found.");
     }
 }
