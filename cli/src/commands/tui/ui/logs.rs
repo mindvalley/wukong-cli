@@ -36,7 +36,11 @@ impl LogsWidget {
         let title = Block::default()
             .title(format!(
                 "Use arrow keys or h j k l to scroll ◄ ▲ ▼ ►. Total {} logs.",
-                app.state.log_entries_length
+                if app.state.log_entries_length == app.state.max_log_entries_length {
+                    format!("{}+", app.state.log_entries_length)
+                } else {
+                    app.state.log_entries_length.to_string()
+                }
             ))
             .title_alignment(Alignment::Center)
             .style(Style::default().fg(Color::DarkGray));
