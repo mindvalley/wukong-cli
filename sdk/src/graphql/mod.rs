@@ -671,9 +671,6 @@ impl ErrorHandler for CanaryErrorHandler {
             "application_not_found" => APIError::ApplicationNotFound,
             "application_namespace_not_found" => APIError::NamespaceNotFound,
             "application_version_not_found" => APIError::VersionNotFound,
-            // "application_k8s_cluster_not_found" => {]
-            // "application_spinnaker_pipeline_not_found" => {}
-            // "application_config_error" => {}
 
             // authentication
             "unauthenticated" | "invalid_token" => APIError::UnAuthenticated,
@@ -683,8 +680,15 @@ impl ErrorHandler for CanaryErrorHandler {
             "pipeline_not_configured" | "pipeline_not_found" => APIError::UnableToGetPipeline,
             "pipeline_deployment_in_progress" => APIError::DuplicatedDeployment,
             // "pipeline_changelogs_not_provided" => {}
+            "jenkins_build_not_found" => APIError::BuildNotFound,
+            "jenkins_pipeline_not_found" => APIError::UnableToGetPipeline,
 
-            // k8s
+            "changelog_unable_to_determine" => APIError::UnableToDetermineChangelog,
+            "changelog_same_commit" => APIError::ChangelogComparingSameBuild,
+
+            // "application_k8s_cluster_not_found" => {]
+            // "application_spinnaker_pipeline_not_found" => {}
+            // "application_config_error" => {}
             // "k8s_destroy_livebook_failed" => {}
             // "k8s_cluster_context_missing" => {}
             // "k8s_kubeconfig_missing" => {}
@@ -697,37 +701,19 @@ impl ErrorHandler for CanaryErrorHandler {
             // "k8s_cluster_ip_not_found" => {}
             // "k8s_context_not_found" => {}
             // "k8s_kubeconfig_not_found" => {}
-
-            // spinnaker
             // "spinnaker_x509_failure" => {}
             // "spinnaker_invalid_domain" => {}
-            // "spinnaker_timeout" => {}
             // "spinnaker_error" => {}
-
-            // jenkins
-            "jenkins_build_not_found" => APIError::BuildNotFound,
             // "jenkins_invalid_domain" => {}
-            // "jenkins_timeout" => {}
-            "jenkins_pipeline_not_found" => APIError::UnableToGetPipeline,
             // "jenkins_commit_id_not_found" => {}
-
-            // github
             // "github_repo_name_not_found" => {}
             // "github_error" => {}
             // "github_invalid_domain" => {}
-            // "github_timeout" => {}
             // "github_pr_not_found" => {}
             // "github_ref_not_found" => {}
             // "github_commit_history_not_found" => {}
             // "github_workflow_not_found" => {}
-
-            // slack
             // "slack_webhook_not_configured" => {}
-
-            // changelog
-            "changelog_unable_to_determine" => APIError::UnableToDetermineChangelog,
-            "changelog_same_commit" => APIError::ChangelogComparingSameBuild,
-
             _ => APIError::ResponseError {
                 code: original_error_code.to_string(),
                 message: format!("{error}"),
