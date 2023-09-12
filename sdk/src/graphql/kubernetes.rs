@@ -48,7 +48,7 @@ mod test {
     };
     use httpmock::prelude::*;
 
-    fn setup_wk_client(api_url: &str) -> WKClient {
+    fn setup_stable_wk_client(api_url: &str) -> WKClient {
         WKClient::new(WKConfig {
             api_url: api_url.to_string(),
             access_token: "test_access_token".to_string(),
@@ -56,10 +56,18 @@ mod test {
         })
     }
 
+    fn setup_canary_wk_client(api_url: &str) -> WKClient {
+        WKClient::new(WKConfig {
+            api_url: api_url.to_string(),
+            access_token: "test_access_token".to_string(),
+            channel: ApiChannel::Canary,
+        })
+    }
+
     #[tokio::test]
     async fn test_fetch_kubernetes_pods_list_success_should_return_kubernetes_pods_list() {
         let server = MockServer::start();
-        let wk_client = setup_wk_client(&server.base_url());
+        let wk_client = setup_stable_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -103,7 +111,7 @@ mod test {
     async fn test_fetch_kubernetes_pods_list_failed_with_unautorized_error_should_return_response_error(
     ) {
         let server = MockServer::start();
-        let wk_client = setup_wk_client(&server.base_url());
+        let wk_client = setup_stable_wk_client(&server.base_url());
 
         let api_resp = r#"
 {
@@ -147,7 +155,7 @@ mod test {
     #[tokio::test]
     async fn test_fetch_is_authorized_success_should_return_boolean_value() {
         let server = MockServer::start();
-        let wk_client = setup_wk_client(&server.base_url());
+        let wk_client = setup_stable_wk_client(&server.base_url());
 
         let api_resp = r#"
 {

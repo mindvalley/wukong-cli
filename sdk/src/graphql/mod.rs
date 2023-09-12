@@ -686,7 +686,7 @@ impl ErrorHandler for CanaryErrorHandler {
             "changelog_unable_to_determine" => APIError::UnableToDetermineChangelog,
             "changelog_same_commit" => APIError::ChangelogComparingSameBuild,
 
-            // "application_k8s_cluster_not_found" => {]
+            // "application_k8s_cluster_not_found" => {}
             // "application_spinnaker_pipeline_not_found" => {}
             // "application_config_error" => {}
             // "k8s_destroy_livebook_failed" => {}

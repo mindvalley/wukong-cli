@@ -42,13 +42,11 @@ impl LogsWidget {
             .style(Style::default().fg(Color::DarkGray));
         frame.render_widget(title, info);
 
-        if app.state.has_log_errors {
-            let loading_widget = Paragraph::new(Text::styled(
-                "Something went wrong while fetching logs.",
-                Style::default().fg(Color::White),
-            ))
-            .block(Block::default().padding(Padding::new(1, 1, 0, 0)));
-            frame.render_widget(loading_widget, logs_area);
+        if let Some(ref error) = app.state.log_entries_error {
+            let error_widget =
+                Paragraph::new(Text::styled(error, Style::default().fg(Color::White)))
+                    .block(Block::default().padding(Padding::new(1, 1, 0, 0)));
+            frame.render_widget(error_widget, logs_area);
             return;
         }
 

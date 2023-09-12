@@ -80,7 +80,8 @@ impl NamespaceSelectionWidget {
                     // to re-trigger the polling
                     app.state.is_fetching_log_entries = true;
                     app.state.start_polling_log_entries = false;
-                    app.state.has_log_errors = false;
+                    // reset error state
+                    app.state.log_entries_error = None;
                 }
 
                 app.current_screen = CurrentScreen::Main;

@@ -35,8 +35,11 @@ pub struct State {
     pub builds: Vec<Build>,
     pub deployments: Vec<Deployment>,
     pub log_entries_hash_map: HashMap<String, LogEntry>,
-    pub has_log_errors: bool,
     pub log_entries_ids: Vec<String>,
+    pub log_entries_error: Option<String>,
+    pub builds_error: Option<String>,
+    pub deployments_error: Option<String>,
+
     // pub log_entries_next_page_token: Option<String>,
     pub last_log_entry_timestamp: Option<String>,
     // ui controls
@@ -106,7 +109,9 @@ impl App {
                 last_log_entry_timestamp: None,
                 log_entries_hash_map: HashMap::new(),
                 log_entries_ids: vec![],
-                has_log_errors: false,
+                log_entries_error: None,
+                builds_error: None,
+                deployments_error: None,
 
                 logs_vertical_scroll_state: ScrollbarState::default(),
                 logs_horizontal_scroll_state: ScrollbarState::default(),
