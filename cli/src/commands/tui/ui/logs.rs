@@ -6,7 +6,7 @@ use ratatui::{
     Frame,
 };
 
-use crate::commands::tui::app::App;
+use crate::commands::tui::app::{App, MAX_LOG_ENTRIES_LENGTH};
 
 pub struct LogsWidget;
 
@@ -36,7 +36,7 @@ impl LogsWidget {
         let title = Block::default()
             .title(format!(
                 "Use arrow keys or h j k l to scroll ◄ ▲ ▼ ►. Total {} logs.",
-                if app.state.log_entries_length == app.state.max_log_entries_length {
+                if app.state.log_entries_length == MAX_LOG_ENTRIES_LENGTH {
                     format!("{}+", app.state.log_entries_length)
                 } else {
                     app.state.log_entries_length.to_string()

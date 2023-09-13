@@ -8,7 +8,7 @@ use crate::{
     commands::{
         application::generate_filter,
         tui::{
-            app::{App, Build, Commit, Deployment},
+            app::{App, Build, Commit, Deployment, MAX_LOG_ENTRIES_LENGTH},
             StatefulList,
         },
     },
@@ -253,11 +253,9 @@ async fn update_logs_entries(app: Arc<Mutex<App>>, log_entries: Option<Vec<LogEn
             );
 
             // Keep the log entries length to the max_log_entries_length:
-            if app_ref.state.log_entries.len() + entries.len()
-                > app_ref.state.max_log_entries_length
-            {
-                let excess = (app_ref.state.log_entries.len() + entries.len())
-                    - app_ref.state.max_log_entries_length;
+            if app_ref.state.log_entries.len() + entries.len() > MAX_LOG_ENTRIES_LENGTH {
+                let excess =
+                    (app_ref.state.log_entries.len() + entries.len()) - MAX_LOG_ENTRIES_LENGTH;
                 if excess > 0 {
                     app_ref.state.log_entries.drain(..excess);
                 }
