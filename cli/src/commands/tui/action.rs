@@ -5,6 +5,7 @@ use super::events::key::Key;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Action {
     OpenNamespaceSelection,
+    OpenVersionSelection,
     Quit,
 }
 
@@ -18,6 +19,7 @@ impl Action {
     pub fn keys(&self) -> &[Key] {
         match self {
             Action::OpenNamespaceSelection => &[Key::Char('n')],
+            Action::OpenVersionSelection => &[Key::Char('v')],
             Action::Quit => &[Key::Char('q')],
         }
     }
@@ -33,6 +35,7 @@ impl Display for Action {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Action::OpenNamespaceSelection => write!(f, "Select namespace"),
+            Action::OpenVersionSelection => write!(f, "Select versiion"),
             Action::Quit => write!(f, "Quit"),
         }
     }
