@@ -21,6 +21,8 @@ pub enum AppReturn {
     Continue,
 }
 
+pub const DEFAULT_VERSION: &str = "green";
+
 pub struct State {
     pub current_application: String,
     pub current_namespace: String,

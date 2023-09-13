@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, MutexGuard};
 use wukong_sdk::services::gcloud::{google::logging::v2::LogEntry, LogEntries, LogEntriesOptions};
 
 use crate::{
@@ -8,7 +8,7 @@ use crate::{
     commands::{
         application::generate_filter,
         tui::{
-            app::{App, Build, Commit, Deployment},
+            app::{App, Build, Commit, Deployment, DEFAULT_VERSION},
             StatefulList,
         },
     },
@@ -39,11 +39,12 @@ pub async fn handle_network_event(
             let application = app_ref.state.current_application.clone();
             let namespace = app_ref.state.current_namespace.clone();
             app_ref.state.is_fetching_builds = true;
+            let version = get_current_version(&app_ref);
 
             drop(app_ref);
 
             let cd_pipeline_data = wk_client
-                .fetch_cd_pipeline(&application, &namespace, "green")
+                .fetch_cd_pipeline(&application, &namespace, &version)
                 .await?
                 .cd_pipeline;
 
@@ -138,7 +139,9 @@ pub async fn handle_network_event(
             let app_ref = app.lock().await;
             let application = app_ref.state.current_application.clone();
             let namespace = app_ref.state.current_namespace.clone();
-            let version = "green";
+
+            let version = get_current_version(&app_ref);
+
             let since = match app_ref.state.last_log_entry_timestamp.clone() {
                 Some(t) => Some(t),
                 None => Some("1m".to_string()),
@@ -149,14 +152,14 @@ pub async fn handle_network_event(
             let gcloud_access_token = auth::google_cloud::get_token_or_login().await;
 
             let application_resp = wk_client
-                .fetch_application_with_k8s_cluster(&application, &namespace, version)
+                .fetch_application_with_k8s_cluster(&application, &namespace, &version)
                 .await?
                 .application;
 
             if let Some(application_data) = application_resp {
                 if let Some(cluster) = application_data.k8s_cluster {
                     let filter = generate_filter(
-                        version,
+                        &version,
                         &cluster.cluster_name,
                         &cluster.k8s_namespace,
                         &since,
@@ -280,4 +283,13 @@ async fn update_logs_entries(app: Arc<Mutex<App>>, log_entries: Option<Vec<LogEn
             }
         }
     }
+}
+
+fn get_current_version(app_ref: &MutexGuard<App>) -> String {
+    app_ref
+        .state
+        .current_version
+        .clone()
+        .map(|current_version| current_version.to_string())
+        .unwrap_or(DEFAULT_VERSION.to_owned())
 }
