@@ -12,7 +12,11 @@ pub enum Action {
 impl Action {
     // iterator for enum https://stackoverflow.com/a/21376984
     pub fn iterator() -> Iter<'static, Action> {
-        static ACTIONS: [Action; 2] = [Action::OpenNamespaceSelection, Action::Quit];
+        static ACTIONS: [Action; 3] = [
+            Action::OpenNamespaceSelection,
+            Action::OpenVersionSelection,
+            Action::Quit,
+        ];
         ACTIONS.iter()
     }
 
@@ -35,7 +39,7 @@ impl Display for Action {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Action::OpenNamespaceSelection => write!(f, "Select namespace"),
-            Action::OpenVersionSelection => write!(f, "Select versiion"),
+            Action::OpenVersionSelection => write!(f, "Select version"),
             Action::Quit => write!(f, "Quit"),
         }
     }

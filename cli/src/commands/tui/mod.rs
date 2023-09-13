@@ -28,6 +28,7 @@ mod ui;
 pub enum CurrentScreen {
     Main,
     NamespaceSelection,
+    VersionSelection,
 }
 
 pub struct StatefulList<T> {

@@ -6,6 +6,7 @@ use ratatui::{
 use self::{
     application::ApplicationWidget, builds::BuildsWidget, deployment::DeploymentWidget,
     help::HelpWidget, logs::LogsWidget, namespace_selection::NamespaceSelectionWidget,
+    version_selection::VersionSelectionWidget,
 };
 
 use super::{app::App, CurrentScreen};
@@ -16,6 +17,7 @@ mod deployment;
 mod help;
 mod logs;
 pub mod namespace_selection;
+pub mod version_selection;
 
 pub fn draw<B>(frame: &mut Frame<B>, app: &mut App)
 where
@@ -66,6 +68,8 @@ where
 
     if let CurrentScreen::NamespaceSelection = app.current_screen {
         NamespaceSelectionWidget::draw(app, frame);
+    } else if let CurrentScreen::VersionSelection = app.current_screen {
+        VersionSelectionWidget::draw(app, frame);
     }
 }
 
