@@ -38,7 +38,7 @@ pub struct State {
     pub log_entries: Vec<LogEntry>,
     pub log_entries_length: usize,
     pub max_log_entries_length: usize,
-    // pub log_entries_next_page_token: Option<String>,
+
     pub last_log_entry_timestamp: Option<String>,
     // ui controls
     pub logs_vertical_scroll_state: ScrollbarState,
