@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use tokio::sync::{Mutex, MutexGuard};
+use tokio::sync::Mutex;
 use wukong_sdk::services::gcloud::{google::logging::v2::LogEntry, LogEntries, LogEntriesOptions};
 
 use crate::{
@@ -8,7 +8,7 @@ use crate::{
     commands::{
         application::generate_filter,
         tui::{
-            app::{App, Build, Commit, Deployment, DEFAULT_VERSION},
+            app::{App, Build, Commit, Deployment},
             StatefulList,
         },
     },
@@ -38,8 +38,8 @@ pub async fn handle_network_event(
             let mut app_ref = app.lock().await;
             let application = app_ref.state.current_application.clone();
             let namespace = app_ref.state.current_namespace.clone();
+            let version = app_ref.state.current_version.clone();
             app_ref.state.is_fetching_builds = true;
-            let version = get_current_version(&app_ref);
 
             drop(app_ref);
 
@@ -139,8 +139,7 @@ pub async fn handle_network_event(
             let app_ref = app.lock().await;
             let application = app_ref.state.current_application.clone();
             let namespace = app_ref.state.current_namespace.clone();
-
-            let version = get_current_version(&app_ref);
+            let version = app_ref.state.current_version.clone();
 
             let since = match app_ref.state.last_log_entry_timestamp.clone() {
                 Some(t) => Some(t),
@@ -283,13 +282,4 @@ async fn update_logs_entries(app: Arc<Mutex<App>>, log_entries: Option<Vec<LogEn
             }
         }
     }
-}
-
-fn get_current_version(app_ref: &MutexGuard<App>) -> String {
-    app_ref
-        .state
-        .current_version
-        .clone()
-        .map(|current_version| current_version.to_string())
-        .unwrap_or(DEFAULT_VERSION.to_owned())
 }

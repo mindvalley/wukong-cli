@@ -7,7 +7,7 @@ use ratatui::{
     Frame,
 };
 
-use crate::commands::tui::app::{App, DEFAULT_VERSION};
+use crate::commands::tui::app::App;
 
 pub struct ApplicationWidget;
 
@@ -15,12 +15,7 @@ impl ApplicationWidget {
     pub fn draw<B: Backend>(app: &App, frame: &mut Frame<B>, rect: Rect) {
         let current_application = app.state.current_application.clone();
         let current_namespace = app.state.current_namespace.clone();
-        let current_version = app
-            .state
-            .current_version
-            .clone()
-            .map(|current_version| current_version.to_string())
-            .unwrap_or(DEFAULT_VERSION.to_owned());
+        let current_version = app.state.current_version.clone();
 
         let application_block = Block::default()
             .borders(Borders::LEFT | Borders::TOP | Borders::BOTTOM)

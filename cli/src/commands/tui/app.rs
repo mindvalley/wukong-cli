@@ -21,12 +21,10 @@ pub enum AppReturn {
     Continue,
 }
 
-pub const DEFAULT_VERSION: &str = "green";
-
 pub struct State {
     pub current_application: String,
     pub current_namespace: String,
-    pub current_version: Option<String>,
+    pub current_version: String,
     pub show_namespace_selection: bool,
 
     // loading state
@@ -96,13 +94,15 @@ impl App {
         namespace_selections.select(0);
 
         let mut version_selections =
-            StatefulList::with_items(vec![String::from("blue"), String::from("green")]);
+            StatefulList::with_items(vec![String::from("green"), String::from("blue")]);
         version_selections.select(0);
 
         Self {
             state: State {
                 current_application: config.core.application.clone(),
                 current_namespace: String::from("prod"),
+                current_version: String::from("green"),
+
                 show_namespace_selection: false,
                 is_fetching_builds: false,
                 is_fetching_deployments: false,
@@ -110,7 +110,6 @@ impl App {
                 is_fetching_log_entries: false,
                 start_polling_log_entries: false,
                 logs_enable_auto_scroll_to_bottom: true,
-                current_version: None,
 
                 builds: vec![],
                 deployments: vec![],
