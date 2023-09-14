@@ -32,6 +32,7 @@ pub struct State {
     pub is_fetching_deployments: bool,
     pub is_checking_namespaces: bool,
     pub is_fetching_log_entries: bool,
+    pub is_checking_version: bool,
     pub start_polling_log_entries: bool,
 
     // fetch data
@@ -107,6 +108,7 @@ impl App {
                 is_fetching_builds: false,
                 is_fetching_deployments: false,
                 is_checking_namespaces: false,
+                is_checking_version: false,
                 is_fetching_log_entries: false,
                 start_polling_log_entries: false,
                 logs_enable_auto_scroll_to_bottom: true,

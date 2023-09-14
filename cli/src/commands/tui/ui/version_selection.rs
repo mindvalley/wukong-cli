@@ -12,7 +12,7 @@ use crate::commands::tui::{
     CurrentScreen,
 };
 
-use super::centered_rect;
+use super::{centered_rect, create_loading_widget};
 
 pub struct VersionSelectionWidget;
 
@@ -37,17 +37,22 @@ impl VersionSelectionWidget {
         let area = centered_rect(60, 25, frame.size());
         frame.render_widget(Clear, area);
 
-        let items = List::new(items)
-            .block(popup_block)
-            .highlight_style(
-                Style::default()
-                    .fg(Color::Black)
-                    .bg(Color::LightGreen)
-                    .add_modifier(Modifier::BOLD),
-            )
-            .highlight_symbol(">> ");
+        if app.state.is_checking_version {
+            let loading_widget = create_loading_widget(popup_block);
+            frame.render_widget(loading_widget, area);
+        } else {
+            let items = List::new(items)
+                .block(popup_block)
+                .highlight_style(
+                    Style::default()
+                        .fg(Color::Black)
+                        .bg(Color::LightGreen)
+                        .add_modifier(Modifier::BOLD),
+                )
+                .highlight_symbol(">> ");
 
-        frame.render_stateful_widget(items, area, &mut app.version_selections.state);
+            frame.render_stateful_widget(items, area, &mut app.version_selections.state);
+        }
     }
 
     pub async fn handle_input(key: Key, app: &mut App) {

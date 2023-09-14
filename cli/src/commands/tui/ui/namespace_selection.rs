@@ -1,8 +1,8 @@
 use ratatui::{
     prelude::{Alignment, Backend},
     style::{Color, Modifier, Style},
-    text::{Line, Text},
-    widgets::{Block, Borders, Clear, List, ListItem, Paragraph},
+    text::Line,
+    widgets::{Block, Borders, Clear, List, ListItem},
     Frame,
 };
 
@@ -12,7 +12,7 @@ use crate::commands::tui::{
     CurrentScreen,
 };
 
-use super::centered_rect;
+use super::{centered_rect, create_loading_widget};
 
 pub struct NamespaceSelectionWidget;
 
@@ -38,11 +38,7 @@ impl NamespaceSelectionWidget {
         frame.render_widget(Clear, area);
 
         if app.state.is_checking_namespaces {
-            let loading_widget = Paragraph::new(Text::styled(
-                "Loading...",
-                Style::default().fg(Color::White),
-            ))
-            .block(popup_block);
+            let loading_widget = create_loading_widget(popup_block);
             frame.render_widget(loading_widget, area);
         } else {
             // Create a List from all list items and highlight the currently selected one
