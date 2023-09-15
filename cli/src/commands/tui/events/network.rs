@@ -253,9 +253,10 @@ async fn update_logs_entries(app: Arc<Mutex<App>>, log_entries: Option<Vec<LogEn
             );
 
             // Keep the log entries length to the max_log_entries_length:
-            if app_ref.state.log_entries.len() + entries.len() > MAX_LOG_ENTRIES_LENGTH {
+            if app_ref.state.log_entries_length + entries.len() > MAX_LOG_ENTRIES_LENGTH {
                 let excess =
-                    (app_ref.state.log_entries.len() + entries.len()) - MAX_LOG_ENTRIES_LENGTH;
+                    (app_ref.state.log_entries_length + entries.len()) - MAX_LOG_ENTRIES_LENGTH;
+          
                 if excess > 0 {
                     app_ref.state.log_entries.drain(..excess);
                 }
