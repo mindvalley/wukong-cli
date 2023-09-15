@@ -9,7 +9,9 @@ use crate::config::Config;
 use super::{
     action::Action,
     events::{key::Key, network::NetworkEvent},
-    ui::namespace_selection::NamespaceSelectionWidget,
+    ui::{
+        namespace_selection::NamespaceSelectionWidget, version_selection::VersionSelectionWidget,
+    },
     CurrentScreen, StatefulList,
 };
 
@@ -22,6 +24,7 @@ pub enum AppReturn {
 pub struct State {
     pub current_application: String,
     pub current_namespace: String,
+    pub current_version: String,
     pub show_namespace_selection: bool,
 
     // loading state
@@ -29,6 +32,7 @@ pub struct State {
     pub is_fetching_deployments: bool,
     pub is_checking_namespaces: bool,
     pub is_fetching_log_entries: bool,
+    pub is_checking_version: bool,
     pub start_polling_log_entries: bool,
 
     // fetch data
@@ -57,6 +61,7 @@ pub struct State {
 pub struct App {
     pub state: State,
     pub namespace_selections: StatefulList<String>,
+    pub version_selections: StatefulList<String>,
     pub current_screen: CurrentScreen,
     pub actions: Vec<Action>,
     pub network_event_sender: Sender<NetworkEvent>,
@@ -89,14 +94,21 @@ impl App {
             StatefulList::with_items(vec![String::from("prod"), String::from("staging")]);
         namespace_selections.select(0);
 
+        let mut version_selections =
+            StatefulList::with_items(vec![String::from("green"), String::from("blue")]);
+        version_selections.select(0);
+
         Self {
             state: State {
                 current_application: config.core.application.clone(),
                 current_namespace: String::from("prod"),
+                current_version: String::from("green"),
+
                 show_namespace_selection: false,
                 is_fetching_builds: false,
                 is_fetching_deployments: false,
                 is_checking_namespaces: false,
+                is_checking_version: false,
                 is_fetching_log_entries: false,
                 start_polling_log_entries: false,
                 logs_enable_auto_scroll_to_bottom: true,
@@ -118,8 +130,13 @@ impl App {
                 logs_widget_height: 0,
             },
             namespace_selections,
+            version_selections,
             current_screen: CurrentScreen::Main,
-            actions: vec![Action::OpenNamespaceSelection, Action::Quit],
+            actions: vec![
+                Action::OpenNamespaceSelection,
+                Action::OpenVersionSelection,
+                Action::Quit,
+            ],
             network_event_sender: sender,
         }
     }
@@ -157,11 +174,18 @@ impl App {
         if let CurrentScreen::NamespaceSelection = self.current_screen {
             NamespaceSelectionWidget::handle_input(key, self).await;
             return AppReturn::Continue;
+        } else if let CurrentScreen::VersionSelection = self.current_screen {
+            VersionSelectionWidget::handle_input(key, self).await;
+            return AppReturn::Continue;
         }
 
         match Action::from_key(key) {
             Some(Action::OpenNamespaceSelection) => {
                 self.current_screen = CurrentScreen::NamespaceSelection;
+                AppReturn::Continue
+            }
+            Some(Action::OpenVersionSelection) => {
+                self.current_screen = CurrentScreen::VersionSelection;
                 AppReturn::Continue
             }
             Some(Action::Quit) => AppReturn::Exit,

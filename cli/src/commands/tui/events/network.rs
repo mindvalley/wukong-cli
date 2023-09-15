@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, MutexGuard};
 use wukong_sdk::services::gcloud::{google::logging::v2::LogEntry, LogEntries, LogEntriesOptions};
 
 use crate::{
@@ -38,12 +38,13 @@ pub async fn handle_network_event(
             let mut app_ref = app.lock().await;
             let application = app_ref.state.current_application.clone();
             let namespace = app_ref.state.current_namespace.clone();
+            let version = app_ref.state.current_version.clone();
             app_ref.state.is_fetching_builds = true;
 
             drop(app_ref);
 
             let cd_pipeline_data = wk_client
-                .fetch_cd_pipeline(&application, &namespace, "green")
+                .fetch_cd_pipeline(&application, &namespace, &version)
                 .await?
                 .cd_pipeline;
 
@@ -81,6 +82,7 @@ pub async fn handle_network_event(
             let application = app_ref.state.current_application.clone();
             app_ref.state.is_fetching_deployments = true;
             app_ref.state.is_checking_namespaces = true;
+            app_ref.state.is_checking_version = true;
 
             drop(app_ref);
 
@@ -121,6 +123,7 @@ pub async fn handle_network_event(
                 .deployments
                 .iter()
                 .any(|pipeline| pipeline.environment == "staging");
+
             let mut selections = vec![];
             if has_prod_namespace {
                 selections.push(String::from("prod"));
@@ -132,13 +135,17 @@ pub async fn handle_network_event(
             let mut namespace_selections = StatefulList::with_items(selections);
             namespace_selections.select(0);
             app_ref.namespace_selections = namespace_selections;
+
+            set_version_selections(&mut app_ref).await;
+
             app_ref.state.is_checking_namespaces = false;
         }
         NetworkEvent::FetchGCloudLogs => {
             let app_ref = app.lock().await;
             let application = app_ref.state.current_application.clone();
             let namespace = app_ref.state.current_namespace.clone();
-            let version = "green";
+            let version = app_ref.state.current_version.clone();
+
             let since = match app_ref.state.last_log_entry_timestamp.clone() {
                 Some(t) => Some(t),
                 None => Some("1m".to_string()),
@@ -149,14 +156,14 @@ pub async fn handle_network_event(
             let gcloud_access_token = auth::google_cloud::get_token_or_login().await;
 
             let application_resp = wk_client
-                .fetch_application_with_k8s_cluster(&application, &namespace, version)
+                .fetch_application_with_k8s_cluster(&application, &namespace, &version)
                 .await?
                 .application;
 
             if let Some(application_data) = application_resp {
                 if let Some(cluster) = application_data.k8s_cluster {
                     let filter = generate_filter(
-                        version,
+                        &version,
                         &cluster.cluster_name,
                         &cluster.k8s_namespace,
                         &since,
@@ -213,6 +220,31 @@ pub async fn handle_network_event(
     }
 
     Ok(())
+}
+
+async fn set_version_selections(app_ref: &mut MutexGuard<'_, App>) {
+    let deployments = &app_ref.state.deployments;
+    let selected_namespace = &app_ref.state.current_namespace;
+
+    let version_selections: Vec<String> = deployments
+        .iter()
+        .filter_map(|pipeline| {
+            if pipeline.environment == *selected_namespace
+                && (pipeline.version == "green" || pipeline.version == "blue")
+            {
+                Some(pipeline.version.to_string())
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    // set version selections to state
+    let mut version_selections_list = StatefulList::with_items(version_selections);
+    version_selections_list.select(0);
+    app_ref.version_selections = version_selections_list;
+
+    app_ref.state.is_checking_version = false;
 }
 
 async fn fetch_log_entries(
