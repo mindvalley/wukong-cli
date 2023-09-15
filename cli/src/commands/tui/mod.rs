@@ -1,4 +1,4 @@
-use std::{sync::Arc, time::Duration};
+use std::{io::stdout, sync::Arc, time::Duration};
 
 use crate::{
     config::{ApiChannel, Config},
@@ -113,31 +113,29 @@ pub async fn handle_tui(channel: ApiChannel) -> Result<bool, WKCliError> {
 }
 
 pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
-    let mut stdout = std::io::stdout();
-    enable_raw_mode()?;
+    let mut stdout = stdout();
     execute!(stdout, EnterAlternateScreen).expect("unable to enter alternate screen");
+    enable_raw_mode()?;
 
-    let mut terminal = Terminal::new(CrosstermBackend::new(stdout))?;
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+
+    terminal.hide_cursor()?;
 
     // The lower the tick_rate, the higher the FPS, but also the higher the CPU usage.
-    let tick_rate = Duration::from_millis(200);
+    let tick_rate = Duration::from_millis(1000);
     let event_manager = EventManager::new();
     event_manager.spawn_event_listen_thread(tick_rate);
 
-    let mut the_first_frame = true;
+    let mut is_first_render = true;
 
     loop {
         let mut app_ref = app.lock().await;
 
-        if the_first_frame {
-            // fetch data on the first frame
-            app_ref.dispatch(NetworkEvent::FetchDeployments).await;
-            app_ref.dispatch(NetworkEvent::FetchBuilds).await;
-
-            the_first_frame = false;
-        }
-
         terminal.draw(|frame| ui::draw(frame, &mut app_ref))?;
+
+        // move cursor to the top left corner to avoid screen scrolling:
+        terminal.set_cursor(1, 1)?;
 
         let result = match event_manager.next().unwrap() {
             events::Event::Input(key) => app_ref.handle_input(key).await,
@@ -147,7 +145,17 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
         if result == AppReturn::Exit {
             break;
         }
+
+        if is_first_render {
+            // fetch data on the first frame
+            app_ref.dispatch(NetworkEvent::FetchDeployments).await;
+            app_ref.dispatch(NetworkEvent::FetchBuilds).await;
+
+            is_first_render = false;
+        }
     }
+
+    terminal.show_cursor()?;
 
     // post-run
     disable_raw_mode()?;
@@ -159,7 +167,6 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
     .expect("unable to leave alternate screen");
 
     terminal.clear()?;
-    terminal.show_cursor()?;
 
     Ok(true)
 }

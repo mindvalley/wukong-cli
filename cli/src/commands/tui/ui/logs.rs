@@ -6,7 +6,7 @@ use ratatui::{
     Frame,
 };
 
-use crate::commands::tui::app::App;
+use crate::commands::tui::app::{App, MAX_LOG_ENTRIES_LENGTH};
 
 pub struct LogsWidget;
 
@@ -36,7 +36,11 @@ impl LogsWidget {
         let title = Block::default()
             .title(format!(
                 "Use arrow keys or h j k l to scroll ◄ ▲ ▼ ►. Total {} logs.",
-                app.state.log_entries_ids.len()
+                if app.state.log_entries_length == MAX_LOG_ENTRIES_LENGTH {
+                    format!("{}+", app.state.log_entries_length)
+                } else {
+                    app.state.log_entries_length.to_string()
+                }
             ))
             .title_alignment(Alignment::Center)
             .style(Style::default().fg(Color::DarkGray));
@@ -63,30 +67,30 @@ impl LogsWidget {
             return;
         }
 
-        let mut log_entries = vec![];
-        let mut first_color = true;
-        for id in &app.state.log_entries_ids {
-            if let Some(log) = app.state.log_entries_hash_map.get(id) {
-                if first_color {
-                    log_entries.push(Line::styled(
-                        format!("{}", log),
-                        Style::default().fg(Color::White),
-                    ));
-                } else {
-                    log_entries.push(Line::styled(
-                        format!("{}", log),
-                        Style::default().fg(Color::LightCyan),
-                    ));
-                }
+        let mut first_color = false;
 
+        let log_entries = app
+            .state
+            .log_entries
+            .iter()
+            .map(|log_entry| {
                 first_color = !first_color;
-            }
-        }
+
+                if first_color {
+                    Line::styled(format!("{}", log_entry), Style::default().fg(Color::White))
+                } else {
+                    Line::styled(
+                        format!("{}", log_entry),
+                        Style::default().fg(Color::LightCyan),
+                    )
+                }
+            })
+            .collect::<Vec<Line>>();
 
         app.state.logs_vertical_scroll_state = app
             .state
             .logs_vertical_scroll_state
-            .content_length(log_entries.len());
+            .content_length(app.state.log_entries_length);
 
         let paragraph = Paragraph::new(log_entries)
             .block(Block::default().padding(Padding::new(1, 1, 0, 0)))
