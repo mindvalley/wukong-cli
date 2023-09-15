@@ -19,7 +19,7 @@ pub enum AppReturn {
     Continue,
 }
 
-pub const MAX_LOG_ENTRIES_LENGTH: usize = 200;
+pub const MAX_LOG_ENTRIES_LENGTH: usize = 1_000;
 
 pub struct State {
     pub current_application: String,
