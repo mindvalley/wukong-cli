@@ -58,6 +58,7 @@ pub struct State {
     // ui state
     pub logs_widget_height: u16,
     pub logs_widget_width: u16,
+    pub logs_tailing: bool,
 }
 
 pub struct App {
@@ -130,6 +131,7 @@ impl App {
 
                 logs_widget_width: 0,
                 logs_widget_height: 0,
+                logs_tailing: true,
             },
             namespace_selections,
             version_selections,
@@ -137,6 +139,7 @@ impl App {
             actions: vec![
                 Action::OpenNamespaceSelection,
                 Action::OpenVersionSelection,
+                Action::ToggleLogsTailing,
                 Action::Quit,
             ],
             network_event_sender: sender,
@@ -166,7 +169,10 @@ impl App {
 
             self.state.start_polling_log_entries = true;
             self.state.instant_since_last_log_entries_poll = Instant::now();
-            self.dispatch(NetworkEvent::FetchGCloudLogs).await;
+
+            if self.state.logs_tailing {
+                self.dispatch(NetworkEvent::FetchGCloudLogs).await;
+            }
         }
 
         AppReturn::Continue
@@ -193,7 +199,7 @@ impl App {
             Some(Action::Quit) => AppReturn::Exit,
             // TODO: just for prototype purpose
             // we will need to track current selected panel to apply the event
-            None => match key {
+            None | Some(Action::ToggleLogsTailing) => match key {
                 Key::Up | Key::Char('k') => {
                     self.state.logs_vertical_scroll =
                         self.state.logs_vertical_scroll.saturating_sub(5);
@@ -240,6 +246,10 @@ impl App {
 
                     self.state.logs_enable_auto_scroll_to_bottom = false;
 
+                    AppReturn::Continue
+                }
+                Key::Ctrl('t') => {
+                    self.state.logs_tailing = !self.state.logs_tailing;
                     AppReturn::Continue
                 }
                 _ => AppReturn::Continue,

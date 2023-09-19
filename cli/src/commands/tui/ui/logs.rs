@@ -2,11 +2,13 @@ use ratatui::{
     prelude::{Alignment, Backend, Constraint, Direction, Layout, Margin, Rect},
     style::{Color, Style},
     text::{Line, Text},
-    widgets::{Block, Borders, Padding, Paragraph, Scrollbar, ScrollbarOrientation},
+    widgets::{
+        Block, Borders, Padding, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState,
+    },
     Frame,
 };
 
-use crate::commands::tui::app::{App, MAX_LOG_ENTRIES_LENGTH};
+use crate::commands::tui::app::{App, State, MAX_LOG_ENTRIES_LENGTH};
 
 pub struct LogsWidget;
 
@@ -15,12 +17,8 @@ impl LogsWidget {
         app.state.logs_widget_width = rect.width;
         app.state.logs_widget_height = rect.height;
 
-        let logs_block = Block::default()
-            .title(" Logs ")
-            .borders(Borders::ALL)
-            .padding(Padding::new(1, 1, 0, 0))
-            .style(Style::default().fg(Color::LightGreen));
-        frame.render_widget(logs_block, rect);
+        let main_block = create_main_block();
+        frame.render_widget(main_block, rect);
 
         let [info, logs_area] = *Layout::default()
             .direction(Direction::Vertical)
@@ -33,87 +31,119 @@ impl LogsWidget {
             return;
         };
 
-        let title = Block::default()
-            .title(format!(
-                "Use arrow keys or h j k l to scroll ◄ ▲ ▼ ►. Total {} logs.",
-                if app.state.log_entries_length == MAX_LOG_ENTRIES_LENGTH {
-                    format!("{}+", app.state.log_entries_length)
-                } else {
-                    app.state.log_entries_length.to_string()
-                }
-            ))
-            .title_alignment(Alignment::Center)
-            .style(Style::default().fg(Color::DarkGray));
+        let title = create_title(&app.state);
         frame.render_widget(title, info);
 
-        if app.state.has_log_errors {
-            let loading_widget = Paragraph::new(Text::styled(
-                "Something went wrong while fetching logs.",
-                Style::default().fg(Color::White),
-            ))
-            .block(Block::default().padding(Padding::new(1, 1, 0, 0)));
-            frame.render_widget(loading_widget, logs_area);
-            return;
-        }
-
-        // it will show loader only on the first call
         if app.state.is_fetching_log_entries {
-            let loading_widget = Paragraph::new(Text::styled(
-                "Loading...",
-                Style::default().fg(Color::White),
-            ))
-            .block(Block::default().padding(Padding::new(1, 1, 0, 0)));
-            frame.render_widget(loading_widget, logs_area);
+            let loading_message = create_loading_block();
+            frame.render_widget(loading_message, logs_area);
+            return;
+        } else if app.state.has_log_errors {
+            let error_message = create_error_block();
+            frame.render_widget(error_message, logs_area);
             return;
         }
 
-        let mut first_color = false;
-
-        let log_entries = app
-            .state
-            .log_entries
-            .iter()
-            .map(|log_entry| {
-                first_color = !first_color;
-
-                if first_color {
-                    Line::styled(format!("{}", log_entry), Style::default().fg(Color::White))
-                } else {
-                    Line::styled(
-                        format!("{}", log_entry),
-                        Style::default().fg(Color::LightCyan),
-                    )
-                }
-            })
-            .collect::<Vec<Line>>();
-
-        app.state.logs_vertical_scroll_state = app
-            .state
-            .logs_vertical_scroll_state
-            .content_length(app.state.log_entries_length);
-
-        let paragraph = Paragraph::new(log_entries)
-            .block(Block::default().padding(Padding::new(1, 1, 0, 0)))
-            // we can't use wrap if we want to scroll to bottom
-            // because we don't know the state of the render
-            // waiting this https://github.com/ratatui-org/ratatui/issues/136
-            // .wrap(Wrap { trim: true })
-            .scroll((
-                app.state.logs_vertical_scroll as u16,
-                app.state.logs_horizontal_scroll as u16,
-            ));
-
-        frame.render_widget(paragraph, logs_area);
-        frame.render_stateful_widget(
-            Scrollbar::default()
-                .orientation(ScrollbarOrientation::VerticalRight)
-                .begin_symbol(None)
-                .end_symbol(None),
-            logs_area.inner(&Margin {
-                vertical: 1,
-                horizontal: 0,
-            }),
-            &mut app.state.logs_vertical_scroll_state,
-        );
+        render_log_entries(frame, logs_area, &mut app.state);
+        render_scrollbar(frame, logs_area, &mut app.state.logs_vertical_scroll_state);
     }
+}
+
+fn create_main_block() -> Block<'static> {
+    Block::default()
+        .title(" Logs ")
+        .borders(Borders::ALL)
+        .padding(Padding::new(1, 1, 0, 0))
+        .style(Style::default().fg(Color::LightGreen))
+}
+
+fn create_title(state: &State) -> Block {
+    Block::default()
+        .title(format!(
+            "Use arrow keys or h j k l to scroll ◄ ▲ ▼ ►. Total {} logs. \t {}",
+            if state.log_entries_length == MAX_LOG_ENTRIES_LENGTH {
+                format!("{}+", state.log_entries_length)
+            } else {
+                state.log_entries_length.to_string()
+            },
+            if state.logs_tailing {
+                "[Tailing:On]"
+            } else {
+                "[Tailing:Off]"
+            }
+        ))
+        .title_alignment(Alignment::Center)
+        .style(Style::default().fg(Color::DarkGray))
+}
+
+fn create_loading_block() -> Paragraph<'static> {
+    Paragraph::new(Text::styled(
+        "Loading...",
+        Style::default().fg(Color::White),
+    ))
+    .block(Block::default().padding(Padding::new(1, 1, 0, 0)))
+}
+
+fn create_error_block() -> Paragraph<'static> {
+    Paragraph::new(Text::styled(
+        "Something went wrong while fetching logs.",
+        Style::default().fg(Color::White),
+    ))
+    .block(Block::default().padding(Padding::new(1, 1, 0, 0)))
+}
+
+fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, state: &mut State) {
+    let mut first_color = false;
+
+    let log_entries = state
+        .log_entries
+        .iter()
+        .map(|log_entry| {
+            first_color = !first_color;
+
+            if first_color {
+                Line::styled(format!("{}", log_entry), Style::default().fg(Color::White))
+            } else {
+                Line::styled(
+                    format!("{}", log_entry),
+                    Style::default().fg(Color::LightCyan),
+                )
+            }
+        })
+        .collect::<Vec<Line>>();
+
+    state.logs_vertical_scroll_state = state
+        .logs_vertical_scroll_state
+        .content_length(state.log_entries_length);
+
+    let paragraph = Paragraph::new(log_entries)
+        .block(Block::default().padding(Padding::new(1, 1, 0, 0)))
+        // we can't use wrap if we want to scroll to bottom
+        // because we don't know the state of the render
+        // waiting this https://github.com/ratatui-org/ratatui/issues/136
+        // .wrap(Wrap { trim: true })
+        .scroll((
+            state.logs_vertical_scroll as u16,
+            state.logs_horizontal_scroll as u16,
+        ));
+
+    frame.render_widget(paragraph, logs_area);
+}
+
+fn render_scrollbar<B: Backend>(
+    frame: &mut Frame<'_, B>,
+    logs_area: Rect,
+    logs_vertical_scroll_state: &mut ScrollbarState,
+) {
+    frame.render_stateful_widget(
+        Scrollbar::default()
+            .orientation(ScrollbarOrientation::VerticalRight)
+            .begin_symbol(None)
+            .end_symbol(None),
+        logs_area.inner(&Margin {
+            vertical: 1,
+            horizontal: 0,
+        }),
+        logs_vertical_scroll_state,
+    );
 }
