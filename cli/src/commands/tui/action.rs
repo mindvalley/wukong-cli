@@ -25,7 +25,7 @@ impl Action {
         match self {
             Action::OpenNamespaceSelection => &[Key::Char('n')],
             Action::OpenVersionSelection => &[Key::Char('v')],
-            Action::ToggleLogsTailing => &[Key::Char('t')],
+            Action::ToggleLogsTailing => &[Key::Ctrl('t')],
             Action::Quit => &[Key::Char('q')],
         }
     }
