@@ -58,7 +58,7 @@ pub struct State {
     // ui state
     pub logs_widget_height: u16,
     pub logs_widget_width: u16,
-    pub logs_serverity: LogSeverity,
+    pub logs_serverity: Option<LogSeverity>,
 }
 
 pub struct App {
@@ -131,7 +131,7 @@ impl App {
 
                 logs_widget_width: 0,
                 logs_widget_height: 0,
-                logs_serverity: LogSeverity::default(),
+                logs_serverity: None,
             },
             namespace_selections,
             version_selections,
@@ -254,8 +254,8 @@ impl App {
                     // Add if not already in the list
                     // or else remove it
                     self.state.logs_serverity = match self.state.logs_serverity {
-                        LogSeverity::Error => LogSeverity::default(),
-                        _ => LogSeverity::Error,
+                        Some(LogSeverity::Error) => None,
+                        _ => Some(LogSeverity::Error),
                     };
 
                     AppReturn::Continue

@@ -10,7 +10,7 @@ use once_cell::sync::Lazy;
 use openidconnect::url;
 use owo_colors::OwoColorize;
 use regex::Regex;
-use wukong_sdk::services::gcloud::LogEntriesOptions;
+use wukong_sdk::services::gcloud::{google::logging::r#type::LogSeverity, LogEntriesOptions};
 use wukong_telemetry::*;
 use wukong_telemetry_macro::*;
 
@@ -57,7 +57,11 @@ pub async fn handle_logs(
                 &cluster.k8s_namespace,
                 since,
                 until,
-                show_error_and_above,
+                if *show_error_and_above {
+                    &Some(LogSeverity::Error)
+                } else {
+                    &None
+                },
             )?;
             let resource_names = vec![format!("projects/{}", cluster.google_project_id)];
             application_loader.finish_and_clear();
@@ -224,7 +228,7 @@ pub fn generate_filter(
     namespace_name: &str,
     since: &Option<String>,
     until: &Option<String>,
-    show_error_and_above: &bool,
+    severity: &Option<LogSeverity>,
 ) -> Result<String, WKCliError> {
     let mut filter = String::new();
     filter.push_str(format!("resource.type=\"k8s_container\" AND resource.labels.cluster_name=\"{}\" AND resource.labels.namespace_name=\"{}\"", cluster_name, namespace_name).as_str());
@@ -246,12 +250,12 @@ pub fn generate_filter(
         filter.push_str(&format!("timestamp<=\"{}\"", get_timestamp(until)?));
     }
 
-    if *show_error_and_above {
+    if let Some(severity) = severity {
         if !filter.is_empty() {
             filter.push_str(" AND ");
         }
 
-        filter.push_str("severity>=ERROR");
+        filter.push_str(&format!("severity={:?}", severity.as_str_name()));
     }
 
     filter.push_str(" AND ");

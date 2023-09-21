@@ -1,10 +1,7 @@
 use std::sync::Arc;
 
 use tokio::sync::{Mutex, MutexGuard};
-use wukong_sdk::services::gcloud::{
-    google::logging::{r#type::LogSeverity, v2::LogEntry},
-    LogEntries, LogEntriesOptions,
-};
+use wukong_sdk::services::gcloud::{google::logging::v2::LogEntry, LogEntries, LogEntriesOptions};
 
 use crate::{
     auth,
@@ -296,11 +293,7 @@ async fn get_gcloud_logs(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Resu
                         &cluster.k8s_namespace,
                         &since,
                         &None,
-                        if logs_serverity == LogSeverity::Error {
-                            &true
-                        } else {
-                            &false
-                        },
+                        &logs_serverity,
                     )?;
                     let resource_names = vec![format!("projects/{}", cluster.google_project_id)];
 

@@ -5,6 +5,7 @@ use ratatui::{
     widgets::{Block, Borders, Padding, Paragraph, Scrollbar, ScrollbarOrientation},
     Frame,
 };
+use wukong_sdk::services::gcloud::google::logging::r#type::LogSeverity;
 
 use crate::commands::tui::app::{App, MAX_LOG_ENTRIES_LENGTH};
 
@@ -41,7 +42,14 @@ impl LogsWidget {
                 } else {
                     app.state.log_entries_length.to_string()
                 },
-                format!("[Severity: {}]", app.state.logs_serverity.as_str_name())
+                format!(
+                    "[Severity: {}]",
+                    if app.state.logs_serverity == Some(LogSeverity::Error) {
+                        "Error"
+                    } else {
+                        "Default"
+                    }
+                )
             ))
             .title_alignment(Alignment::Center)
             .style(Style::default().fg(Color::DarkGray));
