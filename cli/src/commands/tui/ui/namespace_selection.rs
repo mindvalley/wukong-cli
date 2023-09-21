@@ -60,28 +60,39 @@ impl NamespaceSelectionWidget {
         match key {
             Key::Up => app.namespace_selections.previous(),
             Key::Down => app.namespace_selections.next(),
-            Key::Esc | Key::Char('q') => app.current_screen = CurrentScreen::Main,
+            Key::Esc | Key::Char('q') => set_current_screen_to_main(app),
             Key::Enter => {
                 let selected = app
                     .namespace_selections
                     .items
                     .get(app.namespace_selections.state.selected().unwrap())
-                    .unwrap()
-                    .clone();
+                    .unwrap();
 
-                if app.state.current_namespace != selected {
-                    app.state.current_namespace = selected;
-
-                    app.dispatch(NetworkEvent::FetchBuilds).await;
-                    // to re-trigger the polling
-                    app.state.is_fetching_log_entries = true;
-                    app.state.start_polling_log_entries = false;
-                    app.state.has_log_errors = false;
+                if let Some(current_namespace) = &app.state.current_namespace {
+                    if current_namespace != selected {
+                        fetch_and_reset_polling(app, selected.to_string()).await;
+                    }
+                } else {
+                    fetch_and_reset_polling(app, selected.to_string()).await;
                 }
 
-                app.current_screen = CurrentScreen::Main;
+                set_current_screen_to_main(app)
             }
             _ => {}
         }
     }
+}
+
+async fn fetch_and_reset_polling(app: &mut App, selected_version: String) {
+    app.state.current_namespace = Some(selected_version);
+    app.dispatch(NetworkEvent::GetBuilds).await;
+    app.dispatch(NetworkEvent::GetGCloudLogs).await;
+
+    app.state.is_fetching_log_entries = true;
+    app.state.start_polling_log_entries = false;
+    app.state.has_log_errors = false;
+}
+
+fn set_current_screen_to_main(app: &mut App) {
+    app.current_screen = CurrentScreen::Main;
 }

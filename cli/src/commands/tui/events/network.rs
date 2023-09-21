@@ -20,9 +20,9 @@ use crate::{
 #[allow(clippy::enum_variant_names)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NetworkEvent {
-    FetchBuilds,
-    FetchDeployments,
-    FetchGCloudLogs,
+    GetBuilds,
+    GetDeployments,
+    GetGCloudLogs,
 }
 
 pub async fn handle_network_event(
@@ -34,217 +34,67 @@ pub async fn handle_network_event(
     let mut wk_client = WKClient::for_channel(&config, channel)?;
 
     match network_event {
-        NetworkEvent::FetchBuilds => {
-            let mut app_ref = app.lock().await;
-            let application = app_ref.state.current_application.clone();
-            let namespace = app_ref.state.current_namespace.clone();
-            let version = app_ref.state.current_version.clone();
-            app_ref.state.is_fetching_builds = true;
-
-            drop(app_ref);
-
-            let cd_pipeline_data = wk_client
-                .fetch_cd_pipeline(&application, &namespace, &version)
-                .await?
-                .cd_pipeline;
-
-            if let Some(cd_pipeline_data) = cd_pipeline_data {
-                let mut app_ref = app.lock().await;
-                app_ref.state.builds = cd_pipeline_data
-                    .jenkins_builds
-                    .into_iter()
-                    .map(|build| {
-                        let commits = build
-                            .commits
-                            .into_iter()
-                            .map(|commit| Commit {
-                                id: commit.id,
-                                message_headline: commit.message_headline,
-                            })
-                            .collect();
-
-                        Build {
-                            name: build.build_artifact_name,
-                            commits,
-                        }
-                    })
-                    .collect();
-            } else {
-                let mut app_ref = app.lock().await;
-                app_ref.state.builds = vec![];
-            }
-
-            let mut app_ref = app.lock().await;
-            app_ref.state.is_fetching_builds = false;
-        }
-        NetworkEvent::FetchDeployments => {
-            let mut app_ref = app.lock().await;
-            let application = app_ref.state.current_application.clone();
-            app_ref.state.is_fetching_deployments = true;
-            app_ref.state.is_checking_namespaces = true;
-            app_ref.state.is_checking_version = true;
-
-            drop(app_ref);
-
-            let cd_pipelines_data = wk_client
-                .fetch_cd_pipelines(&application)
-                .await?
-                .cd_pipelines;
-
-            let mut app_ref = app.lock().await;
-            app_ref.state.deployments = cd_pipelines_data
-                .into_iter()
-                .map(|pipeline| Deployment {
-                    name: pipeline.name,
-                    environment: pipeline.environment,
-                    version: pipeline.version,
-                    enabled: pipeline.enabled,
-                    deployed_ref: pipeline
-                        .deployed_ref
-                        .map(|deployed_ref| deployed_ref[..7].to_string()),
-                    build_artifact: pipeline.build_artifact,
-                    deployed_by: pipeline.deployed_by,
-                    last_deployed_at: pipeline.last_deployment,
-                    status: pipeline.status,
-                })
-                .collect();
-
-            app_ref.state.is_fetching_deployments = false;
-
-            // we only know the available namespaces after the deployments is fetched
-            // so update namespace selections here
-            let has_prod_namespace = app_ref
-                .state
-                .deployments
-                .iter()
-                .any(|pipeline| pipeline.environment == "prod");
-            let has_staging_namespace = app_ref
-                .state
-                .deployments
-                .iter()
-                .any(|pipeline| pipeline.environment == "staging");
-
-            let mut selections = vec![];
-            if has_prod_namespace {
-                selections.push(String::from("prod"));
-            }
-            if has_staging_namespace {
-                selections.push(String::from("staging"));
-            }
-
-            let mut namespace_selections = StatefulList::with_items(selections);
-            namespace_selections.select(0);
-            app_ref.namespace_selections = namespace_selections;
-
-            set_version_selections(&mut app_ref).await;
-
-            app_ref.state.is_checking_namespaces = false;
-        }
-        NetworkEvent::FetchGCloudLogs => {
-            let app_ref = app.lock().await;
-            let application = app_ref.state.current_application.clone();
-            let namespace = app_ref.state.current_namespace.clone();
-            let version = app_ref.state.current_version.clone();
-
-            let since = match app_ref.state.last_log_entry_timestamp.clone() {
-                Some(t) => Some(t),
-                None => Some("1m".to_string()),
-            };
-
-            drop(app_ref);
-
-            let gcloud_access_token = auth::google_cloud::get_token_or_login().await;
-
-            let application_resp = wk_client
-                .fetch_application_with_k8s_cluster(&application, &namespace, &version)
-                .await?
-                .application;
-
-            if let Some(application_data) = application_resp {
-                if let Some(cluster) = application_data.k8s_cluster {
-                    let filter = generate_filter(
-                        &version,
-                        &cluster.cluster_name,
-                        &cluster.k8s_namespace,
-                        &since,
-                        &None,
-                        &true,
-                    )?;
-                    let resource_names = vec![format!("projects/{}", cluster.google_project_id)];
-
-                    let mut log = match fetch_log_entries(
-                        Some(resource_names.clone()),
-                        Some(500),
-                        Some(filter.clone()),
-                        None,
-                        gcloud_access_token.clone(),
-                        &mut wk_client,
-                    )
-                    .await
-                    {
-                        Ok(data) => data,
-                        Err(error) => {
-                            let mut app_ref = app.lock().await;
-                            app_ref.state.has_log_errors = true;
-                            return Err(error);
-                        }
-                    };
-
-                    let mut next_page_token = log.next_page_token.clone();
-                    update_logs_entries(Arc::clone(&app), log.entries).await;
-
-                    let app = Arc::clone(&app);
-                    while next_page_token.is_some() && next_page_token != Some("".to_string()) {
-                        log = fetch_log_entries(
-                            Some(resource_names.clone()),
-                            Some(500),
-                            Some(filter.clone()),
-                            log.next_page_token.clone(),
-                            gcloud_access_token.clone(),
-                            &mut wk_client,
-                        )
-                        .await
-                        .unwrap();
-
-                        // update next_page_token value
-                        next_page_token = log.next_page_token.clone();
-
-                        update_logs_entries(Arc::clone(&app), log.entries).await;
-                    }
-                }
-            }
-
-            let mut app_ref = app.lock().await;
-            app_ref.state.is_fetching_log_entries = false;
-        }
+        NetworkEvent::GetBuilds => get_builds(app, &mut wk_client).await?,
+        NetworkEvent::GetDeployments => get_deployments(app, &mut wk_client).await?,
+        NetworkEvent::GetGCloudLogs => get_gcloud_logs(app, &mut wk_client).await?,
     }
 
     Ok(())
 }
 
-async fn set_version_selections(app_ref: &mut MutexGuard<'_, App>) {
+fn set_version_selections(app_ref: &mut MutexGuard<'_, App>) {
     let deployments = &app_ref.state.deployments;
-    let selected_namespace = &app_ref.state.current_namespace;
 
-    let version_selections: Vec<String> = deployments
+    let version_selections: Vec<String> = match &app_ref.state.current_namespace {
+        Some(namespace) => deployments
+            .iter()
+            .filter_map(|pipeline| {
+                if pipeline.environment == *namespace
+                    && (pipeline.version == "green" || pipeline.version == "blue")
+                {
+                    Some(pipeline.version.to_string())
+                } else {
+                    None
+                }
+            })
+            .collect(),
+        None => Vec::new(),
+    };
+
+    // set version selections to state
+    let mut version_selections_list = StatefulList::with_items(version_selections.clone());
+    version_selections_list.select(0);
+
+    app_ref.state.current_version = version_selections.first().cloned();
+    app_ref.version_selections = version_selections_list;
+
+    app_ref.state.is_checking_version = false;
+}
+
+fn set_namespace_selections(app_ref: &mut MutexGuard<'_, App>) {
+    let mut namespace_selections: Vec<String> = app_ref
+        .state
+        .deployments
         .iter()
         .filter_map(|pipeline| {
-            if pipeline.environment == *selected_namespace
-                && (pipeline.version == "green" || pipeline.version == "blue")
-            {
-                Some(pipeline.version.to_string())
+            if pipeline.environment == "prod" || pipeline.environment == "staging" {
+                Some(pipeline.environment.to_string())
             } else {
                 None
             }
         })
         .collect();
 
-    // set version selections to state
-    let mut version_selections_list = StatefulList::with_items(version_selections);
-    version_selections_list.select(0);
-    app_ref.version_selections = version_selections_list;
+    // Filter out duplicates:
+    namespace_selections.dedup();
 
-    app_ref.state.is_checking_version = false;
+    let mut namespace_selections_list = StatefulList::with_items(namespace_selections.clone());
+    namespace_selections_list.select(0);
+
+    app_ref.state.current_namespace = namespace_selections.first().cloned();
+    app_ref.namespace_selections = namespace_selections_list;
+
+    app_ref.state.is_checking_namespaces = false;
 }
 
 async fn fetch_log_entries(
@@ -310,4 +160,187 @@ async fn update_logs_entries(app: Arc<Mutex<App>>, log_entries: Option<Vec<LogEn
             }
         }
     }
+}
+
+async fn get_builds(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Result<(), WKCliError> {
+    let mut app_ref = app.lock().await;
+    app_ref.state.is_fetching_builds = true;
+
+    let application = app_ref.state.current_application.clone();
+    let namespace = if let Some(namespace) = &app_ref.state.current_namespace {
+        namespace.clone()
+    } else {
+        return Ok(());
+    };
+
+    let version = if let Some(version) = &app_ref.state.current_version {
+        version.clone()
+    } else {
+        return Ok(());
+    };
+
+    drop(app_ref);
+
+    let mut builds = vec![];
+
+    let cd_pipeline_data = wk_client
+        .fetch_cd_pipeline(&application, &namespace, &version)
+        .await?
+        .cd_pipeline;
+
+    if let Some(cd_pipeline_data) = cd_pipeline_data {
+        builds = cd_pipeline_data
+            .jenkins_builds
+            .into_iter()
+            .map(|build| {
+                let commits = build
+                    .commits
+                    .into_iter()
+                    .map(|commit| Commit {
+                        id: commit.id,
+                        message_headline: commit.message_headline,
+                    })
+                    .collect();
+
+                Build {
+                    name: build.build_artifact_name,
+                    commits,
+                }
+            })
+            .collect();
+    }
+
+    let mut app_ref = app.lock().await;
+
+    app_ref.state.builds = builds;
+    app_ref.state.is_fetching_builds = false;
+
+    Ok(())
+}
+
+async fn get_deployments(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Result<(), WKCliError> {
+    let mut app_ref = app.lock().await;
+    let application = app_ref.state.current_application.clone();
+
+    app_ref.state.is_fetching_deployments = true;
+    app_ref.state.is_checking_namespaces = true;
+    app_ref.state.is_checking_version = true;
+
+    drop(app_ref);
+
+    let cd_pipelines_data = wk_client
+        .fetch_cd_pipelines(&application)
+        .await?
+        .cd_pipelines;
+
+    let mut app_ref = app.lock().await;
+    app_ref.state.deployments = cd_pipelines_data
+        .into_iter()
+        .map(|pipeline| Deployment {
+            name: pipeline.name,
+            environment: pipeline.environment,
+            version: pipeline.version,
+            enabled: pipeline.enabled,
+            deployed_ref: pipeline
+                .deployed_ref
+                .map(|deployed_ref| deployed_ref[..7].to_string()),
+            build_artifact: pipeline.build_artifact,
+            deployed_by: pipeline.deployed_by,
+            last_deployed_at: pipeline.last_deployment,
+            status: pipeline.status,
+        })
+        .collect();
+
+    app_ref.state.is_fetching_deployments = false;
+
+    // we only know the available namespaces & versions after the deployments is fetched
+    // so updated namespace selections & version selections are here
+    set_namespace_selections(&mut app_ref);
+    set_version_selections(&mut app_ref);
+
+    app_ref.state.is_checking_namespaces = false;
+    Ok(())
+}
+
+async fn get_gcloud_logs(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Result<(), WKCliError> {
+    let app_ref = app.lock().await;
+    let application = app_ref.state.current_application.clone();
+    let version = app_ref.state.current_version.clone();
+    let namespace = app_ref.state.current_namespace.clone();
+
+    let since = match app_ref.state.last_log_entry_timestamp.clone() {
+        Some(t) => Some(t),
+        None => Some("1m".to_string()),
+    };
+
+    drop(app_ref);
+
+    let gcloud_access_token = auth::google_cloud::get_token_or_login().await;
+
+    if let Some(namespace) = namespace {
+        if let Some(version) = version {
+            let application_resp = wk_client
+                .fetch_application_with_k8s_cluster(&application, &namespace, &version)
+                .await?
+                .application;
+
+            if let Some(application_data) = application_resp {
+                if let Some(cluster) = application_data.k8s_cluster {
+                    let filter = generate_filter(
+                        &version,
+                        &cluster.cluster_name,
+                        &cluster.k8s_namespace,
+                        &since,
+                        &None,
+                        &true,
+                    )?;
+                    let resource_names = vec![format!("projects/{}", cluster.google_project_id)];
+
+                    let mut log = match fetch_log_entries(
+                        Some(resource_names.clone()),
+                        Some(500),
+                        Some(filter.clone()),
+                        None,
+                        gcloud_access_token.clone(),
+                        wk_client,
+                    )
+                    .await
+                    {
+                        Ok(data) => data,
+                        Err(error) => {
+                            let mut app_ref = app.lock().await;
+                            app_ref.state.has_log_errors = true;
+                            return Err(error);
+                        }
+                    };
+
+                    let mut next_page_token = log.next_page_token.clone();
+                    update_logs_entries(Arc::clone(&app), log.entries).await;
+
+                    let app = Arc::clone(&app);
+                    while next_page_token.is_some() && next_page_token != Some("".to_string()) {
+                        log = fetch_log_entries(
+                            Some(resource_names.clone()),
+                            Some(500),
+                            Some(filter.clone()),
+                            log.next_page_token.clone(),
+                            gcloud_access_token.clone(),
+                            wk_client,
+                        )
+                        .await
+                        .unwrap();
+
+                        // update next_page_token value
+                        next_page_token = log.next_page_token.clone();
+
+                        update_logs_entries(Arc::clone(&app), log.entries).await;
+                    }
+                }
+            }
+        }
+    }
+
+    let mut app_ref = app.lock().await;
+    app_ref.state.is_fetching_log_entries = false;
+    Ok(())
 }
