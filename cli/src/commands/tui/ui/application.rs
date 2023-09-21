@@ -35,7 +35,7 @@ impl ApplicationWidget {
             Line::from(vec![
                 Span::raw("Namespace: "),
                 Span::styled(
-                    current_namespace,
+                    current_namespace.or_else(|| Some("-".to_string())).unwrap(),
                     Style::default()
                         .fg(Color::Green)
                         .add_modifier(style::Modifier::BOLD),
@@ -44,7 +44,7 @@ impl ApplicationWidget {
             Line::from(vec![
                 Span::raw("Version: "),
                 Span::styled(
-                    current_version,
+                    current_version.or_else(|| Some("-".to_string())).unwrap(),
                     Style::default()
                         .fg(Color::Green)
                         .add_modifier(style::Modifier::BOLD),

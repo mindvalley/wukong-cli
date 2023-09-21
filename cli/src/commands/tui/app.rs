@@ -25,8 +25,8 @@ pub const MAX_LOG_ENTRIES_LENGTH: usize = 1_000;
 
 pub struct State {
     pub current_application: String,
-    pub current_namespace: String,
-    pub current_version: String,
+    pub current_namespace: Option<String>,
+    pub current_version: Option<String>,
     pub show_namespace_selection: bool,
 
     // loading state
@@ -104,8 +104,8 @@ impl App {
         Self {
             state: State {
                 current_application: config.core.application.clone(),
-                current_namespace: String::from("prod"),
-                current_version: String::from("green"),
+                current_namespace: None,
+                current_version: None,
 
                 show_namespace_selection: false,
                 is_fetching_builds: false,

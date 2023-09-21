@@ -74,9 +74,11 @@ async fn handle_enter_key(app: &mut App) {
 
     let selected_version = app.version_selections.items[selected_version_index].clone();
 
-    if selected_version == app.state.current_version {
-        set_current_screen_to_main(app);
-        return;
+    if let Some(current_namespace) = &app.state.current_namespace {
+        if selected_version == *current_namespace {
+            set_current_screen_to_main(app);
+            return;
+        }
     }
 
     fetch_and_reset_polling(app, selected_version).await;
@@ -84,13 +86,13 @@ async fn handle_enter_key(app: &mut App) {
 }
 
 async fn fetch_and_reset_polling(app: &mut App, selected_version: String) {
-    app.state.current_version = selected_version;
+    app.state.current_version = Some(selected_version);
 
     app.state.is_fetching_log_entries = true;
     app.state.start_polling_log_entries = false;
     app.state.has_log_errors = false;
 
-    app.dispatch(NetworkEvent::FetchBuilds).await;
+    app.dispatch(NetworkEvent::GetBuilds).await;
 }
 
 fn set_current_screen_to_main(app: &mut App) {
