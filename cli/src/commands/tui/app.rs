@@ -247,9 +247,13 @@ impl App {
                 }
                 Key::Ctrl('e') => {
                     self.dispatch(NetworkEvent::GetGCloudLogs).await;
+
                     self.state.is_fetching_log_entries = true;
                     self.state.start_polling_log_entries = false;
-                    self.state.has_log_errors = false;
+
+                    self.state.log_entries = vec![];
+                    self.state.log_entries_length = 0;
+                    // Need to reset scroll, or else it will be out of bound
 
                     // Add if not already in the list
                     // or else remove it

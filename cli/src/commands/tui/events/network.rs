@@ -151,8 +151,15 @@ async fn update_logs_entries(app: Arc<Mutex<App>>, log_entries: Option<Vec<LogEn
             // so we need to set the scroll to the bottom manually by this hack
             // waiting this https://github.com/fdehau/tui-rs/issues/89
             if app_ref.state.logs_enable_auto_scroll_to_bottom {
-                app_ref.state.logs_vertical_scroll = app_ref.state.log_entries_length
-                    - (app_ref.state.logs_widget_height - 4) as usize;
+                let widget_height = app_ref.state.logs_widget_height - 4;
+
+                app_ref.state.logs_vertical_scroll =
+                    if app_ref.state.log_entries_length > widget_height as usize {
+                        app_ref.state.log_entries_length - widget_height as usize
+                    } else {
+                        0
+                    };
+
                 app_ref.state.logs_vertical_scroll_state = app_ref
                     .state
                     .logs_vertical_scroll_state
