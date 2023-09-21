@@ -2,7 +2,7 @@ use std::time::Instant;
 
 use ratatui::widgets::ScrollbarState;
 use tokio::sync::mpsc::Sender;
-use wukong_sdk::services::gcloud::google::logging::v2::LogEntry;
+use wukong_sdk::services::gcloud::google::logging::{r#type::LogSeverity, v2::LogEntry};
 
 use crate::config::Config;
 
@@ -58,6 +58,7 @@ pub struct State {
     // ui state
     pub logs_widget_height: u16,
     pub logs_widget_width: u16,
+    pub logs_serverity: LogSeverity,
 }
 
 pub struct App {
@@ -130,6 +131,7 @@ impl App {
 
                 logs_widget_width: 0,
                 logs_widget_height: 0,
+                logs_serverity: LogSeverity::default(),
             },
             namespace_selections,
             version_selections,
@@ -137,6 +139,7 @@ impl App {
             actions: vec![
                 Action::OpenNamespaceSelection,
                 Action::OpenVersionSelection,
+                Action::ShowErrorLogsOnly,
                 Action::Quit,
             ],
             network_event_sender: sender,
@@ -193,7 +196,7 @@ impl App {
             Some(Action::Quit) => AppReturn::Exit,
             // TODO: just for prototype purpose
             // we will need to track current selected panel to apply the event
-            None => match key {
+            None | Some(Action::ShowErrorLogsOnly) => match key {
                 Key::Up | Key::Char('k') => {
                     self.state.logs_vertical_scroll =
                         self.state.logs_vertical_scroll.saturating_sub(5);
@@ -239,6 +242,21 @@ impl App {
                         .position(self.state.logs_horizontal_scroll);
 
                     self.state.logs_enable_auto_scroll_to_bottom = false;
+
+                    AppReturn::Continue
+                }
+                Key::Ctrl('e') => {
+                    self.dispatch(NetworkEvent::GetGCloudLogs).await;
+                    self.state.is_fetching_log_entries = true;
+                    self.state.start_polling_log_entries = false;
+                    self.state.has_log_errors = false;
+
+                    // Add if not already in the list
+                    // or else remove it
+                    self.state.logs_serverity = match self.state.logs_serverity {
+                        LogSeverity::Error => LogSeverity::default(),
+                        _ => LogSeverity::Error,
+                    };
 
                     AppReturn::Continue
                 }
