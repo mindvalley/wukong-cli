@@ -8,6 +8,7 @@ pub enum Action {
     OpenVersionSelection,
     ShowErrorAndAbove,
     ToggleLogsTailing,
+    SearchLogs,
     Quit,
 }
 
@@ -19,6 +20,7 @@ impl Action {
             Action::OpenVersionSelection,
             Action::ToggleLogsTailing,
             Action::ShowErrorAndAbove,
+            Action::SearchLogs,
             Action::Quit,
         ];
         ACTIONS.iter()
@@ -30,6 +32,7 @@ impl Action {
             Action::OpenVersionSelection => &[Key::Char('v')],
             Action::ToggleLogsTailing => &[Key::Ctrl('t')],
             Action::ShowErrorAndAbove => &[Key::Ctrl('e')],
+            Action::SearchLogs => &[Key::Ctrl('s'), Key::Char('/')],
             Action::Quit => &[Key::Char('q')],
         }
     }
@@ -49,6 +52,7 @@ impl Display for Action {
             Action::ToggleLogsTailing => write!(f, "Toggle logs tailing"),
             Action::ShowErrorAndAbove => write!(f, "Show errors logs only"),
             Action::Quit => write!(f, "Quit"),
+            Action::SearchLogs => write!(f, "Search logs"),
         }
     }
 }

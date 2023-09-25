@@ -29,6 +29,7 @@ pub enum CurrentScreen {
     Main,
     NamespaceSelection,
     VersionSelection,
+    LogSearchBar,
 }
 
 pub struct StatefulList<T> {

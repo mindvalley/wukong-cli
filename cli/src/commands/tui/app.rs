@@ -60,6 +60,8 @@ pub struct State {
     pub logs_widget_width: u16,
     pub logs_tailing: bool,
     pub logs_severity: Option<LogSeverity>,
+    pub show_search_bar: bool,
+    pub search_bar_input: Input,
 }
 
 pub struct App {
@@ -134,6 +136,8 @@ impl App {
                 logs_widget_height: 0,
                 logs_tailing: true,
                 logs_severity: None,
+                show_search_bar: false,
+                search_bar_input: Input::default(),
             },
             namespace_selections,
             version_selections,
@@ -182,23 +186,29 @@ impl App {
     }
 
     pub async fn handle_input(&mut self, key: Key) -> AppReturn {
-        if let CurrentScreen::NamespaceSelection = self.current_screen {
-            NamespaceSelectionWidget::handle_input(key, self).await;
-            return AppReturn::Continue;
-        } else if let CurrentScreen::VersionSelection = self.current_screen {
-            VersionSelectionWidget::handle_input(key, self).await;
-            return AppReturn::Continue;
-        }
-
-        match Action::from_key(key) {
-            Some(Action::OpenNamespaceSelection) => {
-                self.current_screen = CurrentScreen::NamespaceSelection;
+        match self.current_screen {
+            CurrentScreen::NamespaceSelection => {
+                NamespaceSelectionWidget::handle_input(key, self).await;
                 AppReturn::Continue
             }
-            Some(Action::OpenVersionSelection) => {
-                self.current_screen = CurrentScreen::VersionSelection;
+            CurrentScreen::VersionSelection => {
+                VersionSelectionWidget::handle_input(key, self).await;
                 AppReturn::Continue
             }
+            CurrentScreen::LogSearchBar => {
+                self.state.search_bar_input.handle_input(key);
+                AppReturn::Continue
+            }
+            _ => {
+                match Action::from_key(key) {
+                    Some(Action::OpenNamespaceSelection) => {
+                        self.current_screen = CurrentScreen::NamespaceSelection;
+                        AppReturn::Continue
+                    }
+                    Some(Action::OpenVersionSelection) => {
+                        self.current_screen = CurrentScreen::VersionSelection;
+                        AppReturn::Continue
+                    }
             Some(Action::Quit) => AppReturn::Exit,
             Some(Action::ToggleLogsTailing) => {
                 self.state.logs_tailing = !self.state.logs_tailing;
@@ -234,54 +244,213 @@ impl App {
                         .logs_vertical_scroll_state
                         .position(self.state.logs_vertical_scroll);
 
-                    self.state.logs_enable_auto_scroll_to_bottom = false;
 
-                    AppReturn::Continue
+
+                        self.state.is_fetching_log_entries = true;
+                        self.state.start_polling_log_entries = false;
+
+                        self.state.log_entries = vec![];
+                        self.state.log_entries_length = 0;
+                        // Need to reset scroll, or else it will be out of bound
+
+                        // Add if not already in the list
+                        // or else remove it
+                        self.state.logs_serverity = match self.state.logs_serverity {
+                            Some(LogSeverity::Error) => None,
+                            _ => Some(LogSeverity::Error),
+                        };
+
+                        AppReturn::Continue
+                    }
+                    Some(Action::SearchLogs) => {
+                        self.state.show_search_bar = !self.state.show_search_bar;
+
+                        // focus on the log search bar so the search bar will handle the input
+                        if self.state.show_search_bar {
+                            self.current_screen = CurrentScreen::LogSearchBar;
+                        } else {
+                            self.current_screen = CurrentScreen::Main;
+                        }
+
+                        AppReturn::Continue
+                    }
+                    // TODO: just for prototype purpose
+                    // we will need to track current selected panel to apply the event
+                    None => match key {
+                        Key::Up | Key::Char('k') => {
+                            self.state.logs_vertical_scroll =
+                                self.state.logs_vertical_scroll.saturating_sub(5);
+                            self.state.logs_vertical_scroll_state = self
+                                .state
+                                .logs_vertical_scroll_state
+                                .position(self.state.logs_vertical_scroll);
+
+                            self.state.logs_enable_auto_scroll_to_bottom = false;
+
+                            AppReturn::Continue
+                        }
+                        Key::Down | Key::Char('j') => {
+                            self.state.logs_vertical_scroll =
+                                self.state.logs_vertical_scroll.saturating_add(5);
+                            self.state.logs_vertical_scroll_state = self
+                                .state
+                                .logs_vertical_scroll_state
+                                .position(self.state.logs_vertical_scroll);
+
+                            self.state.logs_enable_auto_scroll_to_bottom = false;
+
+                            AppReturn::Continue
+                        }
+                        Key::Left | Key::Char('h') => {
+                            self.state.logs_horizontal_scroll =
+                                self.state.logs_horizontal_scroll.saturating_sub(5);
+                            self.state.logs_horizontal_scroll_state = self
+                                .state
+                                .logs_horizontal_scroll_state
+                                .position(self.state.logs_horizontal_scroll);
+
+                            self.state.logs_enable_auto_scroll_to_bottom = false;
+
+                            AppReturn::Continue
+                        }
+                        Key::Right | Key::Char('l') => {
+                            self.state.logs_horizontal_scroll =
+                                self.state.logs_horizontal_scroll.saturating_add(5);
+                            self.state.logs_horizontal_scroll_state = self
+                                .state
+                                .logs_horizontal_scroll_state
+                                .position(self.state.logs_horizontal_scroll);
+
+                            self.state.logs_enable_auto_scroll_to_bottom = false;
+
+                            AppReturn::Continue
+                        }
+                        _ => AppReturn::Continue,
+                    },
                 }
-                Key::Down | Key::Char('j') => {
-                    self.state.logs_vertical_scroll =
-                        self.state.logs_vertical_scroll.saturating_add(5);
-                    self.state.logs_vertical_scroll_state = self
-                        .state
-                        .logs_vertical_scroll_state
-                        .position(self.state.logs_vertical_scroll);
-
-                    self.state.logs_enable_auto_scroll_to_bottom = false;
-
-                    AppReturn::Continue
-                }
-                Key::Left | Key::Char('h') => {
-                    self.state.logs_horizontal_scroll =
-                        self.state.logs_horizontal_scroll.saturating_sub(5);
-                    self.state.logs_horizontal_scroll_state = self
-                        .state
-                        .logs_horizontal_scroll_state
-                        .position(self.state.logs_horizontal_scroll);
-
-                    self.state.logs_enable_auto_scroll_to_bottom = false;
-
-                    AppReturn::Continue
-                }
-                Key::Right | Key::Char('l') => {
-                    self.state.logs_horizontal_scroll =
-                        self.state.logs_horizontal_scroll.saturating_add(5);
-                    self.state.logs_horizontal_scroll_state = self
-                        .state
-                        .logs_horizontal_scroll_state
-                        .position(self.state.logs_horizontal_scroll);
-
-                    self.state.logs_enable_auto_scroll_to_bottom = false;
-
-                    AppReturn::Continue
-                }
-                _ => AppReturn::Continue,
-            },
+            }
         }
     }
 
     pub async fn dispatch(&self, network_event: NetworkEvent) {
         if let Err(e) = self.network_event_sender.send(network_event).await {
             println!("Error from network event: {}", e)
+        }
+    }
+}
+
+pub struct Input {
+    /// Current value of the input box
+    pub input: String,
+    /// Position of cursor in the editor area.
+    cursor_position: usize,
+    /// Current input mode
+    input_mode: InputMode,
+    /// History of recorded messages
+    messages: Vec<String>,
+}
+
+enum InputMode {
+    Normal,
+    Editing,
+}
+
+impl Default for Input {
+    fn default() -> Self {
+        Self {
+            input: String::new(),
+            input_mode: InputMode::Normal,
+            messages: Vec::new(),
+            cursor_position: 0,
+        }
+    }
+}
+
+impl Input {
+    fn move_cursor_left(&mut self) {
+        let cursor_moved_left = self.cursor_position.saturating_sub(1);
+        self.cursor_position = self.clamp_cursor(cursor_moved_left);
+    }
+
+    fn move_cursor_right(&mut self) {
+        let cursor_moved_right = self.cursor_position.saturating_add(1);
+        self.cursor_position = self.clamp_cursor(cursor_moved_right);
+    }
+
+    fn enter_char(&mut self, new_char: char) {
+        self.input.insert(self.cursor_position, new_char);
+
+        self.move_cursor_right();
+    }
+
+    fn delete_char(&mut self) {
+        let is_not_cursor_leftmost = self.cursor_position != 0;
+        if is_not_cursor_leftmost {
+            // Method "remove" is not used on the saved text for deleting the selected char.
+            // Reason: Using remove on String works on bytes instead of the chars.
+            // Using remove would require special care because of char boundaries.
+
+            let current_index = self.cursor_position;
+            let from_left_to_current_index = current_index - 1;
+
+            // Getting all characters before the selected character.
+            let before_char_to_delete = self.input.chars().take(from_left_to_current_index);
+            // Getting all characters after selected character.
+            let after_char_to_delete = self.input.chars().skip(current_index);
+
+            // Put all characters together except the selected one.
+            // By leaving the selected one out, it is forgotten and therefore deleted.
+            self.input = before_char_to_delete.chain(after_char_to_delete).collect();
+            self.move_cursor_left();
+        }
+    }
+
+    fn clamp_cursor(&self, new_cursor_pos: usize) -> usize {
+        new_cursor_pos.clamp(0, self.input.len())
+    }
+
+    fn reset_cursor(&mut self) {
+        self.cursor_position = 0;
+    }
+
+    fn submit_message(&mut self) {
+        self.messages.push(self.input.clone());
+        self.input.clear();
+        self.reset_cursor();
+    }
+
+    fn handle_input(&mut self, key: Key) {
+        match self.input_mode {
+            InputMode::Normal => match key {
+                Key::Char('e') => {
+                    self.input_mode = InputMode::Editing;
+                }
+                Key::Char('q') => {
+                    // return Ok(());
+                }
+                _ => {}
+            },
+            // InputMode::Editing if key.kind == KeyEventKind::Press => match key.code {
+            InputMode::Editing => match key {
+                Key::Enter => self.submit_message(),
+                Key::Char(to_insert) => {
+                    self.enter_char(to_insert);
+                }
+                Key::Backspace => {
+                    self.delete_char();
+                }
+                Key::Left => {
+                    self.move_cursor_left();
+                }
+                Key::Right => {
+                    self.move_cursor_right();
+                }
+                Key::Esc => {
+                    self.input_mode = InputMode::Normal;
+                }
+                _ => {}
+            },
+            _ => {}
         }
     }
 }

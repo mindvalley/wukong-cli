@@ -9,7 +9,10 @@ use ratatui::{
 };
 use wukong_sdk::services::gcloud::google::logging::r#type::LogSeverity;
 
-use crate::commands::tui::app::{App, State, MAX_LOG_ENTRIES_LENGTH};
+use crate::commands::tui::{
+    app::{App, State, MAX_LOG_ENTRIES_LENGTH},
+    events::key::Key,
+};
 
 pub struct LogsWidget;
 
@@ -21,9 +24,18 @@ impl LogsWidget {
         let main_block = create_main_block();
         frame.render_widget(main_block, rect);
 
-        let [info, logs_area] = *Layout::default()
+        let search_bar_constraint = if app.state.show_search_bar { 3 } else { 0 };
+
+        let [info, search_bar_area, logs_area] = *Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Min(1), Constraint::Percentage(99)].as_ref())
+            .constraints(
+                [
+                    Constraint::Min(1),
+                    Constraint::Min(search_bar_constraint),
+                    Constraint::Percentage(99),
+                ]
+                .as_ref(),
+            )
             .split(rect.inner(&Margin {
                 vertical: 1,
                 horizontal: 1,
@@ -35,6 +47,22 @@ impl LogsWidget {
         let title = create_title(&app.state);
         frame.render_widget(title, info);
 
+        let search_bar = Paragraph::new(app.state.search_bar_input.input.clone())
+            .style(Style::default().fg(Color::LightGreen))
+            .block(Block::default().borders(Borders::ALL));
+        frame.render_widget(search_bar, search_bar_area);
+
+        if app.state.has_log_errors {
+            let loading_widget = Paragraph::new(Text::styled(
+                "Something went wrong while fetching logs.",
+                Style::default().fg(Color::White),
+            ))
+            .block(Block::default().padding(Padding::new(1, 1, 0, 0)));
+            frame.render_widget(loading_widget, logs_area);
+            return;
+        }
+
+        // it will show loader only on the first call
         if app.state.is_fetching_log_entries {
             let loading_message = create_loading_block();
             frame.render_widget(loading_message, logs_area);
