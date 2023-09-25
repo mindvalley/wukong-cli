@@ -6,6 +6,7 @@ use super::events::key::Key;
 pub enum Action {
     OpenNamespaceSelection,
     OpenVersionSelection,
+    ShowErrorLogsOnly,
     ToggleLogsTailing,
     Quit,
 }
@@ -26,6 +27,7 @@ impl Action {
             Action::OpenNamespaceSelection => &[Key::Char('n')],
             Action::OpenVersionSelection => &[Key::Char('v')],
             Action::ToggleLogsTailing => &[Key::Ctrl('t')],
+            Action::ShowErrorLogsOnly => &[Key::Ctrl('e')],
             Action::Quit => &[Key::Char('q')],
         }
     }
@@ -43,6 +45,7 @@ impl Display for Action {
             Action::OpenNamespaceSelection => write!(f, "Select namespace"),
             Action::OpenVersionSelection => write!(f, "Select version"),
             Action::ToggleLogsTailing => write!(f, "Toggle logs tailing"),
+            Action::ShowErrorLogsOnly => write!(f, "Show error logs only"),
             Action::Quit => write!(f, "Quit"),
         }
     }

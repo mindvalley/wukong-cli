@@ -2,7 +2,7 @@ use std::time::Instant;
 
 use ratatui::widgets::ScrollbarState;
 use tokio::sync::mpsc::Sender;
-use wukong_sdk::services::gcloud::google::logging::v2::LogEntry;
+use wukong_sdk::services::gcloud::google::logging::{r#type::LogSeverity, v2::LogEntry};
 
 use crate::config::Config;
 
@@ -59,6 +59,7 @@ pub struct State {
     pub logs_widget_height: u16,
     pub logs_widget_width: u16,
     pub logs_tailing: bool,
+    pub logs_severity: Option<LogSeverity>,
 }
 
 pub struct App {
@@ -132,6 +133,7 @@ impl App {
                 logs_widget_width: 0,
                 logs_widget_height: 0,
                 logs_tailing: true,
+                logs_severity: None,
             },
             namespace_selections,
             version_selections,
@@ -140,6 +142,7 @@ impl App {
                 Action::OpenNamespaceSelection,
                 Action::OpenVersionSelection,
                 Action::ToggleLogsTailing,
+                Action::ShowErrorLogsOnly,
                 Action::Quit,
             ],
             network_event_sender: sender,
@@ -199,7 +202,7 @@ impl App {
             Some(Action::Quit) => AppReturn::Exit,
             // TODO: just for prototype purpose
             // we will need to track current selected panel to apply the event
-            None | Some(Action::ToggleLogsTailing) => match key {
+            None | Some(Action::ShowErrorLogsOnly) | Some(Action::ToggleLogsTailing) => match key {
                 Key::Up | Key::Char('k') => {
                     self.state.logs_vertical_scroll =
                         self.state.logs_vertical_scroll.saturating_sub(5);
@@ -250,6 +253,25 @@ impl App {
                 }
                 Key::Ctrl('t') => {
                     self.state.logs_tailing = !self.state.logs_tailing;
+                    AppReturn::Continue
+                }
+                Key::Ctrl('e') => {
+                    self.dispatch(NetworkEvent::GetGCloudLogs).await;
+
+                    self.state.is_fetching_log_entries = true;
+                    self.state.start_polling_log_entries = false;
+
+                    self.state.log_entries = vec![];
+                    self.state.log_entries_length = 0;
+                    // Need to reset scroll, or else it will be out of bound
+
+                    // Add if not already in the list
+                    // or else remove it
+                    self.state.logs_severity = match self.state.logs_severity {
+                        Some(LogSeverity::Error) => None,
+                        _ => Some(LogSeverity::Error),
+                    };
+
                     AppReturn::Continue
                 }
                 _ => AppReturn::Continue,
