@@ -5,6 +5,7 @@ use ratatui::{
     widgets::{Block, Borders, Padding, Paragraph, Scrollbar, ScrollbarOrientation},
     Frame,
 };
+use wukong_sdk::services::gcloud::google::logging::r#type::LogSeverity;
 
 use crate::commands::tui::app::{App, MAX_LOG_ENTRIES_LENGTH};
 
@@ -35,11 +36,16 @@ impl LogsWidget {
 
         let title = Block::default()
             .title(format!(
-                "Use arrow keys or h j k l to scroll ◄ ▲ ▼ ►. Total {} logs.",
+                "Use arrow keys or h j k l to scroll ◄ ▲ ▼ ►. Total {} logs. \t [Severity: {}]",
                 if app.state.log_entries_length == MAX_LOG_ENTRIES_LENGTH {
                     format!("{}+", app.state.log_entries_length)
                 } else {
                     app.state.log_entries_length.to_string()
+                },
+                if app.state.logs_serverity == Some(LogSeverity::Error) {
+                    "Error".to_string()
+                } else {
+                    "Default".to_string()
                 }
             ))
             .title_alignment(Alignment::Center)
