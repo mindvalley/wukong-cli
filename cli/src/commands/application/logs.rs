@@ -255,7 +255,7 @@ pub fn generate_filter(
             filter.push_str(" AND ");
         }
 
-        filter.push_str(&format!("severity={:?}", severity.as_str_name()));
+        filter.push_str(&format!("severity>={:?}", severity.as_str_name()));
     }
 
     filter.push_str(" AND ");
