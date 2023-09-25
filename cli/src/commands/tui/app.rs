@@ -142,7 +142,7 @@ impl App {
                 Action::OpenNamespaceSelection,
                 Action::OpenVersionSelection,
                 Action::ToggleLogsTailing,
-                Action::ShowErrorLogsOnly,
+                Action::ShowErrorAndAbove,
                 Action::Quit,
             ],
             network_event_sender: sender,
@@ -204,7 +204,7 @@ impl App {
                 self.state.logs_tailing = !self.state.logs_tailing;
                 AppReturn::Continue
             }
-            Some(Action::ShowErrorLogsOnly) => {
+            Some(Action::ShowErrorAndAbove) => {
                 self.dispatch(NetworkEvent::GetGCloudLogs).await;
 
                 self.state.is_fetching_log_entries = true;
