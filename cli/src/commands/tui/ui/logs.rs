@@ -36,20 +36,17 @@ impl LogsWidget {
 
         let title = Block::default()
             .title(format!(
-                "Use arrow keys or h j k l to scroll ◄ ▲ ▼ ►. Total {} logs. \t {}",
+                "Use arrow keys or h j k l to scroll ◄ ▲ ▼ ►. Total {} logs. \t [Severity: {}]",
                 if app.state.log_entries_length == MAX_LOG_ENTRIES_LENGTH {
                     format!("{}+", app.state.log_entries_length)
                 } else {
                     app.state.log_entries_length.to_string()
                 },
-                format!(
-                    "[Severity: {}]",
-                    if app.state.logs_serverity == Some(LogSeverity::Error) {
-                        "Error"
-                    } else {
-                        "Default"
-                    }
-                )
+                if app.state.logs_serverity == Some(LogSeverity::Error) {
+                    "Error".to_string()
+                } else {
+                    "Default".to_string()
+                }
             ))
             .title_alignment(Alignment::Center)
             .style(Style::default().fg(Color::DarkGray));
