@@ -61,16 +61,16 @@ fn create_main_block() -> Block<'static> {
 fn create_title(state: &State) -> Block {
     Block::default()
         .title(format!(
-          "Use arrow keys or h j k l to scroll ◄ ▲ ▼ ►. Total {} logs. \t [Severity: {}], [Tailing: {}]",
+          "Use arrow keys or h j k l to scroll ◄ ▲ ▼ ►. Total {} logs. \t [Severity{}], [Tailing: {}]",
           if state.log_entries_length == MAX_LOG_ENTRIES_LENGTH {
               format!("{}+", state.log_entries_length)
           } else {
               state.log_entries_length.to_string()
           },
           if state.logs_severity == Some(LogSeverity::Error) {
-              "Error".to_string()
+              " >= Error".to_string()
           } else {
-              "Default".to_string()
+              ": Default".to_string()
           },
           if state.logs_tailing {
             "On"

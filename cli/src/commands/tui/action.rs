@@ -47,7 +47,7 @@ impl Display for Action {
             Action::OpenNamespaceSelection => write!(f, "Select namespace"),
             Action::OpenVersionSelection => write!(f, "Select version"),
             Action::ToggleLogsTailing => write!(f, "Toggle logs tailing"),
-            Action::ShowErrorAndAbove => write!(f, "Show error logs and above"),
+            Action::ShowErrorAndAbove => write!(f, "Show errors logs only"),
             Action::Quit => write!(f, "Quit"),
         }
     }
