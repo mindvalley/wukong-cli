@@ -274,7 +274,7 @@ async fn get_gcloud_logs(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Resu
     let application = app_ref.state.current_application.clone();
     let version = app_ref.state.current_version.clone();
     let namespace = app_ref.state.current_namespace.clone();
-    let logs_serverity = app_ref.state.logs_serverity;
+    let logs_severity = app_ref.state.logs_severity;
 
     let since = match app_ref.state.last_log_entry_timestamp.clone() {
         Some(t) => Some(t),
@@ -300,7 +300,7 @@ async fn get_gcloud_logs(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Resu
                         &cluster.k8s_namespace,
                         &since,
                         &None,
-                        &logs_serverity,
+                        &logs_severity,
                     )?;
                     let resource_names = vec![format!("projects/{}", cluster.google_project_id)];
 

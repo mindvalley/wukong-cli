@@ -58,7 +58,8 @@ pub struct State {
     // ui state
     pub logs_widget_height: u16,
     pub logs_widget_width: u16,
-    pub logs_serverity: Option<LogSeverity>,
+    pub logs_tailing: bool,
+    pub logs_severity: Option<LogSeverity>,
 }
 
 pub struct App {
@@ -131,7 +132,8 @@ impl App {
 
                 logs_widget_width: 0,
                 logs_widget_height: 0,
-                logs_serverity: None,
+                logs_tailing: true,
+                logs_severity: None,
             },
             namespace_selections,
             version_selections,
@@ -139,7 +141,8 @@ impl App {
             actions: vec![
                 Action::OpenNamespaceSelection,
                 Action::OpenVersionSelection,
-                Action::ShowErrorLogsOnly,
+                Action::ToggleLogsTailing,
+                Action::ShowErrorAndAbove,
                 Action::Quit,
             ],
             network_event_sender: sender,
@@ -169,7 +172,10 @@ impl App {
 
             self.state.start_polling_log_entries = true;
             self.state.instant_since_last_log_entries_poll = Instant::now();
-            self.dispatch(NetworkEvent::GetGCloudLogs).await;
+
+            if self.state.logs_tailing {
+                self.dispatch(NetworkEvent::GetGCloudLogs).await;
+            }
         }
 
         AppReturn::Continue
@@ -194,9 +200,32 @@ impl App {
                 AppReturn::Continue
             }
             Some(Action::Quit) => AppReturn::Exit,
+            Some(Action::ToggleLogsTailing) => {
+                self.state.logs_tailing = !self.state.logs_tailing;
+                AppReturn::Continue
+            }
+            Some(Action::ShowErrorAndAbove) => {
+                self.dispatch(NetworkEvent::GetGCloudLogs).await;
+
+                self.state.is_fetching_log_entries = true;
+                self.state.start_polling_log_entries = false;
+
+                self.state.log_entries = vec![];
+                self.state.log_entries_length = 0;
+                // Need to reset scroll, or else it will be out of bound
+
+                // Add if not already in the list
+                // or else remove it
+                self.state.logs_severity = match self.state.logs_severity {
+                    Some(LogSeverity::Error) => None,
+                    _ => Some(LogSeverity::Error),
+                };
+
+                AppReturn::Continue
+            }
             // TODO: just for prototype purpose
             // we will need to track current selected panel to apply the event
-            None | Some(Action::ShowErrorLogsOnly) => match key {
+            None => match key {
                 Key::Up | Key::Char('k') => {
                     self.state.logs_vertical_scroll =
                         self.state.logs_vertical_scroll.saturating_sub(5);
@@ -242,25 +271,6 @@ impl App {
                         .position(self.state.logs_horizontal_scroll);
 
                     self.state.logs_enable_auto_scroll_to_bottom = false;
-
-                    AppReturn::Continue
-                }
-                Key::Ctrl('e') => {
-                    self.dispatch(NetworkEvent::GetGCloudLogs).await;
-
-                    self.state.is_fetching_log_entries = true;
-                    self.state.start_polling_log_entries = false;
-
-                    self.state.log_entries = vec![];
-                    self.state.log_entries_length = 0;
-                    // Need to reset scroll, or else it will be out of bound
-
-                    // Add if not already in the list
-                    // or else remove it
-                    self.state.logs_serverity = match self.state.logs_serverity {
-                        Some(LogSeverity::Error) => None,
-                        _ => Some(LogSeverity::Error),
-                    };
 
                     AppReturn::Continue
                 }

@@ -6,16 +6,19 @@ use super::events::key::Key;
 pub enum Action {
     OpenNamespaceSelection,
     OpenVersionSelection,
-    ShowErrorLogsOnly,
+    ShowErrorAndAbove,
+    ToggleLogsTailing,
     Quit,
 }
 
 impl Action {
     // iterator for enum https://stackoverflow.com/a/21376984
     pub fn iterator() -> Iter<'static, Action> {
-        static ACTIONS: [Action; 3] = [
+        static ACTIONS: [Action; 5] = [
             Action::OpenNamespaceSelection,
             Action::OpenVersionSelection,
+            Action::ToggleLogsTailing,
+            Action::ShowErrorAndAbove,
             Action::Quit,
         ];
         ACTIONS.iter()
@@ -25,7 +28,8 @@ impl Action {
         match self {
             Action::OpenNamespaceSelection => &[Key::Char('n')],
             Action::OpenVersionSelection => &[Key::Char('v')],
-            Action::ShowErrorLogsOnly => &[Key::Ctrl('e')],
+            Action::ToggleLogsTailing => &[Key::Ctrl('t')],
+            Action::ShowErrorAndAbove => &[Key::Ctrl('e')],
             Action::Quit => &[Key::Char('q')],
         }
     }
@@ -42,7 +46,8 @@ impl Display for Action {
         match self {
             Action::OpenNamespaceSelection => write!(f, "Select namespace"),
             Action::OpenVersionSelection => write!(f, "Select version"),
-            Action::ShowErrorLogsOnly => write!(f, "Show error logs only"),
+            Action::ToggleLogsTailing => write!(f, "Toggle logs tailing"),
+            Action::ShowErrorAndAbove => write!(f, "Show errors logs only"),
             Action::Quit => write!(f, "Quit"),
         }
     }
