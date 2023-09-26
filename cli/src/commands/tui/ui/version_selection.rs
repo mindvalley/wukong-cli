@@ -7,9 +7,8 @@ use ratatui::{
 };
 
 use crate::commands::tui::{
-    app::App,
+    app::{ActiveBlock, App, AppReturn},
     events::{key::Key, network::NetworkEvent},
-    CurrentScreen,
 };
 
 use super::{centered_rect, create_loading_widget};
@@ -55,14 +54,16 @@ impl VersionSelectionWidget {
         }
     }
 
-    pub async fn handle_input(key: Key, app: &mut App) {
+    pub async fn handle_input(key: Key, app: &mut App) -> AppReturn {
         match key {
+            Key::Esc | Key::Char('q') => app.push_navigation_stack(ActiveBlock::Empty),
+            Key::Enter => handle_enter_key(app).await,
             Key::Up => app.version_selections.previous(),
             Key::Down => app.version_selections.next(),
-            Key::Esc | Key::Char('q') => set_current_screen_to_main(app),
-            Key::Enter => handle_enter_key(app).await,
             _ => {}
-        }
+        };
+
+        AppReturn::Continue
     }
 }
 
@@ -76,13 +77,13 @@ async fn handle_enter_key(app: &mut App) {
 
     if let Some(current_namespace) = &app.state.current_namespace {
         if selected_version == *current_namespace {
-            set_current_screen_to_main(app);
+            app.push_navigation_stack(ActiveBlock::Empty);
             return;
         }
     }
 
     fetch_and_reset_polling(app, selected_version).await;
-    set_current_screen_to_main(app);
+    app.push_navigation_stack(ActiveBlock::Empty);
 }
 
 async fn fetch_and_reset_polling(app: &mut App, selected_version: String) {
@@ -93,8 +94,4 @@ async fn fetch_and_reset_polling(app: &mut App, selected_version: String) {
     app.state.has_log_errors = false;
 
     app.dispatch(NetworkEvent::GetBuilds).await;
-}
-
-fn set_current_screen_to_main(app: &mut App) {
-    app.current_screen = CurrentScreen::Main;
 }

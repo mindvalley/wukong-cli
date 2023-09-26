@@ -4,21 +4,50 @@ use ratatui::widgets::ScrollbarState;
 use tokio::sync::mpsc::Sender;
 use wukong_sdk::services::gcloud::google::logging::{r#type::LogSeverity, v2::LogEntry};
 
-use crate::config::Config;
+use crate::{commands::tui::ui::empty, config::Config};
 
 use super::{
     action::Action,
     events::{key::Key, network::NetworkEvent},
     ui::{
-        namespace_selection::NamespaceSelectionWidget, version_selection::VersionSelectionWidget,
+        logs::LogsWidget, namespace_selection::NamespaceSelectionWidget,
+        version_selection::VersionSelectionWidget,
     },
-    CurrentScreen, StatefulList,
+    StatefulList,
+};
+
+const DEFAULT_ROUTE: Route = Route {
+    active_block: ActiveBlock::Empty,
+    hovered_block: ActiveBlock::Log,
 };
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum AppReturn {
     Exit,
     Continue,
+}
+
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum DialogContext {
+    NamespaceSelection,
+    VersionSelection,
+}
+
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum ActiveBlock {
+    Application,
+    Build,
+    Deployment,
+    Help,
+    Log,
+    Empty,
+    Dialog(DialogContext),
+}
+
+#[derive(Debug)]
+pub struct Route {
+    pub active_block: ActiveBlock,
+    pub hovered_block: ActiveBlock,
 }
 
 pub const MAX_LOG_ENTRIES_LENGTH: usize = 1_000;
@@ -66,9 +95,10 @@ pub struct App {
     pub state: State,
     pub namespace_selections: StatefulList<String>,
     pub version_selections: StatefulList<String>,
-    pub current_screen: CurrentScreen,
     pub actions: Vec<Action>,
     pub network_event_sender: Sender<NetworkEvent>,
+
+    navigation_stack: Vec<Route>,
 }
 
 pub struct Build {
@@ -135,9 +165,9 @@ impl App {
                 logs_tailing: true,
                 logs_severity: None,
             },
+            navigation_stack: vec![DEFAULT_ROUTE],
             namespace_selections,
             version_selections,
-            current_screen: CurrentScreen::Main,
             actions: vec![
                 Action::OpenNamespaceSelection,
                 Action::OpenVersionSelection,
@@ -182,106 +212,70 @@ impl App {
     }
 
     pub async fn handle_input(&mut self, key: Key) -> AppReturn {
-        if let CurrentScreen::NamespaceSelection = self.current_screen {
-            NamespaceSelectionWidget::handle_input(key, self).await;
-            return AppReturn::Continue;
-        } else if let CurrentScreen::VersionSelection = self.current_screen {
-            VersionSelectionWidget::handle_input(key, self).await;
-            return AppReturn::Continue;
-        }
+        let current_route = self.get_current_route();
 
-        match Action::from_key(key) {
-            Some(Action::OpenNamespaceSelection) => {
-                self.current_screen = CurrentScreen::NamespaceSelection;
-                AppReturn::Continue
+        match current_route.active_block {
+            ActiveBlock::Empty => empty::handle_input(key, self).await, // Main screen
+            ActiveBlock::Log => LogsWidget::handle_input(key, self).await,
+            ActiveBlock::Dialog(DialogContext::NamespaceSelection) => {
+                NamespaceSelectionWidget::handle_input(key, self).await
             }
-            Some(Action::OpenVersionSelection) => {
-                self.current_screen = CurrentScreen::VersionSelection;
-                AppReturn::Continue
+            ActiveBlock::Dialog(DialogContext::VersionSelection) => {
+                VersionSelectionWidget::handle_input(key, self).await
             }
-            Some(Action::Quit) => AppReturn::Exit,
-            Some(Action::ToggleLogsTailing) => {
-                self.state.logs_tailing = !self.state.logs_tailing;
-                AppReturn::Continue
-            }
-            Some(Action::ShowErrorAndAbove) => {
-                self.dispatch(NetworkEvent::GetGCloudLogs).await;
-
-                self.state.is_fetching_log_entries = true;
-                self.state.start_polling_log_entries = false;
-
-                self.state.log_entries = vec![];
-                self.state.log_entries_length = 0;
-                // Need to reset scroll, or else it will be out of bound
-
-                // Add if not already in the list
-                // or else remove it
-                self.state.logs_severity = match self.state.logs_severity {
-                    Some(LogSeverity::Error) => None,
-                    _ => Some(LogSeverity::Error),
-                };
-
-                AppReturn::Continue
-            }
-            // TODO: just for prototype purpose
-            // we will need to track current selected panel to apply the event
-            None => match key {
-                Key::Up | Key::Char('k') => {
-                    self.state.logs_vertical_scroll =
-                        self.state.logs_vertical_scroll.saturating_sub(5);
-                    self.state.logs_vertical_scroll_state = self
-                        .state
-                        .logs_vertical_scroll_state
-                        .position(self.state.logs_vertical_scroll);
-
-                    self.state.logs_enable_auto_scroll_to_bottom = false;
-
-                    AppReturn::Continue
-                }
-                Key::Down | Key::Char('j') => {
-                    self.state.logs_vertical_scroll =
-                        self.state.logs_vertical_scroll.saturating_add(5);
-                    self.state.logs_vertical_scroll_state = self
-                        .state
-                        .logs_vertical_scroll_state
-                        .position(self.state.logs_vertical_scroll);
-
-                    self.state.logs_enable_auto_scroll_to_bottom = false;
-
-                    AppReturn::Continue
-                }
-                Key::Left | Key::Char('h') => {
-                    self.state.logs_horizontal_scroll =
-                        self.state.logs_horizontal_scroll.saturating_sub(5);
-                    self.state.logs_horizontal_scroll_state = self
-                        .state
-                        .logs_horizontal_scroll_state
-                        .position(self.state.logs_horizontal_scroll);
-
-                    self.state.logs_enable_auto_scroll_to_bottom = false;
-
-                    AppReturn::Continue
-                }
-                Key::Right | Key::Char('l') => {
-                    self.state.logs_horizontal_scroll =
-                        self.state.logs_horizontal_scroll.saturating_add(5);
-                    self.state.logs_horizontal_scroll_state = self
-                        .state
-                        .logs_horizontal_scroll_state
-                        .position(self.state.logs_horizontal_scroll);
-
-                    self.state.logs_enable_auto_scroll_to_bottom = false;
-
-                    AppReturn::Continue
-                }
-                _ => AppReturn::Continue,
-            },
+            _ => AppReturn::Continue,
         }
     }
 
     pub async fn dispatch(&self, network_event: NetworkEvent) {
         if let Err(e) = self.network_event_sender.send(network_event).await {
             println!("Error from network event: {}", e)
+        }
+    }
+
+    pub fn pop_navigation_stack(&mut self) -> Option<Route> {
+        if self.navigation_stack.len() == 1 {
+            None
+        } else {
+            self.navigation_stack.pop()
+        }
+    }
+
+    pub fn push_navigation_stack(&mut self, next_active_block: ActiveBlock) {
+        if !self
+            .navigation_stack
+            .last()
+            .map(|last_route| last_route.active_block == next_active_block)
+            .unwrap_or(false)
+        {
+            self.navigation_stack.push(Route {
+                active_block: next_active_block,
+                hovered_block: next_active_block,
+            });
+        }
+    }
+
+    fn get_current_route_mut(&mut self) -> &mut Route {
+        self.navigation_stack.last_mut().unwrap()
+    }
+
+    pub fn get_current_route(&self) -> &Route {
+        self.navigation_stack.last().unwrap_or(&DEFAULT_ROUTE)
+    }
+
+    pub fn set_current_route_state(
+        &mut self,
+        active_block: Option<ActiveBlock>,
+        hovered_block: Option<ActiveBlock>,
+    ) {
+        let current_route = self.get_current_route_mut();
+
+        if let Some(active_block) = active_block {
+            current_route.active_block = active_block;
+        }
+
+        if let Some(hovered_block) = hovered_block {
+            current_route.hovered_block = hovered_block;
         }
     }
 }

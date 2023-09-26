@@ -6,18 +6,30 @@ use ratatui::{
     Frame,
 };
 
-use crate::commands::tui::app::App;
+use crate::commands::tui::app::{ActiveBlock, App};
+
+use super::util::get_color;
 
 pub struct BuildsWidget;
 
 impl BuildsWidget {
     pub fn draw<B: Backend>(app: &App, frame: &mut Frame<B>, rect: Rect) {
         let name_style = Style::default().fg(Color::White);
+        let current_route = app.get_current_route();
+
+        let highlight_state = (
+            current_route.active_block == ActiveBlock::Build,
+            current_route.hovered_block == ActiveBlock::Build,
+        );
+
         let builds_block = Block::default()
             .title(" Build Artifacts ")
             .borders(Borders::ALL)
             .padding(Padding::new(1, 1, 0, 0))
-            .style(Style::default().fg(Color::LightYellow));
+            .border_style(get_color(
+                highlight_state,
+                (Color::LightYellow, Color::LightYellow, Color::White),
+            ));
 
         if app.state.is_fetching_builds {
             let loading_widget = Paragraph::new(Text::styled(

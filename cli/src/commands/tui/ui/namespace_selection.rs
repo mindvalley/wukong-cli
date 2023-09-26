@@ -7,9 +7,8 @@ use ratatui::{
 };
 
 use crate::commands::tui::{
-    app::App,
+    app::{ActiveBlock, App, AppReturn},
     events::{key::Key, network::NetworkEvent},
-    CurrentScreen,
 };
 
 use super::{centered_rect, create_loading_widget};
@@ -56,11 +55,11 @@ impl NamespaceSelectionWidget {
         }
     }
 
-    pub async fn handle_input(key: Key, app: &mut App) {
+    pub async fn handle_input(key: Key, app: &mut App) -> AppReturn {
         match key {
             Key::Up => app.namespace_selections.previous(),
             Key::Down => app.namespace_selections.next(),
-            Key::Esc | Key::Char('q') => set_current_screen_to_main(app),
+            Key::Esc | Key::Char('q') => app.push_navigation_stack(ActiveBlock::Empty),
             Key::Enter => {
                 let selected = app
                     .namespace_selections
@@ -76,10 +75,12 @@ impl NamespaceSelectionWidget {
                     fetch_and_reset_polling(app, selected.to_string()).await;
                 }
 
-                set_current_screen_to_main(app)
+                app.push_navigation_stack(ActiveBlock::Empty)
             }
             _ => {}
-        }
+        };
+
+        AppReturn::Continue
     }
 }
 
@@ -91,8 +92,4 @@ async fn fetch_and_reset_polling(app: &mut App, selected_version: String) {
     app.state.is_fetching_log_entries = true;
     app.state.start_polling_log_entries = false;
     app.state.has_log_errors = false;
-}
-
-fn set_current_screen_to_main(app: &mut App) {
-    app.current_screen = CurrentScreen::Main;
 }

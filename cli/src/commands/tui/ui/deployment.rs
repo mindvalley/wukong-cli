@@ -8,16 +8,28 @@ use ratatui::{
 };
 use time_humanize::HumanTime;
 
-use crate::commands::tui::app::{App, Deployment};
+use crate::commands::tui::app::{ActiveBlock, App, Deployment};
+
+use super::util::get_color;
 
 pub struct DeploymentWidget;
 
 impl DeploymentWidget {
     pub fn draw<B: Backend>(app: &App, frame: &mut Frame<B>, rect: Rect) {
+        let current_route = app.get_current_route();
+
+        let highlight_state = (
+            current_route.active_block == ActiveBlock::Deployment,
+            current_route.hovered_block == ActiveBlock::Deployment,
+        );
+
         let deployments_block = Block::default()
             .title(" Deployments ")
             .borders(Borders::ALL)
-            .style(Style::default().fg(Color::LightBlue));
+            .border_style(get_color(
+                highlight_state,
+                (Color::LightBlue, Color::LightBlue, Color::White),
+            ));
 
         if app.state.is_fetching_deployments || app.state.current_namespace.is_none() {
             let loading_widget = Paragraph::new(Text::styled(
