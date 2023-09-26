@@ -157,8 +157,7 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
 
     let mut first_color = false;
 
-    let log_entries = state
-        .log_entries
+    let log_entries = filtered_log_entries
         .iter()
         .map(|log_entry| {
             first_color = !first_color;
@@ -176,7 +175,7 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
 
     state.logs_vertical_scroll_state = state
         .logs_vertical_scroll_state
-        .content_length(state.log_entries_length);
+        .content_length(state.log_entries_length as u16);
 
     let paragraph = Paragraph::new(log_entries)
         .block(Block::default().padding(Padding::new(1, 1, 0, 0)))

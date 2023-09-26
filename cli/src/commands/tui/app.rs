@@ -214,42 +214,13 @@ impl App {
                         self.current_screen = CurrentScreen::VersionSelection;
                         AppReturn::Continue
                     }
-            Some(Action::Quit) => AppReturn::Exit,
-            Some(Action::ToggleLogsTailing) => {
-                self.state.logs_tailing = !self.state.logs_tailing;
-                AppReturn::Continue
-            }
-            Some(Action::ShowErrorAndAbove) => {
-                self.dispatch(NetworkEvent::GetGCloudLogs).await;
-
-                self.state.is_fetching_log_entries = true;
-                self.state.start_polling_log_entries = false;
-
-                self.state.log_entries = vec![];
-                self.state.log_entries_length = 0;
-                // Need to reset scroll, or else it will be out of bound
-
-                // Add if not already in the list
-                // or else remove it
-                self.state.logs_severity = match self.state.logs_severity {
-                    Some(LogSeverity::Error) => None,
-                    _ => Some(LogSeverity::Error),
-                };
-
-                AppReturn::Continue
-            }
-            // TODO: just for prototype purpose
-            // we will need to track current selected panel to apply the event
-            None => match key {
-                Key::Up | Key::Char('k') => {
-                    self.state.logs_vertical_scroll =
-                        self.state.logs_vertical_scroll.saturating_sub(5);
-                    self.state.logs_vertical_scroll_state = self
-                        .state
-                        .logs_vertical_scroll_state
-                        .position(self.state.logs_vertical_scroll);
-
-
+                    Some(Action::Quit) => AppReturn::Exit,
+                    Some(Action::ToggleLogsTailing) => {
+                        self.state.logs_tailing = !self.state.logs_tailing;
+                        AppReturn::Continue
+                    }
+                    Some(Action::ShowErrorAndAbove) => {
+                        self.dispatch(NetworkEvent::GetGCloudLogs).await;
 
                         self.state.is_fetching_log_entries = true;
                         self.state.start_polling_log_entries = false;
@@ -260,7 +231,7 @@ impl App {
 
                         // Add if not already in the list
                         // or else remove it
-                        self.state.logs_serverity = match self.state.logs_serverity {
+                        self.state.logs_severity = match self.state.logs_severity {
                             Some(LogSeverity::Error) => None,
                             _ => Some(LogSeverity::Error),
                         };
