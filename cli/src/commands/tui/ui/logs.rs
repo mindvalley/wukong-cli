@@ -1,7 +1,7 @@
 use ratatui::{
     prelude::{Alignment, Backend, Constraint, Direction, Layout, Margin, Rect},
-    style::{Color, Style},
-    text::{Line, Text},
+    style::{Color, Style, Stylize},
+    text::{Line, Span, Text},
     widgets::{
         Block, Borders, Padding, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState,
     },
@@ -10,10 +10,7 @@ use ratatui::{
 use regex::Regex;
 use wukong_sdk::services::gcloud::google::logging::r#type::LogSeverity;
 
-use crate::commands::tui::{
-    app::{App, State, MAX_LOG_ENTRIES_LENGTH},
-    events::key::Key,
-};
+use crate::commands::tui::app::{App, State, MAX_LOG_ENTRIES_LENGTH};
 
 pub struct LogsWidget;
 
@@ -155,23 +152,79 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
         })
         .collect::<Vec<_>>();
 
-    let mut first_color = false;
+    let mut log_entries = Vec::new();
+    for each in filtered_log_entries {
+        let output_string = each.to_string();
 
-    let log_entries = filtered_log_entries
-        .iter()
-        .map(|log_entry| {
-            first_color = !first_color;
+        let mut matches: Vec<(usize, usize)> = Vec::new();
+        for found in regex.find_iter(&output_string.clone()) {
+            let start = found.start();
+            let end = found.end();
 
-            if first_color {
-                Line::styled(format!("{}", log_entry), Style::default().fg(Color::White))
-            } else {
-                Line::styled(
-                    format!("{}", log_entry),
-                    Style::default().fg(Color::LightCyan),
-                )
+            // merge the match if it overlaps with any existing match
+            // to avoid highlighting issue
+            let mut is_matched = false;
+            for m in &mut matches {
+                if m.0 <= start && m.1 >= end {
+                    is_matched = true;
+                    break;
+                }
+
+                if m.0 < start && start < m.1 && end > m.1 {
+                    m.1 = end;
+                    is_matched = true;
+                    break;
+                }
+                if m.1 > end && end > m.0 && start < m.0 {
+                    m.0 = start;
+                    is_matched = true;
+                    break;
+                }
             }
-        })
-        .collect::<Vec<Line>>();
+
+            if !is_matched {
+                matches.push((start, end));
+            }
+        }
+
+        // sort the matches so the output will be correct
+        // since we are adding offset manually
+        matches.sort_by(|a, b| a.0.cmp(&b.0));
+
+        let mut line = Vec::new();
+        let mut last_pos = 0;
+        for (index, m) in matches.iter().enumerate() {
+            if index == 0 {
+                line.push(Span::styled(
+                    output_string[..m.0].to_string(),
+                    Style::default().fg(Color::White),
+                ));
+            }
+
+            if last_pos != 0 {
+                line.push(Span::styled(
+                    output_string[last_pos..m.0].to_string(),
+                    Style::default().fg(Color::White),
+                ));
+            }
+
+            line.push(Span::styled(
+                output_string[m.0..m.1].to_string(),
+                Style::default().fg(Color::Cyan),
+            ));
+
+            last_pos = m.1;
+
+            if index == matches.len() - 1 {
+                line.push(Span::styled(
+                    output_string[m.1..].to_string(),
+                    Style::default().fg(Color::White),
+                ));
+            }
+        }
+
+        log_entries.push(Line::from(line));
+    }
 
     state.logs_vertical_scroll_state = state
         .logs_vertical_scroll_state

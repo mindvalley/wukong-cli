@@ -315,28 +315,12 @@ impl App {
     }
 }
 
+#[derive(Default)]
 pub struct Input {
     /// Current value of the input box
     pub input: String,
     /// Position of cursor in the editor area.
     pub cursor_position: usize,
-    /// Current input mode
-    pub input_mode: InputMode,
-}
-
-pub enum InputMode {
-    Normal,
-    Editing,
-}
-
-impl Default for Input {
-    fn default() -> Self {
-        Self {
-            input: String::new(),
-            input_mode: InputMode::Normal,
-            cursor_position: 0,
-        }
-    }
 }
 
 impl Input {
@@ -405,42 +389,11 @@ impl Input {
                 true
             }
             Key::Esc => {
-                // self.input_mode = InputMode::Normal;
                 self.input = "".to_string();
+                self.reset_cursor();
                 false
             }
             _ => true,
         }
-        // match self.input_mode {
-        //     InputMode::Normal => match key {
-        //         Key::Char('e') => {
-        //             self.input_mode = InputMode::Editing;
-        //         }
-        //         Key::Char('q') => {
-        //             // return Ok(());
-        //         }
-        //         _ => {}
-        //     },
-        //     InputMode::Editing => match key {
-        //         // Key::Enter => self.submit_message(),
-        //         Key::Char(to_insert) => {
-        //             self.enter_char(to_insert);
-        //         }
-        //         Key::Backspace => {
-        //             self.delete_char();
-        //         }
-        //         Key::Left => {
-        //             self.move_cursor_left();
-        //         }
-        //         Key::Right => {
-        //             self.move_cursor_right();
-        //         }
-        //         Key::Esc => {
-        //             self.input_mode = InputMode::Normal;
-        //         }
-        //         _ => {}
-        //     },
-        //     _ => {}
-        // }
     }
 }
