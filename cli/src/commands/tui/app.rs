@@ -197,9 +197,15 @@ impl App {
             }
             CurrentScreen::LogSearchBar => {
                 let cont_input = self.state.search_bar_input.handle_input(key);
-                if !cont_input {
+                if cont_input {
+                    // the log will stop tailing during search
+                    self.state.logs_tailing = false;
+                } else {
                     self.state.show_search_bar = false;
                     self.current_screen = CurrentScreen::Main;
+
+                    // the log will resume tailing if the search is ended
+                    self.state.logs_tailing = true;
                 }
 
                 AppReturn::Continue
@@ -335,7 +341,8 @@ impl Input {
     }
 
     fn enter_char(&mut self, new_char: char) {
-        self.input.insert(self.cursor_position, new_char);
+        // self.input.insert(self.cursor_position, new_char);
+        self.input.push(new_char);
 
         self.move_cursor_right();
     }

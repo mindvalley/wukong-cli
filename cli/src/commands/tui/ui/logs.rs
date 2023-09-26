@@ -1,6 +1,6 @@
 use ratatui::{
     prelude::{Alignment, Backend, Constraint, Direction, Layout, Margin, Rect},
-    style::{Color, Style, Stylize},
+    style::{Color, Style},
     text::{Line, Span, Text},
     widgets::{
         Block, Borders, Padding, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState,
@@ -138,108 +138,90 @@ fn create_error_block() -> Paragraph<'static> {
 }
 
 fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, state: &mut State) {
-    let regex = Regex::new(&format!(r"(?i){}", state.search_bar_input.input.trim())).unwrap();
+    let log_entries = if state.search_bar_input.input.is_empty() {
+        state.logs_vertical_scroll_state = state
+            .logs_vertical_scroll_state
+            .content_length(state.log_entries_length as u16);
 
-    let filtered_log_entries = state
-        .log_entries
-        .iter()
-        .filter(|each| {
-            if regex.is_match(&each.to_string()) {
-                return true;
-            }
+        state
+            .log_entries
+            .iter()
+            .map(|log_entry| {
+                Line::styled(format!("{}", log_entry), Style::default().fg(Color::White))
+            })
+            .collect()
+    } else {
+        let regex = Regex::new(&format!(r"(?i){}", state.search_bar_input.input.trim())).unwrap();
 
-            false
-        })
-        .collect::<Vec<_>>();
+        let filtered_log_entries = state
+            .log_entries
+            .iter()
+            .filter(|each| regex.is_match(&each.to_string()))
+            .collect::<Vec<_>>();
 
-    let mut log_entries = Vec::new();
-    for each in filtered_log_entries {
-        let output_string = each.to_string();
+        let mut log_entries = Vec::new();
+        for each in filtered_log_entries.iter() {
+            let output_string = each.to_string();
 
-        let mut matches: Vec<(usize, usize)> = Vec::new();
-        for found in regex.find_iter(&output_string.clone()) {
-            let start = found.start();
-            let end = found.end();
-
-            // merge the match if it overlaps with any existing match
-            // to avoid highlighting issue
-            let mut is_matched = false;
-            for m in &mut matches {
-                if m.0 <= start && m.1 >= end {
-                    is_matched = true;
-                    break;
-                }
-
-                if m.0 < start && start < m.1 && end > m.1 {
-                    m.1 = end;
-                    is_matched = true;
-                    break;
-                }
-                if m.1 > end && end > m.0 && start < m.0 {
-                    m.0 = start;
-                    is_matched = true;
-                    break;
-                }
-            }
-
-            if !is_matched {
+            let mut matches: Vec<(usize, usize)> = Vec::new();
+            for found in regex.find_iter(&output_string.clone()) {
+                let start = found.start();
+                let end = found.end();
                 matches.push((start, end));
             }
+
+            let mut line = Vec::new();
+            let mut last_pos = 0;
+            for (index, m) in matches.iter().enumerate() {
+                if index == 0 {
+                    line.push(Span::styled(
+                        output_string[0..m.0].to_string(),
+                        Style::default().fg(Color::White),
+                    ));
+                }
+
+                if last_pos != 0 {
+                    line.push(Span::styled(
+                        output_string[last_pos..m.0].to_string(),
+                        Style::default().fg(Color::White),
+                    ));
+                }
+
+                line.push(Span::styled(
+                    output_string[m.0..m.1].to_string(),
+                    Style::default().fg(Color::Cyan),
+                ));
+
+                if index == matches.len() - 1 {
+                    line.push(Span::styled(
+                        output_string[m.1..].to_string(),
+                        Style::default().fg(Color::White),
+                    ));
+                }
+
+                last_pos = m.1;
+            }
+
+            log_entries.push(Line::from(line));
         }
 
-        // sort the matches so the output will be correct
-        // since we are adding offset manually
-        matches.sort_by(|a, b| a.0.cmp(&b.0));
+        state.logs_vertical_scroll_state = state
+            .logs_vertical_scroll_state
+            .content_length(filtered_log_entries.len() as u16);
 
-        let mut line = Vec::new();
-        let mut last_pos = 0;
-        for (index, m) in matches.iter().enumerate() {
-            if index == 0 {
-                line.push(Span::styled(
-                    output_string[..m.0].to_string(),
-                    Style::default().fg(Color::White),
-                ));
-            }
+        log_entries
+    };
 
-            if last_pos != 0 {
-                line.push(Span::styled(
-                    output_string[last_pos..m.0].to_string(),
-                    Style::default().fg(Color::White),
-                ));
-            }
-
-            line.push(Span::styled(
-                output_string[m.0..m.1].to_string(),
-                Style::default().fg(Color::Cyan),
-            ));
-
-            last_pos = m.1;
-
-            if index == matches.len() - 1 {
-                line.push(Span::styled(
-                    output_string[m.1..].to_string(),
-                    Style::default().fg(Color::White),
-                ));
-            }
-        }
-
-        log_entries.push(Line::from(line));
-    }
-
-    state.logs_vertical_scroll_state = state
-        .logs_vertical_scroll_state
-        .content_length(state.log_entries_length as u16);
-
-    let paragraph = Paragraph::new(log_entries)
-        .block(Block::default().padding(Padding::new(1, 1, 0, 0)))
-        // we can't use wrap if we want to scroll to bottom
-        // because we don't know the state of the render
-        // waiting this https://github.com/ratatui-org/ratatui/issues/136
-        // .wrap(Wrap { trim: true })
-        .scroll((
-            state.logs_vertical_scroll as u16,
-            state.logs_horizontal_scroll as u16,
-        ));
+    let paragraph =
+        Paragraph::new(log_entries).block(Block::default().padding(Padding::new(1, 1, 0, 0)));
+    // we can't use wrap if we want to scroll to bottom
+    // because we don't know the state of the render
+    // waiting this https://github.com/ratatui-org/ratatui/issues/136
+    // .wrap(Wrap { trim: true })
+    // .scroll((
+    //     state.logs_vertical_scroll as u16,
+    //     state.logs_horizontal_scroll as u16,
+    // ));
 
     frame.render_widget(paragraph, logs_area);
 }
