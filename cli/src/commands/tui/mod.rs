@@ -5,7 +5,7 @@ use crate::{
     error::WKCliError,
 };
 use crossterm::{
-    event::DisableMouseCapture,
+    event::{DisableMouseCapture, EnableMouseCapture},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -114,9 +114,10 @@ pub async fn handle_tui(channel: ApiChannel) -> Result<bool, WKCliError> {
 }
 
 pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
-    let mut stdout = stdout();
-    execute!(stdout, EnterAlternateScreen).expect("unable to enter alternate screen");
     enable_raw_mode()?;
+    let mut stdout = stdout();
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)
+        .expect("unable to enter alternate screen");
 
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
@@ -158,8 +159,6 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
         }
     }
 
-    terminal.show_cursor()?;
-
     // post-run
     disable_raw_mode()?;
     execute!(
@@ -168,6 +167,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
         DisableMouseCapture
     )
     .expect("unable to leave alternate screen");
+    terminal.show_cursor()?;
 
     terminal.clear()?;
 

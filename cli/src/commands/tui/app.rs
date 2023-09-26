@@ -196,7 +196,12 @@ impl App {
                 AppReturn::Continue
             }
             CurrentScreen::LogSearchBar => {
-                self.state.search_bar_input.handle_input(key);
+                let cont_input = self.state.search_bar_input.handle_input(key);
+                if !cont_input {
+                    self.state.show_search_bar = false;
+                    self.current_screen = CurrentScreen::Main;
+                }
+
                 AppReturn::Continue
             }
             _ => {
@@ -283,7 +288,7 @@ impl App {
                             self.state.logs_vertical_scroll_state = self
                                 .state
                                 .logs_vertical_scroll_state
-                                .position(self.state.logs_vertical_scroll);
+                                .position(self.state.logs_vertical_scroll as u16);
 
                             self.state.logs_enable_auto_scroll_to_bottom = false;
 
@@ -295,7 +300,7 @@ impl App {
                             self.state.logs_vertical_scroll_state = self
                                 .state
                                 .logs_vertical_scroll_state
-                                .position(self.state.logs_vertical_scroll);
+                                .position(self.state.logs_vertical_scroll as u16);
 
                             self.state.logs_enable_auto_scroll_to_bottom = false;
 
@@ -307,7 +312,7 @@ impl App {
                             self.state.logs_horizontal_scroll_state = self
                                 .state
                                 .logs_horizontal_scroll_state
-                                .position(self.state.logs_horizontal_scroll);
+                                .position(self.state.logs_horizontal_scroll as u16);
 
                             self.state.logs_enable_auto_scroll_to_bottom = false;
 
@@ -319,7 +324,7 @@ impl App {
                             self.state.logs_horizontal_scroll_state = self
                                 .state
                                 .logs_horizontal_scroll_state
-                                .position(self.state.logs_horizontal_scroll);
+                                .position(self.state.logs_horizontal_scroll as u16);
 
                             self.state.logs_enable_auto_scroll_to_bottom = false;
 
@@ -343,14 +348,12 @@ pub struct Input {
     /// Current value of the input box
     pub input: String,
     /// Position of cursor in the editor area.
-    cursor_position: usize,
+    pub cursor_position: usize,
     /// Current input mode
-    input_mode: InputMode,
-    /// History of recorded messages
-    messages: Vec<String>,
+    pub input_mode: InputMode,
 }
 
-enum InputMode {
+pub enum InputMode {
     Normal,
     Editing,
 }
@@ -360,7 +363,6 @@ impl Default for Input {
         Self {
             input: String::new(),
             input_mode: InputMode::Normal,
-            messages: Vec::new(),
             cursor_position: 0,
         }
     }
@@ -413,44 +415,61 @@ impl Input {
         self.cursor_position = 0;
     }
 
-    fn submit_message(&mut self) {
-        self.messages.push(self.input.clone());
-        self.input.clear();
-        self.reset_cursor();
-    }
-
-    fn handle_input(&mut self, key: Key) {
-        match self.input_mode {
-            InputMode::Normal => match key {
-                Key::Char('e') => {
-                    self.input_mode = InputMode::Editing;
-                }
-                Key::Char('q') => {
-                    // return Ok(());
-                }
-                _ => {}
-            },
-            // InputMode::Editing if key.kind == KeyEventKind::Press => match key.code {
-            InputMode::Editing => match key {
-                Key::Enter => self.submit_message(),
-                Key::Char(to_insert) => {
-                    self.enter_char(to_insert);
-                }
-                Key::Backspace => {
-                    self.delete_char();
-                }
-                Key::Left => {
-                    self.move_cursor_left();
-                }
-                Key::Right => {
-                    self.move_cursor_right();
-                }
-                Key::Esc => {
-                    self.input_mode = InputMode::Normal;
-                }
-                _ => {}
-            },
-            _ => {}
+    fn handle_input(&mut self, key: Key) -> bool {
+        match key {
+            Key::Char(to_insert) => {
+                self.enter_char(to_insert);
+                true
+            }
+            Key::Backspace => {
+                self.delete_char();
+                true
+            }
+            Key::Left => {
+                self.move_cursor_left();
+                true
+            }
+            Key::Right => {
+                self.move_cursor_right();
+                true
+            }
+            Key::Esc => {
+                // self.input_mode = InputMode::Normal;
+                self.input = "".to_string();
+                false
+            }
+            _ => true,
         }
+        // match self.input_mode {
+        //     InputMode::Normal => match key {
+        //         Key::Char('e') => {
+        //             self.input_mode = InputMode::Editing;
+        //         }
+        //         Key::Char('q') => {
+        //             // return Ok(());
+        //         }
+        //         _ => {}
+        //     },
+        //     InputMode::Editing => match key {
+        //         // Key::Enter => self.submit_message(),
+        //         Key::Char(to_insert) => {
+        //             self.enter_char(to_insert);
+        //         }
+        //         Key::Backspace => {
+        //             self.delete_char();
+        //         }
+        //         Key::Left => {
+        //             self.move_cursor_left();
+        //         }
+        //         Key::Right => {
+        //             self.move_cursor_right();
+        //         }
+        //         Key::Esc => {
+        //             self.input_mode = InputMode::Normal;
+        //         }
+        //         _ => {}
+        //     },
+        //     _ => {}
+        // }
     }
 }

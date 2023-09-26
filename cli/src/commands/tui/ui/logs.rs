@@ -7,6 +7,7 @@ use ratatui::{
     },
     Frame,
 };
+use regex::Regex;
 use wukong_sdk::services::gcloud::google::logging::r#type::LogSeverity;
 
 use crate::commands::tui::{
@@ -25,6 +26,7 @@ impl LogsWidget {
         frame.render_widget(main_block, rect);
 
         let search_bar_constraint = if app.state.show_search_bar { 3 } else { 0 };
+        // let search_bar_constraint = 3;
 
         let [info, search_bar_area, logs_area] = *Layout::default()
             .direction(Direction::Vertical)
@@ -49,8 +51,20 @@ impl LogsWidget {
 
         let search_bar = Paragraph::new(app.state.search_bar_input.input.clone())
             .style(Style::default().fg(Color::LightGreen))
-            .block(Block::default().borders(Borders::ALL));
+            .block(Block::default().borders(Borders::ALL).title(" Search "));
         frame.render_widget(search_bar, search_bar_area);
+
+        if app.state.show_search_bar {
+            // Make the cursor visible and ask ratatui to put it at the specified coordinates after
+            // rendering
+            frame.set_cursor(
+                // Draw the cursor at the current position in the input field.
+                // This position is can be controlled via the left and right arrow key
+                search_bar_area.x + app.state.search_bar_input.cursor_position as u16 + 1,
+                // Move one line down, from the border to the input line
+                search_bar_area.y + 1,
+            );
+        }
 
         if app.state.has_log_errors {
             let loading_widget = Paragraph::new(Text::styled(
@@ -127,6 +141,20 @@ fn create_error_block() -> Paragraph<'static> {
 }
 
 fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, state: &mut State) {
+    let regex = Regex::new(&format!(r"(?i){}", state.search_bar_input.input.trim())).unwrap();
+
+    let filtered_log_entries = state
+        .log_entries
+        .iter()
+        .filter(|each| {
+            if regex.is_match(&each.to_string()) {
+                return true;
+            }
+
+            false
+        })
+        .collect::<Vec<_>>();
+
     let mut first_color = false;
 
     let log_entries = state
