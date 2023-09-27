@@ -1,13 +1,12 @@
-use wukong_sdk::services::gcloud::google::logging::r#type::LogSeverity;
-
 use crate::commands::tui::{
     action::Action,
     app::{ActiveBlock, App, AppReturn, DialogContext},
     events::{key::Key, network::NetworkEvent},
 };
+use wukong_sdk::services::gcloud::google::logging::r#type::LogSeverity;
 
 // In the absence of an selected block, handle standard events as usual.
-pub async fn handle_input(key: Key, app: &mut App) -> AppReturn {
+pub async fn handler(key: Key, app: &mut App) -> AppReturn {
     match Action::from_key(key) {
         Some(Action::Quit) => AppReturn::Exit,
         Some(Action::OpenNamespaceSelection) => {

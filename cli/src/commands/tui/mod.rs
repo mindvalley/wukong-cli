@@ -23,6 +23,7 @@ use self::{
 mod action;
 mod app;
 mod events;
+mod handlers;
 mod ui;
 
 pub struct StatefulList<T> {
@@ -132,7 +133,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
         terminal.set_cursor(1, 1)?;
 
         let result = match event_manager.next().unwrap() {
-            events::Event::Input(key) => app_ref.handle_input(key).await,
+            events::Event::Input(key) => handlers::input_handler(key, &mut app_ref).await,
             events::Event::Tick => app_ref.update().await,
         };
 

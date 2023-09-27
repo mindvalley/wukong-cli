@@ -17,7 +17,6 @@ use super::app::{ActiveBlock, App, DialogContext};
 mod application;
 mod builds;
 mod deployment;
-pub mod empty;
 mod help;
 pub mod logs;
 pub mod namespace_selection;

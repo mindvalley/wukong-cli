@@ -4,17 +4,9 @@ use ratatui::widgets::ScrollbarState;
 use tokio::sync::mpsc::Sender;
 use wukong_sdk::services::gcloud::google::logging::{r#type::LogSeverity, v2::LogEntry};
 
-use crate::{commands::tui::ui::empty, config::Config};
+use crate::config::Config;
 
-use super::{
-    action::Action,
-    events::{key::Key, network::NetworkEvent},
-    ui::{
-        logs::LogsWidget, namespace_selection::NamespaceSelectionWidget,
-        version_selection::VersionSelectionWidget,
-    },
-    StatefulList,
-};
+use super::{action::Action, events::network::NetworkEvent, StatefulList};
 
 const DEFAULT_ROUTE: Route = Route {
     active_block: ActiveBlock::Empty,
@@ -35,10 +27,8 @@ pub enum DialogContext {
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum ActiveBlock {
-    Application,
     Build,
     Deployment,
-    Help,
     Log,
     Empty,
     Dialog(DialogContext),
@@ -211,33 +201,9 @@ impl App {
         AppReturn::Continue
     }
 
-    pub async fn handle_input(&mut self, key: Key) -> AppReturn {
-        let current_route = self.get_current_route();
-
-        match current_route.active_block {
-            ActiveBlock::Empty => empty::handle_input(key, self).await, // Main screen
-            ActiveBlock::Log => LogsWidget::handle_input(key, self).await,
-            ActiveBlock::Dialog(DialogContext::NamespaceSelection) => {
-                NamespaceSelectionWidget::handle_input(key, self).await
-            }
-            ActiveBlock::Dialog(DialogContext::VersionSelection) => {
-                VersionSelectionWidget::handle_input(key, self).await
-            }
-            _ => AppReturn::Continue,
-        }
-    }
-
     pub async fn dispatch(&self, network_event: NetworkEvent) {
         if let Err(e) = self.network_event_sender.send(network_event).await {
             println!("Error from network event: {}", e)
-        }
-    }
-
-    pub fn pop_navigation_stack(&mut self) -> Option<Route> {
-        if self.navigation_stack.len() == 1 {
-            None
-        } else {
-            self.navigation_stack.pop()
         }
     }
 
