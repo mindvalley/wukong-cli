@@ -28,7 +28,7 @@ impl DeploymentWidget {
             .borders(Borders::ALL)
             .border_style(get_color(
                 highlight_state,
-                (Color::LightBlue, Color::LightBlue, Color::White),
+                (Color::LightCyan, Color::LightBlue, Color::White),
             ));
 
         if app.state.is_fetching_deployments || app.state.current_namespace.is_none() {

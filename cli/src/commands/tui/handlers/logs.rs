@@ -2,7 +2,7 @@ use wukong_sdk::services::gcloud::google::logging::r#type::LogSeverity;
 
 use crate::commands::tui::{
     action::Action,
-    app::{ActiveBlock, App, AppReturn},
+    app::{App, AppReturn},
     events::{key::Key, network::NetworkEvent},
 };
 
@@ -10,9 +10,6 @@ use super::common_key_events;
 
 pub async fn handler(key: Key, app: &mut App) -> AppReturn {
     match key {
-        key if common_key_events::exit_event(key) => {
-            app.set_current_route_state(Some(ActiveBlock::Empty), None);
-        }
         key if common_key_events::up_event(key) => {
             let new_scroll_position = app.state.logs_vertical_scroll.saturating_sub(5);
             handle_vertical_scroll(app, new_scroll_position)

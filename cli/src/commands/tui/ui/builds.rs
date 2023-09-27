@@ -28,7 +28,7 @@ impl BuildsWidget {
             .padding(Padding::new(1, 1, 0, 0))
             .border_style(get_color(
                 highlight_state,
-                (Color::LightYellow, Color::LightYellow, Color::White),
+                (Color::LightCyan, Color::LightYellow, Color::White),
             ));
 
         if app.state.is_fetching_builds {

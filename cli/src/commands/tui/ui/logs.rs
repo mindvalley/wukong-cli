@@ -64,7 +64,7 @@ fn create_main_block(app: &mut App) -> Block<'static> {
         .padding(Padding::new(1, 1, 0, 0))
         .border_style(get_color(
             highlight_state,
-            (Color::Green, Color::LightGreen, Color::White),
+            (Color::LightCyan, Color::LightGreen, Color::White),
         ))
 }
 

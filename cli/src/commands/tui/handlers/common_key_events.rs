@@ -16,6 +16,10 @@ pub fn right_event(key: Key) -> bool {
     matches!(key, Key::Right | Key::Char('l'))
 }
 
+pub fn back_event(key: Key) -> bool {
+    key == Key::Esc
+}
+
 pub fn exit_event(key: Key) -> bool {
-    matches!(key, Key::Esc | Key::Char('q'))
+    key == Key::Char('q')
 }
