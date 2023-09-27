@@ -23,7 +23,6 @@ impl LogsWidget {
         frame.render_widget(main_block, rect);
 
         let search_bar_constraint = if app.state.show_search_bar { 3 } else { 0 };
-        // let search_bar_constraint = 3;
 
         let [info, search_bar_area, logs_area] = *Layout::default()
             .direction(Direction::Vertical)
