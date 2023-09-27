@@ -14,12 +14,12 @@ use crate::commands::tui::{
 
 use super::{centered_rect, create_loading_widget};
 
-pub struct NamespaceSelectionWidget;
+pub struct VersionSelectionWidget;
 
-impl NamespaceSelectionWidget {
+impl VersionSelectionWidget {
     pub fn draw<B: Backend>(app: &mut App, frame: &mut Frame<B>) {
         let items: Vec<ListItem> = app
-            .namespace_selections
+            .version_selections
             .items
             .iter()
             .map(|i| {
@@ -29,7 +29,7 @@ impl NamespaceSelectionWidget {
             .collect();
 
         let popup_block = Block::default()
-            .title(" Namespace Selection ")
+            .title(" Version Selection ")
             .borders(Borders::ALL)
             .title_alignment(Alignment::Center)
             .style(Style::default().bg(Color::Black));
@@ -37,11 +37,10 @@ impl NamespaceSelectionWidget {
         let area = centered_rect(60, 25, frame.size());
         frame.render_widget(Clear, area);
 
-        if app.state.is_checking_namespaces {
+        if app.state.is_checking_version {
             let loading_widget = create_loading_widget(popup_block);
             frame.render_widget(loading_widget, area);
         } else {
-            // Create a List from all list items and highlight the currently selected one
             let items = List::new(items)
                 .block(popup_block)
                 .highlight_style(
@@ -52,48 +51,48 @@ impl NamespaceSelectionWidget {
                 )
                 .highlight_symbol(">> ");
 
-            frame.render_stateful_widget(items, area, &mut app.namespace_selections.state);
+            frame.render_stateful_widget(items, area, &mut app.version_selections.state);
         }
     }
 
     pub async fn handle_input(key: Key, app: &mut App) {
         match key {
-            Key::Up => app.namespace_selections.previous(),
-            Key::Down => app.namespace_selections.next(),
+            Key::Up => app.version_selections.previous(),
+            Key::Down => app.version_selections.next(),
             Key::Esc | Key::Char('q') => set_current_screen_to_main(app),
-            Key::Enter => {
-                let selected = app
-                    .namespace_selections
-                    .items
-                    .get(app.namespace_selections.state.selected().unwrap())
-                    .unwrap();
-
-                if let Some(current_namespace) = &app.state.current_namespace {
-                    if current_namespace != selected {
-                        fetch_and_reset_polling(app, selected.to_string()).await;
-                    }
-                } else {
-                    fetch_and_reset_polling(app, selected.to_string()).await;
-                }
-
-                set_current_screen_to_main(app)
-            }
+            Key::Enter => handle_enter_key(app).await,
             _ => {}
         }
     }
 }
 
+async fn handle_enter_key(app: &mut App) {
+    let selected_version_index = match app.version_selections.state.selected() {
+        Some(index) => index,
+        None => return, // No selected version, nothing to do
+    };
+
+    let selected_version = app.version_selections.items[selected_version_index].clone();
+
+    if let Some(current_namespace) = &app.state.current_namespace {
+        if selected_version == *current_namespace {
+            set_current_screen_to_main(app);
+            return;
+        }
+    }
+
+    fetch_and_reset_polling(app, selected_version).await;
+    set_current_screen_to_main(app);
+}
+
 async fn fetch_and_reset_polling(app: &mut App, selected_version: String) {
-    app.state.current_namespace = Some(selected_version);
-    app.dispatch(NetworkEvent::GetBuilds).await;
-    app.dispatch(NetworkEvent::GetGCloudLogs).await;
+    app.state.current_version = Some(selected_version);
 
     app.state.is_fetching_log_entries = true;
     app.state.start_polling_log_entries = false;
-    
-    // reset error state
-    app.state.log_entries_error = None;
     app.state.has_log_errors = false;
+
+    app.dispatch(NetworkEvent::GetBuilds).await;
 }
 
 fn set_current_screen_to_main(app: &mut App) {

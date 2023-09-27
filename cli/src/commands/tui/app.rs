@@ -1,15 +1,17 @@
-use std::{collections::HashMap, time::Instant};
+use std::time::Instant;
 
 use ratatui::widgets::ScrollbarState;
 use tokio::sync::mpsc::Sender;
-use wukong_sdk::services::gcloud::google::logging::v2::LogEntry;
+use wukong_sdk::services::gcloud::google::logging::{r#type::LogSeverity, v2::LogEntry};
 
 use crate::config::Config;
 
 use super::{
     action::Action,
     events::{key::Key, network::NetworkEvent},
-    ui::namespace_selection::NamespaceSelectionWidget,
+    ui::{
+        namespace_selection::NamespaceSelectionWidget, version_selection::VersionSelectionWidget,
+    },
     CurrentScreen, StatefulList,
 };
 
@@ -19,9 +21,12 @@ pub enum AppReturn {
     Continue,
 }
 
+pub const MAX_LOG_ENTRIES_LENGTH: usize = 1_000;
+
 pub struct State {
     pub current_application: String,
-    pub current_namespace: String,
+    pub current_namespace: Option<String>,
+    pub current_version: Option<String>,
     pub show_namespace_selection: bool,
 
     // loading state
@@ -29,18 +34,19 @@ pub struct State {
     pub is_fetching_deployments: bool,
     pub is_checking_namespaces: bool,
     pub is_fetching_log_entries: bool,
+    pub is_checking_version: bool,
     pub start_polling_log_entries: bool,
 
     // fetch data
     pub builds: Vec<Build>,
     pub deployments: Vec<Deployment>,
-    pub log_entries_hash_map: HashMap<String, LogEntry>,
-    pub log_entries_ids: Vec<String>,
+    pub has_log_errors: bool,
+    pub log_entries: Vec<LogEntry>,
+    pub log_entries_length: usize,
     pub log_entries_error: Option<String>,
     pub builds_error: Option<String>,
     pub deployments_error: Option<String>,
 
-    // pub log_entries_next_page_token: Option<String>,
     pub last_log_entry_timestamp: Option<String>,
     // ui controls
     pub logs_vertical_scroll_state: ScrollbarState,
@@ -55,11 +61,14 @@ pub struct State {
     // ui state
     pub logs_widget_height: u16,
     pub logs_widget_width: u16,
+    pub logs_tailing: bool,
+    pub logs_severity: Option<LogSeverity>,
 }
 
 pub struct App {
     pub state: State,
     pub namespace_selections: StatefulList<String>,
+    pub version_selections: StatefulList<String>,
     pub current_screen: CurrentScreen,
     pub actions: Vec<Action>,
     pub network_event_sender: Sender<NetworkEvent>,
@@ -92,14 +101,21 @@ impl App {
             StatefulList::with_items(vec![String::from("prod"), String::from("staging")]);
         namespace_selections.select(0);
 
+        let mut version_selections =
+            StatefulList::with_items(vec![String::from("green"), String::from("blue")]);
+        version_selections.select(0);
+
         Self {
             state: State {
                 current_application: config.core.application.clone(),
-                current_namespace: String::from("prod"),
+                current_namespace: None,
+                current_version: None,
+
                 show_namespace_selection: false,
                 is_fetching_builds: false,
                 is_fetching_deployments: false,
                 is_checking_namespaces: false,
+                is_checking_version: false,
                 is_fetching_log_entries: false,
                 start_polling_log_entries: false,
                 logs_enable_auto_scroll_to_bottom: true,
@@ -107,8 +123,10 @@ impl App {
                 builds: vec![],
                 deployments: vec![],
                 last_log_entry_timestamp: None,
-                log_entries_hash_map: HashMap::new(),
-                log_entries_ids: vec![],
+
+                has_log_errors: false,
+                log_entries_length: 0,
+                log_entries: Vec::with_capacity(1_000),
                 log_entries_error: None,
                 builds_error: None,
                 deployments_error: None,
@@ -121,10 +139,19 @@ impl App {
 
                 logs_widget_width: 0,
                 logs_widget_height: 0,
+                logs_tailing: true,
+                logs_severity: None,
             },
             namespace_selections,
+            version_selections,
             current_screen: CurrentScreen::Main,
-            actions: vec![Action::OpenNamespaceSelection, Action::Quit],
+            actions: vec![
+                Action::OpenNamespaceSelection,
+                Action::OpenVersionSelection,
+                Action::ToggleLogsTailing,
+                Action::ShowErrorAndAbove,
+                Action::Quit,
+            ],
             network_event_sender: sender,
         }
     }
@@ -152,7 +179,10 @@ impl App {
 
             self.state.start_polling_log_entries = true;
             self.state.instant_since_last_log_entries_poll = Instant::now();
-            self.dispatch(NetworkEvent::FetchGCloudLogs).await;
+
+            if self.state.logs_tailing {
+                self.dispatch(NetworkEvent::GetGCloudLogs).await;
+            }
         }
 
         AppReturn::Continue
@@ -162,6 +192,9 @@ impl App {
         if let CurrentScreen::NamespaceSelection = self.current_screen {
             NamespaceSelectionWidget::handle_input(key, self).await;
             return AppReturn::Continue;
+        } else if let CurrentScreen::VersionSelection = self.current_screen {
+            VersionSelectionWidget::handle_input(key, self).await;
+            return AppReturn::Continue;
         }
 
         match Action::from_key(key) {
@@ -169,7 +202,34 @@ impl App {
                 self.current_screen = CurrentScreen::NamespaceSelection;
                 AppReturn::Continue
             }
+            Some(Action::OpenVersionSelection) => {
+                self.current_screen = CurrentScreen::VersionSelection;
+                AppReturn::Continue
+            }
             Some(Action::Quit) => AppReturn::Exit,
+            Some(Action::ToggleLogsTailing) => {
+                self.state.logs_tailing = !self.state.logs_tailing;
+                AppReturn::Continue
+            }
+            Some(Action::ShowErrorAndAbove) => {
+                self.dispatch(NetworkEvent::GetGCloudLogs).await;
+
+                self.state.is_fetching_log_entries = true;
+                self.state.start_polling_log_entries = false;
+
+                self.state.log_entries = vec![];
+                self.state.log_entries_length = 0;
+                // Need to reset scroll, or else it will be out of bound
+
+                // Add if not already in the list
+                // or else remove it
+                self.state.logs_severity = match self.state.logs_severity {
+                    Some(LogSeverity::Error) => None,
+                    _ => Some(LogSeverity::Error),
+                };
+
+                AppReturn::Continue
+            }
             // TODO: just for prototype purpose
             // we will need to track current selected panel to apply the event
             None => match key {

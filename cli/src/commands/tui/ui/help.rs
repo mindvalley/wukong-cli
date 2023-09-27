@@ -30,7 +30,7 @@ impl HelpWidget {
 
         let widget = Table::new(rows)
             .block(Block::default().borders(Borders::TOP | Borders::BOTTOM | Borders::RIGHT))
-            .widths(&[Constraint::Length(4), Constraint::Min(20)])
+            .widths(&[Constraint::Length(8), Constraint::Min(21)])
             .column_spacing(1);
 
         frame.render_widget(widget, rect);

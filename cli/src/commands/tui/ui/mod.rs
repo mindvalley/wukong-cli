@@ -1,11 +1,15 @@
 use ratatui::{
     prelude::{Backend, Constraint, Direction, Layout, Rect},
+    style::{Color, Style},
+    text::Text,
+    widgets::{Block, Paragraph},
     Frame,
 };
 
 use self::{
     application::ApplicationWidget, builds::BuildsWidget, deployment::DeploymentWidget,
     help::HelpWidget, logs::LogsWidget, namespace_selection::NamespaceSelectionWidget,
+    version_selection::VersionSelectionWidget,
 };
 
 use super::{app::App, CurrentScreen};
@@ -16,6 +20,7 @@ mod deployment;
 mod help;
 mod logs;
 pub mod namespace_selection;
+pub mod version_selection;
 
 pub fn draw<B>(frame: &mut Frame<B>, app: &mut App)
 where
@@ -66,6 +71,8 @@ where
 
     if let CurrentScreen::NamespaceSelection = app.current_screen {
         NamespaceSelectionWidget::draw(app, frame);
+    } else if let CurrentScreen::VersionSelection = app.current_screen {
+        VersionSelectionWidget::draw(app, frame);
     }
 }
 
@@ -95,4 +102,14 @@ pub fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
             .as_ref(),
         )
         .split(popup_layout[1])[1] // Return the middle chunk
+}
+
+pub fn create_loading_widget(parent_block: Block) -> Paragraph {
+    let loading_widget = Paragraph::new(Text::styled(
+        "Loading...",
+        Style::default().fg(Color::White),
+    ))
+    .block(parent_block);
+
+    loading_widget
 }
