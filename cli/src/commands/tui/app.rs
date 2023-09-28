@@ -61,7 +61,10 @@ pub struct State {
     pub logs_tailing: bool,
     pub logs_severity: Option<LogSeverity>,
     pub show_search_bar: bool,
+    pub show_filter_bar: bool,
     pub search_bar_input: Input,
+    pub filter_bar_include_input: Input,
+    pub filter_bar_exclude_input: Input,
 }
 
 pub struct App {
@@ -137,7 +140,10 @@ impl App {
                 logs_tailing: true,
                 logs_severity: None,
                 show_search_bar: false,
+                show_filter_bar: false,
                 search_bar_input: Input::default(),
+                filter_bar_include_input: Input::default(),
+                filter_bar_exclude_input: Input::default(),
             },
             namespace_selections,
             version_selections,
@@ -249,7 +255,21 @@ impl App {
 
                         // focus on the log search bar so the search bar will handle the input
                         if self.state.show_search_bar {
+                            self.state.show_filter_bar = false;
                             self.current_screen = CurrentScreen::LogSearchBar;
+                        } else {
+                            self.current_screen = CurrentScreen::Main;
+                        }
+
+                        AppReturn::Continue
+                    }
+                    Some(Action::FilterLogs) => {
+                        self.state.show_filter_bar = !self.state.show_filter_bar;
+
+                        // focus on the log filter bar so the filter bar will handle the input
+                        if self.state.show_filter_bar {
+                            self.state.show_search_bar = false;
+                            self.current_screen = CurrentScreen::LogFilterBar;
                         } else {
                             self.current_screen = CurrentScreen::Main;
                         }

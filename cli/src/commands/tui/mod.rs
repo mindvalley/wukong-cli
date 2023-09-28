@@ -30,6 +30,7 @@ pub enum CurrentScreen {
     NamespaceSelection,
     VersionSelection,
     LogSearchBar,
+    LogFilterBar,
 }
 
 pub struct StatefulList<T> {
@@ -130,6 +131,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
     event_manager.spawn_event_listen_thread(tick_rate);
 
     let mut is_first_render = true;
+    let mut is_first_fetch_builds = true;
 
     loop {
         let mut app_ref = app.lock().await;
@@ -137,7 +139,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
         terminal.draw(|frame| ui::draw(frame, &mut app_ref))?;
 
         // move cursor to the top left corner to avoid screen scrolling:
-        terminal.set_cursor(1, 1)?;
+        // terminal.set_cursor(1, 1)?;
 
         let result = match event_manager.next().unwrap() {
             events::Event::Input(key) => app_ref.handle_input(key).await,
@@ -152,9 +154,13 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
             // fetch data on the first frame
             app_ref.dispatch(NetworkEvent::GetDeployments).await;
 
+            is_first_render = false;
+        }
+
+        if is_first_fetch_builds {
             if app_ref.state.current_namespace.is_some() {
                 app_ref.dispatch(NetworkEvent::GetBuilds).await;
-                is_first_render = false;
+                is_first_fetch_builds = false;
             }
         }
     }
