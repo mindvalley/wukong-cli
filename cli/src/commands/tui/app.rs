@@ -216,6 +216,50 @@ impl App {
 
                 AppReturn::Continue
             }
+            CurrentScreen::LogFilterIncludeBar => {
+                match key {
+                    Key::Right => {
+                        self.current_screen = CurrentScreen::LogFilterExcludeBar;
+                    }
+                    _ => {
+                        let cont_input = self.state.filter_bar_include_input.handle_input(key);
+                        if cont_input {
+                            // the log will stop tailing during filtering
+                            self.state.logs_tailing = false;
+                        } else {
+                            self.state.show_filter_bar = false;
+                            self.current_screen = CurrentScreen::Main;
+
+                            // the log will resume tailing if the filtering is ended
+                            self.state.logs_tailing = true;
+                        }
+                    }
+                }
+
+                AppReturn::Continue
+            }
+            CurrentScreen::LogFilterExcludeBar => {
+                match key {
+                    Key::Left => {
+                        self.current_screen = CurrentScreen::LogFilterIncludeBar;
+                    }
+                    _ => {
+                        let cont_input = self.state.filter_bar_exclude_input.handle_input(key);
+                        if cont_input {
+                            // the log will stop tailing during filtering
+                            self.state.logs_tailing = false;
+                        } else {
+                            self.state.show_filter_bar = false;
+                            self.current_screen = CurrentScreen::Main;
+
+                            // the log will resume tailing if the filtering is ended
+                            self.state.logs_tailing = true;
+                        }
+                    }
+                }
+
+                AppReturn::Continue
+            }
             _ => {
                 match Action::from_key(key) {
                     Some(Action::OpenNamespaceSelection) => {
@@ -269,7 +313,7 @@ impl App {
                         // focus on the log filter bar so the filter bar will handle the input
                         if self.state.show_filter_bar {
                             self.state.show_search_bar = false;
-                            self.current_screen = CurrentScreen::LogFilterBar;
+                            self.current_screen = CurrentScreen::LogFilterIncludeBar;
                         } else {
                             self.current_screen = CurrentScreen::Main;
                         }
