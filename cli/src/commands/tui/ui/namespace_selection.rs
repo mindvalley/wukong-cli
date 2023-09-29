@@ -72,8 +72,6 @@ impl NamespaceSelectionWidget {
                     if current_namespace != selected {
                         fetch_and_reset_polling(app, selected.to_string()).await;
                     }
-                } else {
-                    fetch_and_reset_polling(app, selected.to_string()).await;
                 }
 
                 set_current_screen_to_main(app)
@@ -90,6 +88,9 @@ async fn fetch_and_reset_polling(app: &mut App, selected_version: String) {
 
     app.state.is_fetching_log_entries = true;
     app.state.start_polling_log_entries = false;
+
+    // reset error state
+    app.state.log_entries_error = None;
     app.state.has_log_errors = false;
 }
 

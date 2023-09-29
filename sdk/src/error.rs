@@ -66,22 +66,24 @@ pub enum APIError {
     MissingResponseData,
     #[error("The selected build number is the same as the current deployed version. So there is no changelog.")]
     ChangelogComparingSameBuild,
-    #[error("Unable to get pipelines for application `{application}`.")]
-    UnableToGetPipelines { application: String },
-    #[error("Unable to get pipeline `{pipeline}`.")]
-    UnableToGetPipeline { pipeline: String },
+    #[error("Unable to get pipelines.")]
+    UnableToGetPipelines,
+    #[error("Unable to get pipeline.")]
+    UnableToGetPipeline,
     #[error("Could not find the application associated with this Git repo.\n\tEither you're not in the correct working folder for your application, or there's a misconfiguration.")]
     CIStatusApplicationNotFound,
-    #[error("Application `{application}` not found.")]
-    ApplicationNotFound { application: String },
-    #[error("Unable to determine the changelog for {build}.")]
-    UnableToDetermineChangelog { build: String },
+    #[error("Application not found.")]
+    ApplicationNotFound,
+    #[error("Unable to determine the changelog for this build.")]
+    UnableToDetermineChangelog,
     #[error("Cannot submit this deployment request, since there is another running deployment with the same arguments is running on Spinnaker.\nYou can wait a few minutes and submit the deployment again.")]
     DuplicatedDeployment,
-    #[error("Namespace `{namespace}` not found.")]
-    NamespaceNotFound { namespace: String },
-    #[error("Version `{version}` not found.")]
-    VersionNotFound { version: String },
+    #[error("Namespace not found.")]
+    NamespaceNotFound,
+    #[error("Version not found.")]
+    VersionNotFound,
+    #[error("Build not found.")]
+    BuildNotFound,
 }
 
 #[derive(Debug, ThisError)]

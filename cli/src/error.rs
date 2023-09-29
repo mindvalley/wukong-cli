@@ -35,6 +35,8 @@ pub enum WKCliError {
     #[error(transparent)]
     DeploymentError(#[from] DeploymentError),
     #[error(transparent)]
+    PipelineError(#[from] PipelineError),
+    #[error(transparent)]
     DevConfigError(#[from] DevConfigError),
     #[error(transparent)]
     ApplicationInstanceError(#[from] ApplicationInstanceError),
@@ -104,6 +106,12 @@ pub enum ConfigError {
     SerializeTomlError(#[source] toml::ser::Error),
     #[error(transparent)]
     Io(#[from] ::std::io::Error),
+}
+
+#[derive(Debug, ThisError)]
+pub enum PipelineError {
+    #[error("Could not find the application associated with this Git repo.\n\tEither you're not in the correct working folder for your application, or there's a misconfiguration.")]
+    CIStatusApplicationNotFound,
 }
 
 #[derive(Debug, ThisError)]

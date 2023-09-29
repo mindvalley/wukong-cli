@@ -138,16 +138,11 @@ mod test {
 
         let error = response.unwrap_err();
         match &error {
-            WKError::APIError(APIError::ApplicationNotFound { application }) => {
-                assert_eq!(application, "invalid-application");
-            }
+            WKError::APIError(APIError::ApplicationNotFound) => {}
             _ => panic!("it should be returning APIError::ApplicationNotFound",),
         };
 
-        assert_eq!(
-            format!("{error}"),
-            "Application `invalid-application` not found."
-        );
+        assert_eq!(format!("{error}"), "Application not found.");
     }
 
     #[tokio::test]

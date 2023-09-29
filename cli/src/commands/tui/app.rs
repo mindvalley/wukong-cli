@@ -43,6 +43,9 @@ pub struct State {
     pub has_log_errors: bool,
     pub log_entries: Vec<LogEntry>,
     pub log_entries_length: usize,
+    pub log_entries_error: Option<String>,
+    pub builds_error: Option<String>,
+    pub deployments_error: Option<String>,
 
     pub last_log_entry_timestamp: Option<String>,
     // ui controls
@@ -120,9 +123,13 @@ impl App {
                 builds: vec![],
                 deployments: vec![],
                 last_log_entry_timestamp: None,
+
                 has_log_errors: false,
                 log_entries_length: 0,
                 log_entries: Vec::with_capacity(1_000),
+                log_entries_error: None,
+                builds_error: None,
+                deployments_error: None,
 
                 logs_vertical_scroll_state: ScrollbarState::default(),
                 logs_horizontal_scroll_state: ScrollbarState::default(),

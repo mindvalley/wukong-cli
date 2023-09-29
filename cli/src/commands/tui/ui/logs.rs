@@ -35,6 +35,16 @@ impl LogsWidget {
         let title = create_title(&app.state);
         frame.render_widget(title, info);
 
+        if let Some(ref error) = app.state.log_entries_error {
+            let error_widget =
+                Paragraph::new(Text::styled(error, Style::default().fg(Color::White)))
+                    .block(Block::default().padding(Padding::new(1, 1, 0, 0)));
+            frame.render_widget(error_widget, logs_area);
+            return;
+        }
+
+        // it will show loader only on the first call
+
         if app.state.is_fetching_log_entries {
             let loading_message = create_loading_block();
             frame.render_widget(loading_message, logs_area);
