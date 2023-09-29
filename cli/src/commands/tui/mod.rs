@@ -158,11 +158,12 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
             is_first_render = false;
         }
 
-        if is_first_fetch_builds {
-            if app_ref.state.current_namespace.is_some() {
-                app_ref.dispatch(NetworkEvent::GetBuilds).await;
-                is_first_fetch_builds = false;
-            }
+        if is_first_fetch_builds
+            && app_ref.state.current_namespace.is_some()
+            && app_ref.state.current_version.is_some()
+        {
+            app_ref.dispatch(NetworkEvent::GetBuilds).await;
+            is_first_fetch_builds = false;
         }
     }
 

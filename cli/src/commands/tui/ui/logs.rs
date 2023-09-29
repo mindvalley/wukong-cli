@@ -278,7 +278,7 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
         let include = state.filter_bar_include_input.input.clone();
         let exclude = state.filter_bar_exclude_input.input.clone();
 
-        let mut log_entries: Vec<&LogEntry> = state.log_entries.iter().map(|l| l).collect();
+        let mut log_entries: Vec<&LogEntry> = state.log_entries.iter().collect();
         if !exclude.is_empty() {
             let regex = Regex::new(&format!(r"(?i){}", exclude.trim())).unwrap();
 
