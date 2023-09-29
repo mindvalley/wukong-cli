@@ -18,10 +18,10 @@ mod application;
 mod builds;
 mod deployment;
 mod help;
-pub mod logs;
-pub mod namespace_selection;
-pub mod util;
-pub mod version_selection;
+mod logs;
+mod namespace_selection;
+mod util;
+mod version_selection;
 
 pub fn draw<B>(frame: &mut Frame<B>, app: &mut App)
 where
