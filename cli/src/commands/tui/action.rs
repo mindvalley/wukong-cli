@@ -34,7 +34,7 @@ impl Action {
             Action::OpenVersionSelection => &[Key::Char('v')],
             Action::ToggleLogsTailing => &[Key::Ctrl('t')],
             Action::ShowErrorAndAbove => &[Key::Ctrl('e')],
-            Action::SearchLogs => &[Key::Ctrl('s'), Key::Char('/')],
+            Action::SearchLogs => &[Key::Ctrl('s')],
             Action::FilterLogs => &[Key::Ctrl('f')],
             Action::Quit => &[Key::Char('q')],
         }
