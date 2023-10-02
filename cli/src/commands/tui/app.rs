@@ -173,32 +173,34 @@ impl App {
             .elapsed()
             .as_millis();
 
-        // if this is the first log entries api call, fetch the log entries
-        // even if the tail is not enabled
-        if !self.state.start_polling_log_entries {
-            // only to show loader on the first call
-            self.state.is_fetching_log_entries = true;
+        if self.state.current_namespace.is_some() && self.state.current_version.is_some() {
+            // if this is the first log entries api call, fetch the log entries
+            // even if the tail is not enabled
+            if !self.state.start_polling_log_entries {
+                // only to show loader on the first call
+                self.state.is_fetching_log_entries = true;
 
-            // reset scroll state, it could be triggered when user switch namespace
-            self.state.logs_vertical_scroll_state = ScrollbarState::default();
-            self.state.logs_horizontal_scroll_state = ScrollbarState::default();
-            self.state.logs_vertical_scroll = 0;
-            self.state.logs_horizontal_scroll = 0;
+                // reset scroll state, it could be triggered when user switch namespace
+                self.state.logs_vertical_scroll_state = ScrollbarState::default();
+                self.state.logs_horizontal_scroll_state = ScrollbarState::default();
+                self.state.logs_vertical_scroll = 0;
+                self.state.logs_horizontal_scroll = 0;
 
-            self.state.start_polling_log_entries = true;
-            self.state.instant_since_last_log_entries_poll = Instant::now();
+                self.state.start_polling_log_entries = true;
+                self.state.instant_since_last_log_entries_poll = Instant::now();
 
-            self.dispatch(NetworkEvent::GetGCloudLogs).await;
-            return AppReturn::Continue;
-        }
-
-        // if this is not the first call, check if it's time to fetch more log entries
-        // if yes, fetch the log entries if the tailing is enabled
-        if elapsed >= poll_interval_ms {
-            self.state.instant_since_last_log_entries_poll = Instant::now();
-
-            if self.state.logs_tailing {
                 self.dispatch(NetworkEvent::GetGCloudLogs).await;
+                return AppReturn::Continue;
+            }
+
+            // if this is not the first call, check if it's time to fetch more log entries
+            // if yes, fetch the log entries if the tailing is enabled
+            if elapsed >= poll_interval_ms {
+                self.state.instant_since_last_log_entries_poll = Instant::now();
+
+                if self.state.logs_tailing {
+                    self.dispatch(NetworkEvent::GetGCloudLogs).await;
+                }
             }
         }
 
