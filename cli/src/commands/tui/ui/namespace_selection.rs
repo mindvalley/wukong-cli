@@ -69,11 +69,11 @@ impl NamespaceSelectionWidget {
                     .unwrap();
 
                 if let Some(current_namespace) = &app.state.current_namespace {
+                    // if different namespace is selected, fetch the new builds and gcloud logs
+                    // based on the new namespace
                     if current_namespace != selected {
                         fetch_and_reset_polling(app, selected.to_string()).await;
                     }
-                } else {
-                    fetch_and_reset_polling(app, selected.to_string()).await;
                 }
 
                 set_current_screen_to_main(app)
@@ -85,12 +85,17 @@ impl NamespaceSelectionWidget {
 
 async fn fetch_and_reset_polling(app: &mut App, selected_version: String) {
     app.state.current_namespace = Some(selected_version);
-    app.dispatch(NetworkEvent::GetBuilds).await;
-    app.dispatch(NetworkEvent::GetGCloudLogs).await;
+    app.state.log_entries = vec![];
+    app.state.log_entries_length = app.state.log_entries.len();
 
     app.state.is_fetching_log_entries = true;
     app.state.start_polling_log_entries = false;
+
+    // reset error state
+    app.state.log_entries_error = None;
     app.state.has_log_errors = false;
+
+    app.dispatch(NetworkEvent::GetBuilds).await;
 }
 
 fn set_current_screen_to_main(app: &mut App) {

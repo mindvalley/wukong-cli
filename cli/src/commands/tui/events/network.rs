@@ -196,10 +196,18 @@ async fn get_builds(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Result<()
 
     let mut builds = vec![];
 
-    let cd_pipeline_data = wk_client
+    let cd_pipeline_data = match wk_client
         .fetch_cd_pipeline(&application, &namespace, &version)
-        .await?
-        .cd_pipeline;
+        .await
+    {
+        Ok(resp) => Ok(resp),
+        Err(err) => {
+            let mut app_ref = app.lock().await;
+            app_ref.state.builds_error = Some(format!("{err}"));
+            Err(err)
+        }
+    }?
+    .cd_pipeline;
 
     if let Some(cd_pipeline_data) = cd_pipeline_data {
         builds = cd_pipeline_data
@@ -241,10 +249,15 @@ async fn get_deployments(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Resu
 
     drop(app_ref);
 
-    let cd_pipelines_data = wk_client
-        .fetch_cd_pipelines(&application)
-        .await?
-        .cd_pipelines;
+    let cd_pipelines_data = match wk_client.fetch_cd_pipelines(&application).await {
+        Ok(resp) => Ok(resp),
+        Err(err) => {
+            let mut app_ref = app.lock().await;
+            app_ref.state.deployments_error = Some(format!("{err}"));
+            Err(err)
+        }
+    }?
+    .cd_pipelines;
 
     let mut app_ref = app.lock().await;
     app_ref.state.deployments = cd_pipelines_data
@@ -293,10 +306,18 @@ async fn get_gcloud_logs(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Resu
 
     if let Some(namespace) = namespace {
         if let Some(version) = version {
-            let application_resp = wk_client
+            let application_resp = match wk_client
                 .fetch_application_with_k8s_cluster(&application, &namespace, &version)
-                .await?
-                .application;
+                .await
+            {
+                Ok(resp) => Ok(resp),
+                Err(err) => {
+                    let mut app_ref = app.lock().await;
+                    app_ref.state.log_entries_error = Some(format!("{err}"));
+                    Err(err)
+                }
+            }?
+            .application;
 
             if let Some(application_data) = application_resp {
                 if let Some(cluster) = application_data.k8s_cluster {
@@ -323,7 +344,7 @@ async fn get_gcloud_logs(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Resu
                         Ok(data) => data,
                         Err(error) => {
                             let mut app_ref = app.lock().await;
-                            app_ref.state.has_log_errors = true;
+                            app_ref.state.log_entries_error = Some(format!("{error}"));
                             return Err(error);
                         }
                     };
@@ -331,6 +352,7 @@ async fn get_gcloud_logs(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Resu
                     let mut next_page_token = log.next_page_token.clone();
                     update_logs_entries(Arc::clone(&app), log.entries).await;
 
+                    // repeat fetching logs until there is no next_page_token
                     let app = Arc::clone(&app);
                     while next_page_token.is_some() && next_page_token != Some("".to_string()) {
                         log = fetch_log_entries(

@@ -43,6 +43,9 @@ pub struct State {
     pub has_log_errors: bool,
     pub log_entries: Vec<LogEntry>,
     pub log_entries_length: usize,
+    pub log_entries_error: Option<String>,
+    pub builds_error: Option<String>,
+    pub deployments_error: Option<String>,
 
     pub last_log_entry_timestamp: Option<String>,
     // ui controls
@@ -125,9 +128,13 @@ impl App {
                 builds: vec![],
                 deployments: vec![],
                 last_log_entry_timestamp: None,
+
                 has_log_errors: false,
                 log_entries_length: 0,
                 log_entries: Vec::with_capacity(1_000),
+                log_entries_error: None,
+                builds_error: None,
+                deployments_error: None,
 
                 logs_vertical_scroll_state: ScrollbarState::default(),
                 logs_horizontal_scroll_state: ScrollbarState::default(),
@@ -168,19 +175,28 @@ impl App {
             .elapsed()
             .as_millis();
 
-        if !self.state.start_polling_log_entries || elapsed >= poll_interval_ms {
-            if !self.state.start_polling_log_entries {
-                // only to show loader on the first call
-                self.state.is_fetching_log_entries = true;
+        // if this is the first log entries api call, fetch the log entries
+        // even if the tail is not enabled
+        if !self.state.start_polling_log_entries {
+            // only to show loader on the first call
+            self.state.is_fetching_log_entries = true;
 
-                // reset scroll state, it could be triggered when user switch namespace
-                self.state.logs_vertical_scroll_state = ScrollbarState::default();
-                self.state.logs_horizontal_scroll_state = ScrollbarState::default();
-                self.state.logs_vertical_scroll = 0;
-                self.state.logs_horizontal_scroll = 0;
-            }
+            // reset scroll state, it could be triggered when user switch namespace
+            self.state.logs_vertical_scroll_state = ScrollbarState::default();
+            self.state.logs_horizontal_scroll_state = ScrollbarState::default();
+            self.state.logs_vertical_scroll = 0;
+            self.state.logs_horizontal_scroll = 0;
 
             self.state.start_polling_log_entries = true;
+            self.state.instant_since_last_log_entries_poll = Instant::now();
+
+            self.dispatch(NetworkEvent::GetGCloudLogs).await;
+            return AppReturn::Continue;
+        }
+
+        // if this is not the first call, check if it's time to fetch more log entries
+        // if yes, fetch the log entries if the tailing is enabled
+        if elapsed >= poll_interval_ms {
             self.state.instant_since_last_log_entries_poll = Instant::now();
 
             if self.state.logs_tailing {

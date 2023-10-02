@@ -19,6 +19,14 @@ impl BuildsWidget {
             .padding(Padding::new(1, 1, 0, 0))
             .style(Style::default().fg(Color::LightYellow));
 
+        if let Some(ref error) = app.state.builds_error {
+            let error_widget =
+                Paragraph::new(Text::styled(error, Style::default().fg(Color::White)))
+                    .block(builds_block);
+            frame.render_widget(error_widget, rect);
+            return;
+        }
+
         if app.state.is_fetching_builds {
             let loading_widget = Paragraph::new(Text::styled(
                 "Loading...",
