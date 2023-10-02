@@ -30,7 +30,6 @@ impl LogsWidget {
         } else {
             0
         };
-        // let filter_bar_constraint = if app.state.show_filter_bar { 3 } else { 0 };
 
         let [info, search_bar_area, logs_area] = *Layout::default()
             .direction(Direction::Vertical)
