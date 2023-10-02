@@ -95,7 +95,6 @@ async fn fetch_and_reset_polling(app: &mut App, selected_version: String) {
 
     // reset error state
     app.state.log_entries_error = None;
-    app.state.has_log_errors = false;
 
     app.dispatch(NetworkEvent::GetBuilds).await;
 }

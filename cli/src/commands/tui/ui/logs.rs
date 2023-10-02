@@ -53,81 +53,16 @@ impl LogsWidget {
         frame.render_widget(title, info);
 
         if app.state.show_search_bar {
-            let search_bar = Paragraph::new(app.state.search_bar_input.input.clone())
-                .style(Style::default().fg(Color::LightGreen))
-                .block(Block::default().borders(Borders::ALL).title(" Search "));
-            frame.render_widget(search_bar, search_bar_area);
-
-            // Make the cursor visible and ask ratatui to put it at the specified coordinates after
-            // rendering
-            frame.set_cursor(
-                // Draw the cursor at the current position in the input field.
-                // This position is can be controlled via the left and right arrow key
-                search_bar_area.x + app.state.search_bar_input.cursor_position as u16 + 1,
-                // Move one line down, from the border to the input line
-                search_bar_area.y + 1,
-            );
+            render_search_bar(frame, search_bar_area, &mut app.state);
         }
 
         if app.state.show_filter_bar {
-            let [include_bar_area, exclude_bar_area] = *Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
-                .split(search_bar_area.inner(&Margin {
-                    vertical: 0,
-                    horizontal: 0,
-                }))
-            else {
-                return;
-            };
-
-            let filter_include_bar =
-                Paragraph::new(app.state.filter_bar_include_input.input.clone())
-                    .style(Style::default().fg(Color::LightGreen))
-                    .block(Block::default().borders(Borders::ALL).title(" Include "));
-            frame.render_widget(filter_include_bar, include_bar_area);
-            let filter_exclude_bar =
-                Paragraph::new(app.state.filter_bar_exclude_input.input.clone())
-                    .style(Style::default().fg(Color::LightGreen))
-                    .block(Block::default().borders(Borders::ALL).title(" Exclude "));
-            frame.render_widget(filter_exclude_bar, exclude_bar_area);
-
-            match app.current_screen {
-                CurrentScreen::LogFilterIncludeBar => {
-                    // Make the cursor visible and ask ratatui to put it at the specified coordinates after
-                    // rendering
-                    frame.set_cursor(
-                        // Draw the cursor at the current position in the input field.
-                        // This position is can be controlled via the left and right arrow key
-                        include_bar_area.x
-                            + app.state.filter_bar_include_input.cursor_position as u16
-                            + 1,
-                        // Move one line down, from the border to the input line
-                        include_bar_area.y + 1,
-                    );
-                }
-                CurrentScreen::LogFilterExcludeBar => {
-                    // Make the cursor visible and ask ratatui to put it at the specified coordinates after
-                    // rendering
-                    frame.set_cursor(
-                        // Draw the cursor at the current position in the input field.
-                        // This position is can be controlled via the left and right arrow key
-                        exclude_bar_area.x
-                            + app.state.filter_bar_exclude_input.cursor_position as u16
-                            + 1,
-                        // Move one line down, from the border to the input line
-                        exclude_bar_area.y + 1,
-                    );
-                }
-                _ => {}
-            }
+            render_filter_bar(frame, search_bar_area, &mut app.state, &app.current_screen);
         }
 
         if let Some(ref error) = app.state.log_entries_error {
-            let error_widget =
-                Paragraph::new(Text::styled(error, Style::default().fg(Color::White)))
-                    .block(Block::default().padding(Padding::new(1, 1, 0, 0)));
-            frame.render_widget(error_widget, logs_area);
+            let error_block = create_error_block(error);
+            frame.render_widget(error_block, logs_area);
             return;
         }
 
@@ -135,10 +70,6 @@ impl LogsWidget {
         if app.state.is_fetching_log_entries {
             let loading_message = create_loading_block();
             frame.render_widget(loading_message, logs_area);
-            return;
-        } else if app.state.has_log_errors {
-            let error_message = create_error_block();
-            frame.render_widget(error_message, logs_area);
             return;
         }
 
@@ -187,12 +118,9 @@ fn create_loading_block() -> Paragraph<'static> {
     .block(Block::default().padding(Padding::new(1, 1, 0, 0)))
 }
 
-fn create_error_block() -> Paragraph<'static> {
-    Paragraph::new(Text::styled(
-        "Something went wrong while fetching logs.",
-        Style::default().fg(Color::White),
-    ))
-    .block(Block::default().padding(Padding::new(1, 1, 0, 0)))
+fn create_error_block(error: &str) -> Paragraph<'_> {
+    Paragraph::new(Text::styled(error, Style::default().fg(Color::White)))
+        .block(Block::default().padding(Padding::new(1, 1, 0, 0)))
 }
 
 fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, state: &mut State) {
@@ -415,4 +343,74 @@ fn render_scrollbar<B: Backend>(
         }),
         logs_vertical_scroll_state,
     );
+}
+
+fn render_search_bar<B: Backend>(frame: &mut Frame<'_, B>, input_area: Rect, state: &mut State) {
+    let search_bar = Paragraph::new(state.search_bar_input.input.clone())
+        .style(Style::default().fg(Color::LightGreen))
+        .block(Block::default().borders(Borders::ALL).title(" Search "));
+    frame.render_widget(search_bar, input_area);
+
+    // Make the cursor visible and ask ratatui to put it at the specified coordinates after
+    // rendering
+    frame.set_cursor(
+        // Draw the cursor at the current position in the input field.
+        // This position is can be controlled via the left and right arrow key
+        input_area.x + state.search_bar_input.cursor_position as u16 + 1,
+        // Move one line down, from the border to the input line
+        input_area.y + 1,
+    );
+}
+
+fn render_filter_bar<B: Backend>(
+    frame: &mut Frame<'_, B>,
+    input_area: Rect,
+    state: &mut State,
+    current_screen: &CurrentScreen,
+) {
+    let [include_bar_area, exclude_bar_area] = *Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+        .split(input_area.inner(&Margin {
+            vertical: 0,
+            horizontal: 0,
+        }))
+    else {
+        return;
+    };
+
+    let filter_include_bar = Paragraph::new(state.filter_bar_include_input.input.clone())
+        .style(Style::default().fg(Color::LightGreen))
+        .block(Block::default().borders(Borders::ALL).title(" Include "));
+    frame.render_widget(filter_include_bar, include_bar_area);
+    let filter_exclude_bar = Paragraph::new(state.filter_bar_exclude_input.input.clone())
+        .style(Style::default().fg(Color::LightGreen))
+        .block(Block::default().borders(Borders::ALL).title(" Exclude "));
+    frame.render_widget(filter_exclude_bar, exclude_bar_area);
+
+    match current_screen {
+        CurrentScreen::LogFilterIncludeBar => {
+            // Make the cursor visible and ask ratatui to put it at the specified coordinates after
+            // rendering
+            frame.set_cursor(
+                // Draw the cursor at the current position in the input field.
+                // This position is can be controlled via the left and right arrow key
+                include_bar_area.x + state.filter_bar_include_input.cursor_position as u16 + 1,
+                // Move one line down, from the border to the input line
+                include_bar_area.y + 1,
+            );
+        }
+        CurrentScreen::LogFilterExcludeBar => {
+            // Make the cursor visible and ask ratatui to put it at the specified coordinates after
+            // rendering
+            frame.set_cursor(
+                // Draw the cursor at the current position in the input field.
+                // This position is can be controlled via the left and right arrow key
+                exclude_bar_area.x + state.filter_bar_exclude_input.cursor_position as u16 + 1,
+                // Move one line down, from the border to the input line
+                exclude_bar_area.y + 1,
+            );
+        }
+        _ => {}
+    }
 }

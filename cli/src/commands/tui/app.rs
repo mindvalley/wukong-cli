@@ -40,7 +40,6 @@ pub struct State {
     // fetch data
     pub builds: Vec<Build>,
     pub deployments: Vec<Deployment>,
-    pub has_log_errors: bool,
     pub log_entries: Vec<LogEntry>,
     pub log_entries_length: usize,
     pub log_entries_error: Option<String>,
@@ -117,11 +116,11 @@ impl App {
                 current_version: None,
 
                 show_namespace_selection: false,
-                is_fetching_builds: false,
-                is_fetching_deployments: false,
+                is_fetching_builds: true,
+                is_fetching_deployments: true,
                 is_checking_namespaces: false,
                 is_checking_version: false,
-                is_fetching_log_entries: false,
+                is_fetching_log_entries: true,
                 start_polling_log_entries: false,
                 logs_enable_auto_scroll_to_bottom: true,
 
@@ -129,7 +128,6 @@ impl App {
                 deployments: vec![],
                 last_log_entry_timestamp: None,
 
-                has_log_errors: false,
                 log_entries_length: 0,
                 log_entries: Vec::with_capacity(1_000),
                 log_entries_error: None,
