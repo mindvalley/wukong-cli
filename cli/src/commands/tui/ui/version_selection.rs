@@ -74,8 +74,8 @@ async fn handle_enter_key(app: &mut App) {
 
     let selected_version = app.version_selections.items[selected_version_index].clone();
 
-    if let Some(current_namespace) = &app.state.current_namespace {
-        if selected_version == *current_namespace {
+    if let Some(current_version) = &app.state.current_version {
+        if selected_version == *current_version {
             set_current_screen_to_main(app);
             return;
         }
