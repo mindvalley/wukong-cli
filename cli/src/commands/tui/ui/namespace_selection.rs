@@ -86,10 +86,7 @@ impl NamespaceSelectionWidget {
 async fn fetch_and_reset_polling(app: &mut App, selected_version: String) {
     app.state.current_namespace = Some(selected_version);
     app.state.log_entries = vec![];
-    app.state.log_entries_length = 0;
-
-    app.dispatch(NetworkEvent::GetBuilds).await;
-    app.dispatch(NetworkEvent::GetGCloudLogs).await;
+    app.state.log_entries_length = app.state.log_entries.len();
 
     app.state.is_fetching_log_entries = true;
     app.state.start_polling_log_entries = false;
@@ -97,6 +94,8 @@ async fn fetch_and_reset_polling(app: &mut App, selected_version: String) {
     // reset error state
     app.state.log_entries_error = None;
     app.state.has_log_errors = false;
+
+    app.dispatch(NetworkEvent::GetBuilds).await;
 }
 
 fn set_current_screen_to_main(app: &mut App) {
