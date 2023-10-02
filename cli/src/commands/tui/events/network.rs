@@ -346,6 +346,7 @@ async fn get_gcloud_logs(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Resu
                     let mut next_page_token = log.next_page_token.clone();
                     update_logs_entries(Arc::clone(&app), log.entries).await;
 
+                    // repeat fetching logs until there is no next_page_token
                     let app = Arc::clone(&app);
                     while next_page_token.is_some() && next_page_token != Some("".to_string()) {
                         log = fetch_log_entries(
