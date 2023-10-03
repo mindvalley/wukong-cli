@@ -44,7 +44,7 @@ where
 
     let [top_left, top_right] = *Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(40), Constraint::Percentage(60)].as_ref())
+        .constraints([Constraint::Percentage(35), Constraint::Percentage(65)].as_ref())
         .split(top)
     else {
         return;

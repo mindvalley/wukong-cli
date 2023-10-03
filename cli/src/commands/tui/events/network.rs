@@ -65,7 +65,10 @@ fn set_version_selections(app_ref: &mut MutexGuard<'_, App>) {
     let mut version_selections_list = StatefulList::with_items(version_selections.clone());
     version_selections_list.select(0);
 
-    app_ref.state.current_version = version_selections.first().cloned();
+    // only select the first one if the current_version is None
+    if app_ref.state.current_version.is_none() {
+        app_ref.state.current_version = version_selections.first().cloned();
+    }
     app_ref.version_selections = version_selections_list;
 
     app_ref.state.is_checking_version = false;
@@ -91,7 +94,10 @@ fn set_namespace_selections(app_ref: &mut MutexGuard<'_, App>) {
     let mut namespace_selections_list = StatefulList::with_items(namespace_selections.clone());
     namespace_selections_list.select(0);
 
-    app_ref.state.current_namespace = namespace_selections.first().cloned();
+    // only select the first one if the current_namespace is None
+    if app_ref.state.current_namespace.is_none() {
+        app_ref.state.current_namespace = namespace_selections.first().cloned();
+    }
     app_ref.namespace_selections = namespace_selections_list;
 
     app_ref.state.is_checking_namespaces = false;
@@ -163,7 +169,7 @@ async fn update_logs_entries(app: Arc<Mutex<App>>, log_entries: Option<Vec<LogEn
                 app_ref.state.logs_vertical_scroll_state = app_ref
                     .state
                     .logs_vertical_scroll_state
-                    .position(app_ref.state.log_entries_length);
+                    .position(app_ref.state.log_entries_length as u16);
             }
         }
     }

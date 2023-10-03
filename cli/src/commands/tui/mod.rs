@@ -5,7 +5,7 @@ use crate::{
     error::WKCliError,
 };
 use crossterm::{
-    event::DisableMouseCapture,
+    event::{DisableMouseCapture, EnableMouseCapture},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -29,6 +29,9 @@ pub enum CurrentScreen {
     Main,
     NamespaceSelection,
     VersionSelection,
+    LogSearchBar,
+    LogFilterIncludeBar,
+    LogFilterExcludeBar,
 }
 
 pub struct StatefulList<T> {
@@ -113,9 +116,10 @@ pub async fn handle_tui(channel: ApiChannel) -> Result<bool, WKCliError> {
 }
 
 pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
-    let mut stdout = stdout();
-    execute!(stdout, EnterAlternateScreen).expect("unable to enter alternate screen");
     enable_raw_mode()?;
+    let mut stdout = stdout();
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)
+        .expect("unable to enter alternate screen");
 
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
@@ -128,6 +132,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
     event_manager.spawn_event_listen_thread(tick_rate);
 
     let mut is_first_render = true;
+    let mut is_first_fetch_builds = true;
 
     loop {
         let mut app_ref = app.lock().await;
@@ -135,7 +140,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
         terminal.draw(|frame| ui::draw(frame, &mut app_ref))?;
 
         // move cursor to the top left corner to avoid screen scrolling:
-        terminal.set_cursor(1, 1)?;
+        // terminal.set_cursor(1, 1)?;
 
         let result = match event_manager.next().unwrap() {
             events::Event::Input(key) => app_ref.handle_input(key).await,
@@ -150,14 +155,17 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
             // fetch data on the first frame
             app_ref.dispatch(NetworkEvent::GetDeployments).await;
 
-            if app_ref.state.current_namespace.is_some() {
-                app_ref.dispatch(NetworkEvent::GetBuilds).await;
-                is_first_render = false;
-            }
+            is_first_render = false;
+        }
+
+        if is_first_fetch_builds
+            && app_ref.state.current_namespace.is_some()
+            && app_ref.state.current_version.is_some()
+        {
+            app_ref.dispatch(NetworkEvent::GetBuilds).await;
+            is_first_fetch_builds = false;
         }
     }
-
-    terminal.show_cursor()?;
 
     // post-run
     disable_raw_mode()?;
@@ -167,6 +175,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
         DisableMouseCapture
     )
     .expect("unable to leave alternate screen");
+    terminal.show_cursor()?;
 
     terminal.clear()?;
 
