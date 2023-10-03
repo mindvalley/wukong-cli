@@ -159,6 +159,8 @@ impl App {
                 Action::ToggleLogsTailing,
                 Action::ShowErrorAndAbove,
                 Action::Quit,
+                Action::SearchLogs,
+                Action::FilterLogs,
             ],
             network_event_sender: sender,
         }
