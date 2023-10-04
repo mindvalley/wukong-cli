@@ -18,6 +18,8 @@ impl LogsWidget {
         app.state.logs_widget_width = rect.width;
         app.state.logs_widget_height = rect.height;
 
+        app.update_draw_lock(ActiveBlock::Log, rect);
+
         let main_block = create_main_block(app);
         frame.render_widget(main_block, rect);
 

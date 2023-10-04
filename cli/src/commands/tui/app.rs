@@ -1,6 +1,6 @@
-use std::time::Instant;
+use std::{collections::HashMap, time::Instant};
 
-use ratatui::widgets::ScrollbarState;
+use ratatui::{prelude::Rect, widgets::ScrollbarState};
 use tokio::sync::mpsc::Sender;
 use wukong_sdk::services::gcloud::google::logging::{r#type::LogSeverity, v2::LogEntry};
 
@@ -19,13 +19,13 @@ pub enum AppReturn {
     Continue,
 }
 
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum DialogContext {
     NamespaceSelection,
     VersionSelection,
 }
 
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum ActiveBlock {
     Build,
     Deployment,
@@ -38,6 +38,13 @@ pub enum ActiveBlock {
 pub struct Route {
     pub active_block: ActiveBlock,
     pub hovered_block: ActiveBlock,
+}
+
+#[derive(Debug, Eq, Hash, PartialEq)]
+pub struct BlockInfo {
+    pub block_id: ActiveBlock,
+    pub top_left_corner: Option<(u16, u16)>,
+    pub bottom_right_corner: Option<(u16, u16)>,
 }
 
 pub const MAX_LOG_ENTRIES_LENGTH: usize = 1_000;
@@ -88,6 +95,7 @@ pub struct App {
     pub actions: Vec<Action>,
     pub network_event_sender: Sender<NetworkEvent>,
 
+    pub block_map: HashMap<ActiveBlock, BlockInfo>,
     navigation_stack: Vec<Route>,
 }
 
@@ -156,6 +164,7 @@ impl App {
                 logs_severity: None,
             },
             navigation_stack: vec![DEFAULT_ROUTE],
+            block_map: HashMap::new(),
             namespace_selections,
             version_selections,
             actions: vec![
@@ -242,6 +251,22 @@ impl App {
 
         if let Some(hovered_block) = hovered_block {
             current_route.hovered_block = hovered_block;
+        }
+    }
+
+    pub fn update_draw_lock(&mut self, current_block: ActiveBlock, rect: Rect) {
+        if let Some(block) = self.block_map.get_mut(&current_block) {
+            block.top_left_corner = Some((rect.x, rect.y));
+            block.bottom_right_corner = Some((rect.x + rect.width, rect.y + rect.height));
+        } else {
+            self.block_map.insert(
+                current_block,
+                BlockInfo {
+                    block_id: current_block,
+                    top_left_corner: Some((rect.x, rect.y)),
+                    bottom_right_corner: Some((rect.x + rect.width, rect.y + rect.height)),
+                },
+            );
         }
     }
 }

@@ -1,14 +1,13 @@
-use std::{sync::mpsc, time::Duration};
-
-use crossterm::event::{self};
-
-use self::key::Key;
-
 pub mod key;
 pub mod network;
 
+use self::key::Key;
+use crossterm::event::{self, MouseEvent, MouseEventKind};
+use std::{sync::mpsc, time::Duration};
+
 pub enum Event {
     Input(Key),
+    MouseInput(MouseEvent),
     Tick,
 }
 
@@ -35,6 +34,14 @@ impl EventManager {
                         if event_sender.send(Event::Input(key.into())).is_err() {
                             break;
                         };
+                        // Send only mouse click:
+                    } else if let event::Event::Mouse(mouse_event) = event::read().unwrap() {
+                        // Send only mouse click: to increase performance
+                        if let MouseEventKind::Down(_) = mouse_event.kind {
+                            if event_sender.send(Event::MouseInput(mouse_event)).is_err() {
+                                break;
+                            }
+                        }
                     }
                 }
 

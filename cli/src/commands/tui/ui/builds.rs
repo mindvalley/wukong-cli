@@ -1,3 +1,5 @@
+use super::util::get_color;
+use crate::commands::tui::app::{ActiveBlock, App};
 use ratatui::{
     prelude::{Backend, Constraint, Rect},
     style::{Color, Style},
@@ -6,14 +8,10 @@ use ratatui::{
     Frame,
 };
 
-use crate::commands::tui::app::{ActiveBlock, App};
-
-use super::util::get_color;
-
 pub struct BuildsWidget;
 
 impl BuildsWidget {
-    pub fn draw<B: Backend>(app: &App, frame: &mut Frame<B>, rect: Rect) {
+    pub fn draw<B: Backend>(app: &mut App, frame: &mut Frame<B>, rect: Rect) {
         let name_style = Style::default().fg(Color::White);
         let current_route = app.get_current_route();
 
@@ -21,6 +19,8 @@ impl BuildsWidget {
             current_route.active_block == ActiveBlock::Build,
             current_route.hovered_block == ActiveBlock::Build,
         );
+
+        app.update_draw_lock(ActiveBlock::Build, rect);
 
         let builds_block = Block::default()
             .title(" Build Artifacts ")

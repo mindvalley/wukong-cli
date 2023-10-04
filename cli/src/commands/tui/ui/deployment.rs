@@ -1,3 +1,5 @@
+use super::util::get_color;
+use crate::commands::tui::app::{ActiveBlock, App, Deployment};
 use chrono::{DateTime, Local, NaiveDateTime, Utc};
 use ratatui::{
     prelude::{Backend, Constraint, Direction, Layout, Margin, Rect},
@@ -8,20 +10,18 @@ use ratatui::{
 };
 use time_humanize::HumanTime;
 
-use crate::commands::tui::app::{ActiveBlock, App, Deployment};
-
-use super::util::get_color;
-
 pub struct DeploymentWidget;
 
 impl DeploymentWidget {
-    pub fn draw<B: Backend>(app: &App, frame: &mut Frame<B>, rect: Rect) {
+    pub fn draw<B: Backend>(app: &mut App, frame: &mut Frame<B>, rect: Rect) {
         let current_route = app.get_current_route();
 
         let highlight_state = (
             current_route.active_block == ActiveBlock::Deployment,
             current_route.hovered_block == ActiveBlock::Deployment,
         );
+
+        app.update_draw_lock(ActiveBlock::Deployment, rect);
 
         let deployments_block = Block::default()
             .title(" Deployments ")

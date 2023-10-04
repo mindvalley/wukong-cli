@@ -5,7 +5,7 @@ use crate::{
     error::WKCliError,
 };
 use crossterm::{
-    event::DisableMouseCapture,
+    event::EnableMouseCapture,
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -134,6 +134,9 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
 
         let result = match event_manager.next().unwrap() {
             events::Event::Input(key) => handlers::input_handler(key, &mut app_ref).await,
+            events::Event::MouseInput(mouse_event) => {
+                handlers::handle_mouse_event(mouse_event, &mut app_ref)
+            }
             events::Event::Tick => app_ref.update().await,
         };
 
@@ -159,7 +162,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
     execute!(
         terminal.backend_mut(),
         LeaveAlternateScreen,
-        DisableMouseCapture
+        EnableMouseCapture
     )
     .expect("unable to leave alternate screen");
 
