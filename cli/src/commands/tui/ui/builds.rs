@@ -31,6 +31,14 @@ impl BuildsWidget {
                 (Color::LightCyan, Color::LightYellow, Color::White),
             ));
 
+        if let Some(ref error) = app.state.builds_error {
+            let error_widget =
+                Paragraph::new(Text::styled(error, Style::default().fg(Color::White)))
+                    .block(builds_block);
+            frame.render_widget(error_widget, rect);
+            return;
+        }
+
         if app.state.is_fetching_builds {
             let loading_widget = Paragraph::new(Text::styled(
                 "Loading...",

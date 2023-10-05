@@ -13,6 +13,24 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
         Some(Action::Quit) => AppReturn::Exit,
         Some(Action::OpenNamespaceSelection) => open_dialog(app, DialogContext::NamespaceSelection),
         Some(Action::OpenVersionSelection) => open_dialog(app, DialogContext::VersionSelection),
+        Some(Action::SearchLogs) => {
+            app.set_current_route_state(Some(ActiveBlock::Log), Some(ActiveBlock::Log));
+
+            app.state.show_search_bar = !app.state.show_search_bar;
+            if app.state.show_search_bar {
+                app.state.show_filter_bar = false;
+            }
+            AppReturn::Continue
+        }
+        Some(Action::FilterLogs) => {
+            app.set_current_route_state(Some(ActiveBlock::Log), Some(ActiveBlock::Log));
+
+            app.state.show_filter_bar = !app.state.show_filter_bar;
+            if app.state.show_filter_bar {
+                app.state.show_search_bar = false;
+            }
+            AppReturn::Continue
+        }
         Some(Action::ToggleLogsTailing) => {
             app.state.logs_tailing = !app.state.logs_tailing;
             AppReturn::Continue

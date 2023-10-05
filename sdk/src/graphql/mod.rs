@@ -36,20 +36,23 @@ use reqwest::header;
 use std::fmt::Debug;
 use std::{thread, time};
 
-// Check if the error is a timeout error or an authentication error.
+// Check if the error is a timeout error.
 // For Timeout errors, we get the domain and return it as part of the Timeout error.
-fn check_retry_and_auth_error(error: &graphql_client::Error) -> Option<APIError> {
-    if error.message == "Unauthenticated" {
-        Some(APIError::UnAuthenticated)
-    } else if error.message.contains("request_timeout") {
-        // The Wukong API returns a message like "{{domain}_request_timeout}", so we need to extract the domain
-        // from the message. The domain can be one of 'jenkins', 'spinnaker' or 'github'
-        let domain = error.message.split('_').next().unwrap();
-        return Some(APIError::Timeout {
+fn get_timeout_error(error_code: &str) -> Option<APIError> {
+    let error_code = error_code.to_lowercase();
+
+    if error_code.contains("timeout") {
+        // The Wukong API returns a message like
+        // "{{domain}_request_timeout}" in stable channel or
+        // "{{domain}_timeout}" in canary channel,
+        // so we need to extract the domain from the message.
+        // The domain can be one of 'jenkins', 'spinnaker' or 'github'
+        let domain = error_code.split('_').next().unwrap();
+        Some(APIError::Timeout {
             domain: domain.to_string(),
-        });
+        })
     } else {
-        return None;
+        None
     }
 }
 
@@ -101,12 +104,14 @@ impl<'a> GQLClientBuilder<'a> {
 
         Ok(GQLClient {
             inner: reqwest_client,
+            error_handler: setup_error_handler(self.channel),
         })
     }
 }
 
 pub struct GQLClient {
     inner: reqwest::Client,
+    error_handler: Box<dyn ErrorHandler>,
 }
 
 impl GQLClient {
@@ -139,8 +144,8 @@ impl GQLClient {
             if let Some(errors) = response.errors.clone() {
                 let first_error = errors[0].clone();
 
-                match check_retry_and_auth_error(&first_error) {
-                    Some(APIError::UnAuthenticated) => return Err(APIError::UnAuthenticated),
+                let first_error_code = self.error_handler.extract_error_code(&first_error);
+                match get_timeout_error(first_error_code) {
                     Some(APIError::Timeout { domain }) => {
                         if retry_count == 3 {
                             return Err(APIError::Timeout { domain });
@@ -161,10 +166,7 @@ impl GQLClient {
                         debug!("response: {:#?}", response);
                     }
                     _ => {
-                        return Err(APIError::ResponseError {
-                            code: first_error.message.clone(),
-                            message: format!("{first_error}"),
-                        });
+                        return Err(self.error_handler.handle_error(&first_error));
                     }
                 }
             }
@@ -229,18 +231,7 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| {
-                match &err {
-                    APIError::ResponseError { code, message: _ } => match code.as_str() {
-                        "unable_to_get_pipelines" => APIError::UnableToGetPipelines {
-                            application: application.to_string(),
-                        },
-                        _ => err,
-                    },
-                    _ => err,
-                }
-                .into()
-            })
+            .map_err(|err| err.into())
     }
 
     /// Fetch the pipeline info from Wukong API Proxy.
@@ -262,18 +253,7 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| {
-                match &err {
-                    APIError::ResponseError { code, message: _ } => match code.as_str() {
-                        "unable_to_get_pipeline" => APIError::UnableToGetPipeline {
-                            pipeline: name.to_string(),
-                        },
-                        _ => err,
-                    },
-                    _ => err,
-                }
-                .into()
-            })
+            .map_err(|err| err.into())
     }
 
     /// Fetch the multi-branch pipeline info from Wukong API Proxy.
@@ -295,18 +275,7 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| {
-                match &err {
-                    APIError::ResponseError { code, message: _ } => match code.as_str() {
-                        "unable_to_get_pipeline" => APIError::UnableToGetPipeline {
-                            pipeline: name.to_string(),
-                        },
-                        _ => err,
-                    },
-                    _ => err,
-                }
-                .into()
-            })
+            .map_err(|err| err.into())
     }
 
     /// Fetch CI status from Wukong API Proxy.
@@ -321,7 +290,7 @@ impl WKClient {
     ) -> Result<ci_status_query::ResponseData, WKError> {
         let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
-        let response = gql_client
+        gql_client
             .post_graphql::<CiStatusQuery, _>(
                 &self.api_url,
                 ci_status_query::Variables {
@@ -329,25 +298,8 @@ impl WKClient {
                     branch: branch.to_string(),
                 },
             )
-            .await;
-
-        if let Err(err) = &response {
-            match err {
-                APIError::ResponseError { code, message: _ } => {
-                    if code == "application_not_found" {
-                        return Err(APIError::CIStatusApplicationNotFound.into());
-                    }
-
-                    // we don't want this to be an error
-                    if code == "no_builds_associated_with_this_branch" {
-                        return Ok(ci_status_query::ResponseData { ci_status: None });
-                    }
-                }
-                _ => return response.map_err(|err| err.into()),
-            }
-        }
-
-        response.map_err(|err| err.into())
+            .await
+            .map_err(|err| err.into())
     }
 
     /// Fetch CD pipelines from Wukong API Proxy.
@@ -369,18 +321,7 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| {
-                match &err {
-                    APIError::ResponseError { code, message: _ } => match code.as_str() {
-                        "application_not_found" => APIError::ApplicationNotFound {
-                            application: application.to_string(),
-                        },
-                        _ => err,
-                    },
-                    _ => err,
-                }
-                .into()
-            })
+            .map_err(|err| err.into())
     }
 
     /// Fetch CD pipeline from Wukong API Proxy.
@@ -406,18 +347,7 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| {
-                match &err {
-                    APIError::ResponseError { code, message: _ } => match code.as_str() {
-                        "application_not_found" => APIError::ApplicationNotFound {
-                            application: application.to_string(),
-                        },
-                        _ => err,
-                    },
-                    _ => err,
-                }
-                .into()
-            })
+            .map_err(|err| err.into())
     }
 
     /// Fetch CD pipeline (Github) from Wukong API Proxy.
@@ -443,18 +373,7 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| {
-                match &err {
-                    APIError::ResponseError { code, message: _ } => match code.as_str() {
-                        "application_not_found" => APIError::ApplicationNotFound {
-                            application: application.to_string(),
-                        },
-                        _ => err,
-                    },
-                    _ => err,
-                }
-                .into()
-            })
+            .map_err(|err| err.into())
     }
 
     /// Fetch changelogs from Wukong API Proxy.
@@ -485,22 +404,7 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| {
-                match &err {
-                    APIError::ResponseError { code, message: _ } => match code.as_str() {
-                        "application_not_found" => APIError::ApplicationNotFound {
-                            application: application.to_string(),
-                        },
-                        "unable_to_determine_changelog" => APIError::UnableToDetermineChangelog {
-                            build: build_artifact_name.to_string(),
-                        },
-                        "comparing_same_build" => APIError::ChangelogComparingSameBuild,
-                        _ => err,
-                    },
-                    _ => err,
-                }
-                .into()
-            })
+            .map_err(|err| err.into())
     }
 
     /// Deploy CD pipeline build to Kubernetes cluster.
@@ -537,21 +441,7 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| {
-                match &err {
-                    APIError::ResponseError { code, message: _ } => match code.as_str() {
-                        "application_not_found" => APIError::ApplicationNotFound {
-                            application: application.to_string(),
-                        },
-                        "deploy_for_this_build_is_currently_running" => {
-                            APIError::DuplicatedDeployment
-                        }
-                        _ => err,
-                    },
-                    _ => err,
-                }
-                .into()
-            })
+            .map_err(|err| err.into())
     }
 
     /// Fetch previous CD pipeline build from Wukong API Proxy.
@@ -578,18 +468,7 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| {
-                match &err {
-                    APIError::ResponseError { code, message: _ } => match code.as_str() {
-                        "application_not_found" => APIError::ApplicationNotFound {
-                            application: application.to_string(),
-                        },
-                        _ => err,
-                    },
-                    _ => err,
-                }
-                .into()
-            })
+            .map_err(|err| err.into())
     }
 
     /// Check whether the current user is authorized to the `application` (with the `namespace` and `version`) or not from Wukong API Proxy.
@@ -617,24 +496,7 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| {
-                match &err {
-                    APIError::ResponseError { code, message: _ } => match code.as_str() {
-                        "application_config_not_defined" => APIError::ApplicationNotFound {
-                            application: application.to_string(),
-                        },
-                        "k8s_cluster_namespace_config_not_defined" => APIError::NamespaceNotFound {
-                            namespace: namespace.to_string(),
-                        },
-                        "k8s_cluster_version_config_not_defined" => APIError::VersionNotFound {
-                            version: version.to_string(),
-                        },
-                        _ => err,
-                    },
-                    _ => err,
-                }
-                .into()
-            })
+            .map_err(|err| err.into())
     }
 
     /// Fetch Kubernetes pods for the `application` (with the `namespace` and `version`) from Wukong API Proxy.
@@ -656,28 +518,7 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| {
-                match &err {
-                    APIError::ResponseError { code, message: _ } => match code.as_str() {
-                        "Unauthorized" => APIError::ResponseError {
-                            code: code.clone(),
-                            message: code.to_string(),
-                        },
-                        "application_config_not_defined" => APIError::ApplicationNotFound {
-                            application: application.to_string(),
-                        },
-                        "k8s_cluster_namespace_config_not_defined" => APIError::NamespaceNotFound {
-                            namespace: namespace.to_string(),
-                        },
-                        "k8s_cluster_version_config_not_defined" => APIError::VersionNotFound {
-                            version: version.to_string(),
-                        },
-                        _ => err,
-                    },
-                    _ => err,
-                }
-                .into()
-            })
+            .map_err(|err| err.into())
     }
 
     /// Check the status of the livebook instance for the `application` (with the `namespace` and `version`) from Wukong API Proxy.
@@ -726,19 +567,7 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| {
-                match &err {
-                    APIError::ResponseError { code, message: _ } => match code.as_str() {
-                        "Unauthorized" => APIError::ResponseError {
-                            code: code.clone(),
-                            message: code.to_string(),
-                        },
-                        _ => err,
-                    },
-                    _ => err,
-                }
-                .into()
-            })
+            .map_err(|err| err.into())
     }
 
     /// Destroy the livebook instance for the `application` (with the `namespace` and `version`) from Wukong API Proxy.
@@ -760,19 +589,7 @@ impl WKClient {
                 },
             )
             .await
-            .map_err(|err| {
-                match &err {
-                    APIError::ResponseError { code, message: _ } => match code.as_str() {
-                        "Unauthorized" => APIError::ResponseError {
-                            code: code.clone(),
-                            message: code.to_string(),
-                        },
-                        _ => err,
-                    },
-                    _ => err,
-                }
-                .into()
-            })
+            .map_err(|err| err.into())
     }
 
     /// Fetch the application with k8s cluster info from Wukong API Proxy.
@@ -804,4 +621,192 @@ fn setup_gql_client(access_token: &str, channel: &ApiChannel) -> Result<GQLClien
         .with_channel(channel)
         .build()
         .map_err(|err| err.into())
+}
+
+pub trait ErrorHandler: Send + Sync {
+    fn handle_error(&self, error: &graphql_client::Error) -> APIError;
+    fn extract_error_code<'a>(&'a self, error: &'a graphql_client::Error) -> &'a str;
+}
+
+pub struct DefaultErrorHandler;
+pub struct CanaryErrorHandler;
+
+impl ErrorHandler for DefaultErrorHandler {
+    fn handle_error(&self, error: &graphql_client::Error) -> APIError {
+        let original_error_code = self.extract_error_code(error);
+        let lowercase_error_code = original_error_code.to_lowercase();
+        debug!("Error code: {original_error_code}");
+
+        match lowercase_error_code.as_str() {
+            "unauthenticated" => APIError::UnAuthenticated,
+            "unable_to_get_pipelines" => APIError::UnableToGetPipelines,
+            "unable_to_get_pipeline" => APIError::UnableToGetPipeline,
+            "application_not_found" => APIError::ApplicationNotFound,
+            "application_config_not_defined" => APIError::ApplicationNotFound,
+            "unable_to_determine_changelog" => APIError::UnableToDetermineChangelog,
+            "comparing_same_build" => APIError::ChangelogComparingSameBuild,
+            "deploy_for_this_build_is_currently_running" => APIError::DuplicatedDeployment,
+            "k8s_cluster_namespace_config_not_defined" => APIError::NamespaceNotFound,
+            "k8s_cluster_version_config_not_defined" => APIError::VersionNotFound,
+            "no_builds_associated_with_this_branch" => APIError::BuildNotFound,
+            "unauthorized" => APIError::UnAuthorized,
+            _ => APIError::ResponseError {
+                code: original_error_code.to_string(),
+                message: format!("{error}"),
+            },
+        }
+    }
+
+    fn extract_error_code<'a>(&'a self, error: &'a graphql_client::Error) -> &'a str {
+        &error.message
+    }
+}
+impl ErrorHandler for CanaryErrorHandler {
+    fn handle_error(&self, error: &graphql_client::Error) -> APIError {
+        let original_error_code = self.extract_error_code(error);
+        let lowercase_error_code = original_error_code.to_lowercase();
+        debug!("Error code: {original_error_code}");
+
+        match lowercase_error_code.as_str() {
+            "application_not_found" => APIError::ApplicationNotFound,
+            "application_namespace_not_found" => APIError::NamespaceNotFound,
+            "application_version_not_found" => APIError::VersionNotFound,
+
+            // authentication
+            "unauthenticated" | "invalid_token" => APIError::UnAuthenticated,
+            "unauthorized" => APIError::UnAuthorized,
+
+            // pipeline
+            "pipeline_not_configured" | "pipeline_not_found" => APIError::UnableToGetPipeline,
+            "pipeline_deployment_in_progress" => APIError::DuplicatedDeployment,
+            // "pipeline_changelogs_not_provided" => {}
+            "jenkins_build_not_found" => APIError::BuildNotFound,
+            "jenkins_pipeline_not_found" => APIError::UnableToGetPipeline,
+
+            "changelog_unable_to_determine" => APIError::UnableToDetermineChangelog,
+            "changelog_same_commit" => APIError::ChangelogComparingSameBuild,
+
+            // "application_k8s_cluster_not_found" => {}
+            // "application_spinnaker_pipeline_not_found" => {}
+            // "application_config_error" => {}
+            // "k8s_destroy_livebook_failed" => {}
+            // "k8s_cluster_context_missing" => {}
+            // "k8s_kubeconfig_missing" => {}
+            // "k8s_service_not_found_or_deleted" => {}
+            // "k8s_ingress_not_found_or_deleted" => {}
+            // "k8s_issuer_not_found_or_deleted" => {}
+            // "k8s_pod_not_found_or_deleted" => {}
+            // "k8s_operation_timed_out" => {}
+            // "k8s_ingress_ip_not_found" => {}
+            // "k8s_cluster_ip_not_found" => {}
+            // "k8s_context_not_found" => {}
+            // "k8s_kubeconfig_not_found" => {}
+            // "spinnaker_x509_failure" => {}
+            // "spinnaker_invalid_domain" => {}
+            // "spinnaker_error" => {}
+            // "jenkins_invalid_domain" => {}
+            // "jenkins_commit_id_not_found" => {}
+            // "github_repo_name_not_found" => {}
+            // "github_error" => {}
+            // "github_invalid_domain" => {}
+            // "github_pr_not_found" => {}
+            // "github_ref_not_found" => {}
+            // "github_commit_history_not_found" => {}
+            // "github_workflow_not_found" => {}
+            // "slack_webhook_not_configured" => {}
+            _ => APIError::ResponseError {
+                code: original_error_code.to_string(),
+                message: format!("{error}"),
+            },
+        }
+    }
+
+    fn extract_error_code<'a>(&'a self, error: &'a graphql_client::Error) -> &'a str {
+        if let Some(ref error_extensions) = error.extensions {
+            if let Some(error_code) = error_extensions.get("code") {
+                return error_code.as_str().unwrap_or_default();
+            }
+        }
+
+        ""
+    }
+}
+
+fn setup_error_handler(channel: &ApiChannel) -> Box<dyn ErrorHandler> {
+    match channel {
+        ApiChannel::Canary => Box::new(CanaryErrorHandler),
+        ApiChannel::Stable => Box::new(DefaultErrorHandler),
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{graphql::GQLClientBuilder, ApiChannel};
+    use graphql_client::Error;
+    use serde_json::json;
+
+    #[test]
+    fn test_stable_error_handler_extract_error_code() {
+        let gql_client = GQLClientBuilder::default()
+            .with_token("test_access_token")
+            .with_channel(&ApiChannel::Stable)
+            .build()
+            .unwrap();
+
+        let err = json!({
+          "locations": [
+            {
+              "column": 3,
+              "line": 2
+            }
+          ],
+          "message": "application_not_found",
+          "path": [
+            "ciStatus"
+          ]
+        });
+
+        let deserialized_error: Error = serde_json::from_value(err).unwrap();
+
+        assert_eq!(
+            gql_client
+                .error_handler
+                .extract_error_code(&deserialized_error),
+            "application_not_found"
+        );
+    }
+
+    #[test]
+    fn test_canary_error_handler_extract_error_code() {
+        let gql_client = GQLClientBuilder::default()
+            .with_token("test_access_token")
+            .with_channel(&ApiChannel::Canary)
+            .build()
+            .unwrap();
+
+        let err = json!({
+          "locations": [
+            {
+              "column": 3,
+              "line": 2
+            }
+          ],
+          "message": "Application not found",
+          "path": [
+            "ciStatus"
+          ],
+          "extensions": {
+            "code": "application_not_found"
+          }
+        });
+
+        let deserialized_error: Error = serde_json::from_value(err).unwrap();
+
+        assert_eq!(
+            gql_client
+                .error_handler
+                .extract_error_code(&deserialized_error),
+            "application_not_found"
+        );
+    }
 }

@@ -6,7 +6,11 @@ use wukong_sdk::services::gcloud::google::logging::{r#type::LogSeverity, v2::Log
 
 use crate::config::Config;
 
-use super::{action::Action, events::network::NetworkEvent, StatefulList};
+use super::{
+    action::Action,
+    events::{key::Key, network::NetworkEvent},
+    StatefulList,
+};
 
 const DEFAULT_ROUTE: Route = Route {
     active_block: ActiveBlock::Empty,
@@ -23,6 +27,7 @@ pub enum AppReturn {
 pub enum DialogContext {
     NamespaceSelection,
     VersionSelection,
+    LogSearchBar,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
@@ -66,9 +71,11 @@ pub struct State {
     // fetch data
     pub builds: Vec<Build>,
     pub deployments: Vec<Deployment>,
-    pub has_log_errors: bool,
     pub log_entries: Vec<LogEntry>,
     pub log_entries_length: usize,
+    pub log_entries_error: Option<String>,
+    pub builds_error: Option<String>,
+    pub deployments_error: Option<String>,
 
     pub last_log_entry_timestamp: Option<String>,
     // ui controls
@@ -86,6 +93,11 @@ pub struct State {
     pub logs_widget_width: u16,
     pub logs_tailing: bool,
     pub logs_severity: Option<LogSeverity>,
+    pub show_search_bar: bool,
+    pub show_filter_bar: bool,
+    pub search_bar_input: Input,
+    pub filter_bar_include_input: Input,
+    pub filter_bar_exclude_input: Input,
 }
 
 pub struct App {
@@ -137,20 +149,23 @@ impl App {
                 current_version: None,
 
                 show_namespace_selection: false,
-                is_fetching_builds: false,
-                is_fetching_deployments: false,
+                is_fetching_builds: true,
+                is_fetching_deployments: true,
                 is_checking_namespaces: false,
                 is_checking_version: false,
-                is_fetching_log_entries: false,
+                is_fetching_log_entries: true,
                 start_polling_log_entries: false,
                 logs_enable_auto_scroll_to_bottom: true,
 
                 builds: vec![],
                 deployments: vec![],
                 last_log_entry_timestamp: None,
-                has_log_errors: false,
+
                 log_entries_length: 0,
                 log_entries: Vec::with_capacity(1_000),
+                log_entries_error: None,
+                builds_error: None,
+                deployments_error: None,
 
                 logs_vertical_scroll_state: ScrollbarState::default(),
                 logs_horizontal_scroll_state: ScrollbarState::default(),
@@ -162,6 +177,11 @@ impl App {
                 logs_widget_height: 0,
                 logs_tailing: true,
                 logs_severity: None,
+                show_search_bar: false,
+                show_filter_bar: false,
+                search_bar_input: Input::default(),
+                filter_bar_include_input: Input::default(),
+                filter_bar_exclude_input: Input::default(),
             },
             navigation_stack: vec![DEFAULT_ROUTE],
             block_map: HashMap::new(),
@@ -173,6 +193,8 @@ impl App {
                 Action::ToggleLogsTailing,
                 Action::ShowErrorAndAbove,
                 Action::Quit,
+                Action::SearchLogs,
+                Action::FilterLogs,
             ],
             network_event_sender: sender,
         }
@@ -187,7 +209,9 @@ impl App {
             .elapsed()
             .as_millis();
 
-        if !self.state.start_polling_log_entries || elapsed >= poll_interval_ms {
+        if self.state.current_namespace.is_some() && self.state.current_version.is_some() {
+            // if this is the first log entries api call, fetch the log entries
+            // even if the tail is not enabled
             if !self.state.start_polling_log_entries {
                 // only to show loader on the first call
                 self.state.is_fetching_log_entries = true;
@@ -197,13 +221,22 @@ impl App {
                 self.state.logs_horizontal_scroll_state = ScrollbarState::default();
                 self.state.logs_vertical_scroll = 0;
                 self.state.logs_horizontal_scroll = 0;
+
+                self.state.start_polling_log_entries = true;
+                self.state.instant_since_last_log_entries_poll = Instant::now();
+
+                self.dispatch(NetworkEvent::GetGCloudLogs).await;
+                return AppReturn::Continue;
             }
 
-            self.state.start_polling_log_entries = true;
-            self.state.instant_since_last_log_entries_poll = Instant::now();
+            // if this is not the first call, check if it's time to fetch more log entries
+            // if yes, fetch the log entries if the tailing is enabled
+            if elapsed >= poll_interval_ms {
+                self.state.instant_since_last_log_entries_poll = Instant::now();
 
-            if self.state.logs_tailing {
-                self.dispatch(NetworkEvent::GetGCloudLogs).await;
+                if self.state.logs_tailing {
+                    self.dispatch(NetworkEvent::GetGCloudLogs).await;
+                }
             }
         }
 
@@ -267,6 +300,90 @@ impl App {
                     bottom_right_corner: Some((rect.x + rect.width, rect.y + rect.height)),
                 },
             );
+        }
+    }
+}
+
+#[derive(Default)]
+pub struct Input {
+    /// Current value of the input box
+    pub input: String,
+    /// Position of cursor in the editor area.
+    pub cursor_position: usize,
+}
+
+impl Input {
+    fn move_cursor_left(&mut self) {
+        let cursor_moved_left = self.cursor_position.saturating_sub(1);
+        self.cursor_position = self.clamp_cursor(cursor_moved_left);
+    }
+
+    fn move_cursor_right(&mut self) {
+        let cursor_moved_right = self.cursor_position.saturating_add(1);
+        self.cursor_position = self.clamp_cursor(cursor_moved_right);
+    }
+
+    fn enter_char(&mut self, new_char: char) {
+        // self.input.insert(self.cursor_position, new_char);
+        self.input.push(new_char);
+
+        self.move_cursor_right();
+    }
+
+    fn delete_char(&mut self) {
+        let is_not_cursor_leftmost = self.cursor_position != 0;
+        if is_not_cursor_leftmost {
+            // Method "remove" is not used on the saved text for deleting the selected char.
+            // Reason: Using remove on String works on bytes instead of the chars.
+            // Using remove would require special care because of char boundaries.
+
+            let current_index = self.cursor_position;
+            let from_left_to_current_index = current_index - 1;
+
+            // Getting all characters before the selected character.
+            let before_char_to_delete = self.input.chars().take(from_left_to_current_index);
+            // Getting all characters after selected character.
+            let after_char_to_delete = self.input.chars().skip(current_index);
+
+            // Put all characters together except the selected one.
+            // By leaving the selected one out, it is forgotten and therefore deleted.
+            self.input = before_char_to_delete.chain(after_char_to_delete).collect();
+            self.move_cursor_left();
+        }
+    }
+
+    fn clamp_cursor(&self, new_cursor_pos: usize) -> usize {
+        new_cursor_pos.clamp(0, self.input.len())
+    }
+
+    fn reset_cursor(&mut self) {
+        self.cursor_position = 0;
+    }
+
+    fn handle_input(&mut self, key: Key) -> bool {
+        match key {
+            Key::Char(to_insert) => {
+                self.enter_char(to_insert);
+                true
+            }
+            Key::Backspace => {
+                self.delete_char();
+                true
+            }
+            Key::Left => {
+                self.move_cursor_left();
+                true
+            }
+            Key::Right => {
+                self.move_cursor_right();
+                true
+            }
+            Key::Esc => {
+                self.input = "".to_string();
+                self.reset_cursor();
+                false
+            }
+            _ => true,
         }
     }
 }

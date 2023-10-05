@@ -50,6 +50,8 @@ impl EventManager {
         });
     }
 
+    /// Attempts to read an event.
+    /// This funtion will block the current thread.
     pub fn next(&self) -> Result<Event, mpsc::RecvError> {
         self.receiver.recv()
     }

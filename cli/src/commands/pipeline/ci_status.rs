@@ -1,5 +1,7 @@
-use log::debug;
-use wukong_sdk::error::{APIError, WKError};
+use wukong_sdk::{
+    error::{APIError, WKError},
+    graphql::ci_status_query,
+};
 
 use crate::{
     commands::{pipeline::PipelineCiStatus, Context},
@@ -59,24 +61,22 @@ pub async fn handle_ci_status(
     let config = Config::load_from_default_path()?;
     let mut wk_client = WKClient::for_channel(&config, &context.channel)?;
 
-    let ci_status_resp = wk_client
-        .fetch_ci_status(&repo_url, &branch)
-        .await
-        .map_err(|err| match &err {
-            WKCliError::WKSdkError(WKError::APIError(APIError::ResponseError {
-                code,
-                message: _,
-            })) => {
-                if code == "application_config_not_defined" {
-                    debug!("The application config is not defined. code: {code}");
-                    WKCliError::ApplicationConfigNotDefined
-                } else {
-                    err
+    let ci_status_resp = match wk_client.fetch_ci_status(&repo_url, &branch).await {
+        Ok(resp) => Ok(resp),
+        Err(err) => match &err {
+            WKCliError::WKSdkError(wk_sdk_error) => match wk_sdk_error {
+                WKError::APIError(APIError::ApplicationNotFound) => Err(WKCliError::PipelineError(
+                    crate::error::PipelineError::CIStatusApplicationNotFound,
+                )),
+                WKError::APIError(APIError::BuildNotFound) => {
+                    Ok(ci_status_query::ResponseData { ci_status: None })
                 }
-            }
-            _ => err,
-        })?
-        .ci_status;
+                _ => Err(err),
+            },
+            _ => Err(err),
+        },
+    }?
+    .ci_status;
 
     fetch_loader.finish_and_clear();
 

@@ -8,17 +8,21 @@ pub enum Action {
     OpenVersionSelection,
     ShowErrorAndAbove,
     ToggleLogsTailing,
+    SearchLogs,
+    FilterLogs,
     Quit,
 }
 
 impl Action {
     // iterator for enum https://stackoverflow.com/a/21376984
     pub fn iterator() -> Iter<'static, Action> {
-        static ACTIONS: [Action; 5] = [
+        static ACTIONS: [Action; 7] = [
             Action::OpenNamespaceSelection,
             Action::OpenVersionSelection,
             Action::ToggleLogsTailing,
             Action::ShowErrorAndAbove,
+            Action::SearchLogs,
+            Action::FilterLogs,
             Action::Quit,
         ];
         ACTIONS.iter()
@@ -30,6 +34,8 @@ impl Action {
             Action::OpenVersionSelection => &[Key::Char('v')],
             Action::ToggleLogsTailing => &[Key::Ctrl('t')],
             Action::ShowErrorAndAbove => &[Key::Ctrl('e')],
+            Action::SearchLogs => &[Key::Ctrl('s')],
+            Action::FilterLogs => &[Key::Ctrl('f')],
             Action::Quit => &[Key::Char('q')],
         }
     }
@@ -49,6 +55,8 @@ impl Display for Action {
             Action::ToggleLogsTailing => write!(f, "Toggle logs tailing"),
             Action::ShowErrorAndAbove => write!(f, "Show errors logs only"),
             Action::Quit => write!(f, "Quit"),
+            Action::SearchLogs => write!(f, "Search logs"),
+            Action::FilterLogs => write!(f, "Filter logs"),
         }
     }
 }
