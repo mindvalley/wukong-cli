@@ -5,7 +5,7 @@ use crate::commands::tui::{
 };
 use wukong_sdk::services::gcloud::google::logging::r#type::LogSeverity;
 
-use super::{common_key_events, log_filter_exclude, log_filter_include};
+use super::{common_key_events, log_filter_exclude, log_filter_include, log_search};
 
 // In the absence of an selected block, handle standard events as usual.
 pub async fn handler(key: Key, app: &mut App) -> AppReturn {
@@ -13,34 +13,8 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
         Some(Action::Quit) => AppReturn::Exit,
         Some(Action::OpenNamespaceSelection) => open_dialog(app, DialogContext::NamespaceSelection),
         Some(Action::OpenVersionSelection) => open_dialog(app, DialogContext::VersionSelection),
-        Some(Action::SearchLogs) => {
-            app.set_current_route_state(
-                Some(ActiveBlock::Dialog(DialogContext::LogSearchBar)),
-                Some(ActiveBlock::Dialog(DialogContext::LogSearchBar)),
-            );
-
-            app.state.show_search_bar = !app.state.show_search_bar;
-            if app.state.show_search_bar {
-                app.state.show_filter_bar = false;
-            }
-            AppReturn::Continue
-        }
-        Some(Action::FilterLogs) => {
-            app.set_current_route_state(
-                Some(ActiveBlock::Dialog(DialogContext::LogIncludeFilter)),
-                Some(ActiveBlock::Dialog(DialogContext::LogIncludeFilter)),
-            );
-
-            app.state.show_filter_bar = !app.state.show_filter_bar;
-            if app.state.show_filter_bar {
-                app.state.show_search_bar = false;
-            } else {
-                log_filter_exclude::reset_cursor(&mut app.state.filter_bar_exclude_input);
-                log_filter_include::reset_cursor(&mut app.state.filter_bar_include_input);
-            }
-
-            AppReturn::Continue
-        }
+        Some(Action::SearchLogs) => handle_search_logs(app).await,
+        Some(Action::FilterLogs) => handle_filter_logs(app).await,
         Some(Action::ToggleLogsTailing) => {
             app.state.logs_tailing = !app.state.logs_tailing;
             AppReturn::Continue
@@ -51,6 +25,45 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
         }
         _ => handle_key_events(key, app),
     }
+}
+
+async fn handle_search_logs(app: &mut App) -> AppReturn {
+    app.state.show_search_bar = !app.state.show_search_bar;
+
+    if app.state.show_search_bar {
+        // Make sure the filter bar is closed.
+        app.state.show_filter_bar = false;
+
+        app.set_current_route_state(
+            Some(ActiveBlock::Dialog(DialogContext::LogSearch)),
+            Some(ActiveBlock::Dialog(DialogContext::LogSearch)),
+        );
+    } else {
+        log_search::reset_cursor(&mut app.state.search_bar_input);
+        app.set_current_route_state(None, Some(ActiveBlock::Log));
+    }
+
+    AppReturn::Continue
+}
+
+async fn handle_filter_logs(app: &mut App) -> AppReturn {
+    app.state.show_filter_bar = !app.state.show_filter_bar;
+
+    if app.state.show_filter_bar {
+        // Make sure the seach bar is closed.
+        app.state.show_search_bar = false;
+
+        app.set_current_route_state(
+            Some(ActiveBlock::Dialog(DialogContext::LogIncludeFilter)),
+            Some(ActiveBlock::Dialog(DialogContext::LogIncludeFilter)),
+        );
+    } else {
+        log_filter_exclude::reset_cursor(&mut app.state.filter_bar_exclude_input);
+        log_filter_include::reset_cursor(&mut app.state.filter_bar_include_input);
+        app.set_current_route_state(None, Some(ActiveBlock::Log));
+    }
+
+    AppReturn::Continue
 }
 
 fn handle_key_events(key: Key, app: &mut App) -> AppReturn {

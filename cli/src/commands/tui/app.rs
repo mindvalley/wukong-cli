@@ -31,7 +31,7 @@ pub enum AppReturn {
 pub enum DialogContext {
     NamespaceSelection,
     VersionSelection,
-    LogSearchBar,
+    LogSearch,
     LogIncludeFilter,
     LogExcludeFilter,
 }

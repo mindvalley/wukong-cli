@@ -34,7 +34,6 @@ impl EventManager {
                         if event_sender.send(Event::Input(key.into())).is_err() {
                             break;
                         };
-                        // Send only mouse click:
                     } else if let event::Event::Mouse(mouse_event) = event::read().unwrap() {
                         // Send only mouse click: to increase performance
                         if let MouseEventKind::Down(_) = mouse_event.kind {

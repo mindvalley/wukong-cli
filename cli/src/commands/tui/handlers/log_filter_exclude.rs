@@ -40,12 +40,7 @@ fn move_cursor_left(app: &mut App) {
         .saturating_sub(1);
 
     // If the cursor is at the beginning move to the include input:
-    if cursor_moved_left == 0 {
-        app.set_current_route_state(
-            Some(ActiveBlock::Dialog(DialogContext::LogIncludeFilter)),
-            Some(ActiveBlock::Dialog(DialogContext::LogIncludeFilter)),
-        );
-    } else {
+    if cursor_moved_left != 0 {
         app.state.filter_bar_exclude_input.cursor_position =
             clamp_cursor(&mut app.state.filter_bar_exclude_input, cursor_moved_left);
     }

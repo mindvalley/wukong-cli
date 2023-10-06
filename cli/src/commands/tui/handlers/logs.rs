@@ -1,12 +1,10 @@
-use wukong_sdk::services::gcloud::google::logging::r#type::LogSeverity;
-
+use super::{common_key_events, log_filter_exclude, log_filter_include, log_search};
 use crate::commands::tui::{
     action::Action,
     app::{ActiveBlock, App, AppReturn, DialogContext},
     events::{key::Key, network::NetworkEvent},
 };
-
-use super::common_key_events;
+use wukong_sdk::services::gcloud::google::logging::r#type::LogSeverity;
 
 pub async fn handler(key: Key, app: &mut App) -> AppReturn {
     match key {
@@ -39,12 +37,14 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
             app.state.show_search_bar = true;
 
             app.set_current_route_state(
-                Some(ActiveBlock::Dialog(DialogContext::LogSearchBar)),
-                Some(ActiveBlock::Dialog(DialogContext::LogSearchBar)),
+                Some(ActiveBlock::Dialog(DialogContext::LogSearch)),
+                Some(ActiveBlock::Dialog(DialogContext::LogSearch)),
             );
 
             if app.state.show_search_bar {
                 app.state.show_filter_bar = false;
+                log_filter_exclude::reset_cursor(&mut app.state.filter_bar_exclude_input);
+                log_filter_include::reset_cursor(&mut app.state.filter_bar_include_input);
             }
         }
         key if Action::from_key(key) == Some(Action::FilterLogs) => {
@@ -57,6 +57,7 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
 
             if app.state.show_filter_bar {
                 app.state.show_search_bar = false;
+                log_search::reset_cursor(&mut app.state.search_bar_input);
             }
         }
         _ => {}

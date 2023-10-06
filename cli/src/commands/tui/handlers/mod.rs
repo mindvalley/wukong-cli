@@ -34,7 +34,7 @@ async fn handle_block_events(key: Key, app: &mut App) -> AppReturn {
         ActiveBlock::Dialog(DialogContext::VersionSelection) => {
             version_selection::handler(key, app).await
         }
-        ActiveBlock::Dialog(DialogContext::LogSearchBar) => log_search::handler(key, app).await,
+        ActiveBlock::Dialog(DialogContext::LogSearch) => log_search::handler(key, app).await,
         ActiveBlock::Dialog(DialogContext::LogIncludeFilter) => {
             log_filter_include::handler(key, app).await
         }

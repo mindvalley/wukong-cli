@@ -52,7 +52,7 @@ impl LogsWidget {
         frame.render_widget(title, info);
 
         if app.state.show_search_bar {
-            render_search_bar(frame, search_bar_area, &mut app.state);
+            render_search_bar(frame, search_bar_area, app);
         }
 
         if app.state.show_filter_bar {
@@ -202,15 +202,6 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
                 log_entries.push(Line::from(line));
             }
 
-            state.logs_vertical_scroll = 0;
-            state.logs_vertical_scroll_state = state
-                .logs_vertical_scroll_state
-                .position(state.logs_vertical_scroll as u16);
-
-            state.logs_vertical_scroll_state = state
-                .logs_vertical_scroll_state
-                .content_length(log_entries.len() as u16);
-
             log_entries
         }
     } else if state.show_filter_bar {
@@ -346,17 +337,33 @@ fn render_scrollbar<B: Backend>(
     );
 }
 
-fn render_search_bar<B: Backend>(frame: &mut Frame<'_, B>, input_area: Rect, state: &mut State) {
-    let search_bar = Paragraph::new(state.search_bar_input.input.clone())
+fn render_search_bar<B: Backend>(frame: &mut Frame<'_, B>, input_area: Rect, app: &mut App) {
+    let current_route = app.get_current_route();
+
+    let highlight_state = (
+        current_route.active_block == ActiveBlock::Dialog(DialogContext::LogSearch),
+        current_route.hovered_block == ActiveBlock::Dialog(DialogContext::LogSearch),
+    );
+
+    let search_bar = Paragraph::new(app.state.search_bar_input.input.clone())
         .style(Style::default().fg(Color::LightGreen))
-        .block(Block::default().borders(Borders::ALL).title(" Search "));
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(get_color(
+                    highlight_state,
+                    (Color::LightCyan, Color::White, Color::White),
+                ))
+                .title(" Search "),
+        );
+
     frame.render_widget(search_bar, input_area);
     // Make the cursor visible and ask ratatui to put it at the specified coordinates after
     // rendering
     frame.set_cursor(
         // Draw the cursor at the current position in the input field.
         // This position is can be controlled via the left and right arrow key
-        input_area.x + state.search_bar_input.cursor_position as u16 + 1,
+        input_area.x + app.state.search_bar_input.cursor_position as u16 + 1,
         // Move one line down, from the border to the input line
         input_area.y + 1,
     );

@@ -68,7 +68,7 @@ fn delete_char(search_bar_input: &mut Input) {
     }
 }
 
-fn reset_cursor(search_bar_input: &mut Input) {
+pub fn reset_cursor(search_bar_input: &mut Input) {
     search_bar_input.input = "".to_string();
     search_bar_input.cursor_position = 0;
 }
