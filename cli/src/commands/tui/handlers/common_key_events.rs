@@ -23,3 +23,7 @@ pub fn back_event(key: Key) -> bool {
 pub fn exit_event(key: Key) -> bool {
     key == Key::Char('q')
 }
+
+pub fn delete_event(key: Key) -> bool {
+    matches!(key, Key::Backspace | Key::Delete)
+}

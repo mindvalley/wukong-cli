@@ -1,5 +1,10 @@
+mod build;
 mod common_key_events;
+mod deployment;
 mod empty;
+mod log_filter_exclude;
+mod log_filter_include;
+mod log_search;
 mod logs;
 mod namespace_selection;
 mod version_selection;
@@ -12,10 +17,6 @@ use crossterm::event::{MouseEvent, MouseEventKind};
 
 pub async fn input_handler(key: Key, app: &mut App) -> AppReturn {
     match key {
-        key if common_key_events::back_event(key) => {
-            app.set_current_route_state(Some(ActiveBlock::Empty), None);
-            AppReturn::Continue
-        }
         key if common_key_events::exit_event(key) => AppReturn::Exit,
         _ => handle_block_events(key, app).await,
     }
@@ -33,7 +34,15 @@ async fn handle_block_events(key: Key, app: &mut App) -> AppReturn {
         ActiveBlock::Dialog(DialogContext::VersionSelection) => {
             version_selection::handler(key, app).await
         }
-        _ => AppReturn::Continue,
+        ActiveBlock::Dialog(DialogContext::LogSearchBar) => log_search::handler(key, app).await,
+        ActiveBlock::Dialog(DialogContext::LogIncludeFilter) => {
+            log_filter_include::handler(key, app).await
+        }
+        ActiveBlock::Dialog(DialogContext::LogExcludeFilter) => {
+            log_filter_exclude::handler(key, app).await
+        }
+        ActiveBlock::Deployment => deployment::handler(key, app).await,
+        ActiveBlock::Build => build::handler(key, app).await,
     }
 }
 

@@ -7,6 +7,9 @@ use crate::commands::tui::{
 
 pub async fn handler(key: Key, app: &mut App) -> AppReturn {
     match key {
+        key if common_key_events::back_event(key) => {
+            app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Log));
+        }
         key if common_key_events::back_event(key) => app.push_navigation_stack(ActiveBlock::Empty),
         key if common_key_events::down_event(key) => app.version_selections.next(),
         key if common_key_events::up_event(key) => app.version_selections.previous(),
