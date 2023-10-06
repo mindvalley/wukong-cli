@@ -47,19 +47,16 @@ async fn handle_block_events(key: Key, app: &mut App) -> AppReturn {
 }
 
 pub fn handle_mouse_event(event: MouseEvent, app: &mut App) -> AppReturn {
-    match event.kind {
-        MouseEventKind::Down(button) => {
-            let (x, y) = (event.column, event.row);
-            match button {
-                crossterm::event::MouseButton::Left => {
-                    // Trigger left click widget activity
-                    on_left_mouse_up(x, y, app);
-                }
-                crossterm::event::MouseButton::Right => {}
-                _ => {}
+    if let MouseEventKind::Down(button) = event.kind {
+        let (x, y) = (event.column, event.row);
+        match button {
+            crossterm::event::MouseButton::Left => {
+                // Trigger left click widget activity
+                on_left_mouse_up(x, y, app);
             }
+            crossterm::event::MouseButton::Right => {}
+            _ => {}
         }
-        _ => {}
     };
 
     AppReturn::Continue
