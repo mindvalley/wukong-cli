@@ -1,9 +1,10 @@
 use ratatui::{
     prelude::{Alignment, Backend, Constraint, Direction, Layout, Margin, Rect},
-    style::{Color, Style},
+    style::{Color, Modifier, Style},
     text::{Line, Span, Text},
     widgets::{
-        Block, Borders, Padding, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState,
+        Block, Borders, Cell, Padding, Paragraph, Row, Scrollbar, ScrollbarOrientation,
+        ScrollbarState, Table,
     },
     Frame,
 };
@@ -74,7 +75,7 @@ impl LogsWidget {
         }
 
         render_log_entries(frame, logs_area, &mut app.state);
-        render_scrollbar(frame, logs_area, &mut app.state.logs_vertical_scroll_state);
+        // render_scrollbar(frame, logs_area, &mut app.state.logs_vertical_scroll_state);
     }
 }
 
@@ -124,17 +125,32 @@ fn create_error_block(error: &str) -> Paragraph<'_> {
 }
 
 fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, state: &mut State) {
+    let block = Block::default().padding(Padding::new(0, 0, 0, 0));
+
+    let (inner_width, inner_height) = {
+        let inner_rect = block.inner(logs_area);
+        (inner_rect.width, inner_rect.height)
+    };
+
+    let num_rows: usize = inner_height as usize;
+    let start: usize = state.logs_table_start_position;
+    let end = std::cmp::min(state.log_entries.len(), start + num_rows);
+
     let log_entries = if state.show_search_bar {
         if state.search_bar_input.input.is_empty() {
-            state.logs_vertical_scroll_state = state
-                .logs_vertical_scroll_state
-                .content_length(state.log_entries_length as u16);
+            // state.logs_vertical_scroll_state = state
+            //     .logs_vertical_scroll_state
+            //     .content_length(state.log_entries_length as u16);
 
             state
                 .log_entries
                 .iter()
                 .map(|log_entry| {
-                    Line::styled(format!("{}", log_entry), Style::default().fg(Color::White))
+                    // Line::styled(format!("{}", log_entry), Style::default().fg(Color::White))
+                    Row::new(vec![Cell::from(Span::styled(
+                        format!("{}", log_entry),
+                        Style::default().fg(Color::White),
+                    ))])
                 })
                 .collect()
         } else {
@@ -190,17 +206,18 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
                     last_pos = m.1;
                 }
 
-                log_entries.push(Line::from(line));
+                // log_entries.push(Line::from(line));
+                log_entries.push(Row::new(vec![Cell::from(Line::from(line))]));
             }
 
-            state.logs_vertical_scroll = 0;
-            state.logs_vertical_scroll_state = state
-                .logs_vertical_scroll_state
-                .position(state.logs_vertical_scroll as u16);
-
-            state.logs_vertical_scroll_state = state
-                .logs_vertical_scroll_state
-                .content_length(log_entries.len() as u16);
+            // state.logs_vertical_scroll = 0;
+            // state.logs_vertical_scroll_state = state
+            //     .logs_vertical_scroll_state
+            //     .position(state.logs_vertical_scroll as u16);
+            //
+            // state.logs_vertical_scroll_state = state
+            //     .logs_vertical_scroll_state
+            //     .content_length(log_entries.len() as u16);
 
             log_entries
         }
@@ -228,7 +245,11 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
             log_entries
                 .iter()
                 .map(|log_entry| {
-                    Line::styled(format!("{}", log_entry), Style::default().fg(Color::White))
+                    // Line::styled(format!("{}", log_entry), Style::default().fg(Color::White))
+                    Row::new(vec![Cell::from(Span::styled(
+                        format!("{}", log_entry),
+                        Style::default().fg(Color::White),
+                    ))])
                 })
                 .collect()
         } else {
@@ -286,45 +307,59 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
                     last_pos = m.1;
                 }
 
-                log_entries.push(Line::from(line));
+                // log_entries.push(Line::from(line));
+                log_entries.push(Row::new(vec![Cell::from(Line::from(line))]));
             }
 
-            state.logs_vertical_scroll = 0;
-            state.logs_vertical_scroll_state = state
-                .logs_vertical_scroll_state
-                .position(state.logs_vertical_scroll as u16);
-            state.logs_vertical_scroll_state = state
-                .logs_vertical_scroll_state
-                .content_length(log_entries.len() as u16);
+            // state.logs_vertical_scroll = 0;
+            // state.logs_vertical_scroll_state = state
+            //     .logs_vertical_scroll_state
+            //     .position(state.logs_vertical_scroll as u16);
+            // state.logs_vertical_scroll_state = state
+            //     .logs_vertical_scroll_state
+            //     .content_length(log_entries.len() as u16);
 
             log_entries
         }
     } else {
-        state.logs_vertical_scroll_state = state
-            .logs_vertical_scroll_state
-            .content_length(state.log_entries_length as u16);
+        // state.logs_vertical_scroll_state = state
+        //     .logs_vertical_scroll_state
+        //     .content_length(state.log_entries_length as u16);
 
-        state
-            .log_entries
+        state.log_entries[start..end]
             .iter()
             .map(|log_entry| {
-                Line::styled(format!("{}", log_entry), Style::default().fg(Color::White))
+                // Line::styled(format!("{}", log_entry), Style::default().fg(Color::White))
+                // Row::new(vec![Cell::from(Span::styled(
+                //     format!("{}", log_entry),
+                //     Style::default().fg(Color::White),
+                // ))])
+                Row::new(vec![Cell::from(Text::styled(
+                    format!("{}", log_entry),
+                    Style::default().fg(Color::White),
+                ))])
             })
             .collect()
     };
 
-    let paragraph = Paragraph::new(log_entries)
-        .block(Block::default().padding(Padding::new(1, 1, 0, 0)))
-        // we can't use wrap if we want to scroll to bottom
-        // because we don't know the state of the render
-        // waiting this https://github.com/ratatui-org/ratatui/issues/136
-        // .wrap(Wrap { trim: true })
-        .scroll((
-            state.logs_vertical_scroll as u16,
-            state.logs_horizontal_scroll as u16,
-        ));
+    let selected_style = Style::default().add_modifier(Modifier::REVERSED);
+    let table = Table::new(log_entries)
+        // let paragraph = Paragraph::new(log_entries)
+        .highlight_style(selected_style)
+        .block(Block::default().padding(Padding::new(0, 0, 0, 0)))
+        .widths(&[Constraint::Percentage(100)])
+        .column_spacing(1);
+    // we can't use wrap if we want to scroll to bottom
+    // because we don't know the state of the render
+    // waiting this https://github.com/ratatui-org/ratatui/issues/136
+    // .wrap(Wrap { trim: true })
+    // .scroll((
+    //     state.logs_vertical_scroll as u16,
+    //     state.logs_horizontal_scroll as u16,
+    // ));
 
-    frame.render_widget(paragraph, logs_area);
+    // frame.render_widget(table, logs_area);
+    frame.render_stateful_widget(table, logs_area, &mut state.logs_table_state);
 }
 
 fn render_scrollbar<B: Backend>(

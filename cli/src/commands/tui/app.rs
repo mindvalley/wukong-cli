@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use ratatui::widgets::ScrollbarState;
+use ratatui::widgets::{ScrollbarState, TableState};
 use tokio::sync::mpsc::Sender;
 use wukong_sdk::services::gcloud::google::logging::{r#type::LogSeverity, v2::LogEntry};
 
@@ -53,6 +53,9 @@ pub struct State {
     pub logs_vertical_scroll: usize,
     pub logs_horizontal_scroll: usize,
     pub logs_enable_auto_scroll_to_bottom: bool,
+    pub logs_table_state: TableState,
+    pub logs_table_current_display_index: usize,
+    pub logs_table_start_position: usize,
 
     // For log entries polling
     pub instant_since_last_log_entries_poll: Instant,
@@ -139,6 +142,9 @@ impl App {
                 logs_vertical_scroll: 0,
                 logs_horizontal_scroll: 0,
                 instant_since_last_log_entries_poll: Instant::now(),
+                logs_table_state: TableState::default(),
+                logs_table_current_display_index: 0,
+                logs_table_start_position: 0,
 
                 logs_widget_width: 0,
                 logs_widget_height: 0,
@@ -342,26 +348,91 @@ impl App {
                     // we will need to track current selected panel to apply the event
                     None => match key {
                         Key::Up | Key::Char('k') => {
-                            self.state.logs_vertical_scroll =
-                                self.state.logs_vertical_scroll.saturating_sub(5);
-                            self.state.logs_vertical_scroll_state = self
-                                .state
-                                .logs_vertical_scroll_state
-                                .position(self.state.logs_vertical_scroll as u16);
+                            // self.state.logs_vertical_scroll =
+                            //     self.state.logs_vertical_scroll.saturating_sub(5);
+                            // self.state.logs_vertical_scroll_state = self
+                            //     .state
+                            //     .logs_vertical_scroll_state
+                            //     .position(self.state.logs_vertical_scroll as u16);
+                            //
+                            // self.state.logs_enable_auto_scroll_to_bottom = false;
 
-                            self.state.logs_enable_auto_scroll_to_bottom = false;
+                            let i = match self.state.logs_table_state.selected() {
+                                Some(i) => {
+                                    if i == 0 {
+                                        self.state.log_entries.len() - 1
+                                    } else {
+                                        i - 1
+                                    }
+                                }
+                                None => 0,
+                            };
+                            self.state.logs_table_state.select(Some(i));
+
+                            let start_index = self.state.logs_table_current_display_index;
+                            let num_rows = 12 - 2;
+
+                            self.state.logs_table_start_position =
+                                if let Some(selected) = self.state.logs_table_state.selected() {
+                                    if selected <= start_index {
+                                        // If it's past the first element, then show from that element downwards
+                                        selected
+                                    } else if selected >= start_index + num_rows {
+                                        selected - num_rows + 1
+                                    } else {
+                                        start_index
+                                    }
+                                } else {
+                                    0
+                                };
+                            self.state.logs_table_current_display_index =
+                                self.state.logs_table_start_position;
 
                             AppReturn::Continue
                         }
                         Key::Down | Key::Char('j') => {
-                            self.state.logs_vertical_scroll =
-                                self.state.logs_vertical_scroll.saturating_add(5);
-                            self.state.logs_vertical_scroll_state = self
-                                .state
-                                .logs_vertical_scroll_state
-                                .position(self.state.logs_vertical_scroll as u16);
+                            // self.state.logs_vertical_scroll =
+                            //     self.state.logs_vertical_scroll.saturating_add(5);
+                            // self.state.logs_vertical_scroll_state = self
+                            //     .state
+                            //     .logs_vertical_scroll_state
+                            //     .position(self.state.logs_vertical_scroll as u16);
+                            //
+                            // self.state.logs_enable_auto_scroll_to_bottom = false;
 
-                            self.state.logs_enable_auto_scroll_to_bottom = false;
+                            let i = match self.state.logs_table_state.selected() {
+                                Some(i) => {
+                                    if i >= self.state.log_entries.len() - 1 {
+                                        0
+                                    } else {
+                                        i + 1
+                                    }
+                                }
+                                None => 0,
+                            };
+                            self.state.logs_table_state.select(Some(i));
+
+                            let start_index = self.state.logs_table_current_display_index;
+                            let num_rows = 12 - 2;
+                            self.state.logs_table_start_position =
+                                if let Some(selected) = self.state.logs_table_state.selected() {
+                                    if selected < start_index + num_rows {
+                                        // If, using the current scroll position, we can see the element
+                                        // (so within that and + num_rows) just reuse the current previously
+                                        // scrolled position.
+                                        start_index
+                                    } else if selected >= num_rows {
+                                        // If the current position past the last element visible in the list,
+                                        // then skip until we can see that element.
+                                        selected - num_rows + 1
+                                    } else {
+                                        0
+                                    }
+                                } else {
+                                    0
+                                };
+                            self.state.logs_table_current_display_index =
+                                self.state.logs_table_start_position;
 
                             AppReturn::Continue
                         }
