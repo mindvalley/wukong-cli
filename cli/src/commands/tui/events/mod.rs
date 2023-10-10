@@ -2,7 +2,7 @@ pub mod key;
 pub mod network;
 
 use self::key::Key;
-use crossterm::event::{self, MouseEvent, MouseEventKind};
+use crossterm::event::{self, KeyEventKind, MouseEvent, MouseEventKind};
 use std::{sync::mpsc, time::Duration};
 
 pub enum Event {
@@ -29,16 +29,33 @@ impl EventManager {
         std::thread::spawn(move || {
             loop {
                 // poll for tick rate duration, if no event, sent tick event.
-                if event::poll(tick_rate).unwrap() {
-                    if let event::Event::Key(key) = event::read().unwrap() {
-                        if event_sender.send(Event::Input(key.into())).is_err() {
-                            break;
-                        };
-                    } else if let event::Event::Mouse(mouse_event) = event::read().unwrap() {
-                        // Send only mouse click: to increase performance
-                        if let MouseEventKind::Down(_) = mouse_event.kind {
-                            if event_sender.send(Event::MouseInput(mouse_event)).is_err() {
-                                break;
+                if let Ok(poll) = event::poll(tick_rate) {
+                    if poll {
+                        if let Ok(event) = event::read() {
+                            match event {
+                                event::Event::Key(key) => {
+                                    // https://ratatui.rs/tutorial/counter-async-app/async-event-stream.html#admonition-attention
+                                    if key.kind == KeyEventKind::Press {
+                                        if event_sender.send(Event::Input(key.into())).is_err() {
+                                            break;
+                                        };
+                                    }
+                                }
+                                event::Event::Mouse(mouse_event) => match mouse_event.kind {
+                                    MouseEventKind::Down(_) => {
+                                        if event_sender
+                                            .send(Event::MouseInput(mouse_event))
+                                            .is_err()
+                                        {
+                                            break;
+                                        }
+                                    }
+                                    _ => {}
+                                },
+                                event::Event::FocusGained => {}
+                                event::Event::FocusLost => {}
+                                event::Event::Paste(_) => {}
+                                event::Event::Resize(_, _) => {}
                             }
                         }
                     }
