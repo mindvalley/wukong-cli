@@ -35,14 +35,14 @@ impl EventManager {
                             match event {
                                 event::Event::Key(key) => {
                                     // https://ratatui.rs/tutorial/counter-async-app/async-event-stream.html#admonition-attention
-                                    if key.kind == KeyEventKind::Press {
-                                        if event_sender.send(Event::Input(key.into())).is_err() {
-                                            break;
-                                        };
+                                    if key.kind == KeyEventKind::Press
+                                        && event_sender.send(Event::Input(key.into())).is_err()
+                                    {
+                                        break;
                                     }
                                 }
-                                event::Event::Mouse(mouse_event) => match mouse_event.kind {
-                                    MouseEventKind::Down(_) => {
+                                event::Event::Mouse(mouse_event) => {
+                                    if let MouseEventKind::Down(_) = mouse_event.kind {
                                         if event_sender
                                             .send(Event::MouseInput(mouse_event))
                                             .is_err()
@@ -50,8 +50,7 @@ impl EventManager {
                                             break;
                                         }
                                     }
-                                    _ => {}
-                                },
+                                }
                                 event::Event::FocusGained => {}
                                 event::Event::FocusLost => {}
                                 event::Event::Paste(_) => {}
