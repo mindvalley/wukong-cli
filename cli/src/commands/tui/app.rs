@@ -54,7 +54,7 @@ pub struct State {
     pub logs_horizontal_scroll: usize,
     pub logs_enable_auto_scroll_to_bottom: bool,
     pub logs_table_state: TableState,
-    pub logs_table_current_display_index: usize,
+    pub logs_table_current_index: usize,
     pub logs_table_start_position: usize,
 
     // For log entries polling
@@ -143,7 +143,7 @@ impl App {
                 logs_horizontal_scroll: 0,
                 instant_since_last_log_entries_poll: Instant::now(),
                 logs_table_state: TableState::default(),
-                logs_table_current_display_index: 0,
+                logs_table_current_index: 0,
                 logs_table_start_position: 0,
 
                 logs_widget_width: 0,
@@ -357,36 +357,33 @@ impl App {
                             //
                             // self.state.logs_enable_auto_scroll_to_bottom = false;
 
-                            let i = match self.state.logs_table_state.selected() {
-                                Some(i) => {
-                                    if i == 0 {
-                                        self.state.log_entries.len() - 1
-                                    } else {
-                                        i - 1
-                                    }
-                                }
-                                None => 0,
-                            };
-                            self.state.logs_table_state.select(Some(i));
+                            let start_index = self.state.logs_table_start_position;
+                            let num_rows = 12;
 
-                            let start_index = self.state.logs_table_current_display_index;
-                            let num_rows = 12 - 2;
+                            let mut i = self.state.logs_table_current_index;
+                            i = if i == 0 { 0 } else { i - 1 };
+                            self.state.logs_table_current_index = i;
 
-                            self.state.logs_table_start_position =
-                                if let Some(selected) = self.state.logs_table_state.selected() {
-                                    if selected <= start_index {
-                                        // If it's past the first element, then show from that element downwards
-                                        selected
-                                    } else if selected >= start_index + num_rows {
-                                        selected - num_rows + 1
-                                    } else {
-                                        start_index
-                                    }
+                            if i >= start_index + num_rows {
+                                self.state.logs_table_state.select(Some(11));
+                            } else if i <= start_index {
+                                self.state.logs_table_state.select(Some(0));
+                            } else {
+                                let selected = self.state.logs_table_state.selected().unwrap();
+                                self.state.logs_table_state.select(Some(selected - 1));
+                            }
+
+                            self.state.logs_table_start_position = {
+                                let current_index = self.state.logs_table_current_index;
+                                if current_index <= start_index {
+                                    // If it's past the first element, then show from that element downwards
+                                    current_index
+                                } else if current_index >= start_index + num_rows {
+                                    current_index - num_rows + 1
                                 } else {
-                                    0
-                                };
-                            self.state.logs_table_current_display_index =
-                                self.state.logs_table_start_position;
+                                    start_index
+                                }
+                            };
 
                             AppReturn::Continue
                         }
@@ -400,39 +397,41 @@ impl App {
                             //
                             // self.state.logs_enable_auto_scroll_to_bottom = false;
 
-                            let i = match self.state.logs_table_state.selected() {
-                                Some(i) => {
-                                    if i >= self.state.log_entries.len() - 1 {
-                                        0
-                                    } else {
-                                        i + 1
+                            let mut i = self.state.logs_table_current_index;
+                            i = if i >= self.state.log_entries.len() - 1 {
+                                self.state.log_entries.len() - 1
+                            } else {
+                                i + 1
+                            };
+                            self.state.logs_table_current_index = i;
+                            if i >= 12 {
+                                if let Some(selected) = self.state.logs_table_state.selected() {
+                                    if selected != 11 {
+                                        self.state.logs_table_state.select(Some(selected - 1));
                                     }
                                 }
-                                None => 0,
-                            };
-                            self.state.logs_table_state.select(Some(i));
+                                self.state.logs_table_state.select(Some(11));
+                            } else if i < 12 {
+                                self.state.logs_table_state.select(Some(i));
+                            }
 
-                            let start_index = self.state.logs_table_current_display_index;
-                            let num_rows = 12 - 2;
-                            self.state.logs_table_start_position =
-                                if let Some(selected) = self.state.logs_table_state.selected() {
-                                    if selected < start_index + num_rows {
-                                        // If, using the current scroll position, we can see the element
-                                        // (so within that and + num_rows) just reuse the current previously
-                                        // scrolled position.
-                                        start_index
-                                    } else if selected >= num_rows {
-                                        // If the current position past the last element visible in the list,
-                                        // then skip until we can see that element.
-                                        selected - num_rows + 1
-                                    } else {
-                                        0
-                                    }
+                            let start_index = self.state.logs_table_start_position;
+                            let num_rows = 12;
+                            self.state.logs_table_start_position = {
+                                let current_index = self.state.logs_table_current_index;
+                                if current_index < start_index + num_rows {
+                                    // If, using the current scroll position, we can see the element
+                                    // (so within that and + num_rows) just reuse the current previously
+                                    // scrolled position.
+                                    start_index
+                                } else if current_index >= start_index + num_rows {
+                                    // If the current position past the last element visible in the list,
+                                    // then skip until we can see that element.
+                                    current_index - num_rows + 1
                                 } else {
                                     0
-                                };
-                            self.state.logs_table_current_display_index =
-                                self.state.logs_table_start_position;
+                                }
+                            };
 
                             AppReturn::Continue
                         }
