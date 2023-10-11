@@ -37,10 +37,10 @@ impl EventManager {
                             match event {
                                 event::Event::Key(key) => {
                                     // https://ratatui.rs/tutorial/counter-async-app/async-event-stream.html#admonition-attention
-                                    if key.kind == KeyEventKind::Press {
-                                        if event_sender.send(Event::Input(key.into())).is_err() {
-                                            break;
-                                        };
+                                    if key.kind == KeyEventKind::Press
+                                        && event_sender.send(Event::Input(key.into())).is_err()
+                                    {
+                                        break;
                                     }
                                 }
                                 event::Event::FocusGained => {}

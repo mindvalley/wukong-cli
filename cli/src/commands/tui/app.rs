@@ -348,90 +348,14 @@ impl App {
                     // we will need to track current selected panel to apply the event
                     None => match key {
                         Key::Up | Key::Char('k') => {
-                            // self.state.logs_vertical_scroll =
-                            //     self.state.logs_vertical_scroll.saturating_sub(5);
-                            // self.state.logs_vertical_scroll_state = self
-                            //     .state
-                            //     .logs_vertical_scroll_state
-                            //     .position(self.state.logs_vertical_scroll as u16);
-                            //
-                            // self.state.logs_enable_auto_scroll_to_bottom = false;
-
-                            let start_index = self.state.logs_table_start_position;
-                            let num_rows = 12;
-
-                            let mut i = self.state.logs_table_current_index;
-                            i = if i == 0 { 0 } else { i - 1 };
-                            self.state.logs_table_current_index = i;
-
-                            if i >= start_index + num_rows {
-                                self.state.logs_table_state.select(Some(11));
-                            } else if i <= start_index {
-                                self.state.logs_table_state.select(Some(0));
-                            } else {
-                                let selected = self.state.logs_table_state.selected().unwrap();
-                                self.state.logs_table_state.select(Some(selected - 1));
-                            }
-
-                            self.state.logs_table_start_position = {
-                                let current_index = self.state.logs_table_current_index;
-                                if current_index <= start_index {
-                                    // If it's past the first element, then show from that element downwards
-                                    current_index
-                                } else if current_index >= start_index + num_rows {
-                                    current_index - num_rows + 1
-                                } else {
-                                    start_index
-                                }
-                            };
+                            self.state.logs_table_start_position =
+                                self.state.logs_table_start_position.saturating_sub(5);
 
                             AppReturn::Continue
                         }
                         Key::Down | Key::Char('j') => {
-                            // self.state.logs_vertical_scroll =
-                            //     self.state.logs_vertical_scroll.saturating_add(5);
-                            // self.state.logs_vertical_scroll_state = self
-                            //     .state
-                            //     .logs_vertical_scroll_state
-                            //     .position(self.state.logs_vertical_scroll as u16);
-                            //
-                            // self.state.logs_enable_auto_scroll_to_bottom = false;
-
-                            let mut i = self.state.logs_table_current_index;
-                            i = if i >= self.state.log_entries.len() - 1 {
-                                self.state.log_entries.len() - 1
-                            } else {
-                                i + 1
-                            };
-                            self.state.logs_table_current_index = i;
-                            if i >= 12 {
-                                if let Some(selected) = self.state.logs_table_state.selected() {
-                                    if selected != 11 {
-                                        self.state.logs_table_state.select(Some(selected - 1));
-                                    }
-                                }
-                                self.state.logs_table_state.select(Some(11));
-                            } else if i < 12 {
-                                self.state.logs_table_state.select(Some(i));
-                            }
-
-                            let start_index = self.state.logs_table_start_position;
-                            let num_rows = 12;
-                            self.state.logs_table_start_position = {
-                                let current_index = self.state.logs_table_current_index;
-                                if current_index < start_index + num_rows {
-                                    // If, using the current scroll position, we can see the element
-                                    // (so within that and + num_rows) just reuse the current previously
-                                    // scrolled position.
-                                    start_index
-                                } else if current_index >= start_index + num_rows {
-                                    // If the current position past the last element visible in the list,
-                                    // then skip until we can see that element.
-                                    current_index - num_rows + 1
-                                } else {
-                                    0
-                                }
-                            };
+                            self.state.logs_table_start_position =
+                                self.state.logs_table_start_position.saturating_add(5);
 
                             AppReturn::Continue
                         }

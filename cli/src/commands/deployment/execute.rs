@@ -684,17 +684,13 @@ async fn get_deployment_status(
         .iter()
         .find(|deployment| deployment.last_successfully_deployed_artifact.is_some());
 
-    if latest_deployment.is_none() {
-        Ok(String::from("TERMINAL"))
-    } else {
-        let deployment_status = latest_deployment.unwrap().status.clone();
-
-        if deployment_status.is_none() {
-            Ok(String::from("TERMINAL"))
-        } else {
-            Ok(deployment_status.unwrap())
+    if let Some(latest_deployment) = latest_deployment {
+        if let Some(deployment_status) = latest_deployment.status.clone() {
+            return Ok(deployment_status);
         }
     }
+
+    Ok(String::from("TERMINAL"))
 }
 
 async fn get_jenkins_cd_pipeline(
