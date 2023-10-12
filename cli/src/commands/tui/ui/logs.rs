@@ -141,20 +141,14 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
     let num_rows: usize = inner_height as usize;
     let start = calculate_start_position(state);
 
-    // let start: usize = state.logs_table_start_position;
     let end = std::cmp::min(state.log_entries.len(), start + num_rows);
 
     let log_entries = if state.show_search_bar {
         if state.search_bar_input.input.is_empty() {
-            state
-                .log_entries
+            state.log_entries[start..end]
                 .iter()
                 .map(|log_entry| {
                     Line::styled(format!("{}", log_entry), Style::default().fg(Color::White))
-                    // Row::new(vec![Cell::from(Span::styled(
-                    //     format!("{}", log_entry),
-                    //     Style::default().fg(Color::White),
-                    // ))])
                 })
                 .collect()
         } else {
@@ -211,7 +205,6 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
                 }
 
                 log_entries.push(Line::from(line));
-                // log_entries.push(Row::new(vec![Cell::from(Line::from(line))]));
             }
 
             log_entries
@@ -241,10 +234,6 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
                 .iter()
                 .map(|log_entry| {
                     Line::styled(format!("{}", log_entry), Style::default().fg(Color::White))
-                    // Row::new(vec![Cell::from(Span::styled(
-                    //     format!("{}", log_entry),
-                    //     Style::default().fg(Color::White),
-                    // ))])
                 })
                 .collect()
         } else {
@@ -303,24 +292,15 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
                 }
 
                 log_entries.push(Line::from(line));
-                // log_entries.push(Row::new(vec![Cell::from(Line::from(line))]));
             }
 
             log_entries
         }
     } else {
-        // state.logs_vertical_scroll_state = state
-        //     .logs_vertical_scroll_state
-        //     .content_length(state.log_entries_length as u16);
-
         state.log_entries[start..end]
             .iter()
             .map(|log_entry| {
                 Line::styled(format!("{}", log_entry), Style::default().fg(Color::White))
-                // Row::new(vec![Cell::from(Text::styled(
-                //     format!("{}", log_entry),
-                //     Style::default().fg(Color::White),
-                // ))])
             })
             .collect()
     };
@@ -331,24 +311,6 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
 
     frame.render_widget(paragraph, logs_area);
 }
-
-// fn render_scrollbar<B: Backend>(
-//     frame: &mut Frame<'_, B>,
-//     logs_area: Rect,
-//     logs_vertical_scroll_state: &mut ScrollbarState,
-// ) {
-//     frame.render_stateful_widget(
-//         Scrollbar::default()
-//             .orientation(ScrollbarOrientation::VerticalRight)
-//             .begin_symbol(None)
-//             .end_symbol(None),
-//         logs_area.inner(&Margin {
-//             vertical: 1,
-//             horizontal: 0,
-//         }),
-//         logs_vertical_scroll_state,
-//     );
-// }
 
 fn render_search_bar<B: Backend>(frame: &mut Frame<'_, B>, input_area: Rect, app: &mut App) {
     let current_route = app.get_current_route();
