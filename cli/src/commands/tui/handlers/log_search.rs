@@ -13,8 +13,8 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
             );
         }
         key if common_key_events::delete_event(key) => delete_char(&mut app.state.search_bar_input),
-        key if Key::Right == key => move_cursor_right(&mut app.state.search_bar_input),
-        key if Key::Left == key => move_cursor_left(&mut app.state.search_bar_input),
+        Key::Right => move_cursor_right(&mut app.state.search_bar_input),
+        Key::Left => move_cursor_left(&mut app.state.search_bar_input),
         Key::Char(new_char) => {
             enter_char(&mut app.state.search_bar_input, new_char);
         }

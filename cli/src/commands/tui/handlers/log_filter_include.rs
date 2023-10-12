@@ -15,9 +15,9 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
         key if common_key_events::delete_event(key) => {
             delete_char(&mut app.state.filter_bar_include_input)
         }
-        key if Key::Right == key => move_cursor_right(app),
-        key if Key::Left == key => move_cursor_left(&mut app.state.filter_bar_include_input),
-        key if Key::Tab == key => move_to_next_input(app),
+        Key::Right => move_cursor_right(app),
+        Key::Left => move_cursor_left(&mut app.state.filter_bar_include_input),
+        Key::Tab => move_to_next_input(app),
         Key::Char(new_char) => {
             enter_char(app, new_char);
         }
