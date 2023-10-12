@@ -2,9 +2,7 @@ use ratatui::{
     prelude::{Alignment, Backend, Constraint, Direction, Layout, Margin, Rect},
     style::{Color, Style},
     text::{Line, Span, Text},
-    widgets::{
-        Block, Borders, Padding, Paragraph,
-    },
+    widgets::{Block, Borders, Padding, Paragraph},
     Frame,
 };
 use regex::Regex;
@@ -93,8 +91,7 @@ fn create_title(state: &State) -> Block {
           if state.log_entries_length == MAX_LOG_ENTRIES_LENGTH {
               format!("{}+", state.log_entries_length)
           } else {
-            state.log_entries.len().to_string()  
-              // state.log_entries_length.to_string()
+              state.log_entries_length.to_string()
           },
           if state.logs_severity == Some(LogSeverity::Error) {
               " >= Error".to_string()
@@ -140,7 +137,6 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
 
     let log_entries = if state.show_search_bar {
         if state.search_bar_input.input.is_empty() {
-
             state
                 .log_entries
                 .iter()
@@ -208,7 +204,6 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
                 log_entries.push(Line::from(line));
                 // log_entries.push(Row::new(vec![Cell::from(Line::from(line))]));
             }
-
 
             log_entries
         }
@@ -332,7 +327,6 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
     let paragraph = Paragraph::new(log_entries)
         .block(Block::default().padding(Padding::new(0, 0, 0, 0)))
         .scroll((0, state.logs_horizontal_scroll as u16));
-
 
     frame.render_widget(paragraph, logs_area);
 }
