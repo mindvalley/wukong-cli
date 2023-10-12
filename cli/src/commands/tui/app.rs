@@ -1,6 +1,9 @@
 use std::{collections::HashMap, time::Instant};
 
-use ratatui::{prelude::Rect, widgets::ScrollbarState};
+use ratatui::{
+    prelude::Rect,
+    widgets::{ScrollbarState, TableState},
+};
 use tokio::sync::mpsc::Sender;
 use wukong_sdk::services::gcloud::google::logging::{r#type::LogSeverity, v2::LogEntry};
 
