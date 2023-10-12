@@ -1,24 +1,61 @@
-use std::time::Instant;
+use std::{collections::HashMap, time::Instant};
 
-use ratatui::widgets::ScrollbarState;
+use ratatui::{prelude::Rect, widgets::ScrollbarState};
 use tokio::sync::mpsc::Sender;
 use wukong_sdk::services::gcloud::google::logging::{r#type::LogSeverity, v2::LogEntry};
 
 use crate::config::Config;
 
-use super::{
-    action::Action,
-    events::{key::Key, network::NetworkEvent},
-    ui::{
-        namespace_selection::NamespaceSelectionWidget, version_selection::VersionSelectionWidget,
-    },
-    CurrentScreen, StatefulList,
+use super::{action::Action, events::network::NetworkEvent, StatefulList};
+
+const DEFAULT_ROUTE: Route = Route {
+    active_block: ActiveBlock::Empty,
+    hovered_block: ActiveBlock::Log,
 };
+
+#[derive(Default)]
+pub struct Input {
+    /// Current value of the input box
+    pub input: String,
+    /// Position of cursor in the editor area.
+    pub cursor_position: usize,
+}
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum AppReturn {
     Exit,
     Continue,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub enum DialogContext {
+    NamespaceSelection,
+    VersionSelection,
+    LogSearch,
+    LogIncludeFilter,
+    LogExcludeFilter,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub enum ActiveBlock {
+    Build,
+    Deployment,
+    Log,
+    Empty,
+    Dialog(DialogContext),
+}
+
+#[derive(Debug)]
+pub struct Route {
+    pub active_block: ActiveBlock,
+    pub hovered_block: ActiveBlock,
+}
+
+#[derive(Debug, Eq, Hash, PartialEq)]
+pub struct BlockInfo {
+    pub block_id: ActiveBlock,
+    pub top_left_corner: Option<(u16, u16)>,
+    pub bottom_right_corner: Option<(u16, u16)>,
 }
 
 pub const MAX_LOG_ENTRIES_LENGTH: usize = 1_000;
@@ -73,9 +110,11 @@ pub struct App {
     pub state: State,
     pub namespace_selections: StatefulList<String>,
     pub version_selections: StatefulList<String>,
-    pub current_screen: CurrentScreen,
     pub actions: Vec<Action>,
     pub network_event_sender: Sender<NetworkEvent>,
+
+    pub block_map: HashMap<ActiveBlock, BlockInfo>,
+    navigation_stack: Vec<Route>,
 }
 
 pub struct Build {
@@ -150,9 +189,10 @@ impl App {
                 filter_bar_include_input: Input::default(),
                 filter_bar_exclude_input: Input::default(),
             },
+            navigation_stack: vec![DEFAULT_ROUTE],
+            block_map: HashMap::new(),
             namespace_selections,
             version_selections,
-            current_screen: CurrentScreen::Main,
             actions: vec![
                 Action::OpenNamespaceSelection,
                 Action::OpenVersionSelection,
@@ -209,280 +249,63 @@ impl App {
         AppReturn::Continue
     }
 
-    pub async fn handle_input(&mut self, key: Key) -> AppReturn {
-        match self.current_screen {
-            CurrentScreen::NamespaceSelection => {
-                NamespaceSelectionWidget::handle_input(key, self).await;
-                AppReturn::Continue
-            }
-            CurrentScreen::VersionSelection => {
-                VersionSelectionWidget::handle_input(key, self).await;
-                AppReturn::Continue
-            }
-            CurrentScreen::LogSearchBar => {
-                let cont_input = self.state.search_bar_input.handle_input(key);
-                if cont_input {
-                    // the log will stop tailing during search
-                    self.state.logs_tailing = false;
-                } else {
-                    self.state.show_search_bar = false;
-                    self.current_screen = CurrentScreen::Main;
-
-                    // the log will resume tailing if the search is ended
-                    self.state.logs_tailing = true;
-                }
-
-                AppReturn::Continue
-            }
-            CurrentScreen::LogFilterIncludeBar => {
-                match key {
-                    Key::Right => {
-                        self.current_screen = CurrentScreen::LogFilterExcludeBar;
-                    }
-                    _ => {
-                        let cont_input = self.state.filter_bar_include_input.handle_input(key);
-                        if cont_input {
-                            // the log will stop tailing during filtering
-                            self.state.logs_tailing = false;
-                        } else {
-                            self.state.show_filter_bar = false;
-                            self.current_screen = CurrentScreen::Main;
-
-                            // the log will resume tailing if the filtering is ended
-                            self.state.logs_tailing = true;
-                        }
-                    }
-                }
-
-                AppReturn::Continue
-            }
-            CurrentScreen::LogFilterExcludeBar => {
-                match key {
-                    Key::Left => {
-                        self.current_screen = CurrentScreen::LogFilterIncludeBar;
-                    }
-                    _ => {
-                        let cont_input = self.state.filter_bar_exclude_input.handle_input(key);
-                        if cont_input {
-                            // the log will stop tailing during filtering
-                            self.state.logs_tailing = false;
-                        } else {
-                            self.state.show_filter_bar = false;
-                            self.current_screen = CurrentScreen::Main;
-
-                            // the log will resume tailing if the filtering is ended
-                            self.state.logs_tailing = true;
-                        }
-                    }
-                }
-
-                AppReturn::Continue
-            }
-            _ => {
-                match Action::from_key(key) {
-                    Some(Action::OpenNamespaceSelection) => {
-                        self.current_screen = CurrentScreen::NamespaceSelection;
-                        AppReturn::Continue
-                    }
-                    Some(Action::OpenVersionSelection) => {
-                        self.current_screen = CurrentScreen::VersionSelection;
-                        AppReturn::Continue
-                    }
-                    Some(Action::Quit) => AppReturn::Exit,
-                    Some(Action::ToggleLogsTailing) => {
-                        self.state.logs_tailing = !self.state.logs_tailing;
-                        AppReturn::Continue
-                    }
-                    Some(Action::ShowErrorAndAbove) => {
-                        self.dispatch(NetworkEvent::GetGCloudLogs).await;
-
-                        self.state.is_fetching_log_entries = true;
-                        self.state.start_polling_log_entries = false;
-
-                        self.state.log_entries = vec![];
-                        self.state.log_entries_length = 0;
-                        // Need to reset scroll, or else it will be out of bound
-
-                        // Add if not already in the list
-                        // or else remove it
-                        self.state.logs_severity = match self.state.logs_severity {
-                            Some(LogSeverity::Error) => None,
-                            _ => Some(LogSeverity::Error),
-                        };
-
-                        AppReturn::Continue
-                    }
-                    Some(Action::SearchLogs) => {
-                        self.state.show_search_bar = !self.state.show_search_bar;
-
-                        // focus on the log search bar so the search bar will handle the input
-                        if self.state.show_search_bar {
-                            self.state.show_filter_bar = false;
-                            self.current_screen = CurrentScreen::LogSearchBar;
-                        } else {
-                            self.current_screen = CurrentScreen::Main;
-                        }
-
-                        AppReturn::Continue
-                    }
-                    Some(Action::FilterLogs) => {
-                        self.state.show_filter_bar = !self.state.show_filter_bar;
-
-                        // focus on the log filter bar so the filter bar will handle the input
-                        if self.state.show_filter_bar {
-                            self.state.show_search_bar = false;
-                            self.current_screen = CurrentScreen::LogFilterIncludeBar;
-                        } else {
-                            self.current_screen = CurrentScreen::Main;
-                        }
-
-                        AppReturn::Continue
-                    }
-                    // TODO: just for prototype purpose
-                    // we will need to track current selected panel to apply the event
-                    None => match key {
-                        Key::Up | Key::Char('k') => {
-                            self.state.logs_vertical_scroll =
-                                self.state.logs_vertical_scroll.saturating_sub(5);
-                            self.state.logs_vertical_scroll_state = self
-                                .state
-                                .logs_vertical_scroll_state
-                                .position(self.state.logs_vertical_scroll as u16);
-
-                            self.state.logs_enable_auto_scroll_to_bottom = false;
-
-                            AppReturn::Continue
-                        }
-                        Key::Down | Key::Char('j') => {
-                            self.state.logs_vertical_scroll =
-                                self.state.logs_vertical_scroll.saturating_add(5);
-                            self.state.logs_vertical_scroll_state = self
-                                .state
-                                .logs_vertical_scroll_state
-                                .position(self.state.logs_vertical_scroll as u16);
-
-                            self.state.logs_enable_auto_scroll_to_bottom = false;
-
-                            AppReturn::Continue
-                        }
-                        Key::Left | Key::Char('h') => {
-                            self.state.logs_horizontal_scroll =
-                                self.state.logs_horizontal_scroll.saturating_sub(5);
-                            self.state.logs_horizontal_scroll_state = self
-                                .state
-                                .logs_horizontal_scroll_state
-                                .position(self.state.logs_horizontal_scroll as u16);
-
-                            self.state.logs_enable_auto_scroll_to_bottom = false;
-
-                            AppReturn::Continue
-                        }
-                        Key::Right | Key::Char('l') => {
-                            self.state.logs_horizontal_scroll =
-                                self.state.logs_horizontal_scroll.saturating_add(5);
-                            self.state.logs_horizontal_scroll_state = self
-                                .state
-                                .logs_horizontal_scroll_state
-                                .position(self.state.logs_horizontal_scroll as u16);
-
-                            self.state.logs_enable_auto_scroll_to_bottom = false;
-
-                            AppReturn::Continue
-                        }
-                        _ => AppReturn::Continue,
-                    },
-                }
-            }
-        }
-    }
-
     pub async fn dispatch(&self, network_event: NetworkEvent) {
         if let Err(e) = self.network_event_sender.send(network_event).await {
             println!("Error from network event: {}", e)
         }
     }
-}
 
-#[derive(Default)]
-pub struct Input {
-    /// Current value of the input box
-    pub input: String,
-    /// Position of cursor in the editor area.
-    pub cursor_position: usize,
-}
-
-impl Input {
-    fn move_cursor_left(&mut self) {
-        let cursor_moved_left = self.cursor_position.saturating_sub(1);
-        self.cursor_position = self.clamp_cursor(cursor_moved_left);
-    }
-
-    fn move_cursor_right(&mut self) {
-        let cursor_moved_right = self.cursor_position.saturating_add(1);
-        self.cursor_position = self.clamp_cursor(cursor_moved_right);
-    }
-
-    fn enter_char(&mut self, new_char: char) {
-        // self.input.insert(self.cursor_position, new_char);
-        self.input.push(new_char);
-
-        self.move_cursor_right();
-    }
-
-    fn delete_char(&mut self) {
-        let is_not_cursor_leftmost = self.cursor_position != 0;
-        if is_not_cursor_leftmost {
-            // Method "remove" is not used on the saved text for deleting the selected char.
-            // Reason: Using remove on String works on bytes instead of the chars.
-            // Using remove would require special care because of char boundaries.
-
-            let current_index = self.cursor_position;
-            let from_left_to_current_index = current_index - 1;
-
-            // Getting all characters before the selected character.
-            let before_char_to_delete = self.input.chars().take(from_left_to_current_index);
-            // Getting all characters after selected character.
-            let after_char_to_delete = self.input.chars().skip(current_index);
-
-            // Put all characters together except the selected one.
-            // By leaving the selected one out, it is forgotten and therefore deleted.
-            self.input = before_char_to_delete.chain(after_char_to_delete).collect();
-            self.move_cursor_left();
+    pub fn push_navigation_stack(&mut self, next_active_block: ActiveBlock) {
+        if !self
+            .navigation_stack
+            .last()
+            .map(|last_route| last_route.active_block == next_active_block)
+            .unwrap_or(false)
+        {
+            self.navigation_stack.push(Route {
+                active_block: next_active_block,
+                hovered_block: next_active_block,
+            });
         }
     }
 
-    fn clamp_cursor(&self, new_cursor_pos: usize) -> usize {
-        new_cursor_pos.clamp(0, self.input.len())
+    fn get_current_route_mut(&mut self) -> &mut Route {
+        self.navigation_stack.last_mut().unwrap()
     }
 
-    fn reset_cursor(&mut self) {
-        self.cursor_position = 0;
+    pub fn get_current_route(&self) -> &Route {
+        self.navigation_stack.last().unwrap_or(&DEFAULT_ROUTE)
     }
 
-    fn handle_input(&mut self, key: Key) -> bool {
-        match key {
-            Key::Char(to_insert) => {
-                self.enter_char(to_insert);
-                true
-            }
-            Key::Backspace => {
-                self.delete_char();
-                true
-            }
-            Key::Left => {
-                self.move_cursor_left();
-                true
-            }
-            Key::Right => {
-                self.move_cursor_right();
-                true
-            }
-            Key::Esc => {
-                self.input = "".to_string();
-                self.reset_cursor();
-                false
-            }
-            _ => true,
+    pub fn set_current_route_state(
+        &mut self,
+        active_block: Option<ActiveBlock>,
+        hovered_block: Option<ActiveBlock>,
+    ) {
+        let current_route = self.get_current_route_mut();
+
+        if let Some(active_block) = active_block {
+            current_route.active_block = active_block;
+        }
+
+        if let Some(hovered_block) = hovered_block {
+            current_route.hovered_block = hovered_block;
+        }
+    }
+
+    pub fn update_draw_lock(&mut self, current_block: ActiveBlock, rect: Rect) {
+        if let Some(block) = self.block_map.get_mut(&current_block) {
+            block.top_left_corner = Some((rect.x, rect.y));
+            block.bottom_right_corner = Some((rect.x + rect.width, rect.y + rect.height));
+        } else {
+            self.block_map.insert(
+                current_block,
+                BlockInfo {
+                    block_id: current_block,
+                    top_left_corner: Some((rect.x, rect.y)),
+                    bottom_right_corner: Some((rect.x + rect.width, rect.y + rect.height)),
+                },
+            );
         }
     }
 }

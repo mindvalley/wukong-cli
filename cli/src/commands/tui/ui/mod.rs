@@ -12,15 +12,16 @@ use self::{
     version_selection::VersionSelectionWidget,
 };
 
-use super::{app::App, CurrentScreen};
+use super::app::{ActiveBlock, App, DialogContext};
 
 mod application;
 mod builds;
 mod deployment;
 mod help;
 mod logs;
-pub mod namespace_selection;
-pub mod version_selection;
+mod namespace_selection;
+mod util;
+mod version_selection;
 
 pub fn draw<B>(frame: &mut Frame<B>, app: &mut App)
 where
@@ -69,10 +70,17 @@ where
     BuildsWidget::draw(app, frame, bottom_left);
     DeploymentWidget::draw(app, frame, bottom_right);
 
-    if let CurrentScreen::NamespaceSelection = app.current_screen {
-        NamespaceSelectionWidget::draw(app, frame);
-    } else if let CurrentScreen::VersionSelection = app.current_screen {
-        VersionSelectionWidget::draw(app, frame);
+    let current_route = app.get_current_route();
+
+    // Draw the dialog if the current route is a dialog.
+    match current_route.active_block {
+        ActiveBlock::Dialog(DialogContext::NamespaceSelection) => {
+            NamespaceSelectionWidget::draw(app, frame);
+        }
+        ActiveBlock::Dialog(DialogContext::VersionSelection) => {
+            VersionSelectionWidget::draw(app, frame);
+        }
+        _ => {}
     }
 }
 
