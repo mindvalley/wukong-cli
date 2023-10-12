@@ -23,16 +23,8 @@ use self::{
 mod action;
 mod app;
 mod events;
+mod handlers;
 mod ui;
-
-pub enum CurrentScreen {
-    Main,
-    NamespaceSelection,
-    VersionSelection,
-    LogSearchBar,
-    LogFilterIncludeBar,
-    LogFilterExcludeBar,
-}
 
 pub struct StatefulList<T> {
     state: ListState,
@@ -135,11 +127,18 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
     let mut is_first_render = true;
     let mut is_first_fetch_builds = true;
 
+    let mut app_ref = app.lock().await;
+    terminal.draw(|frame| ui::draw(frame, &mut app_ref))?;
+    drop(app_ref);
+
     loop {
         let mut app_ref = app.lock().await;
 
         let result = match event_manager.next().unwrap() {
-            events::Event::Input(key) => app_ref.handle_input(key).await,
+            events::Event::Input(key) => handlers::input_handler(key, &mut app_ref).await,
+            events::Event::MouseInput(mouse_event) => {
+                handlers::handle_mouse_event(mouse_event, &mut app_ref)
+            }
             events::Event::Tick => app_ref.update().await,
         };
 
