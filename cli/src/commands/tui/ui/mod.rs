@@ -36,17 +36,6 @@ where
             return;
         };
 
-        // let [top_left, top_right] = *Layout::default()
-        //     .direction(Direction::Horizontal)
-        //     .constraints([Constraint::Percentage(35), Constraint::Percentage(65)].as_ref())
-        //     .split(top)
-        // else {
-        //     return;
-        // };
-
-        // ApplicationWidget::draw(app, frame, top_left);
-        // HelpWidget::draw(app, frame, top_right);
-
         match expanded_block {
             Block::Build => {
                 BuildsWidget::draw(app, frame, bottom);
