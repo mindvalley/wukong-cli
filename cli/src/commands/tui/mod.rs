@@ -119,7 +119,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
     terminal.hide_cursor()?;
 
     // The lower the tick_rate, the higher the FPS, but also the higher the CPU usage.
-    let tick_rate = Duration::from_millis(1000);
+    let tick_rate = Duration::from_millis(250);
     let event_manager = EventManager::new();
     event_manager.spawn_event_listen_thread(tick_rate);
 

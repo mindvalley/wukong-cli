@@ -1,10 +1,10 @@
 use super::util::get_color;
-use crate::commands::tui::app::{ActiveBlock, App, DialogContext, State, MAX_LOG_ENTRIES_LENGTH};
+use crate::commands::tui::app::{App, Block, DialogContext, State, MAX_LOG_ENTRIES_LENGTH};
 use ratatui::{
     prelude::{Alignment, Backend, Constraint, Direction, Layout, Margin, Rect},
     style::{Color, Style},
     text::{Line, Span, Text},
-    widgets::{Block, Borders, Padding, Paragraph},
+    widgets::{Block as WidgetBlock, Borders, Padding, Paragraph},
     Frame,
 };
 use regex::Regex;
@@ -17,7 +17,7 @@ impl LogsWidget {
         app.state.logs_widget_width = rect.width;
         app.state.logs_widget_height = rect.height;
 
-        app.update_draw_lock(ActiveBlock::Log, rect);
+        app.update_draw_lock(Block::Log, rect);
 
         let main_block = create_main_block(app);
         frame.render_widget(main_block, rect);
@@ -71,19 +71,18 @@ impl LogsWidget {
         }
 
         render_log_entries(frame, logs_area, &mut app.state);
-        // render_scrollbar(frame, logs_area, &mut app.state.logs_vertical_scroll_state);
     }
 }
 
-fn create_main_block(app: &mut App) -> Block<'static> {
+fn create_main_block(app: &mut App) -> WidgetBlock<'static> {
     let current_route = app.get_current_route();
 
     let highlight_state = (
-        current_route.active_block == ActiveBlock::Log,
-        current_route.hovered_block == ActiveBlock::Log,
+        current_route.active_block == Block::Log,
+        current_route.hovered_block == Block::Log,
     );
 
-    Block::default()
+    WidgetBlock::default()
         .title(" Logs ")
         .borders(Borders::ALL)
         .padding(Padding::new(1, 1, 0, 0))
@@ -93,8 +92,8 @@ fn create_main_block(app: &mut App) -> Block<'static> {
         ))
 }
 
-fn create_title(state: &State) -> Block {
-    Block::default()
+fn create_title(state: &State) -> WidgetBlock {
+    WidgetBlock::default()
         .title(format!(
           "Use arrow keys or h j k l to scroll ◄ ▲ ▼ ►. Total {} logs. \t [Severity{}], [Tailing: {}]",
           if state.log_entries_length == MAX_LOG_ENTRIES_LENGTH {
@@ -122,16 +121,16 @@ fn create_loading_block() -> Paragraph<'static> {
         "Loading...",
         Style::default().fg(Color::White),
     ))
-    .block(Block::default().padding(Padding::new(1, 1, 0, 0)))
+    .block(WidgetBlock::default().padding(Padding::new(1, 1, 0, 0)))
 }
 
 fn create_error_block(error: &str) -> Paragraph<'_> {
     Paragraph::new(Text::styled(error, Style::default().fg(Color::White)))
-        .block(Block::default().padding(Padding::new(1, 1, 0, 0)))
+        .block(WidgetBlock::default().padding(Padding::new(1, 1, 0, 0)))
 }
 
 fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, state: &mut State) {
-    let block = Block::default().padding(Padding::new(0, 0, 0, 0));
+    let block = WidgetBlock::default().padding(Padding::new(0, 0, 0, 0));
 
     let (_inner_width, inner_height) = {
         let inner_rect = block.inner(logs_area);
@@ -306,7 +305,7 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
     };
 
     let paragraph = Paragraph::new(log_entries)
-        .block(Block::default().padding(Padding::new(0, 0, 0, 0)))
+        .block(WidgetBlock::default().padding(Padding::new(0, 0, 0, 0)))
         .scroll((0, state.logs_horizontal_scroll as u16));
 
     frame.render_widget(paragraph, logs_area);
@@ -316,14 +315,14 @@ fn render_search_bar<B: Backend>(frame: &mut Frame<'_, B>, input_area: Rect, app
     let current_route = app.get_current_route();
 
     let highlight_state = (
-        current_route.active_block == ActiveBlock::Dialog(DialogContext::LogSearch),
-        current_route.hovered_block == ActiveBlock::Dialog(DialogContext::LogSearch),
+        current_route.active_block == Block::Dialog(DialogContext::LogSearch),
+        current_route.hovered_block == Block::Dialog(DialogContext::LogSearch),
     );
 
     let search_bar = Paragraph::new(app.state.search_bar_input.input.clone())
         .style(Style::default().fg(Color::LightGreen))
         .block(
-            Block::default()
+            WidgetBlock::default()
                 .borders(Borders::ALL)
                 .border_style(get_color(
                     highlight_state,
@@ -358,18 +357,18 @@ fn render_filter_bar<B: Backend>(frame: &mut Frame<'_, B>, input_area: Rect, app
     let current_route = app.get_current_route();
 
     let include_highlight_state = (
-        current_route.active_block == ActiveBlock::Dialog(DialogContext::LogIncludeFilter),
-        current_route.hovered_block == ActiveBlock::Dialog(DialogContext::LogIncludeFilter),
+        current_route.active_block == Block::Dialog(DialogContext::LogIncludeFilter),
+        current_route.hovered_block == Block::Dialog(DialogContext::LogIncludeFilter),
     );
     let exclude_highlight_state = (
-        current_route.active_block == ActiveBlock::Dialog(DialogContext::LogExcludeFilter),
-        current_route.hovered_block == ActiveBlock::Dialog(DialogContext::LogExcludeFilter),
+        current_route.active_block == Block::Dialog(DialogContext::LogExcludeFilter),
+        current_route.hovered_block == Block::Dialog(DialogContext::LogExcludeFilter),
     );
 
     let filter_include_bar = Paragraph::new(app.state.filter_bar_include_input.input.clone())
         .style(Style::default().fg(Color::LightGreen))
         .block(
-            Block::default()
+            WidgetBlock::default()
                 .title(" Include ")
                 .borders(Borders::ALL)
                 .border_style(get_color(
@@ -382,7 +381,7 @@ fn render_filter_bar<B: Backend>(frame: &mut Frame<'_, B>, input_area: Rect, app
     let filter_exclude_bar = Paragraph::new(app.state.filter_bar_exclude_input.input.clone())
         .style(Style::default().fg(Color::LightGreen))
         .block(
-            Block::default()
+            WidgetBlock::default()
                 .borders(Borders::ALL)
                 .border_style(get_color(
                     exclude_highlight_state,
@@ -394,7 +393,7 @@ fn render_filter_bar<B: Backend>(frame: &mut Frame<'_, B>, input_area: Rect, app
     frame.render_widget(filter_exclude_bar, exclude_bar_area);
 
     match current_route.active_block {
-        ActiveBlock::Dialog(DialogContext::LogIncludeFilter) => {
+        Block::Dialog(DialogContext::LogIncludeFilter) => {
             // Make the cursor visible and ask ratatui to put it at the specified coordinates after
             // rendering
             frame.set_cursor(
@@ -405,7 +404,7 @@ fn render_filter_bar<B: Backend>(frame: &mut Frame<'_, B>, input_area: Rect, app
                 include_bar_area.y + 1,
             );
         }
-        ActiveBlock::Dialog(DialogContext::LogExcludeFilter) => {
+        Block::Dialog(DialogContext::LogExcludeFilter) => {
             // Make the cursor visible and ask ratatui to put it at the specified coordinates after
             // rendering
             frame.set_cursor(

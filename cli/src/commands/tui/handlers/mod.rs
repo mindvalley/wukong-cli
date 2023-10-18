@@ -10,7 +10,7 @@ mod namespace_selection;
 mod version_selection;
 
 use super::{
-    app::{ActiveBlock, App, AppReturn, DialogContext},
+    app::{App, AppReturn, Block, DialogContext},
     events::key::Key,
 };
 use crossterm::event::{MouseEvent, MouseEventKind};
@@ -26,23 +26,23 @@ async fn handle_block_events(key: Key, app: &mut App) -> AppReturn {
     let current_route = app.get_current_route();
 
     match current_route.active_block {
-        ActiveBlock::Empty => empty::handler(key, app).await, // Main Input
-        ActiveBlock::Log => logs::handler(key, app).await,
-        ActiveBlock::Dialog(DialogContext::NamespaceSelection) => {
+        Block::Empty => empty::handler(key, app).await, // Main Input
+        Block::Log => logs::handler(key, app).await,
+        Block::Dialog(DialogContext::NamespaceSelection) => {
             namespace_selection::handler(key, app).await
         }
-        ActiveBlock::Dialog(DialogContext::VersionSelection) => {
+        Block::Dialog(DialogContext::VersionSelection) => {
             version_selection::handler(key, app).await
         }
-        ActiveBlock::Dialog(DialogContext::LogSearch) => log_search::handler(key, app).await,
-        ActiveBlock::Dialog(DialogContext::LogIncludeFilter) => {
+        Block::Dialog(DialogContext::LogSearch) => log_search::handler(key, app).await,
+        Block::Dialog(DialogContext::LogIncludeFilter) => {
             log_filter_include::handler(key, app).await
         }
-        ActiveBlock::Dialog(DialogContext::LogExcludeFilter) => {
+        Block::Dialog(DialogContext::LogExcludeFilter) => {
             log_filter_exclude::handler(key, app).await
         }
-        ActiveBlock::Deployment => deployment::handler(key, app).await,
-        ActiveBlock::Build => build::handler(key, app).await,
+        Block::Deployment => deployment::handler(key, app).await,
+        Block::Build => build::handler(key, app).await,
     }
 }
 
