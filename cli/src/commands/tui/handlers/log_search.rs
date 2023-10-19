@@ -7,14 +7,15 @@ use crate::commands::tui::{
 pub async fn handler(key: Key, app: &mut App) -> AppReturn {
     match key {
         key if common_key_events::back_event(key) => {
+            app.state.show_search_bar = false;
             app.set_current_route_state(
                 Some(ActiveBlock::Log),
                 Some(ActiveBlock::Dialog(DialogContext::LogIncludeFilter)),
             );
         }
         key if common_key_events::delete_event(key) => delete_char(&mut app.state.search_bar_input),
-        key if Key::Right == key => move_cursor_right(&mut app.state.search_bar_input),
-        key if Key::Left == key => move_cursor_left(&mut app.state.search_bar_input),
+        Key::Right => move_cursor_right(&mut app.state.search_bar_input),
+        Key::Left => move_cursor_left(&mut app.state.search_bar_input),
         Key::Char(new_char) => {
             enter_char(&mut app.state.search_bar_input, new_char);
         }
