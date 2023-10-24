@@ -1,21 +1,34 @@
 use log::{LevelFilter, Metadata, Record};
 use owo_colors::{colors::xterm::Gray, OwoColorize};
-use std::{env, str::FromStr};
+use std::io::Write;
+use std::{env, fs::File, str::FromStr, sync::Mutex};
 
 pub struct Builder {
     max_log_level: log::LevelFilter,
+    log_file: Mutex<File>,
 }
 
 #[derive(Debug)]
-pub struct Logger;
+pub struct Logger {
+    log_file: Mutex<File>,
+    max_log_level: log::LevelFilter,
+}
 
-pub const GLOBAL_LOGGER: &Logger = &Logger;
+impl Logger {
+    fn new(log_file: Mutex<File>, max_log_level: log::LevelFilter) -> Self {
+        Self {
+            log_file,
+            max_log_level,
+        }
+    }
+}
+
 pub const LOG_LEVEL_ENV: &str = "WUKONG_LOG";
+pub const DEFAULT_LOG_FILE: &str = "wukong-cli.log";
 
 impl log::Log for Logger {
-    fn enabled(&self, _metadata: &Metadata) -> bool {
-        // metadata.level() <= Level::Info
-        true
+    fn enabled(&self, metadata: &Metadata) -> bool {
+        self.max_log_level >= metadata.level()
     }
 
     fn log(&self, record: &Record) {
@@ -29,6 +42,25 @@ impl log::Log for Logger {
             };
 
             eprintln!("{} {} {}", level, "-".fg::<Gray>(), record.args(),);
+        }
+
+        let log_message = format!(
+            "[{}] [{}] [{}] [{}] [line:{}] {}",
+            chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f"),
+            record.level(),
+            record.module_path().expect("Module path not found"),
+            record.file().expect("File path not found"),
+            record.line().expect("Line number not found"),
+            record.args()
+        );
+
+        // Open the log file and write the log message
+        if let Ok(mut log_file) = self.log_file.lock() {
+            if let Err(err) = writeln!(&mut log_file, "{}", log_message) {
+                eprintln!("Error writing to log file: {}", err);
+            }
+        } else {
+            eprintln!("Error locking log file for writing.");
         }
     }
 
@@ -48,6 +80,7 @@ impl Builder {
 
         Self {
             max_log_level: default_log_level,
+            log_file: Mutex::new(File::create(DEFAULT_LOG_FILE).unwrap()),
         }
     }
 
@@ -62,9 +95,21 @@ impl Builder {
         self
     }
 
+    pub fn with_log_file(mut self, log_file: File) -> Self {
+        self.log_file = Mutex::new(log_file);
+        self
+    }
+
     pub fn init(self) {
-        log::set_max_level(self.max_log_level);
-        log::set_logger(GLOBAL_LOGGER).expect("unable to init wukong-cli logger");
+        // Set the default log level to debug,
+        // To get debug logs regardless of the env log level
+        log::set_max_level(LevelFilter::Debug);
+        let logger = self.build();
+        log::set_boxed_logger(Box::new(logger)).expect("unable to init wukong-cli logger");
+    }
+
+    pub fn build(self) -> Logger {
+        Logger::new(self.log_file, self.max_log_level)
     }
 }
 

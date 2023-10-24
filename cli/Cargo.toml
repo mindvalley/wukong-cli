@@ -30,7 +30,7 @@ crossterm = "0.27"
 ratatui = { version = "0.23.0", features = ["all-widgets"] }
 
 # logging
-log = "0.4.19"
+log =  { version = "0.4.19", features = ["std"] }
 clap-verbosity-flag = "2.0.0"
 thiserror = "1.0.40"
 dirs = "5.0.1"

@@ -5,7 +5,10 @@ use log::debug;
 
 use crate::{
     commands::{
-        completion::handle_completion, init::handle_init, login::handle_login, tui::handle_tui,
+        completion::handle_completion,
+        init::handle_init,
+        login::{handle_login, test_log},
+        tui::handle_tui,
     },
     config::{ApiChannel, Config},
     error::WKCliError,
@@ -90,6 +93,8 @@ pub enum CommandGroup {
     Config(config::Config),
     /// Login to start using wukong command
     Login,
+    /// Test log
+    TestLog,
     /// Generate wukong cli completions for your shell to stdout
     Completion {
         #[arg(value_enum)]
@@ -113,6 +118,7 @@ impl ClapApp {
             CommandGroup::Init => handle_init(channel).await,
             CommandGroup::Completion { shell } => handle_completion(*shell),
             CommandGroup::Login => handle_login().await,
+            CommandGroup::TestLog => test_log().await,
             CommandGroup::Application(application) => {
                 application.handle_command(get_context(self)?).await
             }

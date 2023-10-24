@@ -7,7 +7,14 @@ use crate::{
 };
 use dialoguer::{theme::ColorfulTheme, Select};
 use log::debug;
+use log::error;
 
+pub async fn test_log() -> Result<bool, WKCliError> {
+    // colored_println!("[colored_println] You are logged in as: \n");
+    // eprintln!("[eprintln] The refresh token is expired. You have to login again.");
+    debug!("[debug] Access token expired. Refreshing tokens...");
+    Ok(true)
+}
 pub async fn handle_login() -> Result<bool, WKCliError> {
     let config = Config::load_from_default_path()?;
 

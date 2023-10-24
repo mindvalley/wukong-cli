@@ -1,3 +1,5 @@
+use std::fs::OpenOptions;
+
 use crate::{commands::ClapApp, error::WKCliError, logger};
 use clap::Parser;
 
@@ -14,9 +16,16 @@ pub struct AppState {
 impl App {
     pub fn new() -> Result<Self, WKCliError> {
         let cli = ClapApp::parse();
+        let file = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open("wukong-cli.log")
+            .expect("Failed to open/create the log file");
 
+        // Rewrite this to open file on append mode:
         logger::Builder::new()
             .with_max_level(cli.verbose.log_level_filter())
+            .with_log_file(file)
             .init();
 
         Ok(Self { cli })
