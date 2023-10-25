@@ -43,7 +43,7 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
                     },
                     Some(current_application),
                     current_sub,
-                    Some(crate_version!().to_string())
+                    crate_version!().to_string()
                 )
                 .record_event()
                 .await;
@@ -77,6 +77,8 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
 
         generated_func = quote! {
             #visibility #asyncness fn #fn_ident(#fn_inputs) #fn_output {
+                use clap::{crate_version};
+
                 let current_sub = self.sub.clone();
 
                 let now = std::time::Instant::now();
@@ -93,7 +95,7 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
                             },
                             #current_application,
                             current_sub,
-                            None,
+                            crate_version!().to_string()
                         )
                     },
                     Err(_) => {
@@ -105,7 +107,7 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
                             },
                             #current_application,
                             current_sub,
-                            None,
+                            crate_version!().to_string()
                         )
                     }
                 };
