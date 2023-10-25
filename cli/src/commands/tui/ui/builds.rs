@@ -1,10 +1,10 @@
 use super::util::get_color;
-use crate::commands::tui::app::{ActiveBlock, App};
+use crate::commands::tui::app::{App, Block};
 use ratatui::{
     prelude::{Backend, Constraint, Rect},
     style::{Color, Style},
     text::{Line, Span, Text},
-    widgets::{Block, Borders, Cell, Padding, Paragraph, Row, Table},
+    widgets::{Block as WidgetBlock, Borders, Cell, Padding, Paragraph, Row, Table},
     Frame,
 };
 
@@ -16,13 +16,13 @@ impl BuildsWidget {
         let current_route = app.get_current_route();
 
         let highlight_state = (
-            current_route.active_block == ActiveBlock::Build,
-            current_route.hovered_block == ActiveBlock::Build,
+            current_route.active_block == Block::Build,
+            current_route.hovered_block == Block::Build,
         );
 
-        app.update_draw_lock(ActiveBlock::Build, rect);
+        app.update_draw_lock(Block::Build, rect);
 
-        let builds_block = Block::default()
+        let builds_block = WidgetBlock::default()
             .title(" Build Artifacts ")
             .borders(Borders::ALL)
             .padding(Padding::new(1, 1, 0, 0))

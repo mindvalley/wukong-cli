@@ -1,6 +1,6 @@
 use super::common_key_events;
 use crate::commands::tui::{
-    app::{ActiveBlock, App, AppReturn, DialogContext, Input},
+    app::{App, AppReturn, Block, DialogContext, Input},
     events::key::Key,
 };
 
@@ -8,8 +8,8 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
     match key {
         key if common_key_events::back_event(key) => {
             app.set_current_route_state(
-                Some(ActiveBlock::Log),
-                Some(ActiveBlock::Dialog(DialogContext::LogIncludeFilter)),
+                Some(Block::Log),
+                Some(Block::Dialog(DialogContext::LogIncludeFilter)),
             );
         }
         key if common_key_events::delete_event(key) => delete_char(app),
@@ -27,8 +27,8 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
 
 fn move_to_next_input(app: &mut App) {
     app.set_current_route_state(
-        Some(ActiveBlock::Dialog(DialogContext::LogIncludeFilter)),
-        Some(ActiveBlock::Dialog(DialogContext::LogIncludeFilter)),
+        Some(Block::Dialog(DialogContext::LogIncludeFilter)),
+        Some(Block::Dialog(DialogContext::LogIncludeFilter)),
     );
 }
 
