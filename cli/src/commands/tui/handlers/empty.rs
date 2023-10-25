@@ -13,6 +13,7 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
         Some(Action::Quit) => AppReturn::Exit,
         Some(Action::OpenNamespaceSelection) => open_dialog(app, DialogContext::NamespaceSelection),
         Some(Action::OpenVersionSelection) => open_dialog(app, DialogContext::VersionSelection),
+        Some(Action::TimeFilterLogs) => open_dialog(app, DialogContext::LogTimeFilter),
         Some(Action::SearchLogs) => handle_search_logs(app).await,
         Some(Action::FilterLogs) => handle_filter_logs(app).await,
         Some(Action::ToggleLogsTailing) => {

@@ -43,6 +43,7 @@ async fn fetch_and_reset_polling(app: &mut App, selected_version: String) {
     app.state.current_version = Some(selected_version);
     app.state.log_entries = vec![];
     app.state.log_entries_length = app.state.log_entries.len();
+    app.state.last_log_entry_timestamp = None;
 
     app.state.is_fetching_log_entries = true;
     app.state.start_polling_log_entries = false;

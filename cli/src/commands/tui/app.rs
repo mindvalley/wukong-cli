@@ -1,4 +1,4 @@
-use std::{collections::HashMap, time::Instant};
+use std::{collections::HashMap, fmt::Display, time::Instant};
 
 use ratatui::{
     prelude::Rect,
@@ -37,6 +37,7 @@ pub enum DialogContext {
     LogSearch,
     LogIncludeFilter,
     LogExcludeFilter,
+    LogTimeFilter,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
@@ -61,12 +62,28 @@ pub struct BlockInfo {
     pub bottom_right_corner: Option<(u16, u16)>,
 }
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub enum TimeFilter {
+    Minute(i64),
+    Hour(i64),
+}
+
+impl Display for TimeFilter {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TimeFilter::Minute(x) => write!(f, "{}m", x),
+            TimeFilter::Hour(x) => write!(f, "{}h", x),
+        }
+    }
+}
+
 pub const MAX_LOG_ENTRIES_LENGTH: usize = 1_000;
 
 pub struct State {
     pub current_application: String,
     pub current_namespace: Option<String>,
     pub current_version: Option<String>,
+    pub current_time_filter: Option<TimeFilter>,
     pub show_namespace_selection: bool,
 
     // loading state
@@ -87,6 +104,7 @@ pub struct State {
     pub deployments_error: Option<String>,
 
     pub last_log_entry_timestamp: Option<String>,
+    pub log_time_filter: TimeFilter,
     // ui controls
     pub logs_vertical_scroll_state: ScrollbarState,
     pub logs_horizontal_scroll_state: ScrollbarState,
@@ -116,6 +134,7 @@ pub struct App {
     pub state: State,
     pub namespace_selections: StatefulList<String>,
     pub version_selections: StatefulList<String>,
+    pub time_filter_selections: StatefulList<TimeFilter>,
     pub actions: Vec<Action>,
     pub network_event_sender: Sender<NetworkEvent>,
 
@@ -152,13 +171,25 @@ impl App {
 
         let mut version_selections =
             StatefulList::with_items(vec![String::from("green"), String::from("blue")]);
+
         version_selections.select(0);
+
+        let time_filter_list = vec![
+            TimeFilter::Minute(5),
+            TimeFilter::Minute(10),
+            TimeFilter::Minute(30),
+            TimeFilter::Hour(1),
+        ];
+        let default_time_filter = time_filter_list[0];
+        let mut time_filter_selections = StatefulList::with_items(time_filter_list);
+        time_filter_selections.select(0);
 
         Self {
             state: State {
                 current_application: config.core.application.clone(),
                 current_namespace: None,
                 current_version: None,
+                current_time_filter: Some(default_time_filter),
 
                 show_namespace_selection: false,
                 is_fetching_builds: true,
@@ -178,6 +209,7 @@ impl App {
                 log_entries_error: None,
                 builds_error: None,
                 deployments_error: None,
+                log_time_filter: TimeFilter::Minute(5),
 
                 logs_vertical_scroll_state: ScrollbarState::default(),
                 logs_horizontal_scroll_state: ScrollbarState::default(),
@@ -202,6 +234,7 @@ impl App {
             block_map: HashMap::new(),
             namespace_selections,
             version_selections,
+            time_filter_selections,
             actions: vec![
                 Action::OpenNamespaceSelection,
                 Action::OpenVersionSelection,
