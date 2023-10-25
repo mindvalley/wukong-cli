@@ -32,7 +32,7 @@ impl log::Log for Logger {
     fn log(&self, record: &Record) {
         let level = record.level();
 
-        if self.enabled(record.metadata()) && !self.report {
+        if self.enabled(record.metadata()) {
             let level_with_colors = match level {
                 log::Level::Error => "Error".red().to_string(),
                 log::Level::Warn => "Warn".yellow().to_string(),
@@ -41,12 +41,15 @@ impl log::Log for Logger {
                 log::Level::Trace => "Trace".fg::<Gray>().to_string(),
             };
 
-            eprintln!(
-                "{} {} {}",
-                level_with_colors,
-                "-".fg::<Gray>(),
-                record.args(),
-            );
+            // If report mode is on dont pring the debug logs to the user:
+            if self.report && level != log::Level::Debug {
+                eprintln!(
+                    "{} {} {}",
+                    level_with_colors,
+                    "-".fg::<Gray>(),
+                    record.args(),
+                );
+            }
         }
 
         if self.report && level == log::Level::Debug {
@@ -114,7 +117,7 @@ impl Builder {
     pub fn init(self) {
         if self.report {
             log::set_max_level(LevelFilter::Debug);
-        } else if self.max_log_level != LevelFilter::Error {
+        } else {
             log::set_max_level(self.max_log_level);
         }
 
