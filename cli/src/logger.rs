@@ -6,20 +6,18 @@ use std::{env, fs::File, str::FromStr, sync::Mutex};
 pub struct Builder {
     max_log_level: log::LevelFilter,
     log_file: Mutex<File>,
+    report: bool,
 }
 
 #[derive(Debug)]
 pub struct Logger {
     log_file: Mutex<File>,
-    max_log_level: log::LevelFilter,
+    report: bool,
 }
 
 impl Logger {
-    fn new(log_file: Mutex<File>, max_log_level: log::LevelFilter) -> Self {
-        Self {
-            log_file,
-            max_log_level,
-        }
+    fn new(log_file: Mutex<File>, report: bool) -> Self {
+        Self { log_file, report }
     }
 }
 
@@ -27,13 +25,15 @@ pub const LOG_LEVEL_ENV: &str = "WUKONG_LOG";
 pub const DEFAULT_LOG_FILE: &str = "wukong-cli.log";
 
 impl log::Log for Logger {
-    fn enabled(&self, metadata: &Metadata) -> bool {
-        self.max_log_level >= metadata.level()
+    fn enabled(&self, _metadata: &Metadata) -> bool {
+        true
     }
 
     fn log(&self, record: &Record) {
+        let level = record.level();
+
         if self.enabled(record.metadata()) {
-            let level = match record.level() {
+            let level_with_colors = match level {
                 log::Level::Error => "Error".red().to_string(),
                 log::Level::Warn => "Warn".yellow().to_string(),
                 log::Level::Info => "Info".cyan().to_string(),
@@ -41,26 +41,33 @@ impl log::Log for Logger {
                 log::Level::Trace => "Trace".fg::<Gray>().to_string(),
             };
 
-            eprintln!("{} {} {}", level, "-".fg::<Gray>(), record.args(),);
+            eprintln!(
+                "{} {} {}",
+                level_with_colors,
+                "-".fg::<Gray>(),
+                record.args(),
+            );
         }
 
-        let log_message = format!(
-            "[{}] [{}] [{}] [{}] [line:{}] {}",
-            chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f"),
-            record.level(),
-            record.module_path().expect("Module path not found"),
-            record.file().expect("File path not found"),
-            record.line().expect("Line number not found"),
-            record.args()
-        );
+        if self.report && level == log::Level::Debug {
+            let log_message = format!(
+                "[{}] [{}] [{}] [{}] [line:{}] {}",
+                chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f"),
+                record.level(),
+                record.module_path().expect("Module path not found"),
+                record.file().expect("File path not found"),
+                record.line().expect("Line number not found"),
+                record.args()
+            );
 
-        // Open the log file and write the log message
-        if let Ok(mut log_file) = self.log_file.lock() {
-            if let Err(err) = writeln!(&mut log_file, "{}", log_message) {
-                eprintln!("Error writing to log file: {}", err);
+            // Open the log file and write the log message
+            if let Ok(mut log_file) = self.log_file.lock() {
+                if let Err(err) = writeln!(&mut log_file, "{}", log_message) {
+                    eprintln!("Error writing to log file: {}", err);
+                }
+            } else {
+                eprintln!("Error locking log file for writing.");
             }
-        } else {
-            eprintln!("Error locking log file for writing.");
         }
     }
 
@@ -81,7 +88,16 @@ impl Builder {
         Self {
             max_log_level: default_log_level,
             log_file: Mutex::new(File::create(DEFAULT_LOG_FILE).unwrap()),
+            report: false,
         }
+    }
+
+    pub fn with_report(mut self, report: bool) -> Self {
+        if report {
+            self.report = report;
+        }
+
+        self
     }
 
     pub fn with_max_level(mut self, max_log_level: LevelFilter) -> Self {
@@ -101,15 +117,18 @@ impl Builder {
     }
 
     pub fn init(self) {
-        // Set the default log level to debug,
-        // To get debug logs regardless of the env log level
-        log::set_max_level(LevelFilter::Debug);
+        if self.report {
+            log::set_max_level(LevelFilter::Debug);
+        } else if self.max_log_level != LevelFilter::Error {
+            log::set_max_level(self.max_log_level);
+        }
+
         let logger = self.build();
         log::set_boxed_logger(Box::new(logger)).expect("unable to init wukong-cli logger");
     }
 
     pub fn build(self) -> Logger {
-        Logger::new(self.log_file, self.max_log_level)
+        Logger::new(self.log_file, self.report)
     }
 }
 

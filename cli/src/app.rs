@@ -25,6 +25,7 @@ impl App {
         // Rewrite this to open file on append mode:
         logger::Builder::new()
             .with_max_level(cli.verbose.log_level_filter())
+            .with_report(cli.report)
             .with_log_file(file)
             .init();
 
