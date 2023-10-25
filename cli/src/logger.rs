@@ -1,6 +1,5 @@
 use log::{LevelFilter, Metadata, Record};
 use owo_colors::{colors::xterm::Gray, OwoColorize};
-use std::fs::create_dir_all;
 use std::io::Write;
 use std::{env, fs::File, str::FromStr, sync::Mutex};
 

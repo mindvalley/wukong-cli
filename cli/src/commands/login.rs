@@ -7,7 +7,6 @@ use crate::{
 };
 use dialoguer::{theme::ColorfulTheme, Select};
 use log::debug;
-use log::error;
 
 pub async fn test_log() -> Result<bool, WKCliError> {
     // colored_println!("[colored_println] You are logged in as: \n");

@@ -1,5 +1,3 @@
-use std::fs::OpenOptions;
-
 use crate::{commands::ClapApp, error::WKCliError, logger};
 use clap::Parser;
 
