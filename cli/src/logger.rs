@@ -1,5 +1,6 @@
 use log::{LevelFilter, Metadata, Record};
 use owo_colors::{colors::xterm::Gray, OwoColorize};
+use std::fs::create_dir_all;
 use std::io::Write;
 use std::{env, fs::File, str::FromStr, sync::Mutex};
 
@@ -22,7 +23,7 @@ impl Logger {
 }
 
 pub const LOG_LEVEL_ENV: &str = "WUKONG_LOG";
-pub const DEFAULT_LOG_FILE: &str = "wukong-cli.log";
+pub const DEBUG_LOG_FILE_PATH: &str = "debug_log.log";
 
 impl log::Log for Logger {
     fn enabled(&self, _metadata: &Metadata) -> bool {
@@ -32,7 +33,7 @@ impl log::Log for Logger {
     fn log(&self, record: &Record) {
         let level = record.level();
 
-        if self.enabled(record.metadata()) {
+        if self.enabled(record.metadata()) && !self.report {
             let level_with_colors = match level {
                 log::Level::Error => "Error".red().to_string(),
                 log::Level::Warn => "Warn".yellow().to_string(),
@@ -87,7 +88,7 @@ impl Builder {
 
         Self {
             max_log_level: default_log_level,
-            log_file: Mutex::new(File::create(DEFAULT_LOG_FILE).unwrap()),
+            log_file: Mutex::new(File::create(DEBUG_LOG_FILE_PATH).unwrap()),
             report: false,
         }
     }
@@ -108,11 +109,6 @@ impl Builder {
             self.max_log_level = max_log_level;
         }
 
-        self
-    }
-
-    pub fn with_log_file(mut self, log_file: File) -> Self {
-        self.log_file = Mutex::new(log_file);
         self
     }
 
