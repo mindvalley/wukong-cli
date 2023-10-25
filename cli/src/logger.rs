@@ -1,4 +1,5 @@
 use log::{LevelFilter, Metadata, Record};
+use once_cell::sync::Lazy;
 use owo_colors::{colors::xterm::Gray, OwoColorize};
 use std::io::Write;
 use std::{env, fs::File, str::FromStr, sync::Mutex};
@@ -22,7 +23,12 @@ impl Logger {
 }
 
 pub const LOG_LEVEL_ENV: &str = "WUKONG_LOG";
-pub const DEBUG_LOG_FILE_PATH: &str = "debug_log.log";
+pub static DEBUG_LOG_FILE: Lazy<Option<String>> = Lazy::new(|| {
+    dirs::home_dir().map(|mut path| {
+        path.extend([".config", "wukong", "debug_log"]);
+        path.to_str().unwrap().to_string()
+    })
+});
 
 impl log::Log for Logger {
     fn enabled(&self, _metadata: &Metadata) -> bool {
@@ -88,9 +94,13 @@ impl Builder {
             Err(_) => LevelFilter::Error,
         };
 
+        let debug_log_file = DEBUG_LOG_FILE
+            .as_ref()
+            .expect("Unable to identify user's home directory");
+
         Self {
             max_log_level: default_log_level,
-            log_file: Mutex::new(File::create(DEBUG_LOG_FILE_PATH).unwrap()),
+            log_file: Mutex::new(File::create(debug_log_file).unwrap()),
             report: false,
         }
     }
