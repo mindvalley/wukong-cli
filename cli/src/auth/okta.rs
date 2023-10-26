@@ -5,13 +5,15 @@ use crate::{
 };
 use aion::*;
 use chrono::{Duration, Utc};
+use log::debug;
 use openidconnect::{
     core::{
         CoreClient, CoreIdTokenClaims, CoreIdTokenVerifier, CoreProviderMetadata, CoreResponseType,
     },
     reqwest::async_http_client,
-    AccessTokenHash, AdditionalClaims, AuthenticationFlow, AuthorizationCode, ClientId, CsrfToken,
-    IssuerUrl, Nonce, OAuth2TokenResponse, PkceCodeChallenge, RedirectUrl, RefreshToken, Scope,
+    AccessToken, AccessTokenHash, AdditionalClaims, AuthenticationFlow, AuthorizationCode,
+    ClientId, CsrfToken, IntrospectionUrl, IssuerUrl, Nonce, OAuth2TokenResponse,
+    PkceCodeChallenge, RedirectUrl, RefreshToken, Scope, TokenIntrospectionResponse,
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -235,6 +237,46 @@ pub async fn login(config: &Config) -> Result<OktaAuth, WKCliError> {
     })
 }
 
+pub async fn introspect_token(config: &Config, token: &str) -> Result<bool, WKCliError> {
+    let okta_client_id = ClientId::new(config.core.okta_client_id.clone());
+
+    let issuer_url =
+        IssuerUrl::new("https://mindvalley.okta.com".to_string()).expect("Invalid issuer URL");
+
+    // Fetch Okta's OpenID Connect discovery document.
+    let provider_metadata = CoreProviderMetadata::discover_async(issuer_url, async_http_client)
+        .await
+        .map_err(|_err| AuthError::OpenIDDiscoveryError)?;
+
+    // Set up the config for the Okta OAuth2 process.
+    let client = CoreClient::from_provider_metadata(provider_metadata, okta_client_id, None)
+        .set_introspection_uri(
+            IntrospectionUrl::new("https://mindvalley.okta.com/oauth2/v1/introspect".to_string())
+                .expect("Invalid introspect URL"),
+        );
+
+    let token_response = client
+        .introspect(&AccessToken::new(token.to_owned()))
+        .map_err(|_err| AuthError::OpenIDConnectError {
+            message: "Failed to contact introspect endpoint - 1".to_string(),
+        })?
+        .set_token_type_hint("refresh_token")
+        .request_async(async_http_client)
+        .await
+        .map_err(|_err| AuthError::OpenIDConnectError {
+            message: "Failed to get introspect response".to_string(),
+        })?;
+
+    debug!(
+        "introspect response: email: {:?}, active: {:?}, exp: {:?}",
+        token_response.to_owned().username(),
+        token_response.to_owned().active(),
+        token_response.to_owned().exp()
+    );
+
+    Ok(true)
+}
+
 pub async fn refresh_tokens(config: &Config) -> Result<OktaAuth, WKCliError> {
     let auth_config = config.auth.as_ref().ok_or(WKCliError::UnAuthenticated)?;
     let okta_client_id = ClientId::new(config.core.okta_client_id.clone());
@@ -248,36 +290,43 @@ pub async fn refresh_tokens(config: &Config) -> Result<OktaAuth, WKCliError> {
         .map_err(|_err| AuthError::OpenIDDiscoveryError)?;
 
     // Set up the config for the Okta OAuth2 process.
-    let client = CoreClient::from_provider_metadata(provider_metadata, okta_client_id, None)
-        .set_redirect_uri(
-            RedirectUrl::new("http://localhost:6758/login/callback".to_string())
-                .expect("Invalid redirect URL"),
-        );
+    let client = CoreClient::from_provider_metadata(provider_metadata, okta_client_id, None);
 
-    let token_response = client
+    let token_exchange_result = client
         .exchange_refresh_token(&RefreshToken::new(auth_config.refresh_token.clone()))
         .request_async(async_http_client)
-        .await
-        .map_err(|err| match err {
-            openidconnect::RequestTokenError::ServerResponse(error) => {
-                let error_description = error.to_string();
-                if error.error().to_string() == "invalid_grant"
-                    && error_description.contains("refresh token")
-                    && error_description.contains("expired")
-                {
-                    AuthError::OktaRefreshTokenExpired {
-                        message: error_description,
-                    }
-                } else {
-                    AuthError::OpenIDConnectError {
-                        message: "Failed to contact token endpoint".to_string(),
+        .await;
+
+    let token_response = match token_exchange_result {
+        Ok(token_response) => token_response,
+        Err(exchange_error) => {
+            let error = match exchange_error {
+                openidconnect::RequestTokenError::ServerResponse(error) => {
+                    let error_description = error.to_string();
+
+                    if error.error().to_string() == "invalid_grant"
+                        && error_description.contains("refresh token")
+                        && error_description.contains("expired")
+                    {
+                        introspect_token(config, &auth_config.refresh_token).await?;
+
+                        AuthError::OktaRefreshTokenExpired {
+                            message: error_description,
+                        }
+                    } else {
+                        AuthError::OpenIDConnectError {
+                            message: "Failed to contact token endpoint".to_string(),
+                        }
                     }
                 }
-            }
-            _ => AuthError::OpenIDConnectError {
-                message: "Failed to contact token endpoint".to_string(),
-            },
-        })?;
+                _ => AuthError::OpenIDConnectError {
+                    message: "Failed to contact token endpoint".to_string(),
+                },
+            };
+
+            Err(error)?
+        }
+    };
 
     let id_token = token_response
         .extra_fields()

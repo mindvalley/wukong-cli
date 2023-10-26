@@ -58,12 +58,14 @@ impl log::Log for Logger {
             }
         }
 
-        if self.report && level == log::Level::Debug {
+        let module_path = record.module_path().expect("Module path not found");
+
+        if self.report && level == log::Level::Debug && module_path.starts_with("wukong") {
             let log_message = format!(
                 "[{}] [{}] [{}] [{}] [line:{}] {}",
                 chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f"),
                 record.level(),
-                record.module_path().expect("Module path not found"),
+                module_path,
                 record.file().expect("File path not found"),
                 record.line().expect("Line number not found"),
                 record.args()
