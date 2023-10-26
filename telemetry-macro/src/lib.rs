@@ -28,6 +28,8 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
         generated_func = quote! {
             #[allow(clippy::too_many_arguments)]
             #visibility #asyncness fn #fn_ident(#fn_inputs) #fn_output {
+                use clap::{crate_version};
+
                 let current_application = context.current_application.clone();
                 let current_sub = match context.sub {
                     Some(sub) => sub,
@@ -41,6 +43,7 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
                     },
                     Some(current_application),
                     current_sub,
+                    crate_version!().to_string()
                 )
                 .record_event()
                 .await;
@@ -74,6 +77,8 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
 
         generated_func = quote! {
             #visibility #asyncness fn #fn_ident(#fn_inputs) #fn_output {
+                use clap::{crate_version};
+
                 let current_sub = self.sub.clone();
 
                 let now = std::time::Instant::now();
@@ -90,6 +95,7 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
                             },
                             #current_application,
                             current_sub,
+                            crate_version!().to_string()
                         )
                     },
                     Err(_) => {
@@ -101,6 +107,7 @@ pub fn wukong_telemetry(args: TokenStream, item: TokenStream) -> TokenStream {
                             },
                             #current_application,
                             current_sub,
+                            crate_version!().to_string()
                         )
                     }
                 };
