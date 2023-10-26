@@ -24,6 +24,8 @@ Options:
                                    `-vvv` show debug
                                    `-vvvv` show trace
   -q, --quiet...                   Do not print log message
+      --report                     Store the debugging log in the log file, which is located at
+                                   ~/.config/wukong
       --canary                     Use the Canary channel API
   -h, --help                       Print help
 
