@@ -119,17 +119,19 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
     terminal.hide_cursor()?;
 
     // The lower the tick_rate, the higher the FPS, but also the higher the CPU usage.
-    let tick_rate = Duration::from_millis(1000);
+    let tick_rate = Duration::from_millis(250);
     let event_manager = EventManager::new();
     event_manager.spawn_event_listen_thread(tick_rate);
 
     let mut is_first_render = true;
     let mut is_first_fetch_builds = true;
 
+    let mut app_ref = app.lock().await;
+    terminal.draw(|frame| ui::draw(frame, &mut app_ref))?;
+    drop(app_ref);
+
     loop {
         let mut app_ref = app.lock().await;
-
-        terminal.draw(|frame| ui::draw(frame, &mut app_ref))?;
 
         let result = match event_manager.next().unwrap() {
             events::Event::Input(key) => handlers::input_handler(key, &mut app_ref).await,
@@ -142,6 +144,11 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
         if result == AppReturn::Exit {
             break;
         }
+
+        terminal.draw(|frame| ui::draw(frame, &mut app_ref))?;
+
+        // move cursor to the top left corner to avoid screen scrolling:
+        // terminal.set_cursor(1, 1)?;
 
         if is_first_render {
             // fetch data on the first frame

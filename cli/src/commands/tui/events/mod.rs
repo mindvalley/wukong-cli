@@ -26,6 +26,7 @@ impl EventManager {
 
     pub fn spawn_event_listen_thread(&self, tick_rate: Duration) {
         let event_sender = self.sender.clone();
+
         std::thread::spawn(move || {
             loop {
                 // poll for tick rate duration, if no event, sent tick event.

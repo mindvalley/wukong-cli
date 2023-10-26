@@ -1,11 +1,11 @@
 use super::util::get_color;
-use crate::commands::tui::app::{ActiveBlock, App, Deployment};
+use crate::commands::tui::app::{App, Block, Deployment};
 use chrono::{DateTime, Local, NaiveDateTime, Utc};
 use ratatui::{
     prelude::{Backend, Constraint, Direction, Layout, Margin, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Text},
-    widgets::{Block, Borders, Cell, Padding, Paragraph, Row, Table},
+    widgets::{Block as WidgetBlock, Borders, Cell, Padding, Paragraph, Row, Table},
     Frame,
 };
 use time_humanize::HumanTime;
@@ -17,13 +17,13 @@ impl DeploymentWidget {
         let current_route = app.get_current_route();
 
         let highlight_state = (
-            current_route.active_block == ActiveBlock::Deployment,
-            current_route.hovered_block == ActiveBlock::Deployment,
+            current_route.active_block == Block::Deployment,
+            current_route.hovered_block == Block::Deployment,
         );
 
-        app.update_draw_lock(ActiveBlock::Deployment, rect);
+        app.update_draw_lock(Block::Deployment, rect);
 
-        let deployments_block = Block::default()
+        let deployments_block = WidgetBlock::default()
             .title(" Deployments ")
             .borders(Borders::ALL)
             .border_style(get_color(
@@ -86,7 +86,7 @@ impl DeploymentWidget {
                 blue_rows = setup_rows(blue);
             }
 
-            let green_block = Block::default()
+            let green_block = WidgetBlock::default()
                 .title(" Green ")
                 .borders(Borders::ALL)
                 .padding(Padding::new(1, 1, 0, 0));
@@ -94,7 +94,7 @@ impl DeploymentWidget {
                 .block(green_block)
                 .widths(&[Constraint::Min(20), Constraint::Min(40)])
                 .column_spacing(1);
-            let blue_block = Block::default()
+            let blue_block = WidgetBlock::default()
                 .title(" Blue ")
                 .borders(Borders::ALL)
                 .padding(Padding::new(1, 1, 0, 0));

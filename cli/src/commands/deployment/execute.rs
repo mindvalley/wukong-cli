@@ -685,12 +685,8 @@ async fn get_deployment_status(
         .find(|deployment| deployment.last_successfully_deployed_artifact.is_some());
 
     if let Some(latest_deployment) = latest_deployment {
-        let deployment_status = latest_deployment.status.clone();
-
-        if let Some(deployment_status) = deployment_status {
+        if let Some(deployment_status) = latest_deployment.status.clone() {
             return Ok(deployment_status);
-        } else {
-            return Ok(String::from("TERMINAL"));
         }
     }
 

@@ -1,6 +1,9 @@
 use std::{collections::HashMap, time::Instant};
 
-use ratatui::{prelude::Rect, widgets::ScrollbarState};
+use ratatui::{
+    prelude::Rect,
+    widgets::{ScrollbarState, TableState},
+};
 use tokio::sync::mpsc::Sender;
 use wukong_sdk::services::gcloud::google::logging::{r#type::LogSeverity, v2::LogEntry};
 
@@ -9,8 +12,8 @@ use crate::config::Config;
 use super::{action::Action, events::network::NetworkEvent, StatefulList};
 
 const DEFAULT_ROUTE: Route = Route {
-    active_block: ActiveBlock::Empty,
-    hovered_block: ActiveBlock::Log,
+    active_block: Block::Empty,
+    hovered_block: Block::Log,
 };
 
 #[derive(Default)]
@@ -37,7 +40,7 @@ pub enum DialogContext {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
-pub enum ActiveBlock {
+pub enum Block {
     Build,
     Deployment,
     Log,
@@ -47,13 +50,13 @@ pub enum ActiveBlock {
 
 #[derive(Debug)]
 pub struct Route {
-    pub active_block: ActiveBlock,
-    pub hovered_block: ActiveBlock,
+    pub active_block: Block,
+    pub hovered_block: Block,
 }
 
 #[derive(Debug, Eq, Hash, PartialEq)]
 pub struct BlockInfo {
-    pub block_id: ActiveBlock,
+    pub block_id: Block,
     pub top_left_corner: Option<(u16, u16)>,
     pub bottom_right_corner: Option<(u16, u16)>,
 }
@@ -90,6 +93,10 @@ pub struct State {
     pub logs_vertical_scroll: usize,
     pub logs_horizontal_scroll: usize,
     pub logs_enable_auto_scroll_to_bottom: bool,
+    pub logs_table_state: TableState,
+    pub logs_table_current_index: usize,
+    pub logs_table_start_position: usize,
+    pub expanded_block: Option<Block>,
 
     // For log entries polling
     pub instant_since_last_log_entries_poll: Instant,
@@ -113,7 +120,7 @@ pub struct App {
     pub actions: Vec<Action>,
     pub network_event_sender: Sender<NetworkEvent>,
 
-    pub block_map: HashMap<ActiveBlock, BlockInfo>,
+    pub block_map: HashMap<Block, BlockInfo>,
     navigation_stack: Vec<Route>,
 }
 
@@ -178,6 +185,10 @@ impl App {
                 logs_vertical_scroll: 0,
                 logs_horizontal_scroll: 0,
                 instant_since_last_log_entries_poll: Instant::now(),
+                logs_table_state: TableState::default(),
+                logs_table_current_index: 0,
+                logs_table_start_position: 0,
+                expanded_block: None,
 
                 logs_widget_width: 0,
                 logs_widget_height: 0,
@@ -201,6 +212,7 @@ impl App {
                 Action::Quit,
                 Action::SearchLogs,
                 Action::FilterLogs,
+                Action::ExpandToFullScreen,
             ],
             network_event_sender: sender,
         }
@@ -255,7 +267,7 @@ impl App {
         }
     }
 
-    pub fn push_navigation_stack(&mut self, next_active_block: ActiveBlock) {
+    pub fn push_navigation_stack(&mut self, next_active_block: Block) {
         if !self
             .navigation_stack
             .last()
@@ -279,8 +291,8 @@ impl App {
 
     pub fn set_current_route_state(
         &mut self,
-        active_block: Option<ActiveBlock>,
-        hovered_block: Option<ActiveBlock>,
+        active_block: Option<Block>,
+        hovered_block: Option<Block>,
     ) {
         let current_route = self.get_current_route_mut();
 
@@ -293,7 +305,7 @@ impl App {
         }
     }
 
-    pub fn update_draw_lock(&mut self, current_block: ActiveBlock, rect: Rect) {
+    pub fn update_draw_lock(&mut self, current_block: Block, rect: Rect) {
         if let Some(block) = self.block_map.get_mut(&current_block) {
             block.top_left_corner = Some((rect.x, rect.y));
             block.bottom_right_corner = Some((rect.x + rect.width, rect.y + rect.height));
