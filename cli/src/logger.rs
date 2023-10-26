@@ -1,6 +1,7 @@
 use log::{LevelFilter, Metadata, Record};
 use once_cell::sync::Lazy;
 use owo_colors::{colors::xterm::Gray, OwoColorize};
+use std::fs;
 use std::io::Write;
 use std::{env, fs::File, str::FromStr, sync::Mutex};
 
@@ -107,9 +108,20 @@ impl Builder {
             .as_ref()
             .expect("Unable to identify user's home directory");
 
+        // Create the directory if it doesn't exist
+        if let Some(parent_dir) = std::path::Path::new(debug_log_file).parent() {
+            if !parent_dir.exists() {
+                if let Err(err) = fs::create_dir_all(parent_dir) {
+                    eprintln!("Error creating directory: {}", err);
+                }
+            }
+        }
+
+        let log_file = File::create(debug_log_file).expect("Unable to create debug log file");
+
         Self {
             max_log_level: default_log_level,
-            log_file: Mutex::new(File::create(debug_log_file).unwrap()),
+            log_file: Mutex::new(log_file),
             report: false,
         }
     }
