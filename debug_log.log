@@ -1,0 +1,33 @@
+[2023-10-25 05:03:47.885] [DEBUG] [wukong::commands] [cli/src/commands/mod.rs] [line:112] current cli version: 2.0.0-alpha2
+[2023-10-25 05:03:47.885] [DEBUG] [wukong::commands] [cli/src/commands/mod.rs] [line:118] API channel: Stable
+[2023-10-25 05:03:47.940] [DEBUG] [wukong::wukong_client] [cli/src/wukong_client.rs] [line:59] Access token expired. Refreshing tokens...
+[2023-10-25 05:03:47.946] [DEBUG] [reqwest::connect] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/reqwest-0.11.22/src/connect.rs] [line:446] starting new connection: https://mindvalley.okta.com/
+[2023-10-25 05:03:47.946] [DEBUG] [hyper::client::connect::dns] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/client/connect/dns.rs] [line:122] resolving host="mindvalley.okta.com"
+[2023-10-25 05:03:47.963] [DEBUG] [hyper::client::connect::http] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/client/connect/http.rs] [line:537] connecting to 52.223.45.111:443
+[2023-10-25 05:03:47.975] [DEBUG] [hyper::client::connect::http] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/client/connect/http.rs] [line:540] connected to 52.223.45.111:443
+[2023-10-25 05:03:48.586] [DEBUG] [hyper::proto::h1::io] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/proto/h1/io.rs] [line:342] flushed 103 bytes
+[2023-10-25 05:03:48.793] [DEBUG] [hyper::proto::h1::io] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/proto/h1/io.rs] [line:207] parsed 15 headers
+[2023-10-25 05:03:48.793] [DEBUG] [hyper::proto::h1::conn] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/proto/h1/conn.rs] [line:222] incoming body is chunked encoding
+[2023-10-25 05:03:48.793] [DEBUG] [hyper::proto::h1::decode] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/proto/h1/decode.rs] [line:298] incoming chunked header: 0x843 (2115 bytes)
+[2023-10-25 05:03:48.793] [DEBUG] [hyper::proto::h1::conn] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/proto/h1/conn.rs] [line:298] incoming body completed
+[2023-10-25 05:03:48.794] [DEBUG] [hyper::client::pool] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/client/pool.rs] [line:376] pooling idle connection for ("https", mindvalley.okta.com)
+[2023-10-25 05:03:48.795] [DEBUG] [reqwest::connect] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/reqwest-0.11.22/src/connect.rs] [line:446] starting new connection: https://mindvalley.okta.com/
+[2023-10-25 05:03:48.795] [DEBUG] [hyper::client::connect::dns] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/client/connect/dns.rs] [line:122] resolving host="mindvalley.okta.com"
+[2023-10-25 05:03:48.796] [DEBUG] [hyper::client::connect::http] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/client/connect/http.rs] [line:537] connecting to 52.223.45.111:443
+[2023-10-25 05:03:48.802] [DEBUG] [hyper::client::connect::http] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/client/connect/http.rs] [line:540] connected to 52.223.45.111:443
+[2023-10-25 05:03:49.358] [DEBUG] [hyper::proto::h1::io] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/proto/h1/io.rs] [line:342] flushed 85 bytes
+[2023-10-25 05:03:49.798] [DEBUG] [hyper::proto::h1::io] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/proto/h1/io.rs] [line:207] parsed 16 headers
+[2023-10-25 05:03:49.798] [DEBUG] [hyper::proto::h1::conn] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/proto/h1/conn.rs] [line:222] incoming body is chunked encoding
+[2023-10-25 05:03:49.798] [DEBUG] [hyper::proto::h1::decode] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/proto/h1/decode.rs] [line:298] incoming chunked header: 0x1CE (462 bytes)
+[2023-10-25 05:03:49.798] [DEBUG] [hyper::proto::h1::conn] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/proto/h1/conn.rs] [line:298] incoming body completed
+[2023-10-25 05:03:49.798] [DEBUG] [hyper::client::pool] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/client/pool.rs] [line:376] pooling idle connection for ("https", mindvalley.okta.com)
+[2023-10-25 05:03:49.799] [DEBUG] [reqwest::connect] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/reqwest-0.11.22/src/connect.rs] [line:446] starting new connection: https://mindvalley.okta.com/
+[2023-10-25 05:03:49.799] [DEBUG] [hyper::client::connect::dns] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/client/connect/dns.rs] [line:122] resolving host="mindvalley.okta.com"
+[2023-10-25 05:03:49.800] [DEBUG] [hyper::client::connect::http] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/client/connect/http.rs] [line:537] connecting to 52.223.45.111:443
+[2023-10-25 05:03:49.807] [DEBUG] [hyper::client::connect::http] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/client/connect/http.rs] [line:540] connected to 52.223.45.111:443
+[2023-10-25 05:03:50.366] [DEBUG] [hyper::proto::h1::io] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/proto/h1/io.rs] [line:342] flushed 270 bytes
+[2023-10-25 05:03:50.683] [DEBUG] [hyper::proto::h1::io] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/proto/h1/io.rs] [line:207] parsed 21 headers
+[2023-10-25 05:03:50.683] [DEBUG] [hyper::proto::h1::conn] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/proto/h1/conn.rs] [line:222] incoming body is chunked encoding
+[2023-10-25 05:03:50.683] [DEBUG] [hyper::proto::h1::decode] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/proto/h1/decode.rs] [line:298] incoming chunked header: 0x58 (88 bytes)
+[2023-10-25 05:03:50.683] [DEBUG] [hyper::proto::h1::conn] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/proto/h1/conn.rs] [line:298] incoming body completed
+[2023-10-25 05:03:50.683] [DEBUG] [hyper::client::pool] [/Users/fauzaan/.cargo/registry/src/index.crates.io-6f17d22bba15001f/hyper-0.14.27/src/client/pool.rs] [line:376] pooling idle connection for ("https", mindvalley.okta.com)
