@@ -1,6 +1,6 @@
 use crate::commands::tui::{
     action::Action,
-    app::{ActiveBlock, App, AppReturn, DialogContext},
+    app::{App, AppReturn, Block, DialogContext},
     events::{key::Key, network::NetworkEvent},
 };
 use wukong_sdk::services::gcloud::google::logging::r#type::LogSeverity;
@@ -36,12 +36,12 @@ async fn handle_search_logs(app: &mut App) -> AppReturn {
         app.state.show_filter_bar = false;
 
         app.set_current_route_state(
-            Some(ActiveBlock::Dialog(DialogContext::LogSearch)),
-            Some(ActiveBlock::Dialog(DialogContext::LogSearch)),
+            Some(Block::Dialog(DialogContext::LogSearch)),
+            Some(Block::Dialog(DialogContext::LogSearch)),
         );
     } else {
         log_search::reset_cursor(&mut app.state.search_bar_input);
-        app.set_current_route_state(None, Some(ActiveBlock::Log));
+        app.set_current_route_state(None, Some(Block::Log));
     }
 
     AppReturn::Continue
@@ -55,13 +55,13 @@ async fn handle_filter_logs(app: &mut App) -> AppReturn {
         app.state.show_search_bar = false;
 
         app.set_current_route_state(
-            Some(ActiveBlock::Dialog(DialogContext::LogIncludeFilter)),
-            Some(ActiveBlock::Dialog(DialogContext::LogIncludeFilter)),
+            Some(Block::Dialog(DialogContext::LogIncludeFilter)),
+            Some(Block::Dialog(DialogContext::LogIncludeFilter)),
         );
     } else {
         log_filter_exclude::reset_cursor(&mut app.state.filter_bar_exclude_input);
         log_filter_include::reset_cursor(&mut app.state.filter_bar_include_input);
-        app.set_current_route_state(None, Some(ActiveBlock::Log));
+        app.set_current_route_state(None, Some(Block::Log));
     }
 
     AppReturn::Continue
@@ -76,33 +76,33 @@ fn handle_key_events(key: Key, app: &mut App) -> AppReturn {
             AppReturn::Continue
         }
         key if common_key_events::down_event(key) => match app.get_current_route().hovered_block {
-            ActiveBlock::Log => {
-                app.set_current_route_state(None, Some(ActiveBlock::Build));
+            Block::Log => {
+                app.set_current_route_state(None, Some(Block::Build));
                 AppReturn::Continue
             }
             _ => AppReturn::Continue,
         },
         key if common_key_events::up_event(key) => match app.get_current_route().hovered_block {
-            ActiveBlock::Build => {
-                app.set_current_route_state(None, Some(ActiveBlock::Log));
+            Block::Build => {
+                app.set_current_route_state(None, Some(Block::Log));
                 AppReturn::Continue
             }
-            ActiveBlock::Deployment => {
-                app.set_current_route_state(None, Some(ActiveBlock::Log));
+            Block::Deployment => {
+                app.set_current_route_state(None, Some(Block::Log));
                 AppReturn::Continue
             }
             _ => AppReturn::Continue,
         },
         key if common_key_events::right_event(key) => match app.get_current_route().hovered_block {
-            ActiveBlock::Build => {
-                app.set_current_route_state(None, Some(ActiveBlock::Deployment));
+            Block::Build => {
+                app.set_current_route_state(None, Some(Block::Deployment));
                 AppReturn::Continue
             }
             _ => AppReturn::Continue,
         },
         key if common_key_events::left_event(key) => match app.get_current_route().hovered_block {
-            ActiveBlock::Deployment => {
-                app.set_current_route_state(None, Some(ActiveBlock::Build));
+            Block::Deployment => {
+                app.set_current_route_state(None, Some(Block::Build));
                 AppReturn::Continue
             }
             _ => AppReturn::Continue,
@@ -113,7 +113,7 @@ fn handle_key_events(key: Key, app: &mut App) -> AppReturn {
 }
 
 fn open_dialog(app: &mut App, dialog_context: DialogContext) -> AppReturn {
-    app.set_current_route_state(Some(ActiveBlock::Dialog(dialog_context)), None);
+    app.set_current_route_state(Some(Block::Dialog(dialog_context)), None);
     AppReturn::Continue
 }
 

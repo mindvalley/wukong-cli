@@ -1,7 +1,7 @@
 use super::{common_key_events, log_filter_exclude, log_filter_include, log_search};
 use crate::commands::tui::{
     action::Action,
-    app::{ActiveBlock, App, AppReturn, DialogContext},
+    app::{App, AppReturn, Block, DialogContext},
     events::{key::Key, network::NetworkEvent},
 };
 use wukong_sdk::services::gcloud::google::logging::r#type::LogSeverity;
@@ -9,7 +9,11 @@ use wukong_sdk::services::gcloud::google::logging::r#type::LogSeverity;
 pub async fn handler(key: Key, app: &mut App) -> AppReturn {
     match key {
         key if common_key_events::back_event(key) => {
-            app.set_current_route_state(Some(ActiveBlock::Empty), Some(ActiveBlock::Log));
+            if let Some(Block::Log) = app.state.expanded_block {
+                app.state.expanded_block = None;
+            } else {
+                app.set_current_route_state(Some(Block::Empty), Some(Block::Log));
+            }
         }
         key if common_key_events::up_event(key) => {
             app.state.logs_table_start_position =
@@ -37,8 +41,8 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
             app.state.show_search_bar = true;
 
             app.set_current_route_state(
-                Some(ActiveBlock::Dialog(DialogContext::LogSearch)),
-                Some(ActiveBlock::Dialog(DialogContext::LogSearch)),
+                Some(Block::Dialog(DialogContext::LogSearch)),
+                Some(Block::Dialog(DialogContext::LogSearch)),
             );
 
             if app.state.show_search_bar {
@@ -51,14 +55,17 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
             app.state.show_filter_bar = true;
 
             app.set_current_route_state(
-                Some(ActiveBlock::Dialog(DialogContext::LogIncludeFilter)),
-                Some(ActiveBlock::Dialog(DialogContext::LogIncludeFilter)),
+                Some(Block::Dialog(DialogContext::LogIncludeFilter)),
+                Some(Block::Dialog(DialogContext::LogIncludeFilter)),
             );
 
             if app.state.show_filter_bar {
                 app.state.show_search_bar = false;
                 log_search::reset_cursor(&mut app.state.search_bar_input);
             }
+        }
+        key if Action::from_key(key) == Some(Action::ExpandToFullScreen) => {
+            app.state.expanded_block = Some(Block::Log);
         }
         _ => {}
     };

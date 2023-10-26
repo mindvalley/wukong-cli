@@ -47,6 +47,7 @@ pub struct TelemetryData {
     application: Option<String>,
     #[serde(flatten)]
     event: TelemetryEvent,
+    version: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -151,12 +152,18 @@ impl Telemetry {
 }
 
 impl TelemetryData {
-    pub fn new(event: TelemetryEvent, application: Option<String>, actor: String) -> Self {
+    pub fn new(
+        event: TelemetryEvent,
+        application: Option<String>,
+        actor: String,
+        version: String,
+    ) -> Self {
         Self {
             timestamp: Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true),
             actor,
             application,
             event,
+            version,
         }
     }
 

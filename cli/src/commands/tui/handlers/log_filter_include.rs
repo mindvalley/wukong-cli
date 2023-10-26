@@ -1,15 +1,16 @@
 use super::common_key_events;
 use crate::commands::tui::{
-    app::{ActiveBlock, App, AppReturn, DialogContext, Input},
+    app::{App, AppReturn, Block, DialogContext, Input},
     events::key::Key,
 };
 
 pub async fn handler(key: Key, app: &mut App) -> AppReturn {
     match key {
         key if common_key_events::back_event(key) => {
+            app.state.show_filter_bar = false;
             app.set_current_route_state(
-                Some(ActiveBlock::Log),
-                Some(ActiveBlock::Dialog(DialogContext::LogIncludeFilter)),
+                Some(Block::Log),
+                Some(Block::Dialog(DialogContext::LogIncludeFilter)),
             );
         }
         key if common_key_events::delete_event(key) => {
@@ -29,8 +30,8 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
 
 fn move_to_next_input(app: &mut App) {
     app.set_current_route_state(
-        Some(ActiveBlock::Dialog(DialogContext::LogExcludeFilter)),
-        Some(ActiveBlock::Dialog(DialogContext::LogExcludeFilter)),
+        Some(Block::Dialog(DialogContext::LogExcludeFilter)),
+        Some(Block::Dialog(DialogContext::LogExcludeFilter)),
     );
 }
 
@@ -54,8 +55,8 @@ fn move_cursor_right(app: &mut App) {
     // if corsor is at the end move to exclude input:
     if cursor_moved_right > app.state.filter_bar_include_input.input.len() {
         app.set_current_route_state(
-            Some(ActiveBlock::Dialog(DialogContext::LogExcludeFilter)),
-            Some(ActiveBlock::Dialog(DialogContext::LogExcludeFilter)),
+            Some(Block::Dialog(DialogContext::LogExcludeFilter)),
+            Some(Block::Dialog(DialogContext::LogExcludeFilter)),
         );
     } else {
         app.state.filter_bar_include_input.cursor_position =
