@@ -24,8 +24,15 @@ impl Logger {
 
 pub const LOG_LEVEL_ENV: &str = "WUKONG_LOG";
 pub static DEBUG_LOG_FILE: Lazy<Option<String>> = Lazy::new(|| {
-    dirs::home_dir().map(|mut path| {
+    #[cfg(feature = "prod")]
+    return dirs::home_dir().map(|mut path| {
         path.extend([".config", "wukong", "debug_log"]);
+        path.to_str().unwrap().to_string()
+    });
+
+    #[cfg(not(feature = "prod"))]
+    dirs::home_dir().map(|mut path| {
+        path.extend([".config", "wukong", "dev", "debug_log"]);
         path.to_str().unwrap().to_string()
     })
 });
