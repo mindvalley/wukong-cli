@@ -237,46 +237,6 @@ pub async fn login(config: &Config) -> Result<OktaAuth, WKCliError> {
     })
 }
 
-pub async fn introspect_token(config: &Config, token: &str) -> Result<bool, WKCliError> {
-    let okta_client_id = ClientId::new(config.core.okta_client_id.clone());
-
-    let issuer_url =
-        IssuerUrl::new("https://mindvalley.okta.com".to_string()).expect("Invalid issuer URL");
-
-    // Fetch Okta's OpenID Connect discovery document.
-    let provider_metadata = CoreProviderMetadata::discover_async(issuer_url, async_http_client)
-        .await
-        .map_err(|_err| AuthError::OpenIDDiscoveryError)?;
-
-    // Set up the config for the Okta OAuth2 process.
-    let client = CoreClient::from_provider_metadata(provider_metadata, okta_client_id, None)
-        .set_introspection_uri(
-            IntrospectionUrl::new("https://mindvalley.okta.com/oauth2/v1/introspect".to_string())
-                .expect("Invalid introspect URL"),
-        );
-
-    let token_response = client
-        .introspect(&AccessToken::new(token.to_owned()))
-        .map_err(|_err| AuthError::OpenIDConnectError {
-            message: "Failed to contact introspect endpoint - 1".to_string(),
-        })?
-        .set_token_type_hint("refresh_token")
-        .request_async(async_http_client)
-        .await
-        .map_err(|_err| AuthError::OpenIDConnectError {
-            message: "Failed to get introspect response".to_string(),
-        })?;
-
-    debug!(
-        "introspect response: email: {:?}, active: {:?}, exp: {:?}",
-        token_response.to_owned().username(),
-        token_response.to_owned().active(),
-        token_response.to_owned().exp()
-    );
-
-    Ok(true)
-}
-
 pub async fn refresh_tokens(config: &Config) -> Result<OktaAuth, WKCliError> {
     let auth_config = config.auth.as_ref().ok_or(WKCliError::UnAuthenticated)?;
     let okta_client_id = ClientId::new(config.core.okta_client_id.clone());
@@ -357,4 +317,44 @@ pub async fn refresh_tokens(config: &Config) -> Result<OktaAuth, WKCliError> {
         expiry_time: expiry,
         refresh_token: new_refresh_token.secret().to_owned(),
     })
+}
+
+pub async fn introspect_token(config: &Config, token: &str) -> Result<bool, WKCliError> {
+    let okta_client_id = ClientId::new(config.core.okta_client_id.clone());
+
+    let issuer_url =
+        IssuerUrl::new("https://mindvalley.okta.com".to_string()).expect("Invalid issuer URL");
+
+    // Fetch Okta's OpenID Connect discovery document.
+    let provider_metadata = CoreProviderMetadata::discover_async(issuer_url, async_http_client)
+        .await
+        .map_err(|_err| AuthError::OpenIDDiscoveryError)?;
+
+    // Set up the config for the Okta OAuth2 process.
+    let client = CoreClient::from_provider_metadata(provider_metadata, okta_client_id, None)
+        .set_introspection_uri(
+            IntrospectionUrl::new("https://mindvalley.okta.com/oauth2/v1/introspect".to_string())
+                .expect("Invalid introspect URL"),
+        );
+
+    let token_response = client
+        .introspect(&AccessToken::new(token.to_owned()))
+        .map_err(|_err| AuthError::OpenIDConnectError {
+            message: "Failed to contact introspect endpoint - 1".to_string(),
+        })?
+        .set_token_type_hint("refresh_token")
+        .request_async(async_http_client)
+        .await
+        .map_err(|_err| AuthError::OpenIDConnectError {
+            message: "Failed to get introspect response".to_string(),
+        })?;
+
+    debug!(
+        "introspect response: email: {:?}, active: {:?}, exp: {:?}",
+        token_response.to_owned().username(),
+        token_response.to_owned().active(),
+        token_response.to_owned().exp()
+    );
+
+    Ok(true)
 }
