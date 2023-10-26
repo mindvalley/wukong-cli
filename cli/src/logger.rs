@@ -48,7 +48,7 @@ impl log::Log for Logger {
             };
 
             // If report mode is on dont pring the debug logs to the user:
-            if self.report && level != log::Level::Debug {
+            if !self.report || self.report && level != log::Level::Debug {
                 eprintln!(
                     "{} {} {}",
                     level_with_colors,
