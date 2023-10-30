@@ -105,7 +105,7 @@ where
         Block::Dialog(DialogContext::VersionSelection) => {
             VersionSelectionWidget::draw(app, frame);
         }
-        ActiveBlock::Dialog(DialogContext::LogTimeFilter) => {
+        Block::Dialog(DialogContext::LogTimeFilter) => {
             TimeFilterSelectionWidget::draw(app, frame);
         }
         _ => {}

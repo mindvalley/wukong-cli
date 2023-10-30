@@ -18,7 +18,7 @@ pub enum Action {
 impl Action {
     // iterator for enum https://stackoverflow.com/a/21376984
     pub fn iterator() -> Iter<'static, Action> {
-        static ACTIONS: [Action; 8] = [
+        static ACTIONS: [Action; 9] = [
             Action::OpenNamespaceSelection,
             Action::OpenVersionSelection,
             Action::ToggleLogsTailing,
