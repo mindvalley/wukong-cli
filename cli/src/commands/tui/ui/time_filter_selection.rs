@@ -31,10 +31,6 @@ impl TimeFilterSelectionWidget {
         let area = centered_rect(60, 25, frame.size());
         frame.render_widget(Clear, area);
 
-        // if app.state.is_checking_namespaces {
-        //     let loading_widget = create_loading_widget(popup_block);
-        //     frame.render_widget(loading_widget, area);
-        // } else {
         // Create a List from all list items and highlight the currently selected one
         let items = List::new(items)
             .block(popup_block)
@@ -47,6 +43,5 @@ impl TimeFilterSelectionWidget {
             .highlight_symbol(">> ");
 
         frame.render_stateful_widget(items, area, &mut app.time_filter_selections.state);
-        // }
     }
 }
