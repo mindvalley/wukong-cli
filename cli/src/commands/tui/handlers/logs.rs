@@ -67,6 +67,9 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
         key if Action::from_key(key) == Some(Action::ExpandToFullScreen) => {
             app.state.expanded_block = Some(Block::Log);
         }
+        key if Action::from_key(key) == Some(Action::TimeFilterLogs) => {
+            app.set_current_route_state(Some(Block::Dialog(DialogContext::LogTimeFilter)), None);
+        }
         _ => {}
     };
 

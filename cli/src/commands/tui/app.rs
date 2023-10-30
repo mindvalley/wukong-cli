@@ -246,6 +246,7 @@ impl App {
                 Action::SearchLogs,
                 Action::FilterLogs,
                 Action::ExpandToFullScreen,
+                Action::TimeFilterLogs,
             ],
             network_event_sender: sender,
         }
