@@ -9,6 +9,7 @@ use crate::{
     },
     config::{ApiChannel, Config},
     error::WKCliError,
+    update,
 };
 
 mod application;
@@ -42,6 +43,10 @@ pub struct ClapApp {
 
     #[command(flatten)]
     pub verbose: Verbosity<ErrorLevel>,
+
+    /// Store the debugging log in the log file, which is located at ~/.config/wukong
+    #[arg(long, global = true)]
+    pub report: bool,
 
     /// Use the Canary channel API
     #[arg(long, global = true)]
@@ -109,7 +114,7 @@ impl ClapApp {
         };
         debug!("API channel: {:?}", channel);
 
-        match &self.command_group {
+        let command = match &self.command_group {
             CommandGroup::Init => handle_init(channel).await,
             CommandGroup::Completion { shell } => handle_completion(*shell),
             CommandGroup::Login => handle_login().await,
@@ -123,7 +128,12 @@ impl ClapApp {
             CommandGroup::Config(config) => config.handle_command(),
             CommandGroup::Dev(dev) => dev.handle_command(self).await,
             CommandGroup::Tui => handle_tui(channel).await,
-        }
+        };
+
+        // Check for CLI updates:
+        update::check_for_update().await?;
+
+        command
     }
 }
 

@@ -56,6 +56,7 @@ miette = { version = "5.10.0", features = ["fancy"] }
 ignore = "0.4.20"
 rayon = "1.7.0"
 similar = { version = "2.2.1", features = ["inline"] }
+semver = "1.0.20"
 
 # Telemetry
 wukong-telemetry-macro = { path = "../telemetry-macro" }
