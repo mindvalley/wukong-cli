@@ -32,7 +32,7 @@ pub async fn check_for_update() -> Result<(), WKCliError> {
         let last_update_checked_since =
             compare_with_current_time(&release_info.checked_for_update_at);
 
-        if last_update_checked_since >= -24.hours() {
+        if last_update_checked_since >= -(24.hours()) {
             debug!("No need to check for update");
             return Ok(());
         }
