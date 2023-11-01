@@ -37,7 +37,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -72,7 +71,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -98,7 +96,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -132,7 +129,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -171,7 +167,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -197,7 +192,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -233,7 +227,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help (see more with '\''--help'\'')]' \
 '--help[Print help (see more with '\''--help'\'')]' \
@@ -261,7 +254,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -375,7 +367,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -409,7 +400,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -435,7 +425,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -464,7 +453,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -526,7 +514,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -560,7 +547,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -589,7 +575,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -617,7 +602,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -679,7 +663,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -713,7 +696,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -747,7 +729,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -773,7 +754,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -799,7 +779,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -826,7 +805,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -949,7 +927,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -983,7 +960,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -1009,7 +985,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -1037,7 +1012,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -1100,7 +1074,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -1126,7 +1099,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
@@ -1153,7 +1125,6 @@ By default, it'\''ll only report errors.
 \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
-'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
