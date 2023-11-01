@@ -14,6 +14,7 @@ use semver::Version;
 use serde::{Deserialize, Serialize};
 
 const WUKONG_GITHUB_REPO: &str = "mindvalley/wukong-cli";
+const GITHUB_API_URL: &str = "https://api.github.com";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GithubLatestReleaseInfo {
@@ -39,7 +40,7 @@ pub async fn check_for_update() -> Result<(), WKCliError> {
 
     debug!("Checking for update");
 
-    if let Some(latest_release_info) = get_latest_release_info(WUKONG_GITHUB_REPO).await? {
+    if let Some(latest_release_info) = get_latest_release_info(Some(GITHUB_API_URL)).await? {
         let current_version = crate_version!().to_string();
         let has_update = version_greater_than(&latest_release_info.version, &current_version);
 
@@ -88,9 +89,16 @@ fn get_current_release_info() -> Result<Option<ReleaseInfo>, WKCliError> {
     Ok(config.release_info)
 }
 
-async fn get_latest_release_info(repo: &str) -> Result<Option<ReleaseInfo>, WKCliError> {
+async fn get_latest_release_info(
+    github_api_url: Option<&str>,
+) -> Result<Option<ReleaseInfo>, WKCliError> {
     let client = Client::new();
-    let url = format!("https://api.github.com/repos/{}/releases/latest", repo);
+
+    let url = format!(
+        "{}/repos/{}/releases/latest",
+        github_api_url.unwrap_or(GITHUB_API_URL),
+        WUKONG_GITHUB_REPO
+    );
 
     let response = client
         .get(&url)
@@ -104,6 +112,7 @@ async fn get_latest_release_info(repo: &str) -> Result<Option<ReleaseInfo>, WKCl
             .await
             .map_err(|e| {
                 debug!("Error: {:?}", e);
+                println!("Error: {:?}", e);
             });
 
         if let Ok(github_release_info) = github_release_info {
@@ -120,4 +129,63 @@ async fn get_latest_release_info(repo: &str) -> Result<Option<ReleaseInfo>, WKCl
     }
 
     Ok(None)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use httpmock::prelude::*;
+
+    #[test]
+    fn test_version_greater_than() {
+        // Test cases for version comparison.
+        assert!(version_greater_than("1.1.0", "1.0.0"));
+        assert!(!version_greater_than("1.0.0", "1.1.0"));
+        assert!(!version_greater_than("1.0.0", "1.0.0"));
+        assert!(!version_greater_than("invalid", "1.0.0"));
+        assert!(!version_greater_than("1.0.0", "invalid"));
+    }
+
+    #[tokio::test]
+    async fn test_get_latest_release_info() {
+        let server = MockServer::start();
+
+        let api_resp = r#"{
+            "url": "https://github.com/mindvalley/wukong-cli/releases/tag/1.2.0",
+            "html_url": "https://github.com/mindvalley/wukong-cli/releases/tag/1.2.0",
+            "id": 120063991,
+            "tag_name": "1.2.0",
+            "published_at": "2023-09-06T07:08:46Z",
+            "body": null
+        }"#;
+
+        let url = format!("/repos/{}/releases/latest", WUKONG_GITHUB_REPO);
+
+        let mock_server = server.mock(|when, then| {
+            when.method(GET)
+                .path(url)
+                .header("user-agent", "wukong-cli");
+            then.status(200)
+                .header("content-type", "application/json; charset=UTF-8")
+                .body(api_resp);
+        });
+        println!("{:?}", &server.base_url());
+
+        let release_info = get_latest_release_info(Some(&server.base_url())).await;
+
+        mock_server.assert();
+        assert!(release_info.is_ok());
+
+        let release_info = release_info.unwrap();
+        println!("release_info: {:?}", release_info);
+        assert!(release_info.is_some());
+
+        let release_info = release_info.unwrap();
+        assert_eq!(release_info.version, "1.2.0");
+        assert_eq!(release_info.published_at, "2023-09-06T07:08:46Z");
+        assert_eq!(
+            release_info.url,
+            "https://github.com/mindvalley/wukong-cli/releases/tag/1.2.0"
+        );
+    }
 }
