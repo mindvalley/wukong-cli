@@ -293,11 +293,15 @@ async fn get_gcloud_logs(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Resu
     let application = app_ref.state.current_application.clone();
     let version = app_ref.state.current_version.clone();
     let namespace = app_ref.state.current_namespace.clone();
+    let time_filter = app_ref.state.current_time_filter;
     let logs_severity = app_ref.state.logs_severity;
 
     let since = match app_ref.state.last_log_entry_timestamp.clone() {
         Some(t) => Some(t),
-        None => Some("1m".to_string()),
+        None => match time_filter {
+            Some(time_filter) => Some(time_filter.to_string()),
+            None => Some("5m".to_string()),
+        },
     };
 
     drop(app_ref);

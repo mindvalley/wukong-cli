@@ -9,7 +9,7 @@ use ratatui::{
 use self::{
     application::ApplicationWidget, builds::BuildsWidget, deployment::DeploymentWidget,
     help::HelpWidget, logs::LogsWidget, namespace_selection::NamespaceSelectionWidget,
-    version_selection::VersionSelectionWidget,
+    time_filter_selection::TimeFilterSelectionWidget, version_selection::VersionSelectionWidget,
 };
 
 use super::app::{App, Block, DialogContext};
@@ -20,6 +20,7 @@ mod deployment;
 mod help;
 mod logs;
 mod namespace_selection;
+mod time_filter_selection;
 mod util;
 mod version_selection;
 
@@ -103,6 +104,9 @@ where
         }
         Block::Dialog(DialogContext::VersionSelection) => {
             VersionSelectionWidget::draw(app, frame);
+        }
+        Block::Dialog(DialogContext::LogTimeFilter) => {
+            TimeFilterSelectionWidget::draw(app, frame);
         }
         _ => {}
     }
