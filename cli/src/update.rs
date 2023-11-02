@@ -66,10 +66,33 @@ pub async fn check_for_update() -> Result<(), WKCliError> {
     Ok(())
 }
 
+fn get_current_release_info() -> Result<Option<ReleaseInfo>, WKCliError> {
+    let config = Config::load_from_default_path().map_err(|e| {
+        debug!("Error: {:?}", e);
+    });
+
+    if let Ok(config) = config {
+        return Ok(config.release_info);
+    }
+
+    Ok(None)
+}
+
 fn update_release_info(release_info: ReleaseInfo) -> Result<(), WKCliError> {
-    let mut config = Config::load_from_default_path()?;
-    config.release_info = Some(release_info);
-    config.save_to_default_path()?;
+    let config = Config::load_from_default_path();
+
+    match config {
+        Ok(mut config) => {
+            config.release_info = Some(release_info);
+
+            let _ = config.save_to_default_path().map_err(|e| {
+                debug!("Error: {:?}", e);
+            });
+        }
+        Err(e) => {
+            debug!("Error: {:?}", e);
+        }
+    };
 
     Ok(())
 }
@@ -82,11 +105,6 @@ fn version_greater_than(new_version: &str, current_version: &str) -> bool {
     } else {
         false
     }
-}
-
-fn get_current_release_info() -> Result<Option<ReleaseInfo>, WKCliError> {
-    let config = Config::load_from_default_path()?;
-    Ok(config.release_info)
 }
 
 async fn get_latest_release_info(
