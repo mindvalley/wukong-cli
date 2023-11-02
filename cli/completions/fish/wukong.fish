@@ -57,8 +57,8 @@ By default, it\'ll only report errors.
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from info" -s q -l quiet -d 'Do not print log message'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from info" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from info" -s h -l help -d 'Print help'
-complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -l namespace -d '(optional) The namespace to deploy to' -r -f -a "{prod	,staging	}"
-complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -l version -d '(optional) The version that the deployment will perform against' -r -f -a "{blue	,green	}"
+complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -l namespace -d '(optional) The namespace to deploy to' -r -f -a "{prod	'',staging	''}"
+complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -l version -d '(optional) The version that the deployment will perform against' -r -f -a "{blue	'',green	''}"
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -s s -l since -d 'Show logs lines newer from relative duration, e.g 5m, 1h, 1d. Also accept datetime in RFC 3339 format' -r
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -s u -l until -d 'Show logs lines older than relative duration, e.g 30m, 2h, 2d. Also accept datetime in RFC 3339 format' -r
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -l limit -d 'Limiting the number of log entries to return' -r
@@ -91,8 +91,8 @@ complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from connect; and not __fish_seen_subcommand_from help" -f -a "list" -d 'Listing the currently running Elixir instances, normally under a GKE Pod'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from connect; and not __fish_seen_subcommand_from help" -f -a "connect" -d 'Start the interactive session to connect to the remote Elixir instance'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from connect; and not __fish_seen_subcommand_from help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
-complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from list" -l namespace -d '(optional) The namespace to list the running instances' -r -f -a "{prod	,staging	}"
-complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from list" -l version -d '(optional) The version of the application to filter the returning running instances' -r -f -a "{blue	,green	}"
+complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from list" -l namespace -d '(optional) The namespace to list the running instances' -r -f -a "{prod	'',staging	''}"
+complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from list" -l version -d '(optional) The version of the application to filter the returning running instances' -r -f -a "{blue	'',green	''}"
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from list" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from list" -s v -l verbose -d 'Use verbos output. More output per occurrence.
 
@@ -104,8 +104,8 @@ By default, it\'ll only report errors.
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from list" -s q -l quiet -d 'Do not print log message'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from list" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from list" -s h -l help -d 'Print help (see more with \'--help\')'
-complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from connect" -l namespace -d '(optional) The namespace to list the running instances' -r -f -a "{prod	,staging	}"
-complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from connect" -l version -d '(optional) The version of the application to filter the returning running instances' -r -f -a "{blue	,green	}"
+complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from connect" -l namespace -d '(optional) The namespace to list the running instances' -r -f -a "{prod	'',staging	''}"
+complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from connect" -l version -d '(optional) The version of the application to filter the returning running instances' -r -f -a "{blue	'',green	''}"
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from connect" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from connect" -s v -l verbose -d 'Use verbos output. More output per occurrence.
 
@@ -206,8 +206,8 @@ By default, it\'ll only report errors.
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from list" -s q -l quiet -d 'Do not print log message'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from list" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from list" -s h -l help -d 'Print help'
-complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from execute" -l namespace -d 'The namespace to deploy to' -r -f -a "{prod	,staging	}"
-complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from execute" -l version -d 'The version that the deployment will perform against' -r -f -a "{blue	,green	}"
+complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from execute" -l namespace -d 'The namespace to deploy to' -r -f -a "{prod	'',staging	''}"
+complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from execute" -l version -d 'The version that the deployment will perform against' -r -f -a "{blue	'',green	''}"
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from execute" -l artifact -d 'The build artifact that the deployment will use' -r
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from execute" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from execute" -s v -l verbose -d 'Use verbos output. More output per occurrence.
@@ -220,8 +220,8 @@ By default, it\'ll only report errors.
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from execute" -s q -l quiet -d 'Do not print log message'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from execute" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from execute" -s h -l help -d 'Print help'
-complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from rollback" -l namespace -d 'The namespace to deploy to' -r -f -a "{prod	,staging	}"
-complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from rollback" -l version -d 'The version that the deployment will perform against' -r -f -a "{blue	,green	}"
+complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from rollback" -l namespace -d 'The namespace to deploy to' -r -f -a "{prod	'',staging	''}"
+complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from rollback" -l version -d 'The version that the deployment will perform against' -r -f -a "{blue	'',green	''}"
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from rollback" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from rollback" -s v -l verbose -d 'Use verbos output. More output per occurrence.
 

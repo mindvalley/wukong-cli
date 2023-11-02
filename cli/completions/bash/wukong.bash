@@ -2004,4 +2004,4 @@ _wukong() {
     esac
 }
 
-complete -F _wukong -o bashdefault -o default wukong
+complete -F _wukong -o nosort -o bashdefault -o default wukong
