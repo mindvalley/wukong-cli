@@ -29,9 +29,11 @@ async fn handle_enter_key(app: &mut App) {
 
     if let Some(current_time_filter) = &app.state.current_time_filter {
         if current_time_filter != selected {
+            app.state.current_time_filter = Some(*selected);
             fetch_and_reset_polling(app).await;
         }
     } else {
+        app.state.current_time_filter = Some(*selected);
         fetch_and_reset_polling(app).await;
     }
 
