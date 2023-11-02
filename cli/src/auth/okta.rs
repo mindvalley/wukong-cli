@@ -263,6 +263,7 @@ pub async fn refresh_tokens(config: &Config) -> Result<OktaAuth, WKCliError> {
             let error = match exchange_error {
                 openidconnect::RequestTokenError::ServerResponse(error) => {
                     let error_description = error.to_string();
+                    debug!("token_response: {:?}", error);
 
                     if error.error().to_string() == "invalid_grant"
                         && error_description.contains("refresh token")
@@ -350,7 +351,8 @@ pub async fn introspect_token(config: &Config, token: &str) -> Result<bool, WKCl
         })?;
 
     debug!(
-        "introspect response: email: {:?}, active: {:?}, exp: {:?}",
+        "introspect response: refresh_token: {}, email: {:?}, active: {:?}, exp: {:?}",
+        token,
         token_response.to_owned().username(),
         token_response.to_owned().active(),
         token_response.to_owned().exp()
