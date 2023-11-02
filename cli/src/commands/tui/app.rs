@@ -111,6 +111,7 @@ pub struct State {
     pub search_bar_input: Input,
     pub filter_bar_include_input: Input,
     pub filter_bar_exclude_input: Input,
+    pub logs_textwrap: bool,
 }
 
 pub struct App {
@@ -199,6 +200,7 @@ impl App {
                 search_bar_input: Input::default(),
                 filter_bar_include_input: Input::default(),
                 filter_bar_exclude_input: Input::default(),
+                logs_textwrap: false,
             },
             navigation_stack: vec![DEFAULT_ROUTE],
             block_map: HashMap::new(),

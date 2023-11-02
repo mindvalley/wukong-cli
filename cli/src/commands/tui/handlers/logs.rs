@@ -67,6 +67,9 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
         key if Action::from_key(key) == Some(Action::ExpandToFullScreen) => {
             app.state.expanded_block = Some(Block::Log);
         }
+        key if Action::from_key(key) == Some(Action::LineWrapLogs) => {
+            app.state.logs_textwrap = !app.state.logs_textwrap;
+        }
         _ => {}
     };
 

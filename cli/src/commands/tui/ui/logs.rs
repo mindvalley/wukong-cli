@@ -296,61 +296,57 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
             log_entries
         }
     } else {
-        // state.log_entries[start..end]
-        //     .iter()
-        //     .map(|log_entry| {
-        //         Line::styled(format!("{}", log_entry), Style::default().fg(Color::White))
-        //     })
-        //     .collect()
+        if state.logs_textwrap {
+            let mut wrapped_vec = Vec::new();
+            let mut count = 0;
+            let mut first_color = true;
+            for log in state.log_entries[start..end].iter() {
+                let str = log.to_string();
+                let wrapped = textwrap::wrap(&str, inner_width as usize);
+                let color = if first_color {
+                    Color::Cyan
+                } else {
+                    Color::White
+                };
 
-        let mut wrapped_vec = Vec::new();
-        let mut count = 0;
-        let mut first_color = true;
-        for log in state.log_entries[start..end].iter() {
-            let str = log.to_string();
-            let wrapped = textwrap::wrap(&str, inner_width as usize);
-            let color = if first_color {
-                Color::Cyan
-            } else {
-                Color::White
-            };
+                wrapped_vec.extend(
+                    wrapped
+                        .iter()
+                        .map(|each| Line::styled(each.to_string(), Style::default().fg(color)))
+                        .collect::<Vec<_>>(),
+                );
 
-            wrapped_vec.extend(
-                wrapped
-                    .iter()
-                    .map(|each| Line::styled(each.to_string(), Style::default().fg(color)))
-                    .collect::<Vec<_>>(),
-            );
+                first_color = !first_color;
 
-            first_color = !first_color;
+                wrapped_vec.pop();
 
-            wrapped_vec.pop();
+                count += 1;
 
-            count += 1;
-
-            if wrapped_vec.len() >= inner_height as usize {
-                break;
+                if wrapped_vec.len() >= inner_height as usize {
+                    break;
+                }
             }
+
+            wrapped_vec
+                .into_iter()
+                .take(inner_height as usize)
+                .collect()
+        } else {
+            let mut first_color = true;
+
+            state.log_entries[start..end]
+                .iter()
+                .map(|log_entry| {
+                    let color = if first_color {
+                        Color::Cyan
+                    } else {
+                        Color::White
+                    };
+                    first_color = !first_color;
+                    Line::styled(format!("{}", log_entry), Style::default().fg(color))
+                })
+                .collect()
         }
-
-        println!("{count}");
-
-        wrapped_vec
-            .into_iter()
-            .take(inner_height as usize)
-            .collect()
-
-        // state.log_entries[start..end]
-        //     .iter()
-        //     .map(|log_entry| log_entry.to_string())
-        //     // .skip(10)
-        //     .flat_map(|each| textwrap::wrap(each, inner_width as usize))
-        //     // .skip(2)
-        //     .take(5)
-        //     // .enumerate()
-        //     .map(|line| Line::styled(line, Style::default().fg(Color::White)))
-        //     .collect()
-        // .for_each(|(line, y)| buffer.set_line(area.x, area.y + y, line, line.style()));
     };
 
     let paragraph = Paragraph::new(log_entries)
