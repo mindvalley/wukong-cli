@@ -36,6 +36,12 @@ id_token = "id_token"
 access_token = "access_token"
 expiry_time = "2023-02-19T06:55:51.501915+00:00"
 refresh_token = "refresh_token"
+
+[release_info]
+version = "1.2.0"
+url = "https://github.com/mindvalley/wukong-cli/releases/tag/1.2.0"
+published_at = "2023-09-06T07:08:46Z"
+checked_for_update_at = "2023-11-02T03:13:13.147301+00:00"
     "#,
         )
         .unwrap();
@@ -200,6 +206,12 @@ id_token = "id_token"
 access_token = "access_token"
 expiry_time = "2023-02-19T06:55:51.501915+00:00"
 refresh_token = "refresh_token"
+
+[release_info]
+version = "1.2.0"
+url = "https://github.com/mindvalley/wukong-cli/releases/tag/1.2.0"
+published_at = "2023-09-06T07:08:46Z"
+checked_for_update_at = "2023-11-02T03:13:13.147301+00:00"
 "#,
         )
         .unwrap();
@@ -230,6 +242,12 @@ id_token = "id_token"
 access_token = "access_token"
 expiry_time = "2023-02-19T06:55:51.501915+00:00"
 refresh_token = "refresh_token"
+
+[release_info]
+version = "1.2.0"
+url = "https://github.com/mindvalley/wukong-cli/releases/tag/1.2.0"
+published_at = "2023-09-06T07:08:46Z"
+checked_for_update_at = "2023-11-02T03:13:13.147301+00:00"
 "#,
     );
 
