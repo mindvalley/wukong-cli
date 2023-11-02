@@ -44,10 +44,6 @@ pub struct ClapApp {
     #[command(flatten)]
     pub verbose: Verbosity<ErrorLevel>,
 
-    /// Store the debugging log in the log file, which is located at ~/.config/wukong
-    #[arg(long, global = true)]
-    pub report: bool,
-
     /// Use the Canary channel API
     #[arg(long, global = true)]
     canary: bool,
