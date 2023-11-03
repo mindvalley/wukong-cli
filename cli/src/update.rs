@@ -58,9 +58,9 @@ fn print_update_message() {
             colored_print!(
                 "{} {} {} {}\n",
                 "A new release of wukong is available:".yellow(),
-                release_info.version.cyan(),
+                current_version.cyan(),
                 "→".cyan(),
-                current_version.cyan()
+                release_info.version.cyan(),
             );
 
             colored_print!("To upgrade, run: brew upgrade wukong\n");
