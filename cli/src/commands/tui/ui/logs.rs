@@ -144,12 +144,7 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
 
     let log_entries = if state.show_search_bar {
         if state.search_bar_input.input.is_empty() {
-            state.log_entries[start..end]
-                .iter()
-                .map(|log_entry| {
-                    Line::styled(format!("{}", log_entry), Style::default().fg(Color::White))
-                })
-                .collect()
+            generate_log_entries_line_without_text_wrap(state, start, end)
         } else {
             let regex =
                 Regex::new(&format!(r"(?i){}", state.search_bar_input.input.trim())).unwrap();
@@ -190,7 +185,7 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
 
                     line.push(Span::styled(
                         output_string[m.0..m.1].to_string(),
-                        Style::default().fg(Color::Cyan),
+                        Style::default().bg(Color::Yellow).fg(Color::Black),
                     ));
 
                     if index == matches.len() - 1 {
@@ -229,12 +224,7 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
         }
 
         if include.is_empty() {
-            log_entries
-                .iter()
-                .map(|log_entry| {
-                    Line::styled(format!("{}", log_entry), Style::default().fg(Color::White))
-                })
-                .collect()
+            generate_log_entries_line_without_text_wrap(state, start, end)
         } else {
             let regex = Regex::new(&format!(
                 r"(?i){}",
@@ -332,20 +322,7 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
                 .take(inner_height as usize)
                 .collect()
         } else {
-            let mut first_color = true;
-
-            state.log_entries[start..end]
-                .iter()
-                .map(|log_entry| {
-                    let color = if first_color {
-                        Color::Cyan
-                    } else {
-                        Color::White
-                    };
-                    first_color = !first_color;
-                    Line::styled(format!("{}", log_entry), Style::default().fg(color))
-                })
-                .collect()
+            generate_log_entries_line_without_text_wrap(state, start, end)
         }
     };
 
@@ -470,4 +447,25 @@ fn calculate_start_position(state: &mut State) -> usize {
     }
 
     state.logs_table_start_position
+}
+
+fn generate_log_entries_line_without_text_wrap(
+    state: &State,
+    start: usize,
+    end: usize,
+) -> Vec<Line> {
+    let mut first_color = true;
+
+    state.log_entries[start..end]
+        .iter()
+        .map(|log_entry| {
+            let color = if first_color {
+                Color::Cyan
+            } else {
+                Color::White
+            };
+            first_color = !first_color;
+            Line::styled(format!("{}", log_entry), Style::default().fg(color))
+        })
+        .collect()
 }
