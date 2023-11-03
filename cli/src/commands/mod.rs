@@ -127,7 +127,7 @@ impl ClapApp {
         };
 
         // Check for CLI updates:
-        update::check_for_update().await?;
+        update::check_for_update().await;
 
         command
     }

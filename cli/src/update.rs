@@ -29,7 +29,7 @@ pub async fn check_for_update() {
 
     if let Some(release_info) = release_info {
         let last_update_checked_since =
-            compare_with_current_time(&release_info.checked_for_update_at);
+            compare_with_current_time(&release_info.last_update_checked_at);
 
         if last_update_checked_since >= -(24.hours()) {
             debug!("No need to check for update");
@@ -40,26 +40,34 @@ pub async fn check_for_update() {
     debug!("Checking for update");
 
     if let Some(latest_release_info) = get_latest_release_info(Some(GITHUB_API_URL)).await {
-        let current_version = crate_version!().to_string();
-        let has_update = version_greater_than(&latest_release_info.version, &current_version);
+        update_release_info(latest_release_info);
+    }
+
+    print_update_message();
+}
+
+fn print_update_message() {
+    let release_info = get_current_release_info();
+    let current_version = crate_version!().to_string();
+
+    if let Some(release_info) = release_info {
+        let has_update = version_greater_than(&release_info.version, &current_version);
 
         if has_update {
             debug!("New release found");
             colored_print!(
                 "{} {} {} {}\n",
                 "A new release of wukong is available:".yellow(),
-                latest_release_info.version.cyan(),
+                release_info.version.cyan(),
                 "→".cyan(),
                 current_version.cyan()
             );
 
             colored_print!("To upgrade, run: brew upgrade wukong\n");
-            colored_print!("{}\n", latest_release_info.url.yellow());
+            colored_print!("{}\n", release_info.url.yellow());
         } else {
             debug!("No new release found");
         }
-
-        update_release_info(latest_release_info);
     }
 }
 
@@ -133,7 +141,7 @@ async fn get_latest_release_info(github_api_url: Option<&str>) -> Option<Release
                 version: github_release_info.tag_name,
                 url: github_release_info.html_url,
                 published_at: github_release_info.published_at,
-                checked_for_update_at: Utc::now().to_rfc3339(),
+                last_update_checked_at: Utc::now().to_rfc3339(),
             });
         }
     }
@@ -184,11 +192,6 @@ mod tests {
         let release_info = get_latest_release_info(Some(&server.base_url())).await;
 
         mock_server.assert();
-        assert!(release_info.is_ok());
-
-        let release_info = release_info.unwrap();
-        println!("release_info: {:?}", release_info);
-        assert!(release_info.is_some());
 
         let release_info = release_info.unwrap();
         assert_eq!(release_info.version, "1.2.0");

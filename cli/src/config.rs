@@ -101,7 +101,7 @@ pub struct ReleaseInfo {
     pub version: String,
     pub url: String,
     pub published_at: String,
-    pub checked_for_update_at: String,
+    pub last_update_checked_at: String,
 }
 
 impl Default for Config {
