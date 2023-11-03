@@ -1,26 +1,53 @@
 use log::{LevelFilter, Metadata, Record};
+use once_cell::sync::Lazy;
 use owo_colors::{colors::xterm::Gray, OwoColorize};
-use std::{env, str::FromStr};
+use std::fs;
+use std::io::Write;
+use std::{env, fs::File, str::FromStr, sync::Mutex};
 
 pub struct Builder {
     max_log_level: log::LevelFilter,
+    log_file: Mutex<File>,
+    report: bool,
 }
 
 #[derive(Debug)]
-pub struct Logger;
+pub struct Logger {
+    log_file: Mutex<File>,
+    report: bool,
+}
 
-pub const GLOBAL_LOGGER: &Logger = &Logger;
+impl Logger {
+    fn new(log_file: Mutex<File>, report: bool) -> Self {
+        Self { log_file, report }
+    }
+}
+
 pub const LOG_LEVEL_ENV: &str = "WUKONG_LOG";
+pub static DEBUG_LOG_FILE: Lazy<Option<String>> = Lazy::new(|| {
+    #[cfg(feature = "prod")]
+    return dirs::home_dir().map(|mut path| {
+        path.extend([".config", "wukong", "debug_log"]);
+        path.to_str().unwrap().to_string()
+    });
+
+    #[cfg(not(feature = "prod"))]
+    dirs::home_dir().map(|mut path| {
+        path.extend([".config", "wukong", "dev", "debug_log"]);
+        path.to_str().unwrap().to_string()
+    })
+});
 
 impl log::Log for Logger {
     fn enabled(&self, _metadata: &Metadata) -> bool {
-        // metadata.level() <= Level::Info
         true
     }
 
     fn log(&self, record: &Record) {
+        let level = record.level();
+
         if self.enabled(record.metadata()) {
-            let level = match record.level() {
+            let level_with_colors = match level {
                 log::Level::Error => "Error".red().to_string(),
                 log::Level::Warn => "Warn".yellow().to_string(),
                 log::Level::Info => "Info".cyan().to_string(),
@@ -28,7 +55,38 @@ impl log::Log for Logger {
                 log::Level::Trace => "Trace".fg::<Gray>().to_string(),
             };
 
-            eprintln!("{} {} {}", level, "-".fg::<Gray>(), record.args(),);
+            // If report mode is on dont pring the debug logs to the user:
+            if !self.report || level != log::Level::Debug {
+                eprintln!(
+                    "{} {} {}",
+                    level_with_colors,
+                    "-".fg::<Gray>(),
+                    record.args(),
+                );
+            }
+        }
+
+        let module_path = record.module_path().expect("Module path not found");
+
+        if self.report && level == log::Level::Debug && module_path.starts_with("wukong") {
+            let log_message = format!(
+                "[{}] [{}] [{}] [{}] [line:{}] {}",
+                chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f"),
+                record.level(),
+                module_path,
+                record.file().expect("File path not found"),
+                record.line().expect("Line number not found"),
+                record.args()
+            );
+
+            // Open the log file and write the log message
+            if let Ok(mut log_file) = self.log_file.lock() {
+                if let Err(err) = writeln!(&mut log_file, "{}", log_message) {
+                    eprintln!("Error writing to log file: {}", err);
+                }
+            } else {
+                eprintln!("Error locking log file for writing.");
+            }
         }
     }
 
@@ -46,9 +104,34 @@ impl Builder {
             Err(_) => LevelFilter::Error,
         };
 
+        let debug_log_file = DEBUG_LOG_FILE
+            .as_ref()
+            .expect("Unable to identify user's home directory");
+
+        // Create the directory if it doesn't exist
+        if let Some(parent_dir) = std::path::Path::new(debug_log_file).parent() {
+            if !parent_dir.exists() {
+                if let Err(err) = fs::create_dir_all(parent_dir) {
+                    eprintln!("Error creating directory: {}", err);
+                }
+            }
+        }
+
+        let log_file = File::create(debug_log_file).expect("Unable to create debug log file");
+
         Self {
             max_log_level: default_log_level,
+            log_file: Mutex::new(log_file),
+            report: false,
         }
+    }
+
+    pub fn with_report(mut self, report: bool) -> Self {
+        if report {
+            self.report = report;
+        }
+
+        self
     }
 
     pub fn with_max_level(mut self, max_log_level: LevelFilter) -> Self {
@@ -63,8 +146,18 @@ impl Builder {
     }
 
     pub fn init(self) {
-        log::set_max_level(self.max_log_level);
-        log::set_logger(GLOBAL_LOGGER).expect("unable to init wukong-cli logger");
+        if self.report {
+            log::set_max_level(LevelFilter::Debug);
+        } else {
+            log::set_max_level(self.max_log_level);
+        }
+
+        let logger = self.build();
+        log::set_boxed_logger(Box::new(logger)).expect("unable to init wukong-cli logger");
+    }
+
+    pub fn build(self) -> Logger {
+        Logger::new(self.log_file, self.report)
     }
 }
 
