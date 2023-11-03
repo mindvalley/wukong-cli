@@ -1,6 +1,5 @@
 use crate::{
     config::{Config, ReleaseInfo},
-    output::colored_print,
     utils::compare_with_current_time,
 };
 use aion::*;
