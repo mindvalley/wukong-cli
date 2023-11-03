@@ -55,7 +55,7 @@ pub struct Config {
     pub core: CoreConfig,
     pub auth: Option<AuthConfig>,
     pub vault: Option<VaultConfig>,
-    pub release_info: Option<ReleaseInfo>,
+    pub update_check: Option<UpdateCheck>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -97,10 +97,7 @@ pub struct AuthConfig {
 
 // ReleaseInfo stores information about a release
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-pub struct ReleaseInfo {
-    pub version: String,
-    pub url: String,
-    pub published_at: String,
+pub struct UpdateCheck {
     pub last_update_checked_at: String,
 }
 
@@ -117,7 +114,7 @@ impl Default for Config {
             },
             auth: None,
             vault: None,
-            release_info: None,
+            update_check: None,
         }
     }
 }
