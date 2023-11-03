@@ -31,7 +31,7 @@ pub async fn check_for_update() {
         let last_update_checked_since =
             compare_with_current_time(&release_info.last_update_checked_at);
 
-        if last_update_checked_since >= -(24.hours()) {
+        if last_update_checked_since >= -(168.hours()) {
             debug!("No need to check for update");
             return;
         }
