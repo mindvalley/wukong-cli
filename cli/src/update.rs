@@ -1,6 +1,5 @@
 use crate::{
     config::{Config, ReleaseInfo},
-    error::WKCliError,
     output::colored_print,
     utils::compare_with_current_time,
 };
@@ -25,8 +24,8 @@ pub struct GithubLatestReleaseInfo {
 }
 
 // check_for_update checks whether this wukong has had a newer release on Github
-pub async fn check_for_update() -> Result<(), WKCliError> {
-    let release_info = get_current_release_info()?;
+pub async fn check_for_update() {
+    let release_info = get_current_release_info();
 
     if let Some(release_info) = release_info {
         let last_update_checked_since =
@@ -34,13 +33,13 @@ pub async fn check_for_update() -> Result<(), WKCliError> {
 
         if last_update_checked_since >= -(24.hours()) {
             debug!("No need to check for update");
-            return Ok(());
+            return;
         }
     }
 
     debug!("Checking for update");
 
-    if let Some(latest_release_info) = get_latest_release_info(Some(GITHUB_API_URL)).await? {
+    if let Some(latest_release_info) = get_latest_release_info(Some(GITHUB_API_URL)).await {
         let current_version = crate_version!().to_string();
         let has_update = version_greater_than(&latest_release_info.version, &current_version);
 
@@ -60,25 +59,23 @@ pub async fn check_for_update() -> Result<(), WKCliError> {
             debug!("No new release found");
         }
 
-        update_release_info(latest_release_info)?;
+        update_release_info(latest_release_info);
     }
-
-    Ok(())
 }
 
-fn get_current_release_info() -> Result<Option<ReleaseInfo>, WKCliError> {
+fn get_current_release_info() -> Option<ReleaseInfo> {
     let config = Config::load_from_default_path().map_err(|e| {
         debug!("Error: {:?}", e);
     });
 
     if let Ok(config) = config {
-        return Ok(config.release_info);
+        return config.release_info;
     }
 
-    Ok(None)
+    None
 }
 
-fn update_release_info(release_info: ReleaseInfo) -> Result<(), WKCliError> {
+fn update_release_info(release_info: ReleaseInfo) {
     let config = Config::load_from_default_path();
 
     match config {
@@ -93,8 +90,6 @@ fn update_release_info(release_info: ReleaseInfo) -> Result<(), WKCliError> {
             debug!("Error: {:?}", e);
         }
     };
-
-    Ok(())
 }
 
 fn version_greater_than(new_version: &str, current_version: &str) -> bool {
@@ -107,9 +102,7 @@ fn version_greater_than(new_version: &str, current_version: &str) -> bool {
     }
 }
 
-async fn get_latest_release_info(
-    github_api_url: Option<&str>,
-) -> Result<Option<ReleaseInfo>, WKCliError> {
+async fn get_latest_release_info(github_api_url: Option<&str>) -> Option<ReleaseInfo> {
     let client = Client::new();
 
     let url = format!(
@@ -122,31 +115,30 @@ async fn get_latest_release_info(
         .get(&url)
         .header("user-agent", "wukong-cli")
         .send()
-        .await?;
+        .await
+        .map_err(|e| {
+            debug!("Error: {:?}", e);
+        });
 
-    if response.status().is_success() {
+    if let Ok(response) = response {
         let github_release_info = response
             .json::<GithubLatestReleaseInfo>()
             .await
             .map_err(|e| {
                 debug!("Error: {:?}", e);
-                println!("Error: {:?}", e);
             });
 
         if let Ok(github_release_info) = github_release_info {
-            return Ok(Some(ReleaseInfo {
+            return Some(ReleaseInfo {
                 version: github_release_info.tag_name,
                 url: github_release_info.html_url,
                 published_at: github_release_info.published_at,
                 checked_for_update_at: Utc::now().to_rfc3339(),
-            }));
+            });
         }
-    } else {
-        let message = response.text().await?;
-        debug!("Error: {:?}", message);
     }
 
-    Ok(None)
+    None
 }
 
 #[cfg(test)]
