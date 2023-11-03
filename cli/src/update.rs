@@ -55,7 +55,7 @@ fn print_update_message() {
 
         if has_update {
             debug!("New release found");
-            colored_print!(
+            eprintln!(
                 "{} {} {} {}\n",
                 "A new release of wukong is available:".yellow(),
                 current_version.cyan(),
@@ -63,8 +63,8 @@ fn print_update_message() {
                 release_info.version.cyan(),
             );
 
-            colored_print!("To upgrade, run: brew upgrade wukong\n");
-            colored_print!("{}\n", release_info.url.yellow());
+            eprintln!("To upgrade, run: brew upgrade wukong\n");
+            eprintln!("{}\n", release_info.url.yellow());
         } else {
             debug!("No new release found");
         }
