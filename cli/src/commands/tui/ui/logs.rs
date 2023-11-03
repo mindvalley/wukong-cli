@@ -421,7 +421,7 @@ fn render_filter_bar<B: Backend>(frame: &mut Frame<'_, B>, input_area: Rect, app
 
 fn calculate_start_position(state: &mut State) -> usize {
     if state.logs_table_start_position >= state.log_entries.len() {
-        state.logs_table_start_position = state.log_entries.len() - 1;
+        state.logs_table_start_position = state.log_entries.len().saturating_sub(1);
     }
 
     state.logs_table_start_position
