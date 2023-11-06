@@ -93,9 +93,12 @@ pub struct State {
     pub logs_vertical_scroll: usize,
     pub logs_horizontal_scroll: usize,
     pub logs_enable_auto_scroll_to_bottom: bool,
-    pub logs_table_state: TableState,
-    pub logs_table_current_index: usize,
-    pub logs_table_start_position: usize,
+    pub logs_table_current_start_index: usize,
+    // last index of the table that is visible
+    pub logs_table_current_last_index: usize,
+    // whether last index of the table that is visible is fully rendered
+    // useful to know if we need to scroll during textwrap
+    pub logs_table_current_last_fully_rendered: bool,
     pub expanded_block: Option<Block>,
 
     // For log entries polling
@@ -191,9 +194,9 @@ impl App {
                 logs_vertical_scroll: 0,
                 logs_horizontal_scroll: 0,
                 instant_since_last_log_entries_poll: Instant::now(),
-                logs_table_state,
-                logs_table_current_index: 0,
-                logs_table_start_position: 0,
+                logs_table_current_start_index: 0,
+                logs_table_current_last_index: 0,
+                logs_table_current_last_fully_rendered: true,
                 expanded_block: None,
 
                 logs_widget_width: 0,

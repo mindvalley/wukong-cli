@@ -16,21 +16,48 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
             }
         }
         key if common_key_events::up_event(key) => {
+            // FIXME: currently we are scrolling up based on the current rendered count.
+            // if 1 log rendered on the screen currently, then we will scroll up 1 log when up key
+            // is pressed,
+            // if 5 logs rendered on the screen currently, then we will scroll up 5 logs when up
+            // key is pressed.
+            // While this is working, but the UX is not great.
+            // I haven't come up a better solution yet. We need a better calculation for this
             if app.state.logs_textwrap {
-            } else {
-                app.state.logs_table_start_position = app
+                let count = app.state.logs_table_current_last_index
+                    - app.state.logs_table_current_start_index
+                    + 1;
+
+                app.state.logs_table_current_start_index = app
                     .state
-                    .logs_table_start_position
+                    .logs_table_current_start_index
+                    .saturating_sub(count);
+            } else {
+                app.state.logs_table_current_start_index = app
+                    .state
+                    .logs_table_current_start_index
                     .saturating_sub(app.state.logs_size.1 as usize);
             }
         }
         key if common_key_events::down_event(key) => {
-            if app.state.logs_textwrap {
+            let next_start_index = if app.state.logs_textwrap {
+                if app.state.logs_table_current_last_fully_rendered {
+                    app.state.logs_table_current_last_index.saturating_add(1)
+                } else {
+                    app.state.logs_table_current_last_index
+                }
             } else {
-                app.state.logs_table_start_position = app
-                    .state
-                    .logs_table_start_position
-                    .saturating_add(app.state.logs_size.1 as usize);
+                app.state
+                    .logs_table_current_start_index
+                    .saturating_add(app.state.logs_size.1 as usize)
+            };
+
+            // prevent going out of bounds
+            if next_start_index >= app.state.log_entries.len() {
+                app.state.logs_table_current_start_index =
+                    app.state.log_entries.len().saturating_sub(1);
+            } else {
+                app.state.logs_table_current_start_index = next_start_index;
             }
         }
         key if common_key_events::left_event(key) => {

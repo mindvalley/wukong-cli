@@ -143,7 +143,7 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
     state.logs_size = (inner_width, inner_height);
 
     let num_rows: usize = inner_height as usize;
-    let start = calculate_start_position(state);
+    let start = state.logs_table_current_start_index;
 
     let end = std::cmp::min(state.log_entries.len(), start + num_rows);
 
@@ -154,59 +154,7 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
             let regex =
                 Regex::new(&format!(r"(?i){}", state.search_bar_input.input.trim())).unwrap();
 
-            let filtered_log_entries = state
-                .log_entries
-                .iter()
-                .filter(|each| regex.is_match(&each.to_string()))
-                .collect::<Vec<_>>();
-
-            let mut log_entries = Vec::new();
-            for each in filtered_log_entries.iter() {
-                let output_string = each.to_string();
-
-                let mut matches: Vec<(usize, usize)> = Vec::new();
-                for found in regex.find_iter(&output_string.clone()) {
-                    let start = found.start();
-                    let end = found.end();
-                    matches.push((start, end));
-                }
-
-                let mut line = Vec::new();
-                let mut last_pos = 0;
-                for (index, m) in matches.iter().enumerate() {
-                    if index == 0 {
-                        line.push(Span::styled(
-                            output_string[0..m.0].to_string(),
-                            Style::default().fg(Color::White),
-                        ));
-                    }
-
-                    if last_pos != 0 {
-                        line.push(Span::styled(
-                            output_string[last_pos..m.0].to_string(),
-                            Style::default().fg(Color::White),
-                        ));
-                    }
-
-                    line.push(Span::styled(
-                        output_string[m.0..m.1].to_string(),
-                        Style::default().bg(Color::Yellow).fg(Color::Black),
-                    ));
-
-                    if index == matches.len() - 1 {
-                        line.push(Span::styled(
-                            output_string[m.1..].to_string(),
-                            Style::default().fg(Color::White),
-                        ));
-                    }
-
-                    last_pos = m.1;
-                }
-
-                log_entries.push(Line::from(line));
-            }
-
-            log_entries
+            filter_log_entries(regex, state.log_entries.iter().collect())
         }
     } else if state.show_filter_bar {
         let include = state.filter_bar_include_input.input.clone();
@@ -237,101 +185,62 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
             ))
             .unwrap();
 
-            let filtered_log_entries = log_entries
+            filter_log_entries(regex, log_entries)
+        }
+    } else if state.logs_textwrap {
+        let mut wrapped_vec = Vec::new();
+        let mut wrapped_hm = HashMap::new();
+        let mut count = 0;
+        let mut first_color = true;
+        let mut is_fully_filled = false;
+
+        for (i, log) in state.log_entries[start..end].iter().enumerate() {
+            let color = if first_color {
+                Color::Cyan
+            } else {
+                Color::White
+            };
+
+            let str = log.to_string();
+            let mut wrapped = textwrap::wrap(&str, inner_width as usize)
                 .iter()
-                .filter(|each| regex.is_match(&each.to_string()))
+                .map(|each| Line::styled(each.to_string(), Style::default().fg(color)))
                 .collect::<Vec<_>>();
 
-            let mut log_entries = Vec::new();
-            for each in filtered_log_entries.iter() {
-                let output_string = each.to_string();
+            // remove newline
+            wrapped.pop();
 
-                let mut matches: Vec<(usize, usize)> = Vec::new();
-                for found in regex.find_iter(&output_string.clone()) {
-                    let start = found.start();
-                    let end = found.end();
-                    matches.push((start, end));
-                }
+            wrapped_hm.insert(start + i, (wrapped.clone(), wrapped.len()));
+            wrapped_vec.extend(wrapped);
 
-                let mut line = Vec::new();
-                let mut last_pos = 0;
-                for (index, m) in matches.iter().enumerate() {
-                    if index == 0 {
-                        line.push(Span::styled(
-                            output_string[0..m.0].to_string(),
-                            Style::default().fg(Color::White),
-                        ));
-                    }
+            first_color = !first_color;
 
-                    if last_pos != 0 {
-                        line.push(Span::styled(
-                            output_string[last_pos..m.0].to_string(),
-                            Style::default().fg(Color::White),
-                        ));
-                    }
+            count += 1;
 
-                    line.push(Span::styled(
-                        output_string[m.0..m.1].to_string(),
-                        Style::default().fg(Color::Cyan),
-                    ));
+            if wrapped_vec.len() >= inner_height as usize {
+                // the last rendered index is the first rendered index + the number of log
+                // being rendered - 1
+                state.logs_table_current_last_index =
+                    state.logs_table_current_start_index + count - 1;
 
-                    if index == matches.len() - 1 {
-                        line.push(Span::styled(
-                            output_string[m.1..].to_string(),
-                            Style::default().fg(Color::White),
-                        ));
-                    }
+                state.logs_table_current_last_fully_rendered =
+                    wrapped_vec.len() == inner_height as usize;
 
-                    last_pos = m.1;
-                }
-
-                log_entries.push(Line::from(line));
+                is_fully_filled = true;
+                break;
             }
-
-            log_entries
         }
+
+        if !is_fully_filled {
+            state.logs_table_current_last_index = state.logs_table_current_start_index;
+        }
+
+        wrapped_vec
+            .into_iter()
+            .take(inner_height as usize)
+            .collect()
     } else {
-        if state.logs_textwrap {
-            let mut wrapped_vec = Vec::new();
-            let mut wrapped_hm = HashMap::new();
-            let mut count = 0;
-            let mut first_color = true;
-
-            for (i, log) in state.log_entries[start..end].iter().enumerate() {
-                let color = if first_color {
-                    Color::Cyan
-                } else {
-                    Color::White
-                };
-
-                let str = log.to_string();
-                let mut wrapped = textwrap::wrap(&str, inner_width as usize)
-                    .iter()
-                    .map(|each| Line::styled(each.to_string(), Style::default().fg(color)))
-                    .collect::<Vec<_>>();
-
-                // remove newline
-                wrapped.pop();
-
-                wrapped_hm.insert(start + i, (wrapped.clone(), wrapped.len()));
-                wrapped_vec.extend(wrapped);
-
-                first_color = !first_color;
-
-                count += 1;
-
-                if wrapped_vec.len() >= inner_height as usize {
-                    break;
-                }
-            }
-
-            wrapped_vec
-                .into_iter()
-                .take(inner_height as usize)
-                .collect()
-        } else {
-            generate_log_entries_line_without_text_wrap(state, start, end)
-        }
+        generate_log_entries_line_without_text_wrap(state, start, end)
     };
 
     let paragraph = Paragraph::new(log_entries)
@@ -449,14 +358,6 @@ fn render_filter_bar<B: Backend>(frame: &mut Frame<'_, B>, input_area: Rect, app
     }
 }
 
-fn calculate_start_position(state: &mut State) -> usize {
-    if state.logs_table_start_position >= state.log_entries.len() {
-        state.logs_table_start_position = state.log_entries.len().saturating_sub(1);
-    }
-
-    state.logs_table_start_position
-}
-
 fn generate_log_entries_line_without_text_wrap(
     state: &State,
     start: usize,
@@ -477,4 +378,62 @@ fn generate_log_entries_line_without_text_wrap(
             Line::styled(format!("{}", log_entry), Style::default().fg(color))
         })
         .collect()
+}
+
+fn filter_log_entries(regex: Regex, log_entries: Vec<&LogEntry>) -> Vec<Line> {
+    let filtered_log_entries = log_entries
+        .iter()
+        .filter(|each| regex.is_match(&each.to_string()))
+        .collect::<Vec<_>>();
+
+    let mut log_entries = Vec::new();
+    let mut first_color = true;
+
+    for each in filtered_log_entries.iter() {
+        let style = if first_color {
+            Style::default().fg(Color::Cyan)
+        } else {
+            Style::default().fg(Color::White)
+        };
+        let output_string = each.to_string();
+
+        let mut matches: Vec<(usize, usize)> = Vec::new();
+        for found in regex.find_iter(&output_string.clone()) {
+            let start = found.start();
+            let end = found.end();
+            matches.push((start, end));
+        }
+
+        let mut line = Vec::new();
+        let mut last_pos = 0;
+        for (index, m) in matches.iter().enumerate() {
+            if index == 0 {
+                line.push(Span::styled(output_string[0..m.0].to_string(), style));
+            }
+
+            if last_pos != 0 {
+                line.push(Span::styled(
+                    output_string[last_pos..m.0].to_string(),
+                    style,
+                ));
+            }
+
+            line.push(Span::styled(
+                output_string[m.0..m.1].to_string(),
+                Style::default().bg(Color::Yellow).fg(Color::Black),
+            ));
+
+            if index == matches.len() - 1 {
+                line.push(Span::styled(output_string[m.1..].to_string(), style));
+            }
+
+            last_pos = m.1;
+        }
+
+        log_entries.push(Line::from(line));
+
+        first_color = !first_color;
+    }
+
+    log_entries
 }
