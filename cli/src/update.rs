@@ -37,7 +37,7 @@ pub async fn check_for_update() {
 
     debug!("Checking for update");
 
-    if let Some(latest_release_info) = get_latest_release_info(Some(GITHUB_API_URL)).await {
+    if let Some(latest_release_info) = get_latest_release_info(GITHUB_API_URL).await {
         update_last_update_checked_at();
         print_update_message(latest_release_info);
     }
@@ -108,13 +108,12 @@ fn version_greater_than(new_version: &str, current_version: &str) -> bool {
     }
 }
 
-async fn get_latest_release_info(github_api_url: Option<&str>) -> Option<GithubLatestReleaseInfo> {
+async fn get_latest_release_info(github_api_url: &str) -> Option<GithubLatestReleaseInfo> {
     let client = Client::new();
 
     let url = format!(
         "{}/repos/{}/releases/latest",
-        github_api_url.unwrap_or(GITHUB_API_URL),
-        WUKONG_GITHUB_REPO
+        github_api_url, WUKONG_GITHUB_REPO
     );
 
     let response = client
@@ -182,7 +181,7 @@ mod tests {
         });
         println!("{:?}", &server.base_url());
 
-        let release_info = get_latest_release_info(Some(&server.base_url())).await;
+        let release_info = get_latest_release_info(&server.base_url()).await;
 
         mock_server.assert();
 
