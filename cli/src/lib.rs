@@ -6,6 +6,7 @@ mod error;
 mod loader;
 mod logger;
 pub mod output;
+mod update;
 mod utils;
 mod wukong_client;
 

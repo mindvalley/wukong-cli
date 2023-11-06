@@ -55,6 +55,7 @@ pub struct Config {
     pub core: CoreConfig,
     pub auth: Option<AuthConfig>,
     pub vault: Option<VaultConfig>,
+    pub update_check: Option<UpdateCheck>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -94,6 +95,12 @@ pub struct AuthConfig {
     pub refresh_token: String,
 }
 
+// ReleaseInfo stores information about a release
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct UpdateCheck {
+    pub last_update_checked_at: String,
+}
+
 impl Default for Config {
     fn default() -> Self {
         let mut home_dir = dirs::home_dir().unwrap();
@@ -107,6 +114,7 @@ impl Default for Config {
             },
             auth: None,
             vault: None,
+            update_check: None,
         }
     }
 }
