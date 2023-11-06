@@ -1,5 +1,54 @@
 # Changelog
 
+## [2.0.1](https://github.com/mindvalley/wukong-cli/tree/2.0.1) (2023-11-06)
+
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/2.0.0-alpha2...2.0.1)
+
+**Fixed bugs:**
+
+- PXP-631: \[CLI\] The header layout is broken on big screen [\#166](https://github.com/mindvalley/wukong-cli/pull/166) ([jk-gan](https://github.com/jk-gan))
+- PXP-630: \[CLI\]: fix ctrl+e panic [\#165](https://github.com/mindvalley/wukong-cli/pull/165) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-627: \[CLI\] Key binding is incorrect for the logs panel [\#157](https://github.com/mindvalley/wukong-cli/pull/157) ([jk-gan](https://github.com/jk-gan))
+
+**Merged pull requests:**
+
+- Bump CLI version to 2.0.1 [\#169](https://github.com/mindvalley/wukong-cli/pull/169) ([onimsha](https://github.com/onimsha))
+- Bump version of the cli [\#168](https://github.com/mindvalley/wukong-cli/pull/168) ([onimsha](https://github.com/onimsha))
+- PXP-632: \[CLI\] Okta tokens did not being updated after refresh [\#167](https://github.com/mindvalley/wukong-cli/pull/167) ([jk-gan](https://github.com/jk-gan))
+- PXP-628: \[CLI\]: Display new release info banner [\#164](https://github.com/mindvalley/wukong-cli/pull/164) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-628: \[CLI\]: Collect debug logs to a file [\#163](https://github.com/mindvalley/wukong-cli/pull/163) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-599: \[CLI\] Logs panel: Support time filtering \(Reopen to base on the main branch\) [\#162](https://github.com/mindvalley/wukong-cli/pull/162) ([jk-gan](https://github.com/jk-gan))
+- PXP-625: \[CLI\] Report the Wukong version to telemetry [\#161](https://github.com/mindvalley/wukong-cli/pull/161) ([jk-gan](https://github.com/jk-gan))
+- chore\(deps\): bump rustix from 0.37.20 to 0.37.25 in /sdk [\#159](https://github.com/mindvalley/wukong-cli/pull/159) ([dependabot[bot]](https://github.com/apps/dependabot))
+- PXP-610: \[CLI\] Panel Expand [\#158](https://github.com/mindvalley/wukong-cli/pull/158) ([jk-gan](https://github.com/jk-gan))
+- PXP-626: \[CLI\] Remove the tick-based canvas refresh [\#155](https://github.com/mindvalley/wukong-cli/pull/155) ([jk-gan](https://github.com/jk-gan))
+
+## [2.0.0-alpha2](https://github.com/mindvalley/wukong-cli/tree/2.0.0-alpha2) (2023-10-17)
+
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/2.0.0-alpha1...2.0.0-alpha2)
+
+**Implemented enhancements:**
+
+- PXP-583: \[CLI\] New Error Codes handling [\#144](https://github.com/mindvalley/wukong-cli/pull/144) ([jk-gan](https://github.com/jk-gan))
+
+**Fixed bugs:**
+
+- PXP-616: \[CLI\] Log Entries is not reset after a new namespace or a new version is selected [\#152](https://github.com/mindvalley/wukong-cli/pull/152) ([jk-gan](https://github.com/jk-gan))
+
+**Merged pull requests:**
+
+- Bump version and update latest dependencies [\#156](https://github.com/mindvalley/wukong-cli/pull/156) ([onimsha](https://github.com/onimsha))
+- chore\(deps\): bump webpki from 0.22.1 to 0.22.2 [\#154](https://github.com/mindvalley/wukong-cli/pull/154) ([dependabot[bot]](https://github.com/apps/dependabot))
+- chore\(deps\): bump webpki from 0.22.0 to 0.22.2 in /sdk [\#153](https://github.com/mindvalley/wukong-cli/pull/153) ([dependabot[bot]](https://github.com/apps/dependabot))
+- PXP-597: \[CLI\] Logs panel: Support search / filter for logs [\#151](https://github.com/mindvalley/wukong-cli/pull/151) ([jk-gan](https://github.com/jk-gan))
+- PXP-608: Make panels selectable [\#150](https://github.com/mindvalley/wukong-cli/pull/150) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-611: add error logs filter on tui [\#149](https://github.com/mindvalley/wukong-cli/pull/149) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-598: Add log tailing hotkey [\#148](https://github.com/mindvalley/wukong-cli/pull/148) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-613: Update API calls order [\#147](https://github.com/mindvalley/wukong-cli/pull/147) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-600: Display data from different version using hotkey [\#146](https://github.com/mindvalley/wukong-cli/pull/146) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-596: Optimize the logs rendering on tui [\#145](https://github.com/mindvalley/wukong-cli/pull/145) ([mfauzaan](https://github.com/mfauzaan))
+- Update CHANGELOG [\#143](https://github.com/mindvalley/wukong-cli/pull/143) ([onimsha](https://github.com/onimsha))
+
 ## [2.0.0-alpha1](https://github.com/mindvalley/wukong-cli/tree/2.0.0-alpha1) (2023-09-06)
 
 [Full Changelog](https://github.com/mindvalley/wukong-cli/compare/1.2.0...2.0.0-alpha1)
