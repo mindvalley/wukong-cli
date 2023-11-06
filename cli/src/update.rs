@@ -58,7 +58,7 @@ fn print_update_message(latest_release_info: GithubLatestReleaseInfo) {
             latest_release_info.tag_name.cyan(),
         );
 
-        eprintln!("To upgrade, run: brew upgrade wukong");
+        eprintln!("To upgrade, run: brew update && brew upgrade wukong");
         eprintln!("{}", latest_release_info.url.yellow());
     } else {
         debug!("No new release found");
