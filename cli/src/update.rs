@@ -111,7 +111,10 @@ fn version_greater_than(new_version: &str, current_version: &str) -> bool {
 async fn get_latest_release_info(github_api_url: &str) -> Option<GithubLatestReleaseInfo> {
     let client = Client::new();
 
-    let url = format!("{}/repos/{}/releases", github_api_url, WUKONG_GITHUB_REPO);
+    let url = format!(
+        "{}/repos/{}/releases/latest",
+        github_api_url, WUKONG_GITHUB_REPO
+    );
 
     let response = client
         .get(&url)
