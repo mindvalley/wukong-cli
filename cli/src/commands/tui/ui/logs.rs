@@ -139,6 +139,9 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
         (inner_rect.width, inner_rect.height)
     };
 
+    // store the current size so we can use it for scrolling calculation
+    state.logs_size = (inner_width, inner_height);
+
     let num_rows: usize = inner_height as usize;
     let start = calculate_start_position(state);
 

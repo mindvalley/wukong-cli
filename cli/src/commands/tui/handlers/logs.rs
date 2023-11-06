@@ -16,12 +16,22 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
             }
         }
         key if common_key_events::up_event(key) => {
-            app.state.logs_table_start_position =
-                app.state.logs_table_start_position.saturating_sub(5);
+            if app.state.logs_textwrap {
+            } else {
+                app.state.logs_table_start_position = app
+                    .state
+                    .logs_table_start_position
+                    .saturating_sub(app.state.logs_size.1 as usize);
+            }
         }
         key if common_key_events::down_event(key) => {
-            app.state.logs_table_start_position =
-                app.state.logs_table_start_position.saturating_add(5);
+            if app.state.logs_textwrap {
+            } else {
+                app.state.logs_table_start_position = app
+                    .state
+                    .logs_table_start_position
+                    .saturating_add(app.state.logs_size.1 as usize);
+            }
         }
         key if common_key_events::left_event(key) => {
             let new_scroll_position = app.state.logs_horizontal_scroll.saturating_sub(5);

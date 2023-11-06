@@ -112,6 +112,8 @@ pub struct State {
     pub filter_bar_include_input: Input,
     pub filter_bar_exclude_input: Input,
     pub logs_textwrap: bool,
+
+    pub logs_size: (u16, u16),
 }
 
 pub struct App {
@@ -204,6 +206,7 @@ impl App {
                 filter_bar_include_input: Input::default(),
                 filter_bar_exclude_input: Input::default(),
                 logs_textwrap: false,
+                logs_size: (0, 0),
             },
             navigation_stack: vec![DEFAULT_ROUTE],
             block_map: HashMap::new(),
