@@ -7,6 +7,7 @@ mod log_filter_include;
 mod log_search;
 mod logs;
 mod namespace_selection;
+mod time_filter_selection;
 mod version_selection;
 
 use super::{
@@ -40,6 +41,9 @@ async fn handle_block_events(key: Key, app: &mut App) -> AppReturn {
         }
         Block::Dialog(DialogContext::LogExcludeFilter) => {
             log_filter_exclude::handler(key, app).await
+        }
+        Block::Dialog(DialogContext::LogTimeFilter) => {
+            time_filter_selection::handler(key, app).await
         }
         Block::Deployment => deployment::handler(key, app).await,
         Block::Build => build::handler(key, app).await,

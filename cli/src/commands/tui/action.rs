@@ -10,6 +10,7 @@ pub enum Action {
     ToggleLogsTailing,
     SearchLogs,
     FilterLogs,
+    TimeFilterLogs,
     ExpandToFullScreen,
     LineWrapLogs,
     Quit,
@@ -25,6 +26,7 @@ impl Action {
             Action::ShowErrorAndAbove,
             Action::SearchLogs,
             Action::FilterLogs,
+            Action::TimeFilterLogs,
             Action::ExpandToFullScreen,
             Action::LineWrapLogs,
             Action::Quit,
@@ -43,6 +45,7 @@ impl Action {
             Action::ExpandToFullScreen => &[Key::Ctrl('w')],
             Action::LineWrapLogs => &[Key::Ctrl('l')],
             Action::Quit => &[Key::Char('q')],
+            Action::TimeFilterLogs => &[Key::Ctrl('r')],
         }
     }
 
@@ -64,6 +67,7 @@ impl Display for Action {
             Action::SearchLogs => write!(f, "Search logs"),
             Action::FilterLogs => write!(f, "Filter logs"),
             Action::LineWrapLogs => write!(f, "Line wrap logs"),
+            Action::TimeFilterLogs => write!(f, "Filter logs by time"),
             Action::ExpandToFullScreen => write!(f, "Expand to full screen"),
         }
     }

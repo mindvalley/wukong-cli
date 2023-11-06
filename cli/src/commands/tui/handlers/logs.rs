@@ -109,6 +109,8 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
 
             // reset horizontal scroll position
             handle_horizontal_scroll(app, 0);
+        key if Action::from_key(key) == Some(Action::TimeFilterLogs) => {
+            app.set_current_route_state(Some(Block::Dialog(DialogContext::LogTimeFilter)), None);
         }
         _ => {}
     };

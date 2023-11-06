@@ -58,13 +58,11 @@ impl WKClient {
         if auth::okta::need_tokens_refresh(&self.config)? {
             debug!("Access token expired. Refreshing tokens...");
 
-            let mut updated_config = self.config.clone();
-
             let new_tokens = auth::okta::refresh_tokens(&self.config).await?;
-            updated_config.auth = Some(new_tokens.clone().into());
+            self.config.auth = Some(new_tokens.clone().into());
 
             // update config file
-            updated_config.save_to_default_path()?;
+            self.config.save_to_default_path()?;
 
             // update WKClient to the new tokens
             self.inner.set_access_token(new_tokens.id_token);

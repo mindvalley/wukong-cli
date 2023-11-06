@@ -1,6 +1,6 @@
 [package]
 name = "wukong"
-version = "2.0.0-alpha2"
+version = "2.0.0-alpha3"
 edition = "2021"
 default-run = "wukong"
 
@@ -31,7 +31,7 @@ ratatui = { version = "0.23.0", features = ["all-widgets"] }
 textwrap = "0.16.0"
 
 # logging
-log = "0.4.19"
+log =  { version = "0.4.19", features = ["std"] }
 clap-verbosity-flag = "2.0.0"
 thiserror = "1.0.40"
 dirs = "5.0.1"
@@ -57,6 +57,7 @@ miette = { version = "5.10.0", features = ["fancy"] }
 ignore = "0.4.20"
 rayon = "1.7.0"
 similar = { version = "2.2.1", features = ["inline"] }
+semver = "1.0.20"
 
 # Telemetry
 wukong-telemetry-macro = { path = "../telemetry-macro" }
