@@ -224,6 +224,7 @@ impl App {
                 Action::SearchLogs,
                 Action::FilterLogs,
                 Action::ExpandToFullScreen,
+                Action::LineWrapLogs,
             ],
             network_event_sender: sender,
         }
