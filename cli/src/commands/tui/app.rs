@@ -61,7 +61,7 @@ pub struct BlockInfo {
     pub bottom_right_corner: Option<(u16, u16)>,
 }
 
-pub const MAX_LOG_ENTRIES_LENGTH: usize = 1_000;
+pub const MAX_LOG_ENTRIES_LENGTH: usize = 2_000;
 
 pub struct State {
     pub current_application: String,
@@ -156,6 +156,9 @@ impl App {
             StatefulList::with_items(vec![String::from("green"), String::from("blue")]);
         version_selections.select(0);
 
+        let mut logs_table_state = TableState::default();
+        logs_table_state.select(Some(0));
+
         Self {
             state: State {
                 current_application: config.core.application.clone(),
@@ -186,7 +189,7 @@ impl App {
                 logs_vertical_scroll: 0,
                 logs_horizontal_scroll: 0,
                 instant_since_last_log_entries_poll: Instant::now(),
-                logs_table_state: TableState::default(),
+                logs_table_state,
                 logs_table_current_index: 0,
                 logs_table_start_position: 0,
                 expanded_block: None,

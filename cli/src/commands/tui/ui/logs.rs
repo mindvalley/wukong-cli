@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::util::get_color;
 use crate::commands::tui::app::{App, Block, DialogContext, State, MAX_LOG_ENTRIES_LENGTH};
 use ratatui::{
@@ -288,27 +290,30 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
     } else {
         if state.logs_textwrap {
             let mut wrapped_vec = Vec::new();
+            let mut wrapped_hm = HashMap::new();
             let mut count = 0;
             let mut first_color = true;
-            for log in state.log_entries[start..end].iter() {
-                let str = log.to_string();
-                let wrapped = textwrap::wrap(&str, inner_width as usize);
+
+            for (i, log) in state.log_entries[start..end].iter().enumerate() {
                 let color = if first_color {
                     Color::Cyan
                 } else {
                     Color::White
                 };
 
-                wrapped_vec.extend(
-                    wrapped
-                        .iter()
-                        .map(|each| Line::styled(each.to_string(), Style::default().fg(color)))
-                        .collect::<Vec<_>>(),
-                );
+                let str = log.to_string();
+                let mut wrapped = textwrap::wrap(&str, inner_width as usize)
+                    .iter()
+                    .map(|each| Line::styled(each.to_string(), Style::default().fg(color)))
+                    .collect::<Vec<_>>();
+
+                // remove newline
+                wrapped.pop();
+
+                wrapped_hm.insert(start + i, (wrapped.clone(), wrapped.len()));
+                wrapped_vec.extend(wrapped);
 
                 first_color = !first_color;
-
-                wrapped_vec.pop();
 
                 count += 1;
 
@@ -443,7 +448,7 @@ fn render_filter_bar<B: Backend>(frame: &mut Frame<'_, B>, input_area: Rect, app
 
 fn calculate_start_position(state: &mut State) -> usize {
     if state.logs_table_start_position >= state.log_entries.len() {
-        state.logs_table_start_position = state.log_entries.len() - 1;
+        state.logs_table_start_position = state.log_entries.len().saturating_sub(1);
     }
 
     state.logs_table_start_position
@@ -454,6 +459,7 @@ fn generate_log_entries_line_without_text_wrap(
     start: usize,
     end: usize,
 ) -> Vec<Line> {
+    // ) -> Vec<Row> {
     let mut first_color = true;
 
     state.log_entries[start..end]
