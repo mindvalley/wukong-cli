@@ -130,9 +130,9 @@ impl ClapApp {
             CommandGroup::Tui => handle_tui(channel).await,
         };
 
-        // Check for CLI updates:
         // Disabled check_for_update in test as snapshots keep changing with each run
-        #[cfg(not(feature = "test"))]
+        #[cfg(not(test))]
+        // Check for CLI updates:
         update::check_for_update().await;
 
         command
