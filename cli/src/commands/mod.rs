@@ -131,8 +131,8 @@ impl ClapApp {
         };
 
         // Check for CLI updates:
-        // Disabled check_for_update in test as snapshots keep changing with each run
-        if !cfg!(test) {
+        // Disabled check_for_update in test and dev as snapshots keep changing with each run
+        if cfg!(feature = "prod") {
             update::check_for_update().await;
         }
 
