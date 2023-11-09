@@ -33,9 +33,15 @@ The Wukong CLI is a set of tools to manages Mindvalley DevOps resources. Its goa
 > **Note**
 > You can read more from [here](https://mindvalley.atlassian.net/wiki/spaces/PXP/pages/450396161/PD2+-+A+Swiss-army+Knife+CLI+For+Mindvalley+Developers)
 
-## KNOWN ISSUE
+## INSTALLATION  
 
-- Currently the Jenkins sometimes does not return the list of changes during build, so the CLI is not able to determine the CHANGELOG properly. We are working on a solution in the future release.
+For installation on various platforms, you can follow the detailed instructions in the [Installation](https://github.com/mindvalley/wukong-cli/wiki/Installation) page. For quickly install it with Homebrew, run the following command.
+
+brew tap mindvalley/wukong
+brew update
+brew install wukong
+
+Additionallu. you can enable completions on popular shell like bash/zsh by following [this guide](https://docs.brew.sh/Shell-Completion).  
 
 ## GUIDES
 
