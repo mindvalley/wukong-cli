@@ -57,6 +57,7 @@ pub async fn get_token_or_login() -> String {
         auth_provider_x509_cert_url: Some(AUTH_PROVIDER_X509_CERT_URL.to_string()),
         client_x509_cert_url: None,
     };
+    // panic!("This is a custom panic message");
 
     // ~/.config/wukong/
     #[cfg(feature = "prod")]

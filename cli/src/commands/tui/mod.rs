@@ -1,4 +1,4 @@
-use std::{io::stdout, sync::Arc, time::Duration};
+use std::{io::stdout, panic, sync::Arc, time::Duration};
 
 use crate::{
     config::{ApiChannel, Config},
@@ -127,8 +127,14 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
     let mut is_first_fetch_builds = true;
 
     let mut app_ref = app.lock().await;
+
     terminal.draw(|frame| ui::draw(frame, &mut app_ref))?;
+
     drop(app_ref);
+
+    // Override the default panic hook to avoid printing panic messages to the terminal:
+    // Can be removed once all unhandled panics are handled.
+    panic::set_hook(Box::new(|panic_error| eprintln!("{:?}", panic_error)));
 
     loop {
         let mut app_ref = app.lock().await;
@@ -177,6 +183,8 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
     terminal.show_cursor()?;
 
     terminal.clear()?;
+
+    // eprintln!("{:?}", app_ref.state.panic_error);
 
     Ok(true)
 }

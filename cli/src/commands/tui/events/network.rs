@@ -32,12 +32,29 @@ pub async fn handle_network_event(
 ) -> Result<(), WKCliError> {
     let config = Config::load_from_default_path()?;
     let mut wk_client = WKClient::for_channel(&config, channel)?;
+    let mut tui_error = false;
 
-    match network_event {
-        NetworkEvent::GetBuilds => get_builds(app, &mut wk_client).await?,
-        NetworkEvent::GetDeployments => get_deployments(app, &mut wk_client).await?,
-        NetworkEvent::GetGCloudLogs => get_gcloud_logs(app, &mut wk_client).await?,
-    }
+    let _ =
+        match network_event {
+            NetworkEvent::GetBuilds => {
+                get_builds(app.clone(), &mut wk_client).await.map_err(|_e| {
+                    tui_error = true;
+                })
+            }
+            NetworkEvent::GetDeployments => get_deployments(app.clone(), &mut wk_client)
+                .await
+                .map_err(|_e| {
+                    tui_error = true;
+                }),
+            NetworkEvent::GetGCloudLogs => get_gcloud_logs(app.clone(), &mut wk_client)
+                .await
+                .map_err(|_e| {
+                    tui_error = true;
+                }),
+        };
+
+    // let mut app_ref = app.lock().await;
+    // app_ref.state.tui_error = true;
 
     Ok(())
 }
@@ -295,6 +312,8 @@ async fn get_gcloud_logs(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Resu
     let namespace = app_ref.state.current_namespace.clone();
     let time_filter = app_ref.state.current_time_filter;
     let logs_severity = app_ref.state.logs_severity;
+
+    panic!("tst opanic");
 
     let since = match app_ref.state.last_log_entry_timestamp.clone() {
         Some(t) => Some(t),
