@@ -37,11 +37,13 @@ The Wukong CLI is a set of tools to manages Mindvalley DevOps resources. Its goa
 
 For installation on various platforms, you can follow the detailed instructions in the [Installation](https://github.com/mindvalley/wukong-cli/wiki/Installation) page. For quickly install it with Homebrew, run the following command.
 
+```bash
 brew tap mindvalley/wukong
 brew update
 brew install wukong
+```
 
-Additionallu. you can enable completions on popular shell like bash/zsh by following [this guide](https://docs.brew.sh/Shell-Completion).  
+Additionally, you can enable completions on popular shell like bash/zsh by following [this guide](https://docs.brew.sh/Shell-Completion).  
 
 ## GUIDES
 
