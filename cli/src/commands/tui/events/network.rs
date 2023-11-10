@@ -32,29 +32,12 @@ pub async fn handle_network_event(
 ) -> Result<(), WKCliError> {
     let config = Config::load_from_default_path()?;
     let mut wk_client = WKClient::for_channel(&config, channel)?;
-    let mut tui_error = false;
 
-    let _ =
-        match network_event {
-            NetworkEvent::GetBuilds => {
-                get_builds(app.clone(), &mut wk_client).await.map_err(|_e| {
-                    tui_error = true;
-                })
-            }
-            NetworkEvent::GetDeployments => get_deployments(app.clone(), &mut wk_client)
-                .await
-                .map_err(|_e| {
-                    tui_error = true;
-                }),
-            NetworkEvent::GetGCloudLogs => get_gcloud_logs(app.clone(), &mut wk_client)
-                .await
-                .map_err(|_e| {
-                    tui_error = true;
-                }),
-        };
-
-    // let mut app_ref = app.lock().await;
-    // app_ref.state.tui_error = true;
+    match network_event {
+        NetworkEvent::GetBuilds => get_builds(app, &mut wk_client).await?,
+        NetworkEvent::GetDeployments => get_deployments(app, &mut wk_client).await?,
+        NetworkEvent::GetGCloudLogs => get_gcloud_logs(app, &mut wk_client).await?,
+    }
 
     Ok(())
 }
