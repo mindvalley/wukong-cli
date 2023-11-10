@@ -313,8 +313,6 @@ async fn get_gcloud_logs(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Resu
     let time_filter = app_ref.state.current_time_filter;
     let logs_severity = app_ref.state.logs_severity;
 
-    panic!("tst opanic");
-
     let since = match app_ref.state.last_log_entry_timestamp.clone() {
         Some(t) => Some(t),
         None => match time_filter {

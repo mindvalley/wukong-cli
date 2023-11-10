@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Display, panic::PanicInfo, time::Instant};
+use std::{collections::HashMap, fmt::Display, time::Instant};
 
 use ratatui::{
     prelude::Rect,
@@ -115,7 +115,6 @@ pub struct State {
     pub logs_table_current_index: usize,
     pub logs_table_start_position: usize,
     pub expanded_block: Option<Block>,
-    pub panic_error: Option<String>,
 
     // For log entries polling
     pub instant_since_last_log_entries_poll: Instant,
@@ -201,7 +200,6 @@ impl App {
                 is_fetching_log_entries: true,
                 start_polling_log_entries: false,
                 logs_enable_auto_scroll_to_bottom: true,
-                panic_error: None,
 
                 builds: vec![],
                 deployments: vec![],

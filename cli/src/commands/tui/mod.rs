@@ -1,4 +1,9 @@
-use std::{io::stdout, panic, sync::Arc, time::Duration};
+use std::{
+    io::stdout,
+    panic::{self, PanicInfo},
+    sync::Arc,
+    time::Duration,
+};
 
 use crate::{
     config::{ApiChannel, Config},
@@ -7,6 +12,7 @@ use crate::{
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
+    style::Print,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use ratatui::{prelude::CrosstermBackend, widgets::ListState, Terminal};
@@ -91,6 +97,9 @@ pub async fn handle_tui(channel: ApiChannel) -> Result<bool, WKCliError> {
 
     let arc_channel = Arc::new(channel);
 
+    // Set panic hook
+    panic::set_hook(Box::new(panic_hook));
+
     tokio::spawn(async move {
         while let Some(network_event) = receiver.recv().await {
             let app = Arc::clone(&app);
@@ -127,14 +136,8 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
     let mut is_first_fetch_builds = true;
 
     let mut app_ref = app.lock().await;
-
     terminal.draw(|frame| ui::draw(frame, &mut app_ref))?;
-
     drop(app_ref);
-
-    // Override the default panic hook to avoid printing panic messages to the terminal:
-    // Can be removed once all unhandled panics are handled.
-    panic::set_hook(Box::new(|panic_error| eprintln!("{:?}", panic_error)));
 
     loop {
         let mut app_ref = app.lock().await;
@@ -184,7 +187,30 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
 
     terminal.clear()?;
 
-    // eprintln!("{:?}", app_ref.state.panic_error);
-
     Ok(true)
+}
+
+pub fn panic_hook(panic_info: &PanicInfo<'_>) {
+    let mut stdout = stdout();
+
+    let msg = match panic_info.payload().downcast_ref::<&'static str>() {
+        Some(s) => *s,
+        None => match panic_info.payload().downcast_ref::<String>() {
+            Some(s) => &s[..],
+            None => "Box<Any>",
+        },
+    };
+
+    let _ = disable_raw_mode();
+    let _ = execute!(stdout, DisableMouseCapture, LeaveAlternateScreen);
+
+    // Print stack trace. Must be done after!
+    if let Some(panic_info) = panic_info.location() {
+        let _ = execute!(
+            stdout,
+            Print(format!(
+                "thread '<unnamed>' panicked at '{msg}', {panic_info}",
+            )),
+        );
+    }
 }
