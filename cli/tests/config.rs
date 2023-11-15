@@ -36,9 +36,6 @@ id_token = "id_token"
 access_token = "access_token"
 expiry_time = "2023-02-19T06:55:51.501915+00:00"
 refresh_token = "refresh_token"
-
-[update_check]
-last_update_checked_at = "2023-11-03T08:51:02.800908+00:00"
     "#,
         )
         .unwrap();
@@ -203,9 +200,6 @@ id_token = "id_token"
 access_token = "access_token"
 expiry_time = "2023-02-19T06:55:51.501915+00:00"
 refresh_token = "refresh_token"
-
-[update_check]
-last_update_checked_at = "2023-11-07T06:04:10.796909526+00:00"
 "#,
         )
         .unwrap();
@@ -236,9 +230,6 @@ id_token = "id_token"
 access_token = "access_token"
 expiry_time = "2023-02-19T06:55:51.501915+00:00"
 refresh_token = "refresh_token"
-
-[update_check]
-last_update_checked_at = "2023-11-07T06:04:10.796909526+00:00"
 "#,
     );
 
