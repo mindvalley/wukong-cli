@@ -188,7 +188,7 @@ impl OutputTokenizer {
                 }
             } else {
                 // this is more readable
-                #[allow(clippy::collapsible-else-if)]
+                #[allow(clippy::collapsible_else_if)]
                 if word.contains('(') {
                     let open_index = word.find('(').unwrap();
                     tokens.push(Token::Parentheses("(".to_string()));
