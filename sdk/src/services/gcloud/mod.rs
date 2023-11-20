@@ -218,7 +218,7 @@ impl GCloudClient {
         let token_info = match response.error_for_status() {
             Ok(token_info) => token_info.json::<TokenInfo>().await?,
             Err(err) => {
-                return Err(GCloudError::ReqwestError(err.into()));
+                return Err(GCloudError::ReqwestError(err));
             }
         };
 
