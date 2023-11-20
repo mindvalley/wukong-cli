@@ -1,9 +1,6 @@
 use std::{collections::HashMap, fmt::Display, time::Instant};
 
-use ratatui::{
-    prelude::Rect,
-    widgets::{ScrollbarState, TableState},
-};
+use ratatui::{prelude::Rect, widgets::ScrollbarState};
 use tokio::sync::mpsc::Sender;
 use wukong_sdk::services::gcloud::google::logging::{r#type::LogSeverity, v2::LogEntry};
 
@@ -77,7 +74,7 @@ impl Display for TimeFilter {
     }
 }
 
-pub const MAX_LOG_ENTRIES_LENGTH: usize = 1_000;
+pub const MAX_LOG_ENTRIES_LENGTH: usize = 2_000;
 
 pub struct State {
     pub current_application: String,
@@ -115,9 +112,12 @@ pub struct State {
     pub logs_vertical_scroll: usize,
     pub logs_horizontal_scroll: usize,
     pub logs_enable_auto_scroll_to_bottom: bool,
-    pub logs_table_state: TableState,
-    pub logs_table_current_index: usize,
-    pub logs_table_start_position: usize,
+    pub logs_table_current_start_index: usize,
+    // last index of the table that is visible
+    pub logs_table_current_last_index: usize,
+    // whether last index of the table that is visible is fully rendered
+    // useful to know if we need to scroll during textwrap
+    pub logs_table_current_last_fully_rendered: bool,
     pub expanded_block: Option<Block>,
 
     // For log entries polling
@@ -133,6 +133,9 @@ pub struct State {
     pub search_bar_input: Input,
     pub filter_bar_include_input: Input,
     pub filter_bar_exclude_input: Input,
+    pub logs_textwrap: bool,
+
+    pub logs_size: (u16, u16),
     pub welcome_screen_timer: Option<Instant>,
 }
 
@@ -225,9 +228,9 @@ impl App {
                 logs_vertical_scroll: 0,
                 logs_horizontal_scroll: 0,
                 instant_since_last_log_entries_poll: Instant::now(),
-                logs_table_state: TableState::default(),
-                logs_table_current_index: 0,
-                logs_table_start_position: 0,
+                logs_table_current_start_index: 0,
+                logs_table_current_last_index: 0,
+                logs_table_current_last_fully_rendered: true,
                 expanded_block: None,
 
                 logs_widget_width: 0,
@@ -239,6 +242,8 @@ impl App {
                 search_bar_input: Input::default(),
                 filter_bar_include_input: Input::default(),
                 filter_bar_exclude_input: Input::default(),
+                logs_textwrap: false,
+                logs_size: (0, 0),
                 welcome_screen_timer: None,
             },
             navigation_stack: vec![DEFAULT_ROUTE],
@@ -255,6 +260,7 @@ impl App {
                 Action::SearchLogs,
                 Action::FilterLogs,
                 Action::ExpandToFullScreen,
+                Action::LineWrapLogs,
                 Action::TimeFilterLogs,
             ],
             network_event_sender: sender,

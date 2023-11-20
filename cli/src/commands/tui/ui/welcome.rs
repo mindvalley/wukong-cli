@@ -149,7 +149,7 @@ impl WelcomeWidget {
             None => ("", format!("Verifying {} token...", label), Color::Red),
         };
 
-        (symbol.to_string(), format!("{}", message), color)
+        (symbol.to_string(), message, color)
     }
 
     fn format_status_line((symbol, message, color): (String, String, Color)) -> Vec<Span<'static>> {
