@@ -36,6 +36,13 @@ pub struct TokenInfo {
     pub refresh_token: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TokenIntrospection {
+    pub active: bool,
+    pub exp: Option<DateTime<Utc>>,
+    pub iat: Option<DateTime<Utc>>,
+}
+
 #[derive(Debug, Clone)]
 pub struct OktaAuth {
     pub account: String,
@@ -370,7 +377,6 @@ pub async fn introspect_token(
 
     Ok(TokenIntrospection {
         active: token_response.active(),
-        // username: token_response.username().ok_or_else(None),
         exp: token_response.exp(),
         iat: token_response.iat(),
     })
