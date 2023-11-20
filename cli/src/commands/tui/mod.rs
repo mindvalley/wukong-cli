@@ -184,7 +184,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
             terminal.draw(|frame| ui::draw_welcome_screen(frame, &mut app_ref))?;
             is_first_render = false;
         } else {
-            terminal.draw(|frame| ui::draw(frame, &mut app_ref))?;
+            terminal.draw(|frame| ui::draw_main_screen(frame, &mut app_ref))?;
 
             if is_first_render {
                 // fetch data on the first frame

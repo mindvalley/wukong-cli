@@ -10,7 +10,7 @@ use self::{
     application::ApplicationWidget, builds::BuildsWidget, deployment::DeploymentWidget,
     help::HelpWidget, logs::LogsWidget, namespace_selection::NamespaceSelectionWidget,
     time_filter_selection::TimeFilterSelectionWidget, version_selection::VersionSelectionWidget,
-    welcome_screen::WelcomeWidget,
+    welcome::WelcomeWidget,
 };
 
 use super::app::{App, Block, DialogContext};
@@ -24,9 +24,9 @@ mod namespace_selection;
 mod time_filter_selection;
 mod util;
 mod version_selection;
-mod welcome_screen;
+mod welcome;
 
-pub fn draw<B>(frame: &mut Frame<B>, app: &mut App)
+pub fn draw_main_screen<B>(frame: &mut Frame<B>, app: &mut App)
 where
     B: Backend,
 {
