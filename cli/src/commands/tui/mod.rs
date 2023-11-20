@@ -1,4 +1,8 @@
-use std::{io::stdout, sync::Arc, time::Duration};
+use std::{
+    io::stdout,
+    sync::Arc,
+    time::{Duration, Instant},
+};
 
 use crate::{
     config::{ApiChannel, Config},
@@ -7,7 +11,9 @@ use crate::{
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{
+        disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen, SetTitle,
+    },
 };
 use ratatui::{prelude::CrosstermBackend, widgets::ListState, Terminal};
 use tokio::sync::Mutex;
@@ -124,10 +130,13 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
     event_manager.spawn_event_listen_thread(tick_rate);
 
     let mut is_first_render = true;
+    let mut is_first_ui_render = true;
     let mut is_first_fetch_builds = true;
 
     let mut app_ref = app.lock().await;
-    terminal.draw(|frame| ui::draw(frame, &mut app_ref))?;
+
+    terminal.draw(|frame| ui::draw_welcome_screen(frame, &mut app_ref))?;
+
     drop(app_ref);
 
     loop {
@@ -145,25 +154,57 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
             break;
         }
 
-        terminal.draw(|frame| ui::draw(frame, &mut app_ref))?;
+        if let (Some(gcloud_authenticated), Some(okta_authenticated)) = (
+            app_ref.state.is_gcloud_authenticated,
+            app_ref.state.is_okta_authenticated,
+        ) {
+            if gcloud_authenticated && okta_authenticated && is_first_fetch_builds {
+                if app_ref.state.welcome_screen_timer.is_none() {
+                    app_ref.state.welcome_screen_timer =
+                        Some(Instant::now() + Duration::from_secs(4));
+                }
+
+                if let Some(timer) = app_ref.state.welcome_screen_timer {
+                    let time_remaining = timer.saturating_duration_since(Instant::now());
+
+                    if time_remaining == Duration::from_secs(0) {
+                        is_first_render = false
+                    }
+                }
+            } else {
+                app_ref.state.welcome_screen_timer = None;
+            }
+        } else {
+            app_ref.state.welcome_screen_timer = None;
+        }
+
+        if is_first_render {
+            if is_first_ui_render {
+                app_ref.dispatch(NetworkEvent::VerifyOktaRefreshToken).await;
+                app_ref.dispatch(NetworkEvent::VerifyGCloudToken).await;
+            }
+            terminal.draw(|frame| ui::draw_welcome_screen(frame, &mut app_ref))?;
+            is_first_ui_render = false;
+        } else {
+            terminal.draw(|frame| ui::draw(frame, &mut app_ref))?;
+
+            if is_first_ui_render {
+                // fetch data on the first frame
+                app_ref.dispatch(NetworkEvent::GetDeployments).await;
+                is_first_ui_render = false;
+            }
+
+            if is_first_fetch_builds
+                && app_ref.state.current_namespace.is_some()
+                && app_ref.state.current_version.is_some()
+            {
+                app_ref.dispatch(NetworkEvent::GetBuilds).await;
+                is_first_fetch_builds = false;
+            }
+        }
 
         // move cursor to the top left corner to avoid screen scrolling:
         // terminal.set_cursor(1, 1)?;
-
-        if is_first_render {
-            // fetch data on the first frame
-            app_ref.dispatch(NetworkEvent::GetDeployments).await;
-
-            is_first_render = false;
-        }
-
-        if is_first_fetch_builds
-            && app_ref.state.current_namespace.is_some()
-            && app_ref.state.current_version.is_some()
-        {
-            app_ref.dispatch(NetworkEvent::GetBuilds).await;
-            is_first_fetch_builds = false;
-        }
     }
 
     // post-run

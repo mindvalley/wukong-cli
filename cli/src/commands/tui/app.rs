@@ -103,6 +103,11 @@ pub struct State {
     pub builds_error: Option<String>,
     pub deployments_error: Option<String>,
 
+    // Auth
+    pub is_gcloud_authenticated: Option<bool>,
+    pub is_okta_authenticated: Option<bool>,
+    pub welcome_screen_timer: Option<Instant>,
+
     pub last_log_entry_timestamp: Option<String>,
     pub log_time_filter: TimeFilter,
     // ui controls
@@ -200,6 +205,10 @@ impl App {
                 is_fetching_log_entries: true,
                 start_polling_log_entries: false,
                 logs_enable_auto_scroll_to_bottom: true,
+
+                is_gcloud_authenticated: None,
+                is_okta_authenticated: None,
+                welcome_screen_timer: None,
 
                 builds: vec![],
                 deployments: vec![],

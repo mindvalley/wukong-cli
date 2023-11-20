@@ -14,7 +14,7 @@ use wukong_sdk::{
         multi_branch_pipeline_query, pipeline_query, pipelines_query,
     },
     services::{
-        gcloud::{LogEntries, LogEntriesOptions},
+        gcloud::{LogEntries, LogEntriesOptions, TokenInfo},
         vault::client::FetchSecretsData,
     },
     WKClient as WKSdkClient, WKConfig,
@@ -302,6 +302,14 @@ impl WKClient {
         self.inner
             .get_gcloud_log_entries(optons, access_token)
             .await
+    }
+
+    #[wukong_telemetry(api_event = "get_access_token_info")]
+    pub async fn get_access_token_info(
+        &self,
+        access_token: String,
+    ) -> Result<TokenInfo, WKCliError> {
+        self.inner.get_access_token_info(access_token).await
     }
 
     #[wukong_telemetry(api_event = "fetch_vault_secrets")]

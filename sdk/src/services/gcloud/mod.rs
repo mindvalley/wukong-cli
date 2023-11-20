@@ -23,6 +23,7 @@ use chrono::Duration;
 use google::logging::v2::{
     logging_service_v2_client::LoggingServiceV2Client, ListLogEntriesRequest,
 };
+use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use tonic::{metadata::MetadataValue, transport::Channel, Request};
 
@@ -153,6 +154,15 @@ pub struct GCloudClient {
     access_token: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TokenInfo {
+    pub issued_to: String,
+    pub audience: String,
+    pub scope: String,
+    pub expires_in: i64,
+    pub access_type: String,
+}
+
 impl GCloudClient {
     pub fn new(access_token: String) -> Self {
         Self { access_token }
@@ -191,6 +201,29 @@ impl GCloudClient {
             next_page_token: Some(response.next_page_token),
         })
     }
+
+    pub async fn get_access_token_info(&self) -> Result<TokenInfo, GCloudError> {
+        let token_info_url = "https://www.googleapis.com/oauth2/v1/tokeninfo";
+
+        let query_params = vec![("access_token", self.access_token.clone())];
+
+        let client = reqwest::Client::new();
+
+        let response = client
+            .get(token_info_url)
+            .query(&query_params)
+            .send()
+            .await?;
+
+        let token_info = match response.error_for_status() {
+            Ok(token_info) => token_info.json::<TokenInfo>().await?,
+            Err(err) => {
+                return Err(GCloudError::ReqwestError(err.into()));
+            }
+        };
+
+        Ok(token_info)
+    }
 }
 
 /// Functions from Google Cloud service.
@@ -204,6 +237,15 @@ impl WKClient {
         let google_client = GCloudClient::new(access_token);
         google_client
             .get_log_entries(optons)
+            .await
+            .map_err(|err| err.into())
+    }
+
+    // Get access token info from Google Cloud.
+    pub async fn get_access_token_info(&self, access_token: String) -> Result<TokenInfo, WKError> {
+        let google_client = GCloudClient::new(access_token);
+        google_client
+            .get_access_token_info()
             .await
             .map_err(|err| err.into())
     }
