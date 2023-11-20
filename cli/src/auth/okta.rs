@@ -46,6 +46,13 @@ pub struct OktaAuth {
     pub expiry_time: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TokenIntrospection {
+    pub active: bool,
+    pub exp: Option<DateTime<Utc>>,
+    pub iat: Option<DateTime<Utc>>,
+}
+
 impl From<OktaAuth> for AuthConfig {
     fn from(value: OktaAuth) -> Self {
         Self {
@@ -318,14 +325,6 @@ pub async fn refresh_tokens(config: &Config) -> Result<OktaAuth, WKCliError> {
         expiry_time: expiry,
         refresh_token: new_refresh_token.secret().to_owned(),
     })
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct TokenIntrospection {
-    pub active: bool,
-    // pub username: Option<&str>,
-    pub exp: Option<DateTime<Utc>>,
-    pub iat: Option<DateTime<Utc>>,
 }
 
 pub async fn introspect_token(
