@@ -127,8 +127,8 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
     let event_manager = EventManager::new();
     event_manager.spawn_event_listen_thread(tick_rate);
 
+    let mut show_welcome_screen = true;
     let mut is_first_render = true;
-    let mut is_first_ui_render = true;
     let mut is_first_fetch_builds = true;
 
     let mut app_ref = app.lock().await;
@@ -166,7 +166,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
                     let time_remaining = timer.saturating_duration_since(Instant::now());
 
                     if time_remaining == Duration::from_secs(0) {
-                        is_first_render = false
+                        show_welcome_screen = false
                     }
                 }
             } else {
@@ -176,20 +176,20 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
             app_ref.state.welcome_screen_timer = None;
         }
 
-        if is_first_render {
-            if is_first_ui_render {
+        if show_welcome_screen {
+            if is_first_render {
                 app_ref.dispatch(NetworkEvent::VerifyOktaRefreshToken).await;
                 app_ref.dispatch(NetworkEvent::VerifyGCloudToken).await;
             }
             terminal.draw(|frame| ui::draw_welcome_screen(frame, &mut app_ref))?;
-            is_first_ui_render = false;
+            is_first_render = false;
         } else {
             terminal.draw(|frame| ui::draw(frame, &mut app_ref))?;
 
-            if is_first_ui_render {
+            if is_first_render {
                 // fetch data on the first frame
                 app_ref.dispatch(NetworkEvent::GetDeployments).await;
-                is_first_ui_render = false;
+                is_first_render = false;
             }
 
             if is_first_fetch_builds
@@ -200,9 +200,6 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
                 is_first_fetch_builds = false;
             }
         }
-
-        // move cursor to the top left corner to avoid screen scrolling:
-        // terminal.set_cursor(1, 1)?;
     }
 
     // post-run

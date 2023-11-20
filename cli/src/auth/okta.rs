@@ -53,13 +53,6 @@ pub struct OktaAuth {
     pub expiry_time: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct TokenIntrospection {
-    pub active: bool,
-    pub exp: Option<DateTime<Utc>>,
-    pub iat: Option<DateTime<Utc>>,
-}
-
 impl From<OktaAuth> for AuthConfig {
     fn from(value: OktaAuth) -> Self {
         Self {
