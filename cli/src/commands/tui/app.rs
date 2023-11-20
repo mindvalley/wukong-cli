@@ -106,7 +106,6 @@ pub struct State {
     // Auth
     pub is_gcloud_authenticated: Option<bool>,
     pub is_okta_authenticated: Option<bool>,
-    pub welcome_screen_timer: Option<Instant>,
 
     pub last_log_entry_timestamp: Option<String>,
     pub log_time_filter: TimeFilter,
@@ -134,6 +133,7 @@ pub struct State {
     pub search_bar_input: Input,
     pub filter_bar_include_input: Input,
     pub filter_bar_exclude_input: Input,
+    pub welcome_screen_timer: Option<Instant>,
 }
 
 pub struct App {
@@ -208,7 +208,6 @@ impl App {
 
                 is_gcloud_authenticated: None,
                 is_okta_authenticated: None,
-                welcome_screen_timer: None,
 
                 builds: vec![],
                 deployments: vec![],
@@ -240,6 +239,7 @@ impl App {
                 search_bar_input: Input::default(),
                 filter_bar_include_input: Input::default(),
                 filter_bar_exclude_input: Input::default(),
+                welcome_screen_timer: None,
             },
             navigation_stack: vec![DEFAULT_ROUTE],
             block_map: HashMap::new(),
