@@ -120,7 +120,7 @@ impl WelcomeWidget {
                 Line::styled(
                     Self::get_auth_instruction(
                         okta_authenticated,
-                        "Please run `wukong init` to authenticate again. Press `q` to exit.",
+                        "Your refresh token is expired. Run \"wukong login\" to authenticate again. Press `q` to exit.",
                     ),
                     Style::default().fg(Color::Red),
                 ),

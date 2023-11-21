@@ -166,7 +166,8 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
                     let time_remaining = timer.saturating_duration_since(Instant::now());
 
                     if time_remaining == Duration::from_secs(0) {
-                        show_welcome_screen = false
+                        show_welcome_screen = false;
+                        is_first_render = true;
                     }
                 }
             } else {
