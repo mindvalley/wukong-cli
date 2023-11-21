@@ -132,7 +132,8 @@ impl WelcomeWidget {
                     Style::default().fg(Color::Red),
                 ),
             ])
-            .alignment(Alignment::Center);
+            .alignment(Alignment::Center)
+            .wrap(Wrap { trim: true });
 
             frame.render_widget(gcloud_auth_block, layout);
         }
