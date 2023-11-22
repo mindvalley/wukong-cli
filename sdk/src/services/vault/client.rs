@@ -57,8 +57,8 @@ impl Default for VaultClient {
 }
 
 impl VaultClient {
-    pub const FETCH_SECRETS: &str = "/v1/secret/data";
-    pub const UPDATE_SECRET: &str = "/v1/secret/data";
+    pub const FETCH_SECRETS: &'static str = "/v1/secret/data";
+    pub const UPDATE_SECRET: &'static str = "/v1/secret/data";
 
     pub fn new() -> Self {
         let client = reqwest::Client::new();
