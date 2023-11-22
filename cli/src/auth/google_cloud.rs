@@ -143,24 +143,24 @@ pub async fn get_access_token() -> Option<String> {
     let contents = tokio::fs::read(format!("{}/gcloud_logging", config_dir)).await;
 
     let tokens = contents
-        .and_then(|contents| {
-            Ok(serde_json::from_slice::<Vec<JSONToken>>(&contents)
+        .map(|contents| {
+            serde_json::from_slice::<Vec<JSONToken>>(&contents)
                 .map_err(|_| {
                     eprintln!("Failed to parse token file.");
                 })
-                .ok())
+                .ok()
         })
         .unwrap_or(None);
 
     let json_token = tokens.and_then(|tokens| {
         tokens
             .iter()
-            .find(|scope| {
-                scope
+            .find(|token| {
+                token
                     .scopes
                     .contains(&"https://www.googleapis.com/auth/logging.read".to_string())
             })
-            .map(|t| t.token.access_token.clone())
+            .map(|token| token.token.access_token.clone())
     });
 
     // Sometimes access token exist but is expired, so call get_token_or_login() to refresh it
