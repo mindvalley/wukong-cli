@@ -1,9 +1,10 @@
 use super::{common_key_events, log_filter_exclude, log_filter_include, log_search};
 use crate::commands::tui::{
     action::Action,
-    app::{App, AppReturn, Block, DialogContext},
+    app::{App, AppReturn, Block, DialogContext, MAX_LOG_ENTRIES_LENGTH},
     events::{key::Key, network::NetworkEvent},
 };
+use chrono::Utc;
 use wukong_sdk::services::gcloud::google::logging::r#type::LogSeverity;
 
 pub async fn handler(key: Key, app: &mut App) -> AppReturn {
@@ -53,9 +54,9 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
             };
 
             // prevent going out of bounds
-            if next_start_index >= app.state.log_entries.len() {
+            if next_start_index >= app.state.log_entries.1.len() {
                 app.state.logs_table_current_start_index =
-                    app.state.log_entries.len().saturating_sub(1);
+                    app.state.log_entries.1.len().saturating_sub(1);
             } else {
                 app.state.logs_table_current_start_index = next_start_index;
             }
@@ -120,11 +121,17 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
 }
 
 async fn handle_show_error_and_above(app: &mut App) {
+    let new_id = Utc::now().timestamp();
+
+    app.state.log_entries = (
+        format!("{}", new_id),
+        Vec::with_capacity(MAX_LOG_ENTRIES_LENGTH),
+    );
+    app.state.log_entries_length = 0;
+
     app.state.is_fetching_log_entries = true;
     app.state.start_polling_log_entries = false;
 
-    app.state.log_entries = vec![];
-    app.state.log_entries_length = 0;
     // Need to reset scroll, or else it will be out of bound
 
     // Add if not already in the list

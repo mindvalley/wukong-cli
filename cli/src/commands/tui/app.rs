@@ -94,7 +94,7 @@ pub struct State {
     // fetch data
     pub builds: Vec<Build>,
     pub deployments: Vec<Deployment>,
-    pub log_entries: Vec<LogEntry>,
+    pub log_entries: (String, Vec<LogEntry>),
     pub log_entries_length: usize,
     pub log_entries_error: Option<String>,
     pub builds_error: Option<String>,
@@ -209,7 +209,10 @@ impl App {
                 last_log_entry_timestamp: None,
 
                 log_entries_length: 0,
-                log_entries: Vec::with_capacity(1_000),
+                log_entries: (
+                    "default".to_string(),
+                    Vec::with_capacity(MAX_LOG_ENTRIES_LENGTH),
+                ),
                 log_entries_error: None,
                 builds_error: None,
                 deployments_error: None,
