@@ -120,8 +120,6 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
 }
 
 async fn handle_show_error_and_above(app: &mut App) {
-    app.dispatch(NetworkEvent::GetGCloudLogs).await;
-
     app.state.is_fetching_log_entries = true;
     app.state.start_polling_log_entries = false;
 
@@ -135,6 +133,8 @@ async fn handle_show_error_and_above(app: &mut App) {
         Some(LogSeverity::Error) => None,
         _ => Some(LogSeverity::Error),
     };
+
+    app.dispatch(NetworkEvent::GetGCloudLogs).await;
 }
 
 fn handle_horizontal_scroll(app: &mut App, new_scroll_position: usize) {
