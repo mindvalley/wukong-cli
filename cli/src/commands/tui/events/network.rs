@@ -76,16 +76,21 @@ async fn verify_gcloud_token(
     app: Arc<Mutex<App>>,
     wk_client: &mut WKClient,
 ) -> Result<(), WKCliError> {
-    let gcloud_access_token = auth::google_cloud::get_token_or_login().await;
+    let gcloud_access_token = auth::google_cloud::get_access_token().await;
 
-    let mut app_ref = app.lock().await;
-    match wk_client.get_access_token_info(gcloud_access_token).await {
-        Ok(_token_info) => {
-            app_ref.state.is_gcloud_authenticated = Some(true);
+    if let Some(gcloud_access_token) = gcloud_access_token {
+        let mut app_ref = app.lock().await;
+        match wk_client.get_access_token_info(gcloud_access_token).await {
+            Ok(_token_info) => {
+                app_ref.state.is_gcloud_authenticated = Some(true);
+            }
+            Err(_error) => {
+                app_ref.state.is_gcloud_authenticated = Some(false);
+            }
         }
-        Err(_error) => {
-            app_ref.state.is_gcloud_authenticated = Some(false);
-        }
+    } else {
+        let mut app_ref = app.lock().await;
+        app_ref.state.is_gcloud_authenticated = Some(false);
     }
 
     Ok(())
