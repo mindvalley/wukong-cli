@@ -143,7 +143,10 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
     state.logs_size = (inner_width, inner_height);
 
     let num_rows: usize = inner_height as usize;
-    let start = state.logs_table_current_start_index;
+    let start = std::cmp::min(
+        state.log_entries.1.len(),
+        state.logs_table_current_start_index,
+    );
 
     let end = std::cmp::min(state.log_entries.1.len(), start + num_rows);
 

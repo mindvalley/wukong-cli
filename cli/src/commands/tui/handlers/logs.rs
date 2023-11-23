@@ -2,7 +2,7 @@ use super::{common_key_events, log_filter_exclude, log_filter_include, log_searc
 use crate::commands::tui::{
     action::Action,
     app::{App, AppReturn, Block, DialogContext, MAX_LOG_ENTRIES_LENGTH},
-    events::{key::Key, network::NetworkEvent},
+    events::key::Key,
 };
 use chrono::Utc;
 use wukong_sdk::services::gcloud::google::logging::r#type::LogSeverity;
@@ -121,19 +121,6 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
 }
 
 async fn handle_show_error_and_above(app: &mut App) {
-    let new_id = Utc::now().timestamp();
-
-    app.state.log_entries = (
-        format!("{}", new_id),
-        Vec::with_capacity(MAX_LOG_ENTRIES_LENGTH),
-    );
-    app.state.log_entries_length = 0;
-
-    app.state.is_fetching_log_entries = true;
-    app.state.start_polling_log_entries = false;
-
-    // Need to reset scroll, or else it will be out of bound
-
     // Add if not already in the list
     // or else remove it
     app.state.logs_severity = match app.state.logs_severity {
@@ -141,7 +128,7 @@ async fn handle_show_error_and_above(app: &mut App) {
         _ => Some(LogSeverity::Error),
     };
 
-    app.dispatch(NetworkEvent::GetGCloudLogs).await;
+    reset_log_panel_and_trigger_log_refetch(app);
 }
 
 fn handle_horizontal_scroll(app: &mut App, new_scroll_position: usize) {
@@ -152,4 +139,23 @@ fn handle_horizontal_scroll(app: &mut App, new_scroll_position: usize) {
         .position(app.state.logs_horizontal_scroll as u16);
 
     app.state.logs_enable_auto_scroll_to_bottom = false;
+}
+
+pub fn reset_log_panel_and_trigger_log_refetch(app: &mut App) {
+    let new_id = Utc::now().timestamp();
+
+    app.state.log_entries = (
+        format!("{}", new_id),
+        Vec::with_capacity(MAX_LOG_ENTRIES_LENGTH),
+    );
+    app.state.log_entries_length = 0;
+    app.state.logs_table_current_start_index = 0;
+    app.state.logs_table_current_last_index = 0;
+    app.state.last_log_entry_timestamp = None;
+
+    app.state.is_fetching_log_entries = true;
+    // this will trigger refetch in tui/app.rs update()
+    app.state.start_polling_log_entries = false;
+
+    app.state.log_entries_error = None;
 }

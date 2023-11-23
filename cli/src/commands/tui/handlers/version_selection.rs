@@ -1,9 +1,7 @@
-use chrono::Utc;
-
-use super::common_key_events;
+use super::{common_key_events, logs::reset_log_panel_and_trigger_log_refetch};
 
 use crate::commands::tui::{
-    app::{App, AppReturn, Block, MAX_LOG_ENTRIES_LENGTH},
+    app::{App, AppReturn, Block},
     events::{key::Key, network::NetworkEvent},
 };
 
@@ -42,22 +40,8 @@ async fn handle_enter_key(app: &mut App) {
 }
 
 async fn fetch_and_reset_polling(app: &mut App, selected_version: String) {
-    let new_id = Utc::now().timestamp();
-
-    app.state.log_entries = (
-        format!("{}", new_id),
-        Vec::with_capacity(MAX_LOG_ENTRIES_LENGTH),
-    );
-    app.state.log_entries_length = app.state.log_entries.1.len();
-
     app.state.current_version = Some(selected_version);
-    app.state.last_log_entry_timestamp = None;
-
-    app.state.is_fetching_log_entries = true;
-    app.state.start_polling_log_entries = false;
-
-    // reset error state
-    app.state.log_entries_error = None;
+    reset_log_panel_and_trigger_log_refetch(app);
 
     app.dispatch(NetworkEvent::GetBuilds).await;
 }
