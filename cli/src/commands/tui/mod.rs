@@ -2,7 +2,7 @@ use std::{
     io::stdout,
     panic::{self, PanicInfo},
     sync::Arc,
-    time::Duration
+    time::{Duration, Instant},
 };
 
 use crate::{
