@@ -125,10 +125,16 @@ async fn fetch_log_entries(
         .await
 }
 
-async fn update_logs_entries(app: Arc<Mutex<App>>, log_entries: Option<Vec<LogEntry>>) {
+async fn update_logs_entries(app: Arc<Mutex<App>>, log_entries: Option<Vec<LogEntry>>, id: &str) {
     if let Some(entries) = log_entries {
         if !entries.is_empty() {
             let mut app_ref = app.lock().await;
+
+            // if the id are not same, we don't need to update
+            // it was the old api call
+            if app_ref.state.log_entries.0 != id {
+                return;
+            }
 
             app_ref.state.last_log_entry_timestamp = Some(
                 entries
@@ -146,12 +152,12 @@ async fn update_logs_entries(app: Arc<Mutex<App>>, log_entries: Option<Vec<LogEn
                     (app_ref.state.log_entries_length + entries.len()) - MAX_LOG_ENTRIES_LENGTH;
 
                 if excess > 0 {
-                    app_ref.state.log_entries.drain(..excess);
+                    app_ref.state.log_entries.1.drain(..excess);
                 }
             }
 
-            app_ref.state.log_entries.extend(entries);
-            app_ref.state.log_entries_length = app_ref.state.log_entries.len();
+            app_ref.state.log_entries.1.extend(entries);
+            app_ref.state.log_entries_length = app_ref.state.log_entries.1.len();
 
             // Currently ratatui don't provide scroll to bottom function,
             // so we need to set the scroll to the bottom manually by this hack
@@ -296,6 +302,8 @@ async fn get_gcloud_logs(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Resu
     let time_filter = app_ref.state.current_time_filter;
     let logs_severity = app_ref.state.logs_severity;
 
+    let id = app_ref.state.log_entries.0.clone();
+
     let since = match app_ref.state.last_log_entry_timestamp.clone() {
         Some(t) => Some(t),
         None => match time_filter {
@@ -354,7 +362,7 @@ async fn get_gcloud_logs(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Resu
                     };
 
                     let mut next_page_token = log.next_page_token.clone();
-                    update_logs_entries(Arc::clone(&app), log.entries).await;
+                    update_logs_entries(Arc::clone(&app), log.entries, &id).await;
 
                     // repeat fetching logs until there is no next_page_token
                     let app = Arc::clone(&app);
@@ -373,7 +381,7 @@ async fn get_gcloud_logs(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Resu
                         // update next_page_token value
                         next_page_token = log.next_page_token.clone();
 
-                        update_logs_entries(Arc::clone(&app), log.entries).await;
+                        update_logs_entries(Arc::clone(&app), log.entries, &id).await;
                     }
                 }
             }

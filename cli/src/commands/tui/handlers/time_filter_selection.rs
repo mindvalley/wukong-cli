@@ -1,7 +1,9 @@
+use chrono::Utc;
+
 use super::common_key_events;
 
 use crate::commands::tui::{
-    app::{App, AppReturn, Block},
+    app::{App, AppReturn, Block, MAX_LOG_ENTRIES_LENGTH},
     events::key::Key,
 };
 
@@ -41,8 +43,14 @@ async fn handle_enter_key(app: &mut App) {
 }
 
 async fn fetch_and_reset_polling(app: &mut App) {
-    app.state.log_entries = vec![];
-    app.state.log_entries_length = app.state.log_entries.len();
+    let new_id = Utc::now().timestamp();
+
+    app.state.log_entries = (
+        format!("{}", new_id),
+        Vec::with_capacity(MAX_LOG_ENTRIES_LENGTH),
+    );
+    app.state.log_entries_length = app.state.log_entries.1.len();
+
     app.state.last_log_entry_timestamp = None;
 
     // this will trigger refetch of log entries
