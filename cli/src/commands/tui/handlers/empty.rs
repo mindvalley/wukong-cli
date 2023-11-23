@@ -1,8 +1,9 @@
 use crate::commands::tui::{
     action::Action,
-    app::{App, AppReturn, Block, DialogContext},
+    app::{App, AppReturn, Block, DialogContext, MAX_LOG_ENTRIES_LENGTH},
     events::{key::Key, network::NetworkEvent},
 };
+use chrono::Utc;
 use wukong_sdk::services::gcloud::google::logging::r#type::LogSeverity;
 
 use super::{common_key_events, log_filter_exclude, log_filter_include, log_search};
@@ -117,13 +118,17 @@ fn open_dialog(app: &mut App, dialog_context: DialogContext) -> AppReturn {
 }
 
 async fn show_error_and_above_logs(app: &mut App) -> AppReturn {
-    app.dispatch(NetworkEvent::GetGCloudLogs).await;
+    let new_id = Utc::now().timestamp();
+
+    app.state.log_entries = (
+        format!("{}", new_id),
+        Vec::with_capacity(MAX_LOG_ENTRIES_LENGTH),
+    );
+    app.state.log_entries_length = 0;
 
     app.state.is_fetching_log_entries = true;
     app.state.start_polling_log_entries = false;
 
-    app.state.log_entries = vec![];
-    app.state.log_entries_length = 0;
     // Need to reset scroll, or else it will be out of bound
 
     // Add if not already in the list
@@ -132,6 +137,8 @@ async fn show_error_and_above_logs(app: &mut App) -> AppReturn {
         Some(LogSeverity::Error) => None,
         _ => Some(LogSeverity::Error),
     };
+
+    app.dispatch(NetworkEvent::GetGCloudLogs).await;
 
     AppReturn::Continue
 }

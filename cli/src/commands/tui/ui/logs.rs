@@ -145,7 +145,7 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
     let num_rows: usize = inner_height as usize;
     let start = state.logs_table_current_start_index;
 
-    let end = std::cmp::min(state.log_entries.len(), start + num_rows);
+    let end = std::cmp::min(state.log_entries.1.len(), start + num_rows);
 
     let log_entries = if state.show_search_bar {
         if state.search_bar_input.input.is_empty() {
@@ -154,13 +154,13 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
             let regex =
                 Regex::new(&format!(r"(?i){}", state.search_bar_input.input.trim())).unwrap();
 
-            filter_log_entries(regex, state.log_entries.iter().collect())
+            filter_log_entries(regex, state.log_entries.1.iter().collect())
         }
     } else if state.show_filter_bar {
         let include = state.filter_bar_include_input.input.clone();
         let exclude = state.filter_bar_exclude_input.input.clone();
 
-        let mut log_entries: Vec<&LogEntry> = state.log_entries.iter().collect();
+        let mut log_entries: Vec<&LogEntry> = state.log_entries.1.iter().collect();
         if !exclude.is_empty() {
             let regex = Regex::new(&format!(r"(?i){}", exclude.trim())).unwrap();
 
@@ -194,7 +194,7 @@ fn render_log_entries<B: Backend>(frame: &mut Frame<'_, B>, logs_area: Rect, sta
         let mut first_color = true;
         let mut is_fully_filled = false;
 
-        for (i, log) in state.log_entries[start..end].iter().enumerate() {
+        for (i, log) in state.log_entries.1[start..end].iter().enumerate() {
             let color = if first_color {
                 Color::Cyan
             } else {
@@ -366,7 +366,7 @@ fn generate_log_entries_line_without_text_wrap(
     // ) -> Vec<Row> {
     let mut first_color = true;
 
-    state.log_entries[start..end]
+    state.log_entries.1[start..end]
         .iter()
         .map(|log_entry| {
             let color = if first_color {
