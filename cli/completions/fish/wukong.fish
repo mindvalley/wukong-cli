@@ -7,6 +7,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_use_subcommand" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_use_subcommand" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_use_subcommand" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_use_subcommand" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_use_subcommand" -s V -l version -d 'Print version'
@@ -29,6 +30,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from init" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from init" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from init" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from init" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from application; and not __fish_seen_subcommand_from info; and not __fish_seen_subcommand_from logs; and not __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from help" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
@@ -40,6 +42,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from application; and not __fish_seen_subcommand_from info; and not __fish_seen_subcommand_from logs; and not __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from help" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from application; and not __fish_seen_subcommand_from info; and not __fish_seen_subcommand_from logs; and not __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from help" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from application; and not __fish_seen_subcommand_from info; and not __fish_seen_subcommand_from logs; and not __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from help" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from application; and not __fish_seen_subcommand_from info; and not __fish_seen_subcommand_from logs; and not __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from help" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from application; and not __fish_seen_subcommand_from info; and not __fish_seen_subcommand_from logs; and not __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from help" -f -a "info" -d 'Show the application’s relevant informations'
@@ -55,6 +58,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from info" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from info" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from info" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from info" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -l namespace -d '(optional) The namespace to deploy to' -r -f -a "{prod	'',staging	''}"
@@ -75,6 +79,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from logs" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from connect; and not __fish_seen_subcommand_from help" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
@@ -86,6 +91,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from connect; and not __fish_seen_subcommand_from help" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from connect; and not __fish_seen_subcommand_from help" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from connect; and not __fish_seen_subcommand_from help" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from connect; and not __fish_seen_subcommand_from help" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from connect; and not __fish_seen_subcommand_from help" -f -a "list" -d 'Listing the currently running Elixir instances, normally under a GKE Pod'
@@ -102,6 +108,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from list" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from list" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from list" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from list" -s h -l help -d 'Print help (see more with \'--help\')'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from connect" -l namespace -d '(optional) The namespace to list the running instances' -r -f -a "{prod	'',staging	''}"
@@ -115,6 +122,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from connect" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from connect" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from connect" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from connect" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from application; and __fish_seen_subcommand_from instances; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from connect; and not __fish_seen_subcommand_from help" -f -a "list" -d 'Listing the currently running Elixir instances, normally under a GKE Pod'
@@ -135,6 +143,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from describe; and not __fish_seen_subcommand_from ci-status; and not __fish_seen_subcommand_from help" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from describe; and not __fish_seen_subcommand_from ci-status; and not __fish_seen_subcommand_from help" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from describe; and not __fish_seen_subcommand_from ci-status; and not __fish_seen_subcommand_from help" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from describe; and not __fish_seen_subcommand_from ci-status; and not __fish_seen_subcommand_from help" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from describe; and not __fish_seen_subcommand_from ci-status; and not __fish_seen_subcommand_from help" -f -a "list" -d 'List the current pipelines of the application'
@@ -150,6 +159,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from list" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from list" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from list" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from list" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from describe" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
@@ -161,6 +171,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from describe" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from describe" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from describe" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from describe" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from ci-status" -l repo-url -d 'Repository url' -r
@@ -174,6 +185,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from ci-status" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from ci-status" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from ci-status" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from ci-status" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from pipeline; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from describe; and not __fish_seen_subcommand_from ci-status; and not __fish_seen_subcommand_from help" -f -a "list" -d 'List the current pipelines of the application'
@@ -189,6 +201,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from execute; and not __fish_seen_subcommand_from rollback; and not __fish_seen_subcommand_from help" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from execute; and not __fish_seen_subcommand_from rollback; and not __fish_seen_subcommand_from help" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from execute; and not __fish_seen_subcommand_from rollback; and not __fish_seen_subcommand_from help" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from execute; and not __fish_seen_subcommand_from rollback; and not __fish_seen_subcommand_from help" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from execute; and not __fish_seen_subcommand_from rollback; and not __fish_seen_subcommand_from help" -f -a "list" -d 'List the current available deployment pipelines of an application'
@@ -204,6 +217,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from list" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from list" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from list" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from list" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from execute" -l namespace -d 'The namespace to deploy to' -r -f -a "{prod	'',staging	''}"
@@ -218,6 +232,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from execute" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from execute" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from execute" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from execute" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from rollback" -l namespace -d 'The namespace to deploy to' -r -f -a "{prod	'',staging	''}"
@@ -231,6 +246,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from rollback" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from rollback" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from rollback" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from rollback" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from deployment; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from execute; and not __fish_seen_subcommand_from rollback; and not __fish_seen_subcommand_from help" -f -a "list" -d 'List the current available deployment pipelines of an application'
@@ -246,6 +262,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from help" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from help" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from help" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from help" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from help" -f -a "config" -d 'This command group contains the commands to interact with the config secrets with bunker'
@@ -259,6 +276,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from push; and not __fish_seen_subcommand_from diff; and not __fish_seen_subcommand_from pull; and not __fish_seen_subcommand_from lint; and not __fish_seen_subcommand_from help" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from push; and not __fish_seen_subcommand_from diff; and not __fish_seen_subcommand_from pull; and not __fish_seen_subcommand_from lint; and not __fish_seen_subcommand_from help" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from push; and not __fish_seen_subcommand_from diff; and not __fish_seen_subcommand_from pull; and not __fish_seen_subcommand_from lint; and not __fish_seen_subcommand_from help" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from push; and not __fish_seen_subcommand_from diff; and not __fish_seen_subcommand_from pull; and not __fish_seen_subcommand_from lint; and not __fish_seen_subcommand_from help" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from push; and not __fish_seen_subcommand_from diff; and not __fish_seen_subcommand_from pull; and not __fish_seen_subcommand_from lint; and not __fish_seen_subcommand_from help" -f -a "push" -d 'Push the current configuration changes to the Bunker'
@@ -275,6 +293,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from push" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from push" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from push" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from push" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from diff" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
@@ -286,6 +305,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from diff" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from diff" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from diff" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from diff" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from pull" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
@@ -297,6 +317,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from pull" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from pull" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from pull" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from pull" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from lint" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
@@ -308,6 +329,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from lint" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from lint" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from lint" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from lint" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from dev; and __fish_seen_subcommand_from config; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from push; and not __fish_seen_subcommand_from diff; and not __fish_seen_subcommand_from pull; and not __fish_seen_subcommand_from lint; and not __fish_seen_subcommand_from help" -f -a "push" -d 'Push the current configuration changes to the Bunker'
@@ -330,6 +352,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from config; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from set; and not __fish_seen_subcommand_from get; and not __fish_seen_subcommand_from help" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from config; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from set; and not __fish_seen_subcommand_from get; and not __fish_seen_subcommand_from help" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from config; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from set; and not __fish_seen_subcommand_from get; and not __fish_seen_subcommand_from help" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from config; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from set; and not __fish_seen_subcommand_from get; and not __fish_seen_subcommand_from help" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from config; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from set; and not __fish_seen_subcommand_from get; and not __fish_seen_subcommand_from help" -f -a "list" -d 'List the configurations'
@@ -345,6 +368,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from list" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from list" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from list" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from list" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
@@ -356,6 +380,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from get" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
@@ -367,6 +392,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from get" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from get" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from get" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from get" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from config; and __fish_seen_subcommand_from help; and not __fish_seen_subcommand_from list; and not __fish_seen_subcommand_from set; and not __fish_seen_subcommand_from get; and not __fish_seen_subcommand_from help" -f -a "list" -d 'List the configurations'
@@ -382,6 +408,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from login" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from login" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from login" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from login" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from completion" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
@@ -393,6 +420,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from completion" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from completion" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from completion" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from completion" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from tui" -s a -l application -d 'Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config' -r
@@ -404,6 +432,7 @@ By default, it\'ll only report errors.
 `-vvv` show debug
 `-vvvv` show trace'
 complete -c wukong -n "__fish_seen_subcommand_from tui" -s q -l quiet -d 'Do not print log message'
+complete -c wukong -n "__fish_seen_subcommand_from tui" -l report -d 'Store the debugging log in the log file, which is located at ~/.config/wukong'
 complete -c wukong -n "__fish_seen_subcommand_from tui" -l canary -d 'Use the Canary channel API'
 complete -c wukong -n "__fish_seen_subcommand_from tui" -s h -l help -d 'Print help'
 complete -c wukong -n "__fish_seen_subcommand_from help; and not __fish_seen_subcommand_from init; and not __fish_seen_subcommand_from application; and not __fish_seen_subcommand_from pipeline; and not __fish_seen_subcommand_from deployment; and not __fish_seen_subcommand_from dev; and not __fish_seen_subcommand_from config; and not __fish_seen_subcommand_from login; and not __fish_seen_subcommand_from completion; and not __fish_seen_subcommand_from tui; and not __fish_seen_subcommand_from help" -f -a "init" -d 'Initialize Wukong\'s configurations'
