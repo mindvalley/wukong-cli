@@ -6,21 +6,21 @@ use self::login::handle_login;
 mod login;
 
 #[derive(Debug, Args)]
-pub struct Gcloud {
+pub struct Google {
     #[command(subcommand)]
-    pub subcommand: GcloudSubcommand,
+    pub subcommand: GoogleSubcommand,
 }
 
 #[derive(Debug, Subcommand)]
-pub enum GcloudSubcommand {
-    /// Login to Google Cloud
+pub enum GoogleSubcommand {
+    /// Login to Google
     Login,
 }
 
-impl Gcloud {
+impl Google {
     pub async fn handle_command(&self) -> Result<bool, WKCliError> {
         match &self.subcommand {
-            GcloudSubcommand::Login => handle_login().await,
+            GoogleSubcommand::Login => handle_login().await,
         }
     }
 }
