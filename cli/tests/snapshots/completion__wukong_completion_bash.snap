@@ -31,8 +31,8 @@ _wukong() {
             wukong,dev)
                 cmd="wukong__dev"
                 ;;
-            wukong,gcloud)
-                cmd="wukong__gcloud"
+            wukong,google)
+                cmd="wukong__google"
                 ;;
             wukong,help)
                 cmd="wukong__help"
@@ -199,17 +199,17 @@ _wukong() {
             wukong__dev__help__config,push)
                 cmd="wukong__dev__help__config__push"
                 ;;
-            wukong__gcloud,help)
-                cmd="wukong__gcloud__help"
+            wukong__google,help)
+                cmd="wukong__google__help"
                 ;;
-            wukong__gcloud,login)
-                cmd="wukong__gcloud__login"
+            wukong__google,login)
+                cmd="wukong__google__login"
                 ;;
-            wukong__gcloud__help,help)
-                cmd="wukong__gcloud__help__help"
+            wukong__google__help,help)
+                cmd="wukong__google__help__help"
                 ;;
-            wukong__gcloud__help,login)
-                cmd="wukong__gcloud__help__login"
+            wukong__google__help,login)
+                cmd="wukong__google__help__login"
                 ;;
             wukong__help,application)
                 cmd="wukong__help__application"
@@ -226,8 +226,8 @@ _wukong() {
             wukong__help,dev)
                 cmd="wukong__help__dev"
                 ;;
-            wukong__help,gcloud)
-                cmd="wukong__help__gcloud"
+            wukong__help,google)
+                cmd="wukong__help__google"
                 ;;
             wukong__help,help)
                 cmd="wukong__help__help"
@@ -292,8 +292,8 @@ _wukong() {
             wukong__help__dev__config,push)
                 cmd="wukong__help__dev__config__push"
                 ;;
-            wukong__help__gcloud,login)
-                cmd="wukong__help__gcloud__login"
+            wukong__help__google,login)
+                cmd="wukong__help__google__login"
                 ;;
             wukong__help__pipeline,ci-status)
                 cmd="wukong__help__pipeline__ci__status"
@@ -335,7 +335,7 @@ _wukong() {
 
     case "${cmd}" in
         wukong)
-            opts="-a -v -q -h -V --application --verbose --quiet --report --canary --help --version init application pipeline deployment dev config login gcloud completion tui help"
+            opts="-a -v -q -h -V --application --verbose --quiet --report --canary --help --version init application pipeline deployment dev config login google completion tui help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -1374,7 +1374,7 @@ _wukong() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        wukong__gcloud)
+        wukong__google)
             opts="-a -v -q -h --application --verbose --quiet --report --canary --help login help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -1396,7 +1396,7 @@ _wukong() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        wukong__gcloud__help)
+        wukong__google__help)
             opts="login help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -1410,7 +1410,7 @@ _wukong() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        wukong__gcloud__help__help)
+        wukong__google__help__help)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -1424,7 +1424,7 @@ _wukong() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        wukong__gcloud__help__login)
+        wukong__google__help__login)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -1438,7 +1438,7 @@ _wukong() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        wukong__gcloud__login)
+        wukong__google__login)
             opts="-a -v -q -h --application --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -1461,7 +1461,7 @@ _wukong() {
             return 0
             ;;
         wukong__help)
-            opts="init application pipeline deployment dev config login gcloud completion tui help"
+            opts="init application pipeline deployment dev config login google completion tui help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -1768,7 +1768,7 @@ _wukong() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        wukong__help__gcloud)
+        wukong__help__google)
             opts="login"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -1782,7 +1782,7 @@ _wukong() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        wukong__help__gcloud__login)
+        wukong__help__google__login)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )

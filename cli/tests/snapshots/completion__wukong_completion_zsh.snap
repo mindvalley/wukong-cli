@@ -1106,7 +1106,7 @@ By default, it'\''ll only report errors.
 '--help[Print help]' \
 && ret=0
 ;;
-(gcloud)
+(google)
 _arguments "${_arguments_options[@]}" \
 '-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
@@ -1130,15 +1130,15 @@ By default, it'\''ll only report errors.
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
-":: :_wukong__gcloud_commands" \
-"*::: :->gcloud" \
+":: :_wukong__google_commands" \
+"*::: :->google" \
 && ret=0
 
     case $state in
-    (gcloud)
+    (google)
         words=($line[1] "${words[@]}")
         (( CURRENT += 1 ))
-        curcontext="${curcontext%:*:*}:wukong-gcloud-command-$line[1]:"
+        curcontext="${curcontext%:*:*}:wukong-google-command-$line[1]:"
         case $line[1] in
             (login)
 _arguments "${_arguments_options[@]}" \
@@ -1168,7 +1168,7 @@ By default, it'\''ll only report errors.
 ;;
 (help)
 _arguments "${_arguments_options[@]}" \
-":: :_wukong__gcloud__help_commands" \
+":: :_wukong__google__help_commands" \
 "*::: :->help" \
 && ret=0
 
@@ -1176,7 +1176,7 @@ _arguments "${_arguments_options[@]}" \
     (help)
         words=($line[1] "${words[@]}")
         (( CURRENT += 1 ))
-        curcontext="${curcontext%:*:*}:wukong-gcloud-help-command-$line[1]:"
+        curcontext="${curcontext%:*:*}:wukong-google-help-command-$line[1]:"
         case $line[1] in
             (login)
 _arguments "${_arguments_options[@]}" \
@@ -1447,17 +1447,17 @@ esac
 _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
-(gcloud)
+(google)
 _arguments "${_arguments_options[@]}" \
-":: :_wukong__help__gcloud_commands" \
-"*::: :->gcloud" \
+":: :_wukong__help__google_commands" \
+"*::: :->google" \
 && ret=0
 
     case $state in
-    (gcloud)
+    (google)
         words=($line[1] "${words[@]}")
         (( CURRENT += 1 ))
-        curcontext="${curcontext%:*:*}:wukong-help-gcloud-command-$line[1]:"
+        curcontext="${curcontext%:*:*}:wukong-help-google-command-$line[1]:"
         case $line[1] in
             (login)
 _arguments "${_arguments_options[@]}" \
@@ -1498,7 +1498,7 @@ _wukong_commands() {
 'dev:This command group contains the commands to interact with the local development environment' \
 'config:This command group contains the commands to view & interact with Wukong'\''s configurations' \
 'login:Login to start using wukong command' \
-'gcloud:This command group contains the commands to interact with Google Cloud Platform' \
+'google:This command group contains the commands to interact with Google services' \
 'completion:Generate wukong cli completions for your shell to stdout' \
 'tui:Start TUI session' \
 'help:Print this message or the help of the given subcommand(s)' \
@@ -1703,21 +1703,6 @@ _wukong__help__deployment__execute_commands() {
     local commands; commands=()
     _describe -t commands 'wukong help deployment execute commands' commands "$@"
 }
-(( $+functions[_wukong__gcloud_commands] )) ||
-_wukong__gcloud_commands() {
-    local commands; commands=(
-'login:Login to Google Cloud' \
-'help:Print this message or the help of the given subcommand(s)' \
-    )
-    _describe -t commands 'wukong gcloud commands' commands "$@"
-}
-(( $+functions[_wukong__help__gcloud_commands] )) ||
-_wukong__help__gcloud_commands() {
-    local commands; commands=(
-'login:Login to Google Cloud' \
-    )
-    _describe -t commands 'wukong help gcloud commands' commands "$@"
-}
 (( $+functions[_wukong__config__get_commands] )) ||
 _wukong__config__get_commands() {
     local commands; commands=()
@@ -1732,6 +1717,21 @@ _wukong__config__help__get_commands() {
 _wukong__help__config__get_commands() {
     local commands; commands=()
     _describe -t commands 'wukong help config get commands' commands "$@"
+}
+(( $+functions[_wukong__google_commands] )) ||
+_wukong__google_commands() {
+    local commands; commands=(
+'login:Login to Google' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong google commands' commands "$@"
+}
+(( $+functions[_wukong__help__google_commands] )) ||
+_wukong__help__google_commands() {
+    local commands; commands=(
+'login:Login to Google' \
+    )
+    _describe -t commands 'wukong help google commands' commands "$@"
 }
 (( $+functions[_wukong__application__help_commands] )) ||
 _wukong__application__help_commands() {
@@ -1821,18 +1821,18 @@ _wukong__dev__help__help_commands() {
     local commands; commands=()
     _describe -t commands 'wukong dev help help commands' commands "$@"
 }
-(( $+functions[_wukong__gcloud__help_commands] )) ||
-_wukong__gcloud__help_commands() {
+(( $+functions[_wukong__google__help_commands] )) ||
+_wukong__google__help_commands() {
     local commands; commands=(
-'login:Login to Google Cloud' \
+'login:Login to Google' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
-    _describe -t commands 'wukong gcloud help commands' commands "$@"
+    _describe -t commands 'wukong google help commands' commands "$@"
 }
-(( $+functions[_wukong__gcloud__help__help_commands] )) ||
-_wukong__gcloud__help__help_commands() {
+(( $+functions[_wukong__google__help__help_commands] )) ||
+_wukong__google__help__help_commands() {
     local commands; commands=()
-    _describe -t commands 'wukong gcloud help help commands' commands "$@"
+    _describe -t commands 'wukong google help help commands' commands "$@"
 }
 (( $+functions[_wukong__help_commands] )) ||
 _wukong__help_commands() {
@@ -1844,7 +1844,7 @@ _wukong__help_commands() {
 'dev:This command group contains the commands to interact with the local development environment' \
 'config:This command group contains the commands to view & interact with Wukong'\''s configurations' \
 'login:Login to start using wukong command' \
-'gcloud:This command group contains the commands to interact with Google Cloud Platform' \
+'google:This command group contains the commands to interact with Google services' \
 'completion:Generate wukong cli completions for your shell to stdout' \
 'tui:Start TUI session' \
 'help:Print this message or the help of the given subcommand(s)' \
@@ -2006,20 +2006,20 @@ _wukong__pipeline__list_commands() {
     local commands; commands=()
     _describe -t commands 'wukong pipeline list commands' commands "$@"
 }
-(( $+functions[_wukong__gcloud__help__login_commands] )) ||
-_wukong__gcloud__help__login_commands() {
+(( $+functions[_wukong__google__help__login_commands] )) ||
+_wukong__google__help__login_commands() {
     local commands; commands=()
-    _describe -t commands 'wukong gcloud help login commands' commands "$@"
+    _describe -t commands 'wukong google help login commands' commands "$@"
 }
-(( $+functions[_wukong__gcloud__login_commands] )) ||
-_wukong__gcloud__login_commands() {
+(( $+functions[_wukong__google__login_commands] )) ||
+_wukong__google__login_commands() {
     local commands; commands=()
-    _describe -t commands 'wukong gcloud login commands' commands "$@"
+    _describe -t commands 'wukong google login commands' commands "$@"
 }
-(( $+functions[_wukong__help__gcloud__login_commands] )) ||
-_wukong__help__gcloud__login_commands() {
+(( $+functions[_wukong__help__google__login_commands] )) ||
+_wukong__help__google__login_commands() {
     local commands; commands=()
-    _describe -t commands 'wukong help gcloud login commands' commands "$@"
+    _describe -t commands 'wukong help google login commands' commands "$@"
 }
 (( $+functions[_wukong__help__login_commands] )) ||
 _wukong__help__login_commands() {
