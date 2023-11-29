@@ -14,7 +14,7 @@ struct JSONToken {
     token: TokenInfo,
 }
 
-pub static CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
+pub static CONFIG_PATH: Lazy<Option<String>> = Lazy::new(|| {
     #[cfg(feature = "prod")]
     return dirs::home_dir().map(|mut path| {
         path.extend([".config", "wukong"]);
@@ -23,11 +23,8 @@ pub static CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
 
     #[cfg(not(feature = "prod"))]
     {
-        match std::env::var("WUKONG_DEV_CONFIG_FILE") {
-            Ok(config) => {
-                // TODO: we should check whether the config file valid
-                Some(config)
-            }
+        match std::env::var("WUKONG_DEV_GCLOUD_FILE") {
+            Ok(config) => Some(config),
             Err(_) => dirs::home_dir().map(|mut path| {
                 path.extend([".config", "wukong", "dev"]);
                 path.to_str().unwrap().to_string()
@@ -106,7 +103,7 @@ pub async fn get_token_or_login() -> String {
     )
     .persist_tokens_to_disk(format!(
         "{}/gcloud_logging",
-        CONFIG_FILE
+        CONFIG_PATH
             .as_ref()
             .expect("Unable to identify user's home directory"),
     ))
@@ -127,7 +124,7 @@ pub async fn get_token_or_login() -> String {
 pub async fn get_access_token() -> Option<String> {
     let contents = tokio::fs::read(format!(
         "{}/gcloud_logging",
-        CONFIG_FILE
+        CONFIG_PATH
             .as_ref()
             .expect("Unable to identify user's home directory")
     ))
