@@ -161,7 +161,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
             app_ref.state.is_gcloud_authenticated,
             app_ref.state.is_okta_authenticated,
         ) {
-            if gcloud_authenticated && okta_authenticated {
+            if gcloud_authenticated && okta_authenticated && show_welcome_screen {
                 if app_ref.state.welcome_screen_timer.is_none() {
                     app_ref.state.welcome_screen_timer =
                         Some(Instant::now() + Duration::from_secs(4));
