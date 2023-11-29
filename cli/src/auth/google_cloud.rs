@@ -1,3 +1,4 @@
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::{future::Future, pin::Pin};
 use yup_oauth2::{
@@ -12,6 +13,28 @@ struct JSONToken {
     scopes: Vec<String>,
     token: TokenInfo,
 }
+
+pub static CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
+    #[cfg(feature = "prod")]
+    return dirs::home_dir().map(|mut path| {
+        path.extend([".config", "wukong"]);
+        path.to_str().unwrap().to_string()
+    });
+
+    #[cfg(not(feature = "prod"))]
+    {
+        match std::env::var("WUKONG_DEV_CONFIG_FILE") {
+            Ok(config) => {
+                // TODO: we should check whether the config file valid
+                Some(config)
+            }
+            Err(_) => dirs::home_dir().map(|mut path| {
+                path.extend([".config", "wukong", "dev"]);
+                path.to_str().unwrap().to_string()
+            }),
+        }
+    }
+});
 
 /// async function to be pinned by the `present_user_url` method of the trait
 /// we use the existing `DefaultInstalledFlowDelegate::present_user_url` method as a fallback for
@@ -67,28 +90,6 @@ pub async fn get_token_or_login() -> String {
         client_x509_cert_url: None,
     };
 
-    // ~/.config/wukong/
-    #[cfg(feature = "prod")]
-    let config_dir = dirs::home_dir()
-        .map(|mut path| {
-            path.extend([".config", "wukong"]);
-            path.to_str().unwrap().to_string()
-        })
-        .expect("wukong config path is invalid");
-
-    #[cfg(not(feature = "prod"))]
-    let config_dir = {
-        match std::env::var("WUKONG_DEV_GCLOUD_FILE") {
-            Ok(config) => config,
-            Err(_) => dirs::home_dir()
-                .map(|mut path| {
-                    path.extend([".config", "wukong", "dev"]);
-                    path.to_str().unwrap().to_string()
-                })
-                .expect("wukong dev config path is invalid"),
-        }
-    };
-
     let client = hyper::Client::builder().build(
         hyper_rustls::HttpsConnectorBuilder::new()
             .with_native_roots()
@@ -103,7 +104,12 @@ pub async fn get_token_or_login() -> String {
         InstalledFlowReturnMethod::HTTPPortRedirect(8855),
         client,
     )
-    .persist_tokens_to_disk(format!("{}/gcloud_logging", config_dir))
+    .persist_tokens_to_disk(format!(
+        "{}/gcloud_logging",
+        CONFIG_FILE
+            .as_ref()
+            .expect("Unable to identify user's home directory"),
+    ))
     .flow_delegate(Box::new(InstalledFlowBrowserDelegate))
     .build()
     .await
@@ -119,28 +125,13 @@ pub async fn get_token_or_login() -> String {
 }
 
 pub async fn get_access_token() -> Option<String> {
-    #[cfg(feature = "prod")]
-    let config_dir = dirs::home_dir()
-        .map(|mut path| {
-            path.extend([".config", "wukong"]);
-            path.to_str().unwrap().to_string()
-        })
-        .expect("wukong config path is invalid");
-
-    #[cfg(not(feature = "prod"))]
-    let config_dir = {
-        match std::env::var("WUKONG_DEV_GCLOUD_FILE") {
-            Ok(config) => config,
-            Err(_) => dirs::home_dir()
-                .map(|mut path| {
-                    path.extend([".config", "wukong", "dev"]);
-                    path.to_str().unwrap().to_string()
-                })
-                .expect("wukong dev config path is invalid"),
-        }
-    };
-
-    let contents = tokio::fs::read(format!("{}/gcloud_logging", config_dir)).await;
+    let contents = tokio::fs::read(format!(
+        "{}/gcloud_logging",
+        CONFIG_FILE
+            .as_ref()
+            .expect("Unable to identify user's home directory")
+    ))
+    .await;
 
     let tokens = contents
         .map(|contents| {

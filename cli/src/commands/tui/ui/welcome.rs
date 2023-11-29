@@ -127,7 +127,7 @@ impl WelcomeWidget {
                 Line::styled(
                     Self::get_auth_instruction(
                         gcloud_authenticated,
-                        "Your GCloud token is expired. Run \"wukong gcloud login\" to authenticate again. Press `q` to exit.",
+                        "Your GCloud token is expired. Run \"wukong google login\" to authenticate again. Press `q` to exit.",
                     ),
                     Style::default().fg(Color::Red),
                 ),
