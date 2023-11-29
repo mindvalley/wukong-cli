@@ -1,7 +1,7 @@
 use crate::commands::tui::{
     action::Action,
     app::{App, AppReturn, Block, DialogContext},
-    events::key::Key,
+    events::{key::Key, network::NetworkEvent},
 };
 use wukong_sdk::services::gcloud::google::logging::r#type::LogSeverity;
 
@@ -26,6 +26,7 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
             show_error_and_above_logs(app).await;
             AppReturn::Continue
         }
+        Some(Action::Refresh) => refresh_tui(app).await,
         _ => handle_key_events(key, app),
     }
 }
@@ -127,6 +128,14 @@ async fn show_error_and_above_logs(app: &mut App) -> AppReturn {
         _ => Some(LogSeverity::Error),
     };
 
+    reset_log_panel_and_trigger_log_refetch(app);
+
+    AppReturn::Continue
+}
+
+async fn refresh_tui(app: &mut App) -> AppReturn {
+    app.dispatch(NetworkEvent::GetDeployments).await;
+    app.dispatch(NetworkEvent::GetBuilds).await;
     reset_log_panel_and_trigger_log_refetch(app);
 
     AppReturn::Continue
