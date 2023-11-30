@@ -257,9 +257,10 @@ impl App {
             actions: vec![
                 Action::OpenNamespaceSelection,
                 Action::OpenVersionSelection,
+                Action::Quit,
+                Action::Refresh,
                 Action::ToggleLogsTailing,
                 Action::ShowErrorAndAbove,
-                Action::Quit,
                 Action::SearchLogs,
                 Action::FilterLogs,
                 Action::ExpandToFullScreen,
