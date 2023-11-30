@@ -100,6 +100,10 @@ pub struct State {
     pub builds_error: Option<String>,
     pub deployments_error: Option<String>,
 
+    // Auth
+    pub is_gcloud_authenticated: Option<bool>,
+    pub is_okta_authenticated: Option<bool>,
+
     pub last_log_entry_timestamp: Option<String>,
     pub log_time_filter: TimeFilter,
     // ui controls
@@ -132,6 +136,7 @@ pub struct State {
     pub logs_textwrap: bool,
 
     pub logs_size: (u16, u16),
+    pub welcome_screen_timer: Option<Instant>,
 }
 
 pub struct App {
@@ -204,6 +209,9 @@ impl App {
                 start_polling_log_entries: false,
                 logs_enable_auto_scroll_to_bottom: true,
 
+                is_gcloud_authenticated: None,
+                is_okta_authenticated: None,
+
                 builds: vec![],
                 deployments: vec![],
                 last_log_entry_timestamp: None,
@@ -239,6 +247,7 @@ impl App {
                 filter_bar_exclude_input: Input::default(),
                 logs_textwrap: false,
                 logs_size: (0, 0),
+                welcome_screen_timer: None,
             },
             navigation_stack: vec![DEFAULT_ROUTE],
             block_map: HashMap::new(),

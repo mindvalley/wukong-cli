@@ -1,8 +1,37 @@
+use once_cell::sync::Lazy;
+use serde::{Deserialize, Serialize};
 use std::{future::Future, pin::Pin};
 use yup_oauth2::{
     authenticator_delegate::{DefaultInstalledFlowDelegate, InstalledFlowDelegate},
-    hyper, hyper_rustls, ApplicationSecret, InstalledFlowAuthenticator, InstalledFlowReturnMethod,
+    hyper, hyper_rustls,
+    storage::TokenInfo,
+    ApplicationSecret, InstalledFlowAuthenticator, InstalledFlowReturnMethod,
 };
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct JSONToken {
+    scopes: Vec<String>,
+    token: TokenInfo,
+}
+
+pub static CONFIG_PATH: Lazy<Option<String>> = Lazy::new(|| {
+    #[cfg(feature = "prod")]
+    return dirs::home_dir().map(|mut path| {
+        path.extend([".config", "wukong"]);
+        path.to_str().unwrap().to_string()
+    });
+
+    #[cfg(not(feature = "prod"))]
+    {
+        match std::env::var("WUKONG_DEV_GCLOUD_FILE") {
+            Ok(config) => Some(config),
+            Err(_) => dirs::home_dir().map(|mut path| {
+                path.extend([".config", "wukong", "dev"]);
+                path.to_str().unwrap().to_string()
+            }),
+        }
+    }
+});
 
 /// async function to be pinned by the `present_user_url` method of the trait
 /// we use the existing `DefaultInstalledFlowDelegate::present_user_url` method as a fallback for
@@ -58,28 +87,6 @@ pub async fn get_token_or_login() -> String {
         client_x509_cert_url: None,
     };
 
-    // ~/.config/wukong/
-    #[cfg(feature = "prod")]
-    let config_dir = dirs::home_dir()
-        .map(|mut path| {
-            path.extend([".config", "wukong"]);
-            path.to_str().unwrap().to_string()
-        })
-        .expect("wukong config path is invalid");
-
-    #[cfg(not(feature = "prod"))]
-    let config_dir = {
-        match std::env::var("WUKONG_DEV_GCLOUD_FILE") {
-            Ok(config) => config,
-            Err(_) => dirs::home_dir()
-                .map(|mut path| {
-                    path.extend([".config", "wukong", "dev"]);
-                    path.to_str().unwrap().to_string()
-                })
-                .expect("wukong dev config path is invalid"),
-        }
-    };
-
     let client = hyper::Client::builder().build(
         hyper_rustls::HttpsConnectorBuilder::new()
             .with_native_roots()
@@ -94,7 +101,12 @@ pub async fn get_token_or_login() -> String {
         InstalledFlowReturnMethod::HTTPPortRedirect(8855),
         client,
     )
-    .persist_tokens_to_disk(format!("{}/gcloud_logging", config_dir))
+    .persist_tokens_to_disk(format!(
+        "{}/gcloud_logging",
+        CONFIG_PATH
+            .as_ref()
+            .expect("Unable to identify user's home directory"),
+    ))
     .flow_delegate(Box::new(InstalledFlowBrowserDelegate))
     .build()
     .await
@@ -107,4 +119,43 @@ pub async fn get_token_or_login() -> String {
         .token()
         .unwrap()
         .to_string()
+}
+
+pub async fn get_access_token() -> Option<String> {
+    let contents = tokio::fs::read(format!(
+        "{}/gcloud_logging",
+        CONFIG_PATH
+            .as_ref()
+            .expect("Unable to identify user's home directory")
+    ))
+    .await;
+
+    let tokens = contents
+        .map(|contents| {
+            serde_json::from_slice::<Vec<JSONToken>>(&contents)
+                .map_err(|_| {
+                    eprintln!("Failed to parse token file.");
+                })
+                .ok()
+        })
+        .unwrap_or(None);
+
+    let json_token = tokens.and_then(|tokens| {
+        tokens
+            .iter()
+            .find(|token| {
+                token
+                    .scopes
+                    .contains(&"https://www.googleapis.com/auth/logging.read".to_string())
+            })
+            .map(|token| token.token.access_token.clone())
+    });
+
+    // Sometimes access token exist but is expired, so call get_token_or_login() to refresh it
+    // before returning it.
+    if json_token.is_some() {
+        Some(get_token_or_login().await)
+    } else {
+        None
+    }
 }

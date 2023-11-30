@@ -4,7 +4,7 @@ use tokio::sync::{Mutex, MutexGuard};
 use wukong_sdk::services::gcloud::{google::logging::v2::LogEntry, LogEntries, LogEntriesOptions};
 
 use crate::{
-    auth,
+    auth::{self, okta::introspect_token},
     commands::{
         application::generate_filter,
         tui::{
@@ -23,6 +23,8 @@ pub enum NetworkEvent {
     GetBuilds,
     GetDeployments,
     GetGCloudLogs,
+    VerifyOktaRefreshToken,
+    VerifyGCloudToken,
 }
 
 pub async fn handle_network_event(
@@ -37,6 +39,58 @@ pub async fn handle_network_event(
         NetworkEvent::GetBuilds => get_builds(app, &mut wk_client).await?,
         NetworkEvent::GetDeployments => get_deployments(app, &mut wk_client).await?,
         NetworkEvent::GetGCloudLogs => get_gcloud_logs(app, &mut wk_client).await?,
+        NetworkEvent::VerifyOktaRefreshToken => verify_okta_refresh_token(app).await?,
+        NetworkEvent::VerifyGCloudToken => verify_gcloud_token(app, &mut wk_client).await?,
+    }
+
+    Ok(())
+}
+
+async fn verify_okta_refresh_token(app: Arc<Mutex<App>>) -> Result<(), WKCliError> {
+    let mut app_ref = app.lock().await;
+    match Config::load_from_default_path() {
+        Ok(config) => {
+            let auth_config = config.auth.as_ref();
+
+            if let Some(auth_config) = auth_config {
+                let token = introspect_token(&config, &auth_config.refresh_token).await?;
+
+                if token.active {
+                    app_ref.state.is_okta_authenticated = Some(true);
+                } else {
+                    app_ref.state.is_okta_authenticated = Some(false);
+                }
+            } else {
+                app_ref.state.is_okta_authenticated = Some(false);
+            }
+        }
+        Err(_error) => {
+            app_ref.state.is_okta_authenticated = Some(false);
+        }
+    };
+
+    Ok(())
+}
+
+async fn verify_gcloud_token(
+    app: Arc<Mutex<App>>,
+    wk_client: &mut WKClient,
+) -> Result<(), WKCliError> {
+    let gcloud_access_token = auth::google_cloud::get_access_token().await;
+
+    if let Some(gcloud_access_token) = gcloud_access_token {
+        let mut app_ref = app.lock().await;
+        match wk_client.get_access_token_info(gcloud_access_token).await {
+            Ok(_token_info) => {
+                app_ref.state.is_gcloud_authenticated = Some(true);
+            }
+            Err(_error) => {
+                app_ref.state.is_gcloud_authenticated = Some(false);
+            }
+        }
+    } else {
+        let mut app_ref = app.lock().await;
+        app_ref.state.is_gcloud_authenticated = Some(false);
     }
 
     Ok(())

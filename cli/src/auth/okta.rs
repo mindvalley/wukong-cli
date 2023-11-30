@@ -4,7 +4,7 @@ use crate::{
     utils::compare_with_current_time,
 };
 use aion::*;
-use chrono::{Duration, Utc};
+use chrono::{DateTime, Duration, Utc};
 use log::debug;
 use openidconnect::{
     core::{
@@ -34,6 +34,13 @@ pub struct TokenInfo {
     pub access_token: String,
     pub expiry_time: String,
     pub refresh_token: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TokenIntrospection {
+    pub active: bool,
+    pub exp: Option<DateTime<Utc>>,
+    pub iat: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Clone)]
@@ -320,7 +327,10 @@ pub async fn refresh_tokens(config: &Config) -> Result<OktaAuth, WKCliError> {
     })
 }
 
-pub async fn introspect_token(config: &Config, token: &str) -> Result<bool, WKCliError> {
+pub async fn introspect_token(
+    config: &Config,
+    token: &str,
+) -> Result<TokenIntrospection, WKCliError> {
     let okta_client_id = ClientId::new(config.core.okta_client_id.clone());
 
     let issuer_url =
@@ -358,5 +368,9 @@ pub async fn introspect_token(config: &Config, token: &str) -> Result<bool, WKCl
         token_response.to_owned().exp()
     );
 
-    Ok(true)
+    Ok(TokenIntrospection {
+        active: token_response.active(),
+        exp: token_response.exp(),
+        iat: token_response.iat(),
+    })
 }

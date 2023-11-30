@@ -10,6 +10,7 @@ use self::{
     application::ApplicationWidget, builds::BuildsWidget, deployment::DeploymentWidget,
     help::HelpWidget, logs::LogsWidget, namespace_selection::NamespaceSelectionWidget,
     time_filter_selection::TimeFilterSelectionWidget, version_selection::VersionSelectionWidget,
+    welcome::WelcomeWidget,
 };
 
 use super::app::{App, Block, DialogContext};
@@ -23,8 +24,9 @@ mod namespace_selection;
 mod time_filter_selection;
 mod util;
 mod version_selection;
+mod welcome;
 
-pub fn draw<B>(frame: &mut Frame<B>, app: &mut App)
+pub fn draw_main_screen<B>(frame: &mut Frame<B>, app: &mut App)
 where
     B: Backend,
 {
@@ -138,6 +140,13 @@ pub fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
             .as_ref(),
         )
         .split(popup_layout[1])[1] // Return the middle chunk
+}
+
+pub fn draw_welcome_screen<B>(frame: &mut Frame<B>, app: &mut App)
+where
+    B: Backend,
+{
+    WelcomeWidget::draw(app, frame);
 }
 
 pub fn create_loading_widget(parent_block: WidgetBlock) -> Paragraph {

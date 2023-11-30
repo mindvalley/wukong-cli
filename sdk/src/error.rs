@@ -181,6 +181,8 @@ pub enum GCloudError {
     GoogleLogging2Error(#[from] google_logging2::Error),
     #[error(transparent)]
     ResponseError(#[from] tonic::Status),
+    #[error(transparent)]
+    ReqwestError(#[from] reqwest::Error),
 }
 
 // Secret Extractor Error

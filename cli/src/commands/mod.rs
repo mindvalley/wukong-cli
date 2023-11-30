@@ -17,6 +17,7 @@ mod completion;
 mod config;
 mod deployment;
 mod dev;
+mod google;
 mod init;
 mod login;
 mod pipeline;
@@ -95,6 +96,8 @@ pub enum CommandGroup {
     Config(config::Config),
     /// Login to start using wukong command
     Login,
+    /// This command group contains the commands to interact with Google services
+    Google(google::Google),
     /// Generate wukong cli completions for your shell to stdout
     Completion {
         #[arg(value_enum)]
@@ -118,6 +121,7 @@ impl ClapApp {
             CommandGroup::Init => handle_init(channel).await,
             CommandGroup::Completion { shell } => handle_completion(*shell),
             CommandGroup::Login => handle_login().await,
+            CommandGroup::Google(google) => google.handle_command().await,
             CommandGroup::Application(application) => {
                 application.handle_command(get_context(self)?).await
             }
