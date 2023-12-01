@@ -134,14 +134,18 @@ impl GQLClient {
         let request = self.inner.post(url.clone()).json(&body);
         debug!("request: {:#?}", request);
 
-        let response: Response<Q::ResponseData>=
-            request.send().await?.json().await.map_err(|err: reqwest::Error| {
-                debug!("response: {:#?}", err);
-                return APIError::MissingResponseData;
-              })?;
+        let response: Response<Q::ResponseData> =
+            request
+                .send()
+                .await?
+                .json()
+                .await
+                .map_err(|err: reqwest::Error| {
+                    debug!("response: {:#?}", err);
+                    APIError::MissingResponseData
+                })?;
 
         debug!("response: {:#?}", response);
-
 
         // We use <= 3 so it does one extra loop where the last response is checked
         // in order to return an APIError::Timeout if it was a timeout error in the
