@@ -61,7 +61,9 @@ impl EventManager {
                     }
                 }
 
-                event_sender.send(Event::Tick).unwrap();
+                if event_sender.send(Event::Tick).is_err() {
+                    break;
+                }
             }
         });
     }
