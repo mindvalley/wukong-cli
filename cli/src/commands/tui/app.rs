@@ -306,7 +306,7 @@ impl App {
                 self.state.instant_since_last_log_entries_poll = Instant::now();
 
                 if self.state.logs_tailing {
-                    self.dispatch(NetworkEvent::GetGCloudLogs).await;
+                    self.dispatch(NetworkEvent::GetGCloudLogsTail).await;
                 }
             }
         }
