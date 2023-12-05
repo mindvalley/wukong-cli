@@ -1,4 +1,4 @@
-use super::{common_key_events, logs::reset_log_panel_and_trigger_log_refetch};
+// use super::{common_key_events, logs::reset_log_panel_and_trigger_log_refetch};
 
 use crate::commands::tui::{
     app::{App, AppReturn, Block},
