@@ -23,6 +23,7 @@ pub enum NetworkEvent {
     GetBuilds,
     GetDeployments,
     GetGCloudLogs,
+    GetGCloudLogsTail,
     VerifyOktaRefreshToken,
     VerifyGCloudToken,
 }
@@ -38,7 +39,8 @@ pub async fn handle_network_event(
     match network_event {
         NetworkEvent::GetBuilds => get_builds(app, &mut wk_client).await?,
         NetworkEvent::GetDeployments => get_deployments(app, &mut wk_client).await?,
-        NetworkEvent::GetGCloudLogs => get_gcloud_logs(app, &mut wk_client).await?,
+        NetworkEvent::GetGCloudLogs => get_gcloud_logs(app, &mut wk_client, false).await?,
+        NetworkEvent::GetGCloudLogsTail => get_gcloud_logs(app, &mut wk_client, true).await?,
         NetworkEvent::VerifyOktaRefreshToken => verify_okta_refresh_token(app).await?,
         NetworkEvent::VerifyGCloudToken => verify_gcloud_token(app, &mut wk_client).await?,
     }
@@ -162,6 +164,7 @@ async fn fetch_log_entries(
     page_size: Option<i32>,
     filter: Option<String>,
     page_token: Option<String>,
+    order_by: Option<String>,
     gcloud_access_token: String,
     wk_client: &mut WKClient,
 ) -> Result<LogEntries, WKCliError> {
@@ -172,6 +175,7 @@ async fn fetch_log_entries(
                 page_size,
                 filter,
                 page_token,
+                order_by,
                 ..Default::default()
             },
             gcloud_access_token,
@@ -348,7 +352,11 @@ async fn get_deployments(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Resu
     Ok(())
 }
 
-async fn get_gcloud_logs(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Result<(), WKCliError> {
+async fn get_gcloud_logs(
+    app: Arc<Mutex<App>>,
+    wk_client: &mut WKClient,
+    tailing: bool,
+) -> Result<(), WKCliError> {
     let app_ref = app.lock().await;
     let application = app_ref.state.current_application.clone();
     let version = app_ref.state.current_version.clone();
@@ -397,11 +405,16 @@ async fn get_gcloud_logs(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Resu
                     )?;
                     let resource_names = vec![format!("projects/{}", cluster.google_project_id)];
 
+                    let (page_size, order_by) = match tailing {
+                        true => (1000, None),
+                        false => (100, Some("timestamp desc".to_string())),
+                    };
                     let mut log = match fetch_log_entries(
                         Some(resource_names.clone()),
-                        Some(500),
+                        Some(page_size),
                         Some(filter.clone()),
                         None,
+                        order_by,
                         gcloud_access_token.clone(),
                         wk_client,
                     )
@@ -415,28 +428,13 @@ async fn get_gcloud_logs(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Resu
                         }
                     };
 
-                    let mut next_page_token = log.next_page_token.clone();
-                    update_logs_entries(Arc::clone(&app), log.entries, &id).await;
-
-                    // repeat fetching logs until there is no next_page_token
-                    let app = Arc::clone(&app);
-                    while next_page_token.is_some() && next_page_token != Some("".to_string()) {
-                        log = fetch_log_entries(
-                            Some(resource_names.clone()),
-                            Some(500),
-                            Some(filter.clone()),
-                            log.next_page_token.clone(),
-                            gcloud_access_token.clone(),
-                            wk_client,
-                        )
-                        .await
-                        .unwrap();
-
-                        // update next_page_token value
-                        next_page_token = log.next_page_token.clone();
-
-                        update_logs_entries(Arc::clone(&app), log.entries, &id).await;
+                    if !tailing {
+                        log.entries = log
+                            .entries
+                            .map(|entries| entries.into_iter().rev().collect::<Vec<LogEntry>>());
                     }
+
+                    update_logs_entries(Arc::clone(&app), log.entries, &id).await;
                 }
             }
         }

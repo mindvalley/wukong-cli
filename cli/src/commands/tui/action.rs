@@ -10,7 +10,7 @@ pub enum Action {
     ToggleLogsTailing,
     SearchLogs,
     FilterLogs,
-    TimeFilterLogs,
+    // TimeFilterLogs,
     ExpandToFullScreen,
     LineWrapLogs,
     Refresh,
@@ -20,14 +20,14 @@ pub enum Action {
 impl Action {
     // iterator for enum https://stackoverflow.com/a/21376984
     pub fn iterator() -> Iter<'static, Action> {
-        static ACTIONS: [Action; 11] = [
+        static ACTIONS: [Action; 10] = [
             Action::OpenNamespaceSelection,
             Action::OpenVersionSelection,
             Action::ToggleLogsTailing,
             Action::ShowErrorAndAbove,
             Action::SearchLogs,
             Action::FilterLogs,
-            Action::TimeFilterLogs,
+            // Action::TimeFilterLogs,
             Action::ExpandToFullScreen,
             Action::LineWrapLogs,
             Action::Refresh,
@@ -47,7 +47,7 @@ impl Action {
             Action::ExpandToFullScreen => &[Key::Ctrl('w')],
             Action::LineWrapLogs => &[Key::Ctrl('l')],
             Action::Quit => &[Key::Char('q')],
-            Action::TimeFilterLogs => &[Key::Ctrl('y')],
+            // Action::TimeFilterLogs => &[Key::Ctrl('y')],
             Action::Refresh => &[Key::Ctrl('r')],
         }
     }
@@ -70,7 +70,7 @@ impl Display for Action {
             Action::SearchLogs => write!(f, "Search logs"),
             Action::FilterLogs => write!(f, "Filter logs"),
             Action::LineWrapLogs => write!(f, "Line wrap logs"),
-            Action::TimeFilterLogs => write!(f, "Filter logs by time"),
+            // Action::TimeFilterLogs => write!(f, "Filter logs by time"),
             Action::ExpandToFullScreen => write!(f, "Expand to full screen"),
             Action::Refresh => write!(f, "Refresh"),
         }

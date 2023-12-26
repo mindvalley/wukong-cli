@@ -34,7 +34,7 @@ pub enum DialogContext {
     LogSearch,
     LogIncludeFilter,
     LogExcludeFilter,
-    LogTimeFilter,
+    // LogTimeFilter,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
@@ -265,7 +265,7 @@ impl App {
                 Action::FilterLogs,
                 Action::ExpandToFullScreen,
                 Action::LineWrapLogs,
-                Action::TimeFilterLogs,
+                // Action::TimeFilterLogs,
             ],
             network_event_sender: sender,
         }
@@ -306,7 +306,7 @@ impl App {
                 self.state.instant_since_last_log_entries_poll = Instant::now();
 
                 if self.state.logs_tailing {
-                    self.dispatch(NetworkEvent::GetGCloudLogs).await;
+                    self.dispatch(NetworkEvent::GetGCloudLogsTail).await;
                 }
             }
         }
