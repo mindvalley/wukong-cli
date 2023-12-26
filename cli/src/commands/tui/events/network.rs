@@ -405,50 +405,34 @@ async fn get_gcloud_logs(
                     )?;
                     let resource_names = vec![format!("projects/{}", cluster.google_project_id)];
 
-                    let log = if tailing {
-                        match fetch_log_entries(
-                            Some(resource_names.clone()),
-                            Some(1000),
-                            Some(filter.clone()),
-                            None,
-                            None,
-                            gcloud_access_token.clone(),
-                            wk_client,
-                        )
-                        .await
-                        {
-                            Ok(data) => data,
-                            Err(error) => {
-                                let mut app_ref = app.lock().await;
-                                app_ref.state.log_entries_error = Some(format!("{error}"));
-                                return Err(error);
-                            }
+                    let (page_size, order_by) = match tailing {
+                        true => (1000, None),
+                        false => (100, Some("timestamp desc".to_string())),
+                    };
+                    let mut log = match fetch_log_entries(
+                        Some(resource_names.clone()),
+                        Some(page_size),
+                        Some(filter.clone()),
+                        None,
+                        order_by,
+                        gcloud_access_token.clone(),
+                        wk_client,
+                    )
+                    .await
+                    {
+                        Ok(data) => data,
+                        Err(error) => {
+                            let mut app_ref = app.lock().await;
+                            app_ref.state.log_entries_error = Some(format!("{error}"));
+                            return Err(error);
                         }
-                    } else {
-                        let mut log = match fetch_log_entries(
-                            Some(resource_names.clone()),
-                            Some(100),
-                            Some(filter.clone()),
-                            None,
-                            Some("timestamp desc".to_string()),
-                            gcloud_access_token.clone(),
-                            wk_client,
-                        )
-                        .await
-                        {
-                            Ok(data) => data,
-                            Err(error) => {
-                                let mut app_ref = app.lock().await;
-                                app_ref.state.log_entries_error = Some(format!("{error}"));
-                                return Err(error);
-                            }
-                        };
+                    };
 
+                    if !tailing {
                         log.entries = log
                             .entries
                             .map(|entries| entries.into_iter().rev().collect::<Vec<LogEntry>>());
-                        log
-                    };
+                    }
 
                     update_logs_entries(Arc::clone(&app), log.entries, &id).await;
                 }
