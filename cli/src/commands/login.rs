@@ -8,22 +8,25 @@ use crate::{
 use dialoguer::{theme::ColorfulTheme, Select};
 use log::debug;
 
-pub async fn handle_login() -> Result<bool, WKCliError> {
-    let config = Config::load_from_default_path()?;
+pub async fn handle_login(config: Option<Config>) -> Result<bool, WKCliError> {
+    let config = match config {
+        Some(config) => config,
+        None => Config::load_from_default_path()?,
+    };
 
     let mut login_selections = vec!["Log in with a new account"];
     if let Some(ref auth_config) = config.auth {
         login_selections.splice(..0, vec![auth_config.account.as_str()]);
     };
 
-    let selection = Select::with_theme(&ColorfulTheme::default())
+    let selected_account = Select::with_theme(&ColorfulTheme::default())
                 .with_prompt("Choose the account you would like to use to perform operations for this configuration:")
                 .default(0)
                 .items(&login_selections[..])
                 .interact()?;
 
     // "Log in with a new account" is selected
-    let new_config = if selection == login_selections.len() - 1 {
+    let new_config = if selected_account == login_selections.len() - 1 {
         login_and_create_config(config).await?
     } else {
         // check access token expiry
@@ -39,7 +42,10 @@ pub async fn handle_login() -> Result<bool, WKCliError> {
                     current_config.auth = Some(new_tokens.into());
 
                     refresh_token_loader.finish_and_clear();
-                    colored_println!("You are logged in as: {}.\n", login_selections[selection]);
+                    colored_println!(
+                        "You are logged in as: {}.\n",
+                        login_selections[selected_account]
+                    );
 
                     current_config
                 }
@@ -57,7 +63,10 @@ pub async fn handle_login() -> Result<bool, WKCliError> {
 
             current_config = updated_config;
         } else {
-            colored_println!("You are logged in as: {}.\n", login_selections[selection]);
+            colored_println!(
+                "You are logged in as: {}.\n",
+                login_selections[selected_account]
+            );
         }
 
         current_config
