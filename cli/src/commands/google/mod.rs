@@ -3,7 +3,7 @@ use clap::{Args, Subcommand};
 use std::str;
 
 use self::login::handle_login;
-mod login;
+pub mod login;
 
 #[derive(Debug, Args)]
 pub struct Google {

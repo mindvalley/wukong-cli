@@ -1,12 +1,15 @@
 use crate::{
-    commands::login::handle_login,
+    auth::vault,
+    commands::google,
+    commands::login,
     config::{ApiChannel, Config},
     error::{ConfigError, WKCliError},
     loader::new_spinner,
     output::colored_println,
     wukong_client::WKClient,
 };
-use dialoguer::{theme::ColorfulTheme, Select};
+use dialoguer::{theme::ColorfulTheme, Confirm, Select};
+use owo_colors::OwoColorize;
 
 pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
@@ -20,37 +23,12 @@ pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
         },
     };
 
-    handle_login(Some(config)).await?;
+    login::handle_login(Some(config)).await?;
 
     let mut new_config = Config::load_from_default_path()?;
-
-    let fetch_loader = new_spinner();
-    fetch_loader.set_message("Fetching application list...");
-
-    let mut wk_client = WKClient::for_channel(&new_config, &channel)?;
-
-    let applications_data: Vec<String> = wk_client
-        .fetch_applications()
-        .await?
-        .applications
-        .iter()
-        .map(|app| app.name.clone())
-        .collect();
-
-    fetch_loader.finish_and_clear();
-
-    let application_selection = Select::with_theme(&ColorfulTheme::default())
-        .with_prompt("Please select the application")
-        .default(0)
-        .items(&applications_data[..])
-        .interact()?;
-
-    colored_println!(
-        "Your current application has been set to: {}.",
-        &applications_data[application_selection]
-    );
-
-    new_config.core.application = applications_data[application_selection].clone();
+    new_config = handle_application(new_config, channel).await?;
+    new_config = handle_gcloud_auth(new_config).await?;
+    new_config = handle_bunker_auth(new_config).await?;
 
     colored_println!(
         r#"
@@ -73,4 +51,70 @@ pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
         .expect("Config file save failed");
 
     Ok(true)
+}
+
+async fn handle_bunker_auth(mut config: Config) -> Result<Config, WKCliError> {
+    let agree_to_authenticate = Confirm::with_theme(&ColorfulTheme::default())
+        .with_prompt(format!(
+            "{} {}",
+            "(Optional)".bright_black(),
+            "Do you want to authenticate against Bunker? You may do it later when neccessary"
+        ))
+        .default(true)
+        .interact()?;
+
+    if agree_to_authenticate {
+        vault::get_token_or_login(&mut config).await?;
+    }
+
+    Ok(config)
+}
+
+async fn handle_gcloud_auth(new_config: Config) -> Result<Config, WKCliError> {
+    let agree_to_authenticate = Confirm::with_theme(&ColorfulTheme::default())
+        .with_prompt(format!(
+            "{} {}",
+            "(Optional)".bright_black(),
+            "Do you want to authenticate against Google Cloud? You may do it later when neccessary"
+        ))
+        .default(false)
+        .interact()?;
+
+    if agree_to_authenticate {
+        google::login::handle_login().await?;
+    }
+
+    Ok(new_config)
+}
+
+async fn handle_application(mut config: Config, channel: ApiChannel) -> Result<Config, WKCliError> {
+    let fetch_loader = new_spinner();
+    fetch_loader.set_message("Fetching application list...");
+
+    let mut wk_client = WKClient::for_channel(&config, &channel)?;
+
+    let applications_data: Vec<String> = wk_client
+        .fetch_applications()
+        .await?
+        .applications
+        .iter()
+        .map(|app| app.name.clone())
+        .collect();
+
+    fetch_loader.finish_and_clear();
+
+    let application_selection = Select::with_theme(&ColorfulTheme::default())
+        .with_prompt("Please select the application")
+        .default(0)
+        .items(&applications_data[..])
+        .interact()?;
+
+    colored_println!(
+        "Your current application has been set to: {}.",
+        &applications_data[application_selection]
+    );
+
+    config.core.application = applications_data[application_selection].clone();
+
+    Ok(config)
 }

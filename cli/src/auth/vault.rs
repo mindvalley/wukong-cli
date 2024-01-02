@@ -105,7 +105,7 @@ pub async fn get_token_or_login(config: &mut Config) -> Result<String, WKCliErro
                 });
                 config.save_to_default_path()?;
 
-                colored_println!("You are now logged in as {}.\n", email);
+                colored_println!("You are now logged in as: {}.\n", email);
                 Ok(login_resp.auth.client_token)
             }
             Err(err) => Err(err),
@@ -134,7 +134,7 @@ pub async fn get_token_or_login(config: &mut Config) -> Result<String, WKCliErro
             });
             config.save_to_default_path()?;
 
-            colored_println!("You are now logged in as {}.\n", email);
+            colored_println!("You are now logged in as: {}.\n", email);
             Ok(login_resp.auth.client_token)
         }
     }
