@@ -1,4 +1,4 @@
-use crate::error::ConfigError;
+use crate::{auth::google_cloud::GoogleCloudConfig, error::ConfigError};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -56,6 +56,7 @@ pub struct Config {
     pub auth: Option<AuthConfig>,
     pub vault: Option<VaultConfig>,
     pub update_check: Option<UpdateCheck>,
+    pub google_cloud: Option<GoogleCloudConfig>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -115,6 +116,7 @@ impl Default for Config {
             auth: None,
             vault: None,
             update_check: None,
+            google_cloud: None,
         }
     }
 }
