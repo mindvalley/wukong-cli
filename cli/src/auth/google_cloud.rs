@@ -81,7 +81,7 @@ impl TokenStorage for ConfigTokenStore {
     async fn set(&self, _scopes: &[&str], token: TokenInfo) -> anyhow::Result<()> {
         let mut config = self.config.clone();
 
-        config.google_cloud = Some(GoogleCloudConfig {
+        config.auth.google_cloud = Some(GoogleCloudConfig {
             access_token: token.access_token.expect("Invalid access token"),
             refresh_token: token.refresh_token.expect("Invalid refresh token"),
             expiry_time: token
@@ -97,7 +97,7 @@ impl TokenStorage for ConfigTokenStore {
     }
 
     async fn get(&self, _target_scopes: &[&str]) -> Option<TokenInfo> {
-        let google_cloud = self.config.google_cloud.clone()?;
+        let google_cloud = self.config.auth.google_cloud.clone()?;
 
         Some(TokenInfo {
             access_token: Some(google_cloud.access_token),
@@ -166,7 +166,7 @@ pub async fn get_access_token() -> Option<String> {
 
     // Sometimes access token exist but is expired, so call get_token_or_login() to refresh it
     // before returning it.
-    if config.google_cloud.is_some() {
+    if config.auth.google_cloud.is_some() {
         Some(get_token_or_login().await)
     } else {
         None

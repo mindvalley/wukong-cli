@@ -157,7 +157,7 @@ fn get_context(clap_app: &ClapApp) -> Result<Context, WKCliError> {
                 config.core.application
             }
         },
-        sub: config.auth.map(|auth_config| auth_config.subject),
+        sub: config.auth.okta.map(|auth_config| auth_config.subject),
         // if the `--canary` flag is used, then the CLI will use the Canary channel API,
         // otherwise, it will use the Stable channel API.
         channel: if clap_app.canary {

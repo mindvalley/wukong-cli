@@ -48,10 +48,14 @@ pub static BASE_URL: Lazy<String> = Lazy::new(|| {
 });
 
 pub async fn get_token_or_login(config: &mut Config) -> Result<String, WKCliError> {
-    let auth_config = config.auth.as_ref().ok_or(WKCliError::UnAuthenticated)?;
+    let okta_config = config
+        .auth
+        .okta
+        .as_ref()
+        .ok_or(WKCliError::UnAuthenticated)?;
     let client = reqwest::Client::new();
 
-    match &config.vault {
+    match &config.auth.vault {
         Some(vault_config) => match verify_token(&client, &BASE_URL, &vault_config.api_token).await
         {
             Ok(_) => {
@@ -71,7 +75,7 @@ pub async fn get_token_or_login(config: &mut Config) -> Result<String, WKCliErro
                     let new_expiry_time =
                         calculate_expiry_time(renew_token_resp.auth.lease_duration);
 
-                    config.vault = Some(VaultConfig {
+                    config.auth.vault = Some(VaultConfig {
                         api_token: token.clone(),
                         expiry_time: new_expiry_time,
                     });
@@ -84,7 +88,7 @@ pub async fn get_token_or_login(config: &mut Config) -> Result<String, WKCliErro
             }
             Err(WKCliError::AuthError(AuthError::VaultPermissionDenied)) => {
                 // login
-                colored_println!("Login Vault with okta account {}", auth_config.account);
+                colored_println!("Login Vault with okta account {}", okta_config.account);
 
                 let password = dialoguer::Password::with_theme(&ColorfulTheme::default())
                     .with_prompt("Enter okta password")
@@ -93,13 +97,13 @@ pub async fn get_token_or_login(config: &mut Config) -> Result<String, WKCliErro
                 let loader = new_spinner();
                 loader.set_message("Authenticating the user... You may need to check your device for an MFA notification.");
 
-                let email = &auth_config.account;
+                let email = &okta_config.account;
                 let login_resp = login(&client, &BASE_URL, email, &password).await?;
 
                 loader.finish_and_clear();
                 let expiry_time = calculate_expiry_time(login_resp.auth.lease_duration);
 
-                config.vault = Some(VaultConfig {
+                config.auth.vault = Some(VaultConfig {
                     api_token: login_resp.auth.client_token.clone(),
                     expiry_time,
                 });
@@ -111,7 +115,7 @@ pub async fn get_token_or_login(config: &mut Config) -> Result<String, WKCliErro
             Err(err) => Err(err),
         },
         None => {
-            colored_println!("Login Vault with okta account {}", auth_config.account);
+            colored_println!("Login Vault with okta account {}", okta_config.account);
 
             let password = dialoguer::Password::with_theme(&ColorfulTheme::default())
                 .with_prompt("Enter okta password")
@@ -122,13 +126,13 @@ pub async fn get_token_or_login(config: &mut Config) -> Result<String, WKCliErro
             "Authenticating the user... You may need to check your device for an MFA notification.",
         );
 
-            let email = &auth_config.account;
+            let email = &okta_config.account;
             let login_resp = login(&client, &BASE_URL, email, &password).await?;
 
             loader.finish_and_clear();
             let expiry_time = calculate_expiry_time(login_resp.auth.lease_duration);
 
-            config.vault = Some(VaultConfig {
+            config.auth.vault = Some(VaultConfig {
                 api_token: login_resp.auth.client_token.clone(),
                 expiry_time,
             });

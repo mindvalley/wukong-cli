@@ -53,10 +53,8 @@ pub static CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct Config {
     pub core: CoreConfig,
-    pub auth: Option<OktaConfig>,
-    pub vault: Option<VaultConfig>,
+    pub auth: AuthConfig,
     pub update_check: Option<UpdateCheck>,
-    pub google_cloud: Option<GoogleCloudConfig>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -96,6 +94,13 @@ pub struct OktaConfig {
     pub refresh_token: String,
 }
 
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct AuthConfig {
+    pub okta: Option<OktaConfig>,
+    pub vault: Option<VaultConfig>,
+    pub google_cloud: Option<GoogleCloudConfig>,
+}
+
 // ReleaseInfo stores information about a release
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct UpdateCheck {
@@ -113,10 +118,12 @@ impl Default for Config {
                 wukong_api_url: WUKONG_API_URL.to_string(),
                 okta_client_id: OKTA_CLIENT_ID.to_string(),
             },
-            auth: None,
-            vault: None,
+            auth: AuthConfig {
+                okta: None,
+                vault: None,
+                google_cloud: None,
+            },
             update_check: None,
-            google_cloud: None,
         }
     }
 }

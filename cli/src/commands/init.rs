@@ -42,7 +42,7 @@ pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
 
     * Run `wukong --help` to see the wukong command groups you can interact with. And run `wukong COMMAND help` to get help on any wukong command.
                              "#,
-        new_config.auth.as_ref().unwrap().account,
+        new_config.auth.okta.as_ref().unwrap().account,
         new_config.core.application
     );
 

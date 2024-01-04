@@ -15,8 +15,8 @@ pub async fn handle_login(config: Option<Config>) -> Result<bool, WKCliError> {
     };
 
     let mut login_selections = vec!["Log in with a new account"];
-    if let Some(ref auth_config) = config.auth {
-        login_selections.splice(..0, vec![auth_config.account.as_str()]);
+    if let Some(ref okta_config) = config.auth.okta {
+        login_selections.splice(..0, vec![okta_config.account.as_str()]);
     };
 
     let selected_account = Select::with_theme(&ColorfulTheme::default())
@@ -39,7 +39,7 @@ pub async fn handle_login(config: Option<Config>) -> Result<bool, WKCliError> {
 
             let updated_config = match auth::okta::refresh_tokens(&config).await {
                 Ok(new_tokens) => {
-                    current_config.auth = Some(new_tokens.into());
+                    current_config.auth.okta = Some(new_tokens.into());
 
                     refresh_token_loader.finish_and_clear();
                     colored_println!(
@@ -81,7 +81,7 @@ async fn login_and_create_config(mut config: Config) -> Result<Config, WKCliErro
     let auth_info = auth::okta::login(&config).await?;
     let acc = auth_info.account.clone();
 
-    config.auth = Some(auth_info.into());
+    config.auth.okta = Some(auth_info.into());
 
     colored_println!("You are logged in as: {acc}.\n");
 
