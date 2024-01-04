@@ -1,5 +1,5 @@
 use crate::{
-    config::{AuthConfig, Config},
+    config::{Config, OktaConfig},
     error::{AuthError, WKCliError},
     utils::compare_with_current_time,
 };
@@ -53,7 +53,7 @@ pub struct OktaAuth {
     pub expiry_time: String,
 }
 
-impl From<OktaAuth> for AuthConfig {
+impl From<OktaAuth> for OktaConfig {
     fn from(value: OktaAuth) -> Self {
         Self {
             account: value.account,

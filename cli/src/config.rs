@@ -53,7 +53,7 @@ pub static CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct Config {
     pub core: CoreConfig,
-    pub auth: Option<AuthConfig>,
+    pub auth: Option<OktaConfig>,
     pub vault: Option<VaultConfig>,
     pub update_check: Option<UpdateCheck>,
     pub google_cloud: Option<GoogleCloudConfig>,
@@ -87,7 +87,7 @@ pub struct ConfigWithPath {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-pub struct AuthConfig {
+pub struct OktaConfig {
     pub account: String,
     pub subject: String,
     pub id_token: String,
