@@ -107,6 +107,8 @@ fn test_wukong_pipeline_list_should_failed_when_unauthenticated() {
 application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
 okta_client_id = "valid-okta-client-id"
+
+[auth]
 "#
             .to_string()
             .as_str(),
@@ -143,6 +145,8 @@ fn test_wukong_pipeline_describe_should_failed_when_unauthenticated() {
 application = "valid-application"
 wukong_api_url = "{}"
 okta_client_id = "valid-okta-client-id"
+
+[auth]
 "#,
                 server.base_url(),
             )
@@ -393,6 +397,8 @@ fn test_wukong_pipeline_ci_status_should_failed_when_unauthenticated() {
 application = "valid-application"
 wukong_api_url = "{}"
 okta_client_id = "valid-okta-client-id"
+
+[auth]
 "#,
                 server.base_url(),
             )
