@@ -67,6 +67,8 @@ fn test_wukong_config_list_success_without_login() {
 application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
 okta_client_id = "valid-okta-client-id"
+
+[auth]
     "#,
         )
         .unwrap();
