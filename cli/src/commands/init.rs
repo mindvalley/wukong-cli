@@ -82,6 +82,9 @@ async fn handle_gcloud_auth(new_config: Config) -> Result<Config, WKCliError> {
 
     if agree_to_authenticate {
         google::login::handle_login().await?;
+        // Load the config again to get the latest token
+        let new_config = Config::load_from_default_path()?;
+        return Ok(new_config);
     }
 
     Ok(new_config)
