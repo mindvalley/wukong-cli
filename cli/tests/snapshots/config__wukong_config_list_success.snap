@@ -7,10 +7,12 @@ application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
 okta_client_id = "valid-okta-client-id"
 
-[auth]
+[auth.okta]
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
 access_token = "access_token"
 expiry_time = "2023-02-19T06:55:51.501915+00:00"
 refresh_token = "refresh_token"
+
+

@@ -63,7 +63,7 @@ fn test_wukong_pipeline_list_success() {
   wukong_api_url = "{}"
   okta_client_id = "valid-okta-client-id"
 
-  [auth]
+  [auth.okta]
   account = "test@email.com"
   subject = "subject"
   id_token = "id_token"
@@ -265,7 +265,7 @@ application = "valid-application"
 wukong_api_url = "{}"
 okta_client_id = "valid-okta-client-id"
 
-[auth]
+[auth.okta]
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
@@ -344,7 +344,7 @@ application = "valid-application"
 wukong_api_url = "{}"
 okta_client_id = "valid-okta-client-id"
 
-[auth]
+[auth.okta]
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
