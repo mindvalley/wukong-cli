@@ -70,7 +70,7 @@ async fn handle_bunker_auth(mut config: Config) -> Result<Config, WKCliError> {
     Ok(config)
 }
 
-async fn handle_gcloud_auth(new_config: Config) -> Result<Config, WKCliError> {
+async fn handle_gcloud_auth(config: Config) -> Result<Config, WKCliError> {
     let agree_to_authenticate = Confirm::with_theme(&ColorfulTheme::default())
         .with_prompt(format!(
             "{} {}",
@@ -83,11 +83,11 @@ async fn handle_gcloud_auth(new_config: Config) -> Result<Config, WKCliError> {
     if agree_to_authenticate {
         google::login::handle_login().await?;
         // Load the config again to get the latest token
-        let new_config = Config::load_from_default_path()?;
-        return Ok(new_config);
+        let updated_config = Config::load_from_default_path()?;
+        return Ok(updated_config);
     }
 
-    Ok(new_config)
+    Ok(config)
 }
 
 async fn handle_application(mut config: Config, channel: ApiChannel) -> Result<Config, WKCliError> {
