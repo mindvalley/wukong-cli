@@ -1,9 +1,10 @@
 mod info;
+mod init;
 mod instances;
 mod logs;
 
 pub use self::logs::generate_filter;
-use self::logs::handle_logs;
+use self::{init::handle_application_init, logs::handle_logs};
 use clap::{command, Args, Subcommand, ValueEnum};
 
 use crate::error::WKCliError;
@@ -55,6 +56,8 @@ pub enum ApplicationSubcommand {
     },
     /// This command group contains the commands to interact with an application’s instances
     Instances(instances::Instances),
+    // This command init the application’s instances
+    Init,
 }
 
 #[derive(Debug, ValueEnum, Clone)]
@@ -109,6 +112,7 @@ impl Application {
                 .await
             }
             ApplicationSubcommand::Instances(instances) => instances.handle_command(context).await,
+            ApplicationSubcommand::Init => handle_application_init().await,
         }
     }
 }
