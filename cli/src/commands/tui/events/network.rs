@@ -52,10 +52,10 @@ async fn verify_okta_refresh_token(app: Arc<Mutex<App>>) -> Result<(), WKCliErro
     let mut app_ref = app.lock().await;
     match Config::load_from_default_path() {
         Ok(config) => {
-            let auth_config = config.auth.as_ref();
+            let okta_config = config.auth.okta.as_ref();
 
-            if let Some(auth_config) = auth_config {
-                let token = introspect_token(&config, &auth_config.refresh_token).await?;
+            if let Some(okta_config) = okta_config {
+                let token = introspect_token(&config, &okta_config.refresh_token).await?;
 
                 if token.active {
                     app_ref.state.is_okta_authenticated = Some(true);

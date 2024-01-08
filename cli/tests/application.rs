@@ -68,7 +68,7 @@ application = "valid-application"
 wukong_api_url = "{}"
 okta_client_id = "valid-okta-client-id"
 
-[auth]
+[auth.okta]
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
@@ -112,6 +112,8 @@ fn test_wukong_application_info_should_failed_when_unauthenticated() {
 application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
 okta_client_id = "valid-okta-client-id"
+
+[auth]
 "#,
         )
         .unwrap();

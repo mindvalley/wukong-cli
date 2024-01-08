@@ -1,4 +1,4 @@
-use crate::error::ConfigError;
+use crate::{auth::google_cloud::GoogleCloudConfig, error::ConfigError};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -53,8 +53,7 @@ pub static CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct Config {
     pub core: CoreConfig,
-    pub auth: Option<AuthConfig>,
-    pub vault: Option<VaultConfig>,
+    pub auth: AuthConfig,
     pub update_check: Option<UpdateCheck>,
 }
 
@@ -86,13 +85,20 @@ pub struct ConfigWithPath {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-pub struct AuthConfig {
+pub struct OktaConfig {
     pub account: String,
     pub subject: String,
     pub id_token: String,
     pub access_token: String,
     pub expiry_time: String,
     pub refresh_token: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct AuthConfig {
+    pub okta: Option<OktaConfig>,
+    pub vault: Option<VaultConfig>,
+    pub google_cloud: Option<GoogleCloudConfig>,
 }
 
 // ReleaseInfo stores information about a release
@@ -112,8 +118,11 @@ impl Default for Config {
                 wukong_api_url: WUKONG_API_URL.to_string(),
                 okta_client_id: OKTA_CLIENT_ID.to_string(),
             },
-            auth: None,
-            vault: None,
+            auth: AuthConfig {
+                okta: None,
+                vault: None,
+                google_cloud: None,
+            },
             update_check: None,
         }
     }

@@ -92,11 +92,11 @@ fn mock_user_config(wk_temp: &assert_fs::TempDir, server_url: String) -> ChildPa
                     wukong_api_url = "{}"
                     okta_client_id = "valid-okta-client-id"
 
-                    [vault]
+                    [auth.vault]
                     api_token = "valid_vault_api_token"
                     expiry_time = "2027-06-09T08:51:19.032792+00:00"
 
-                    [auth]
+                    [auth.okta]
                     account = "test@email.com"
                     subject = "subject"
                     id_token = "id_token"
@@ -504,11 +504,11 @@ application = "valid-application"
 wukong_api_url = "{}"
 okta_client_id = "valid-okta-client-id"
 
-[vault]
+[auth.vault]
 api_token = "valid_vault_api_token"
 expiry_time = "2027-06-09T08:51:19.032792+00:00"
 
-[auth]
+[auth.okta]
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
@@ -595,11 +595,11 @@ application = "valid-application"
 wukong_api_url = "{}"
 okta_client_id = "valid-okta-client-id"
 
-[vault]
+[auth.vault]
 api_token = "valid_vault_api_token"
 expiry_time = "2027-06-09T08:51:19.032792+00:00"
 
-[auth]
+[auth.okta]
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"

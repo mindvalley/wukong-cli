@@ -120,7 +120,7 @@ impl ClapApp {
         let command = match &self.command_group {
             CommandGroup::Init => handle_init(channel).await,
             CommandGroup::Completion { shell } => handle_completion(*shell),
-            CommandGroup::Login => handle_login().await,
+            CommandGroup::Login => handle_login(None).await,
             CommandGroup::Google(google) => google.handle_command().await,
             CommandGroup::Application(application) => {
                 application.handle_command(get_context(self)?).await
@@ -157,7 +157,7 @@ fn get_context(clap_app: &ClapApp) -> Result<Context, WKCliError> {
                 config.core.application
             }
         },
-        sub: config.auth.map(|auth_config| auth_config.subject),
+        sub: config.auth.okta.map(|auth_config| auth_config.subject),
         // if the `--canary` flag is used, then the CLI will use the Canary channel API,
         // otherwise, it will use the Stable channel API.
         channel: if clap_app.canary {

@@ -41,7 +41,11 @@ impl From<config::ApiChannel> for wukong_sdk::ApiChannel {
 }
 impl WKClient {
     pub fn for_channel(config: &Config, channel: &ApiChannel) -> Result<Self, WKCliError> {
-        let auth_config = config.auth.as_ref().ok_or(WKCliError::UnAuthenticated)?;
+        let auth_config = config
+            .auth
+            .okta
+            .as_ref()
+            .ok_or(WKCliError::UnAuthenticated)?;
 
         Ok(Self {
             inner: WKSdkClient::new(WKConfig {
@@ -59,7 +63,7 @@ impl WKClient {
             debug!("Access token expired. Refreshing tokens...");
 
             let new_tokens = auth::okta::refresh_tokens(&self.config).await?;
-            self.config.auth = Some(new_tokens.clone().into());
+            self.config.auth.okta = Some(new_tokens.clone().into());
 
             // update config file
             self.config.save_to_default_path()?;

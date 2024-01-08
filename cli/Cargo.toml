@@ -62,6 +62,8 @@ semver = "1.0.20"
 # Telemetry
 wukong-telemetry-macro = { path = "../telemetry-macro" }
 wukong-telemetry = { path = "../telemetry" }
+time = { version = "0.3.31", features = ["formatting", "parsing"] }
+anyhow = "1.0.79"
 
 [dev-dependencies]
 httpmock = "0.6.7"

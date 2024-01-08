@@ -1,10 +1,12 @@
-use once_cell::sync::Lazy;
+use crate::config::Config;
 use serde::{Deserialize, Serialize};
 use std::{future::Future, pin::Pin};
+use time::{format_description, OffsetDateTime};
+use tonic::async_trait;
 use yup_oauth2::{
     authenticator_delegate::{DefaultInstalledFlowDelegate, InstalledFlowDelegate},
     hyper, hyper_rustls,
-    storage::TokenInfo,
+    storage::{TokenInfo, TokenStorage},
     ApplicationSecret, InstalledFlowAuthenticator, InstalledFlowReturnMethod,
 };
 
@@ -13,25 +15,6 @@ struct JSONToken {
     scopes: Vec<String>,
     token: TokenInfo,
 }
-
-pub static CONFIG_PATH: Lazy<Option<String>> = Lazy::new(|| {
-    #[cfg(feature = "prod")]
-    return dirs::home_dir().map(|mut path| {
-        path.extend([".config", "wukong"]);
-        path.to_str().unwrap().to_string()
-    });
-
-    #[cfg(not(feature = "prod"))]
-    {
-        match std::env::var("WUKONG_DEV_GCLOUD_FILE") {
-            Ok(config) => Some(config),
-            Err(_) => dirs::home_dir().map(|mut path| {
-                path.extend([".config", "wukong", "dev"]);
-                path.to_str().unwrap().to_string()
-            }),
-        }
-    }
-});
 
 /// async function to be pinned by the `present_user_url` method of the trait
 /// we use the existing `DefaultInstalledFlowDelegate::present_user_url` method as a fallback for
@@ -74,6 +57,63 @@ const AUTH_URI: &str = "https://accounts.google.com/o/oauth2/auth";
 const REDIRECT_URI: &str = "http://127.0.0.1/8855";
 const AUTH_PROVIDER_X509_CERT_URL: &str = "https://www.googleapis.com/oauth2/v1/certs";
 
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct GoogleCloudConfig {
+    /// used when authorizing calls to oauth2 enabled services.
+    pub access_token: String,
+    /// used to refresh an expired access_token.
+    pub refresh_token: String,
+    /// The time when the token expires.
+    pub expiry_time: String,
+    /// Optionally included by the OAuth2 server and may contain information to verify the identity
+    /// used to obtain the access token.
+    /// Specifically Google API:s include this if the additional scopes "email" and/or "profile"
+    /// are used. In that case the content is an JWT token.
+    pub id_token: Option<String>,
+}
+
+struct ConfigTokenStore {
+    config: Config,
+}
+
+#[async_trait]
+impl TokenStorage for ConfigTokenStore {
+    async fn set(&self, _scopes: &[&str], token: TokenInfo) -> anyhow::Result<()> {
+        let mut config = self.config.clone();
+
+        config.auth.google_cloud = Some(GoogleCloudConfig {
+            access_token: token.access_token.expect("Invalid access token"),
+            refresh_token: token.refresh_token.expect("Invalid refresh token"),
+            expiry_time: token
+                .expires_at
+                .expect("Invalid expiry time")
+                .format(&format_description::well_known::Iso8601::DEFAULT)?,
+            id_token: token.id_token,
+        });
+
+        config.save_to_default_path()?;
+
+        Ok(())
+    }
+
+    async fn get(&self, _target_scopes: &[&str]) -> Option<TokenInfo> {
+        let google_cloud = self.config.auth.google_cloud.clone()?;
+
+        Some(TokenInfo {
+            access_token: Some(google_cloud.access_token),
+            refresh_token: Some(google_cloud.refresh_token),
+            expires_at: Some(
+                OffsetDateTime::parse(
+                    &google_cloud.expiry_time,
+                    &format_description::well_known::Iso8601::DEFAULT,
+                )
+                .expect("Invalid expiry time"),
+            ),
+            id_token: google_cloud.id_token,
+        })
+    }
+}
+
 pub async fn get_token_or_login() -> String {
     let secret = ApplicationSecret {
         client_id: GOOGLE_CLIENT_ID.to_string(),
@@ -96,17 +136,14 @@ pub async fn get_token_or_login() -> String {
             .build(),
     );
 
+    let config = Config::load_from_default_path().expect("Unable to load config");
+
     let authenticator = InstalledFlowAuthenticator::with_client(
         secret,
         InstalledFlowReturnMethod::HTTPPortRedirect(8855),
         client,
     )
-    .persist_tokens_to_disk(format!(
-        "{}/gcloud_logging",
-        CONFIG_PATH
-            .as_ref()
-            .expect("Unable to identify user's home directory"),
-    ))
+    .with_storage(Box::new(ConfigTokenStore { config }))
     .flow_delegate(Box::new(InstalledFlowBrowserDelegate))
     .build()
     .await
@@ -122,38 +159,14 @@ pub async fn get_token_or_login() -> String {
 }
 
 pub async fn get_access_token() -> Option<String> {
-    let contents = tokio::fs::read(format!(
-        "{}/gcloud_logging",
-        CONFIG_PATH
-            .as_ref()
-            .expect("Unable to identify user's home directory")
-    ))
-    .await;
-
-    let tokens = contents
-        .map(|contents| {
-            serde_json::from_slice::<Vec<JSONToken>>(&contents)
-                .map_err(|_| {
-                    eprintln!("Failed to parse token file.");
-                })
-                .ok()
-        })
-        .unwrap_or(None);
-
-    let json_token = tokens.and_then(|tokens| {
-        tokens
-            .iter()
-            .find(|token| {
-                token
-                    .scopes
-                    .contains(&"https://www.googleapis.com/auth/logging.read".to_string())
-            })
-            .map(|token| token.token.access_token.clone())
-    });
+    let config = match Config::load_from_default_path() {
+        Ok(config) => config,
+        Err(_) => return None,
+    };
 
     // Sometimes access token exist but is expired, so call get_token_or_login() to refresh it
     // before returning it.
-    if json_token.is_some() {
+    if config.auth.google_cloud.is_some() {
         Some(get_token_or_login().await)
     } else {
         None

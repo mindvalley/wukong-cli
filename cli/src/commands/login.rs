@@ -8,22 +8,25 @@ use crate::{
 use dialoguer::{theme::ColorfulTheme, Select};
 use log::debug;
 
-pub async fn handle_login() -> Result<bool, WKCliError> {
-    let config = Config::load_from_default_path()?;
-
-    let mut login_selections = vec!["Log in with a new account"];
-    if let Some(ref auth_config) = config.auth {
-        login_selections.splice(..0, vec![auth_config.account.as_str()]);
+pub async fn handle_login(config: Option<Config>) -> Result<bool, WKCliError> {
+    let config = match config {
+        Some(config) => config,
+        None => Config::load_from_default_path()?,
     };
 
-    let selection = Select::with_theme(&ColorfulTheme::default())
+    let mut login_selections = vec!["Log in with a new account"];
+    if let Some(ref okta_config) = config.auth.okta {
+        login_selections.splice(..0, vec![okta_config.account.as_str()]);
+    };
+
+    let selected_account = Select::with_theme(&ColorfulTheme::default())
                 .with_prompt("Choose the account you would like to use to perform operations for this configuration:")
                 .default(0)
                 .items(&login_selections[..])
                 .interact()?;
 
     // "Log in with a new account" is selected
-    let new_config = if selection == login_selections.len() - 1 {
+    let new_config = if selected_account == login_selections.len() - 1 {
         login_and_create_config(config).await?
     } else {
         // check access token expiry
@@ -36,10 +39,13 @@ pub async fn handle_login() -> Result<bool, WKCliError> {
 
             let updated_config = match auth::okta::refresh_tokens(&config).await {
                 Ok(new_tokens) => {
-                    current_config.auth = Some(new_tokens.into());
+                    current_config.auth.okta = Some(new_tokens.into());
 
                     refresh_token_loader.finish_and_clear();
-                    colored_println!("You are logged in as: {}.\n", login_selections[selection]);
+                    colored_println!(
+                        "You are logged in as: {}.\n",
+                        login_selections[selected_account]
+                    );
 
                     current_config
                 }
@@ -57,7 +63,10 @@ pub async fn handle_login() -> Result<bool, WKCliError> {
 
             current_config = updated_config;
         } else {
-            colored_println!("You are logged in as: {}.\n", login_selections[selection]);
+            colored_println!(
+                "You are logged in as: {}.\n",
+                login_selections[selected_account]
+            );
         }
 
         current_config
@@ -72,7 +81,7 @@ async fn login_and_create_config(mut config: Config) -> Result<Config, WKCliErro
     let auth_info = auth::okta::login(&config).await?;
     let acc = auth_info.account.clone();
 
-    config.auth = Some(auth_info.into());
+    config.auth.okta = Some(auth_info.into());
 
     colored_println!("You are logged in as: {acc}.\n");
 
