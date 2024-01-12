@@ -84,6 +84,8 @@ pub enum APIError {
     VersionNotFound,
     #[error("Build not found.")]
     BuildNotFound,
+    #[error("Github Workflow not found.")]
+    GithubWorkflowNotFound,
 }
 
 #[derive(Debug, ThisError)]

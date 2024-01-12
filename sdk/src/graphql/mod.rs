@@ -5,6 +5,7 @@ pub mod deployment_github;
 pub mod kubernetes;
 pub mod pipeline;
 
+use self::deployment::{cd_pipeline_status_query, CdPipelineStatusQuery};
 pub use self::{
     application::{
         application_query, application_with_k8s_cluster_query, applications_query,
@@ -341,6 +342,31 @@ impl WKClient {
             .post_graphql::<CdPipelineQuery, _>(
                 &self.api_url,
                 cd_pipeline_query::Variables {
+                    application: application.to_string(),
+                    namespace: namespace.to_string(),
+                    version: version.to_string(),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+    /// Fetch CD pipeline from Wukong API Proxy.
+    ///
+    /// It will return:
+    /// - [`WKError::APIError(APIError::ApplicationNotFound)`](APIError::ApplicationNotFound) if the `application` does not exist.
+    /// - [`WKError::APIError(APIError::ResponseError)`](APIError::ResponseError)  for the rest.
+    pub async fn fetch_cd_pipeline_status(
+        &self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<cd_pipeline_status_query::ResponseData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        gql_client
+            .post_graphql::<CdPipelineStatusQuery, _>(
+                &self.api_url,
+                cd_pipeline_status_query::Variables {
                     application: application.to_string(),
                     namespace: namespace.to_string(),
                     version: version.to_string(),
@@ -712,7 +738,7 @@ impl ErrorHandler for CanaryErrorHandler {
             // "github_pr_not_found" => {}
             // "github_ref_not_found" => {}
             // "github_commit_history_not_found" => {}
-            // "github_workflow_not_found" => {}
+            "github_workflow_not_found" => APIError::GithubWorkflowNotFound,
             // "slack_webhook_not_configured" => {}
             _ => APIError::ResponseError {
                 code: original_error_code.to_string(),

@@ -19,6 +19,14 @@ pub struct CdPipelineQuery;
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "src/graphql/schema.json",
+    query_path = "src/graphql/query/cd_pipeline_status.graphql",
+    response_derives = "Debug, Serialize, Deserialize"
+)]
+pub struct CdPipelineStatusQuery;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/graphql/schema.json",
     query_path = "src/graphql/query/cd_pipeline_for_rollback.graphql",
     response_derives = "Debug, Serialize, Deserialize"
 )]

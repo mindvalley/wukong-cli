@@ -676,7 +676,7 @@ async fn get_deployment_status(
     version: &str,
 ) -> Result<String, WKCliError> {
     let deployments = wk_client
-        .fetch_cd_pipeline(application, namespace, version)
+        .fetch_cd_pipeline_status(application, namespace, version)
         .await?
         .cd_pipeline;
 
