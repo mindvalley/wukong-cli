@@ -28,7 +28,7 @@ pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
     let mut new_config = Config::load_from_default_path()?;
     new_config = handle_application(new_config, channel).await?;
     new_config = handle_gcloud_auth(new_config).await?;
-    new_config = handle_bunker_auth(new_config).await?;
+    new_config = handle_vault_auth(new_config).await?;
 
     colored_println!(
         r#"
@@ -53,7 +53,7 @@ pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
     Ok(true)
 }
 
-async fn handle_bunker_auth(mut config: Config) -> Result<Config, WKCliError> {
+async fn handle_vault_auth(mut config: Config) -> Result<Config, WKCliError> {
     let agree_to_authenticate = Confirm::with_theme(&ColorfulTheme::default())
         .with_prompt(format!(
             "{} {}",
