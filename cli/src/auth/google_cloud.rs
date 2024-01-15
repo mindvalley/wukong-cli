@@ -87,7 +87,7 @@ impl TokenStorage for ConfigTokenStore {
             expiry_time: token
                 .expires_at
                 .expect("Invalid expiry time")
-                .format(&format_description::well_known::Rfc3339::DEFAULT)?,
+                .format(&format_description::well_known::Rfc3339)?,
             id_token: token.id_token,
         });
 
@@ -105,7 +105,7 @@ impl TokenStorage for ConfigTokenStore {
             expires_at: Some(
                 OffsetDateTime::parse(
                     &google_cloud.expiry_time,
-                    &format_description::well_known::Rfc3339::DEFAULT,
+                    &format_description::well_known::Rfc3339,
                 )
                 .expect("Invalid expiry time"),
             ),
