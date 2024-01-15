@@ -60,7 +60,7 @@ async fn handle_bunker_auth(mut config: Config) -> Result<Config, WKCliError> {
             "(Optional)".bright_black(),
             "Do you want to authenticate against Bunker? You may do it later when neccessary"
         ))
-        .default(true)
+        .default(false)
         .interact()?;
 
     if agree_to_authenticate {
