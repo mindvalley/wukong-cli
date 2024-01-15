@@ -1,3 +1,4 @@
+mod config;
 mod info;
 mod init;
 mod instances;

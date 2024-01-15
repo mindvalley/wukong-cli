@@ -55,6 +55,7 @@ pub struct Config {
     pub core: CoreConfig,
     pub auth: AuthConfig,
     pub update_check: Option<UpdateCheck>,
+    pub application: Option<ApplicationConfig>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -95,6 +96,61 @@ pub struct OktaConfig {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct ApplicationConfig {
+    pub name: String,
+    pub enable: bool,
+    pub workflows: ApplicationWokflowConfig,
+    pub namespaces: Vec<ApplicationNamespaceConfig>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct ApplicationNamespaceConfig {
+    pub environment: String,
+    pub build: ApplicationNamespaceBuildConfig,
+    pub delivery: ApplicationNamespaceDeliveryConfig,
+    pub appsignal: Option<ApplicationNamespaceAppsignalConfig>,
+    pub honeycomb: Option<ApplicationNamespaceHoneycombConfig>,
+    pub cloudsql: Option<ApplicationNamespaceCloudsqlConfig>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct ApplicationNamespaceBuildConfig {
+    pub build_workflow: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct ApplicationNamespaceDeliveryConfig {
+    pub target: String,
+    pub base_replica: u32,
+    pub rollout_strategy: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct ApplicationNamespaceAppsignalConfig {
+    pub enable: bool,
+    pub environment: String,
+    pub default_namespace: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct ApplicationNamespaceHoneycombConfig {
+    pub enable: bool,
+    pub dataset: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct ApplicationWokflowConfig {
+    pub provider: String,
+    pub excluded_workflows: Vec<String>,
+    pub enable: bool,
+}
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct ApplicationNamespaceCloudsqlConfig {
+    pub enable: bool,
+    pub project_id: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct AuthConfig {
     pub okta: Option<OktaConfig>,
     pub vault: Option<VaultConfig>,
@@ -123,6 +179,7 @@ impl Default for Config {
                 vault: None,
                 google_cloud: None,
             },
+            application: None,
             update_check: None,
         }
     }
