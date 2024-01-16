@@ -20,7 +20,7 @@ pub enum GoogleSubcommand {
 impl Google {
     pub async fn handle_command(&self) -> Result<bool, WKCliError> {
         match &self.subcommand {
-            GoogleSubcommand::Login => handle_login().await,
+            GoogleSubcommand::Login => handle_login(None).await,
         }
     }
 }

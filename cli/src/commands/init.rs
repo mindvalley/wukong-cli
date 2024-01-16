@@ -9,26 +9,50 @@ use crate::{
     wukong_client::WKClient,
 };
 use dialoguer::{theme::ColorfulTheme, Confirm, Select};
+use once_cell::sync::Lazy;
 use owo_colors::OwoColorize;
+
+pub static CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
+    return std::env::temp_dir()
+        .join("wukong_config.toml")
+        .to_str()
+        .map(|s| s.to_owned());
+});
 
 pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
 
-    let config = match Config::load_from_default_path() {
-        Ok(config) => config,
-        Err(error) => match error {
-            // create new config if the config file not found or the config format is invalid
-            ConfigError::NotFound { .. } | ConfigError::BadTomlData(_) => Config::default(),
-            error => return Err(error.into()),
-        },
-    };
+    // Use temporary file to achieve atomic write:
+    let mut tmp_config: Config =
+        match Config::load_from_path(CONFIG_FILE.as_ref().expect("Invalid config path")) {
+            Ok(config) => config,
+            Err(error) => match error {
+                // create new config if the config file not found or the config format is invalid
+                ConfigError::NotFound { .. } | ConfigError::BadTomlData(_) => Config::default(),
+                error => return Err(error.into()),
+            },
+        };
 
-    login::handle_login(Some(config)).await?;
+    let mut config = Config::load_from_default_path()?;
+    // Keep the core and default auth config:
+    tmp_config.auth.okta = config.auth.okta.clone();
+    tmp_config.auth.vault = None;
+    tmp_config.auth.google_cloud = None;
 
-    let mut new_config = Config::load_from_default_path()?;
-    new_config = handle_application(new_config, channel).await?;
-    new_config = handle_gcloud_auth(new_config).await?;
-    new_config = handle_vault_auth(new_config).await?;
+    tmp_config = login::new_login_or_refresh_token(tmp_config).await?;
+
+    tmp_config = handle_application(tmp_config, channel).await?;
+    tmp_config = handle_gcloud_auth(tmp_config).await?;
+    tmp_config = handle_vault_auth(tmp_config).await?;
+
+    // Merge the tmp config into the default config:
+    config.core.application = tmp_config.core.application;
+    config.auth.vault = tmp_config.auth.vault;
+    config.auth.google_cloud = tmp_config.auth.google_cloud;
+
+    config
+        .save_to_default_path()
+        .expect("Config file save failed");
 
     colored_println!(
         r#"
@@ -42,13 +66,9 @@ pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
 
     * Run `wukong --help` to see the wukong command groups you can interact with. And run `wukong COMMAND help` to get help on any wukong command.
                              "#,
-        new_config.auth.okta.as_ref().unwrap().account,
-        new_config.core.application
+        config.auth.okta.as_ref().unwrap().account,
+        config.core.application
     );
-
-    new_config
-        .save_to_default_path()
-        .expect("Config file save failed");
 
     Ok(true)
 }
@@ -81,7 +101,7 @@ async fn handle_gcloud_auth(config: Config) -> Result<Config, WKCliError> {
         .interact()?;
 
     if agree_to_authenticate {
-        google::login::handle_login().await?;
+        google::login::handle_login(Some(config)).await?;
         // Load the config again to get the latest token
         let updated_config = Config::load_from_default_path()?;
         return Ok(updated_config);

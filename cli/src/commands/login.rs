@@ -8,12 +8,16 @@ use crate::{
 use dialoguer::{theme::ColorfulTheme, Select};
 use log::debug;
 
-pub async fn handle_login(config: Option<Config>) -> Result<bool, WKCliError> {
-    let config = match config {
-        Some(config) => config,
-        None => Config::load_from_default_path()?,
-    };
+pub async fn handle_login() -> Result<bool, WKCliError> {
+    let config = Config::load_from_default_path()?;
 
+    let new_config = new_login_or_refresh_token(config).await?;
+    new_config.save_to_default_path()?;
+
+    Ok(true)
+}
+
+pub async fn new_login_or_refresh_token(config: Config) -> Result<Config, WKCliError> {
     let mut login_selections = vec!["Log in with a new account"];
     if let Some(ref okta_config) = config.auth.okta {
         login_selections.splice(..0, vec![okta_config.account.as_str()]);
@@ -72,9 +76,7 @@ pub async fn handle_login(config: Option<Config>) -> Result<bool, WKCliError> {
         current_config
     };
 
-    new_config.save_to_default_path()?;
-
-    Ok(true)
+    Ok(new_config)
 }
 
 async fn login_and_create_config(mut config: Config) -> Result<Config, WKCliError> {

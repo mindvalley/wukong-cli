@@ -120,7 +120,7 @@ impl ClapApp {
         let command = match &self.command_group {
             CommandGroup::Init => handle_init(channel).await,
             CommandGroup::Completion { shell } => handle_completion(*shell),
-            CommandGroup::Login => handle_login(None).await,
+            CommandGroup::Login => handle_login().await,
             CommandGroup::Google(google) => google.handle_command().await,
             CommandGroup::Application(application) => {
                 application.handle_command(get_context(self)?).await

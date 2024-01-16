@@ -114,7 +114,7 @@ impl TokenStorage for ConfigTokenStore {
     }
 }
 
-pub async fn get_token_or_login() -> String {
+pub async fn get_token_or_login(config: Option<Config>) -> String {
     let secret = ApplicationSecret {
         client_id: GOOGLE_CLIENT_ID.to_string(),
         client_secret: GOOGLE_CLIENT_SECRET.to_string(),
@@ -136,7 +136,10 @@ pub async fn get_token_or_login() -> String {
             .build(),
     );
 
-    let config = Config::load_from_default_path().expect("Unable to load config");
+    let config = match config {
+        Some(config) => config,
+        None => Config::load_from_default_path().expect("Unable to load config"),
+    };
 
     let authenticator = InstalledFlowAuthenticator::with_client(
         secret,
@@ -167,7 +170,7 @@ pub async fn get_access_token() -> Option<String> {
     // Sometimes access token exist but is expired, so call get_token_or_login() to refresh it
     // before returning it.
     if config.auth.google_cloud.is_some() {
-        Some(get_token_or_login().await)
+        Some(get_token_or_login(None).await)
     } else {
         None
     }
