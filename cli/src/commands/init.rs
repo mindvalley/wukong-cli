@@ -3,7 +3,7 @@ use crate::{
     commands::google,
     commands::login,
     config::{ApiChannel, Config},
-    error::WKCliError,
+    error::{ConfigError, WKCliError},
     loader::new_spinner,
     output::colored_println,
     wukong_client::WKClient,
@@ -21,7 +21,14 @@ pub static TMP_CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
 
 pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
-    let mut config = Config::load_from_default_path()?;
+    let mut config = match Config::load_from_default_path() {
+        Ok(config) => config,
+        Err(error) => match error {
+            // create new config if the config file not found or the config format is invalid
+            ConfigError::NotFound { .. } | ConfigError::BadTomlData(_) => Config::default(),
+            error => return Err(error.into()),
+        },
+    };
 
     config = login::new_login_or_refresh_token(config).await?;
     config = handle_application(config, channel).await?;
