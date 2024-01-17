@@ -150,7 +150,7 @@ impl Config {
     /// # Errors
     ///
     /// This function may return typical file I/O errors.
-    fn load_from_path(path: &'static str) -> Result<Self, ConfigError> {
+    pub fn load_from_path(path: &'static str) -> Result<Self, ConfigError> {
         let config_file_path = Path::new(path);
 
         let content = std::fs::read_to_string(

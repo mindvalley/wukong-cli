@@ -14,43 +14,23 @@ use owo_colors::OwoColorize;
 
 pub static TMP_CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
     return dirs::home_dir().map(|mut path| {
-        path.extend([".config", "wukong", "tmp", "config.toml"]);
+        path.extend([".config", "wukong", ".tmp", "config.toml"]);
         path.to_str().unwrap().to_string()
     });
 });
 
 pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
-
-    // Use temporary file to achieve atomic write:
-    let mut tmp_config =
-        Config::default().with_path(TMP_CONFIG_FILE.to_owned().expect("Unable to get tmp path"));
-
     let mut config = Config::load_from_default_path()?;
 
-    // Keep the core and default auth config:
-    tmp_config.auth.okta = config.auth.okta.clone();
-    tmp_config.auth.vault = None;
-    tmp_config.auth.google_cloud = None;
-
-    tmp_config = login::new_login_or_refresh_token(tmp_config).await?;
-
-    tmp_config = handle_application(tmp_config, channel).await?;
-    tmp_config = handle_gcloud_auth(tmp_config).await?;
-    tmp_config = handle_vault_auth(tmp_config).await?;
-
-    // Merge the tmp config into the default config:
-    config.core.application = tmp_config.core.application.clone();
-    config.auth.vault = tmp_config.auth.vault.clone();
-    config.auth.google_cloud = tmp_config.auth.google_cloud.clone();
+    config = login::new_login_or_refresh_token(config).await?;
+    config = handle_application(config, channel).await?;
+    config = handle_gcloud_auth(config).await?;
+    config = handle_vault_auth(config).await?;
 
     config
         .save_to_default_path()
         .expect("Config file save failed");
-
-    tmp_config
-        .remove_config_from_path()
-        .expect("Config file failed to remove");
 
     colored_println!(
         r#"
@@ -88,7 +68,7 @@ async fn handle_vault_auth(mut config: Config) -> Result<Config, WKCliError> {
     Ok(config)
 }
 
-async fn handle_gcloud_auth(config: Config) -> Result<Config, WKCliError> {
+async fn handle_gcloud_auth(mut config: Config) -> Result<Config, WKCliError> {
     let agree_to_authenticate = Confirm::with_theme(&ColorfulTheme::default())
         .with_prompt(format!(
             "{} {}",
@@ -99,12 +79,26 @@ async fn handle_gcloud_auth(config: Config) -> Result<Config, WKCliError> {
         .interact()?;
 
     if agree_to_authenticate {
-        google::login::handle_login(Some(config)).await?;
-        // Load the config again to get the latest token
-        let updated_config = Config::default()
+        // Use temporary file to achieve atomic write for gcloud:
+        // GCloud does not support atomic write, so we use a temporary file to store the config
+        // and then move it to the original location after when the config is ready.
+        let tmp_config = Config::default()
             .with_path(TMP_CONFIG_FILE.to_owned().expect("Unable to get tmp path"));
 
-        return Ok(updated_config);
+        google::login::handle_login(Some(tmp_config.clone())).await?;
+
+        // Load the config again to get the latest token
+        let updated_config =
+            Config::load_from_path(TMP_CONFIG_FILE.as_ref().expect("Unable to get tmp path"))
+                .expect("Unable to load tmp config");
+
+        config.auth.google_cloud = updated_config.auth.google_cloud.clone();
+
+        tmp_config
+            .remove_config_from_path()
+            .expect("Config file failed to remove");
+
+        return Ok(config);
     }
 
     Ok(config)
