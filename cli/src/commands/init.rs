@@ -3,7 +3,7 @@ use crate::{
     commands::google,
     commands::login,
     config::{ApiChannel, Config},
-    error::{ConfigError, WKCliError},
+    error::WKCliError,
     loader::new_spinner,
     output::colored_println,
     wukong_client::WKClient,
@@ -12,28 +12,22 @@ use dialoguer::{theme::ColorfulTheme, Confirm, Select};
 use once_cell::sync::Lazy;
 use owo_colors::OwoColorize;
 
-pub static CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
-    return std::env::temp_dir()
-        .join("wukong_config.toml")
-        .to_str()
-        .map(|s| s.to_owned());
+pub static TMP_CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
+    return dirs::home_dir().map(|mut path| {
+        path.extend([".config", "wukong", "tmp", "config.toml"]);
+        path.to_str().unwrap().to_string()
+    });
 });
 
 pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
 
     // Use temporary file to achieve atomic write:
-    let mut tmp_config: Config =
-        match Config::load_from_path(CONFIG_FILE.as_ref().expect("Invalid config path")) {
-            Ok(config) => config,
-            Err(error) => match error {
-                // create new config if the config file not found or the config format is invalid
-                ConfigError::NotFound { .. } | ConfigError::BadTomlData(_) => Config::default(),
-                error => return Err(error.into()),
-            },
-        };
+    let mut tmp_config =
+        Config::default().with_path(TMP_CONFIG_FILE.to_owned().expect("Unable to get tmp path"));
 
     let mut config = Config::load_from_default_path()?;
+
     // Keep the core and default auth config:
     tmp_config.auth.okta = config.auth.okta.clone();
     tmp_config.auth.vault = None;
@@ -46,13 +40,17 @@ pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
     tmp_config = handle_vault_auth(tmp_config).await?;
 
     // Merge the tmp config into the default config:
-    config.core.application = tmp_config.core.application;
-    config.auth.vault = tmp_config.auth.vault;
-    config.auth.google_cloud = tmp_config.auth.google_cloud;
+    config.core.application = tmp_config.core.application.clone();
+    config.auth.vault = tmp_config.auth.vault.clone();
+    config.auth.google_cloud = tmp_config.auth.google_cloud.clone();
 
     config
         .save_to_default_path()
         .expect("Config file save failed");
+
+    tmp_config
+        .remove_config_from_path()
+        .expect("Config file failed to remove");
 
     colored_println!(
         r#"
@@ -103,7 +101,9 @@ async fn handle_gcloud_auth(config: Config) -> Result<Config, WKCliError> {
     if agree_to_authenticate {
         google::login::handle_login(Some(config)).await?;
         // Load the config again to get the latest token
-        let updated_config = Config::load_from_default_path()?;
+        let updated_config = Config::default()
+            .with_path(TMP_CONFIG_FILE.to_owned().expect("Unable to get tmp path"));
+
         return Ok(updated_config);
     }
 
