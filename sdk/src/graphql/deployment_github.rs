@@ -113,7 +113,7 @@ mod test {
       ],
       "extensions": {
         "code": "github_workflow_not_found"
-      },
+      }
     }
   ]
 }"#;
@@ -139,7 +139,7 @@ mod test {
                 message: _message,
                 code,
             }) => {
-                assert_eq!(code, "Unable to get workflow");
+                assert_eq!(code, "github_workflow_not_found");
             }
             _ => panic!("it should be returning APIError::UnableToGetPipelines"),
         };

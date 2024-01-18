@@ -133,12 +133,13 @@ mod test {
         assert!(response.is_err());
 
         let error = response.unwrap_err();
+
         match &error {
-            WKError::APIError(APIError::UnableToGetPipelines) => {}
-            _ => panic!("it should be returning APIError::UnableToGetPipelines"),
+            WKError::APIError(APIError::UnableToGetPipeline) => {},
+            _ => panic!("it should be returning APIError::UnableToGetPipeline"),
         };
 
-        assert_eq!(format!("{error}"), "Unable to get pipelines.");
+        assert_eq!(format!("{error}"), "Unable to get pipeline.");
     }
 
     #[tokio::test]
