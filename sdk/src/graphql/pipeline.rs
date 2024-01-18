@@ -135,7 +135,7 @@ mod test {
         let error = response.unwrap_err();
 
         match &error {
-            WKError::APIError(APIError::UnableToGetPipeline) => {},
+            WKError::APIError(APIError::UnableToGetPipeline) => {}
             _ => panic!("it should be returning APIError::UnableToGetPipeline"),
         };
 
