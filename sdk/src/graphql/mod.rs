@@ -768,10 +768,13 @@ mod test {
               "line": 2
             }
           ],
-          "message": "application_not_found",
+          "message": "Application not found",
           "path": [
             "ciStatus"
-          ]
+          ],
+          "extensions": {
+            "code": "application_not_found"
+          }
         });
 
         let deserialized_error: Error = serde_json::from_value(err).unwrap();
