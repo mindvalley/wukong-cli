@@ -742,11 +742,8 @@ impl ErrorHandler for CanaryErrorHandler {
     }
 }
 
-fn setup_error_handler(channel: &ApiChannel) -> Box<dyn ErrorHandler> {
-    match channel {
-        ApiChannel::Canary => Box::new(CanaryErrorHandler),
-        ApiChannel::Stable => Box::new(DefaultErrorHandler),
-    }
+fn setup_error_handler(_channel: &ApiChannel) -> Box<dyn ErrorHandler> {
+    Box::new(CanaryErrorHandler)
 }
 
 #[cfg(test)]
