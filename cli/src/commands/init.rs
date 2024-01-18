@@ -41,15 +41,15 @@ pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
 
     colored_println!(
         r#"
-    Your Wukong CLI is configured and ready to use!
+Your Wukong CLI is configured and ready to use!
 
-    * Commands that require authentication will use {} by default
-    * Commands will reference application {} by default
-    Run `wukong config help` to learn how to change individual settings
+* Commands that require authentication will use {} by default
+* Commands will reference application {} by default
+Run `wukong config help` to learn how to change individual settings
 
-    Some things to try next:
+Some things to try next:
 
-    * Run `wukong --help` to see the wukong command groups you can interact with. And run `wukong COMMAND help` to get help on any wukong command.
+* Run `wukong --help` to see the wukong command groups you can interact with. And run `wukong COMMAND help` to get help on any wukong command.
                              "#,
         config.auth.okta.as_ref().unwrap().account,
         config.core.application
