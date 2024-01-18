@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     fs::{create_dir_all, File},
     io::Write,
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
 /// The application config.
@@ -94,101 +94,17 @@ impl ApplicationConfigs {
         })
     }
 
-    // pub fn sync_
-
     pub fn save(&self) -> Result<(), ApplicationConfigError> {
-        println!("Saving config to {:?}", self.config_path);
-        let config_dir = self
-            .config_path
-            .parent()
-            .expect("Failed to get parent directory");
-
-        // Ensure directory exists
-        create_dir_all(config_dir)?;
-
-        // Use temporary file to achieve atomic write:
-        //  1. Open file /.wukong.toml
-        //  2. Serialize config to temporary file
-        //  3. Rename temporary file to /.config.toml (atomic operation)
-        let tmp_file_path = self.config_path.with_extension("tmp");
-        let mut tmp_file = File::options()
-            .create(true)
-            .write(true)
-            .truncate(true)
-            .open(&tmp_file_path)?;
-
         let serialized =
             toml::to_string(self).map_err(ApplicationConfigError::SerializeTomlError)?;
 
-        tmp_file.write_all(&serialized.into_bytes())?;
+        if let Some(config_file_dir) = self.config_path.parent() {
+            create_dir_all(config_file_dir)?;
+        }
 
-        // Rename file to final destination to achieve atomic write
-        std::fs::rename(tmp_file_path.as_path(), &self.config_path).expect("Failed to rename file");
-        // let toml = toml::to_string(&self).map_err(ApplicationConfigError::BadTomlData)?;
-        // std::fs::write(&self.config_path, toml).map_err(ApplicationConfigError::IoError);
+        let mut file = File::create(self.config_path.clone())?;
+        file.write_all(&serialized.into_bytes())?;
 
         Ok(())
     }
-
-    // /// Load a configuration from file.
-    // ///
-    // /// # Errors
-    // ///
-    // /// This function may return typical file I/O errors.
-    // pub fn load_from_path(path: &'static str) -> Result<Self, ConfigError> {
-    //     let config_file_path = Path::new(path);
-
-    //     let content = std::fs::read_to_string(
-    //         config_file_path
-    //             .to_str()
-    //             .expect("The config file path is not valid."),
-    //     )
-    //     .map_err(|err| match err.kind() {
-    //         io::ErrorKind::NotFound => ConfigError::NotFound { path, source: err },
-    //         io::ErrorKind::PermissionDenied => ConfigError::PermissionDenied { path, source: err },
-    //         _ => err.into(),
-    //     })?;
-
-    //     let config = toml::from_str(&content).map_err(ConfigError::BadTomlData)?;
-
-    //     Ok(config)
-    // }
-
-    // /// Save a configuration to file.
-    // ///
-    // /// If the file's directory does not exist, it will be created. If the file
-    // /// already exists, it will be overwritten.
-    // ///
-    // /// # Errors
-    // ///
-    // /// This function may return typical file I/O errors.
-    // pub fn save_to_path(&self, path: &str) -> Result<(), ConfigError> {
-    //     let config_file_path = Path::new(path);
-    //     let serialized = toml::to_string(self).map_err(ConfigError::SerializeTomlError)?;
-
-    //     if let Some(outdir) = config_file_path.parent() {
-    //         create_dir_all(outdir)?;
-    //     }
-    //     let mut file = File::create(path)?;
-    //     file.write_all(&serialized.into_bytes())?;
-
-    //     Ok(())
-    // }
-
-    // pub fn save_to_default_path(&self) -> Result<(), ConfigError> {
-    //     self.save_to_path(
-    //         CONFIG_FILE
-    //             .as_ref()
-    //             .expect("Unable to identify user's home directory"),
-    //     )
-    // }
-
-    // pub fn get_current_directory(&self) -> Result<String, ConfigError> {
-    //     let current_dir = std::env::current_dir()?;
-    //     let path = current_dir
-    //         .to_str()
-    //         .expect("Unable to get current working directory");
-
-    //     Ok(path.to_owned())
-    // }
 }
