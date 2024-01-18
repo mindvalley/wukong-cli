@@ -100,9 +100,6 @@ mod test {
   },
   "errors": [
     {
-      "extensions": {
-        "code": "github_workflow_not_found"
-      },
       "locations": [
         {
           "column": 5,
@@ -113,7 +110,10 @@ mod test {
       "path": [
         "cdPipeline",
         "githubBuilds"
-      ]
+      ],
+      "extensions": {
+        "code": "github_workflow_not_found"
+      },
     }
   ]
 }"#;

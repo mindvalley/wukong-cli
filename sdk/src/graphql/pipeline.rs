@@ -109,10 +109,13 @@ mod test {
           "line": 2
         }
       ],
-      "message": "unable_to_get_pipelines",
+      "message": "Pipeline not found",
       "path": [
         "pipelines"
-      ]
+      ],
+      "extensions": {
+        "code": "pipeline_not_found"
+      }
     }
   ]
 }"#;
@@ -201,10 +204,13 @@ mod test {
           "line": 2
         }
       ],
-      "message": "unable_to_get_pipeline",
+      "message": "Pipeline not found",
       "path": [
-        "pipeline"
-      ]
+        "pipelines"
+      ],
+      "extensions": {
+        "code": "pipeline_not_found"
+      }
     }
   ]
 }"#;
@@ -315,10 +321,13 @@ mod test {
           "line": 2
         }
       ],
-      "message": "unable_to_get_pipeline",
+      "message": "Pipeline not found",
       "path": [
-        "multiBranchPipeline"
-      ]
+        "pipelines"
+      ],
+      "extensions": {
+        "code": "pipeline_not_found"
+      }
     }
   ]
 }"#;
@@ -415,10 +424,13 @@ mod test {
           "line": 2
         }
       ],
-      "message": "application_not_found",
+      "message": "Application not found in application config",
       "path": [
         "ciStatus"
-      ]
+      ],
+      "extensions": {
+        "code": "application_not_found"
+      }
     }
   ]
 }"#;
@@ -465,10 +477,13 @@ mod test {
           "line": 2
         }
       ],
-      "message": "no_builds_associated_with_this_branch",
+      "message": "Jenkins build not found on this branch",
       "path": [
         "ciStatus"
-      ]
+      ],
+      "extensions": {
+        "code": "jenkins_build_not_found"
+      }
     }
   ]
 }"#;
