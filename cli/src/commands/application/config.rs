@@ -11,7 +11,7 @@ use std::{
 pub struct ApplicationConfig {
     pub name: String,
     pub enable: bool,
-    pub workflows: Option<ApplicationWokflowConfig>,
+    pub workflows: Option<ApplicationWorkflowConfig>,
     pub namespaces: Vec<ApplicationNamespaceConfig>,
 }
 
@@ -52,7 +52,7 @@ pub struct ApplicationNamespaceHoneycombConfig {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-pub struct ApplicationWokflowConfig {
+pub struct ApplicationWorkflowConfig {
     pub provider: String,
     pub excluded_workflows: Vec<String>,
     pub enable: bool,

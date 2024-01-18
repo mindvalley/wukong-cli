@@ -5,7 +5,7 @@ use crate::commands::application::config::{
     ApplicationConfig, ApplicationConfigs, ApplicationNamespaceAppsignalConfig,
     ApplicationNamespaceBuildConfig, ApplicationNamespaceCloudsqlConfig,
     ApplicationNamespaceConfig, ApplicationNamespaceDeliveryConfig,
-    ApplicationNamespaceHoneycombConfig, ApplicationWokflowConfig,
+    ApplicationNamespaceHoneycombConfig, ApplicationWorkflowConfig,
 };
 use crate::error::ConfigError;
 use crate::{error::WKCliError, loader::new_spinner};
@@ -25,8 +25,8 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
         .default("my-first-application".to_string())
         .interact_text()?;
 
-    // // TODO: Check for available workflows
-    // // Checking available Github Actions workflows.
+    // TODO: Check for available workflows
+    // Checking available Github Actions workflows.
     let available_github_actions_loader = new_spinner();
     available_github_actions_loader.set_message("Checking available Github Actions workflows...");
 
@@ -127,11 +127,11 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
     //         .italic()
     //     );
 
-    //     // let workflows = vec![ApplicationWokflowConfig {}];
+    //     // let workflows = vec![ApplicationWorkflowConfig {}];
     //     config.application = Some(ApplicationConfig {
     //         name,
     //         enable: true,
-    //         workflows: ApplicationWokflowConfig {
+    //         workflows: ApplicationWorkflowConfig {
     //             provider: "github_actions".to_string(),
     //             excluded_workflows: vec![],
     //             enable: true,
@@ -167,7 +167,7 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
         }),
     };
 
-    let workflows = ApplicationWokflowConfig {
+    let workflows = ApplicationWorkflowConfig {
         provider: "github_actions".to_string(),
         excluded_workflows,
         enable: true,
