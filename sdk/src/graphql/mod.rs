@@ -743,6 +743,7 @@ impl ErrorHandler for CanaryErrorHandler {
 }
 
 fn setup_error_handler(_channel: &ApiChannel) -> Box<dyn ErrorHandler> {
+    // TODO: Cleanup outdated error handler:
     Box::new(CanaryErrorHandler)
 }
 
