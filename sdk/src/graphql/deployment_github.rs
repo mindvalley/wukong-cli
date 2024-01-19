@@ -135,18 +135,10 @@ mod test {
         let error = response.unwrap_err();
 
         match &error {
-            WKError::APIError(APIError::ResponseError {
-                message: _message,
-                code,
-            }) => {
-                assert_eq!(code, "github_workflow_not_found");
-            }
+            WKError::APIError(APIError::GithubWorkflowNotFound) => {}
             _ => panic!("it should be returning APIError::UnableToGetPipelines"),
         };
 
-        assert_eq!(
-            format!("{error}"),
-            "API Response Error: cdPipeline/githubBuilds:12:5: Unable to get workflow"
-        );
+        assert_eq!(format!("{error}"), "Github Workflow not found.");
     }
 }
