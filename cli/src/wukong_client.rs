@@ -9,8 +9,9 @@ use wukong_sdk::{
     graphql::{
         application_query, application_with_k8s_cluster_query, applications_query,
         cd_pipeline_for_rollback_query, cd_pipeline_github_query, cd_pipeline_query,
-        cd_pipelines_query, changelogs_query, ci_status_query, deploy_livebook, destroy_livebook,
-        execute_cd_pipeline, is_authorized_query, kubernetes_pods_query, livebook_resource_query,
+        cd_pipelines_query, changelogs_query, ci_status_query, deploy_livebook,
+        deployment::cd_pipeline_status_query, destroy_livebook, execute_cd_pipeline,
+        is_authorized_query, kubernetes_pods_query, livebook_resource_query,
         multi_branch_pipeline_query, pipeline_query, pipelines_query,
     },
     services::{
@@ -160,6 +161,19 @@ impl WKClient {
         self.check_and_refresh_tokens().await?;
         self.inner
             .fetch_cd_pipeline(application, namespace, version)
+            .await
+    }
+
+    #[wukong_telemetry(api_event = "fetch_cd_pipeline_status")]
+    pub async fn fetch_cd_pipeline_status(
+        &mut self,
+        application: &str,
+        namespace: &str,
+        version: &str,
+    ) -> Result<cd_pipeline_status_query::ResponseData, WKCliError> {
+        self.check_and_refresh_tokens().await?;
+        self.inner
+            .fetch_cd_pipeline_status(application, namespace, version)
             .await
     }
 
