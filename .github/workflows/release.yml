@@ -133,7 +133,7 @@ jobs:
           echo "PKG_PATH=${PKG_STAGING}/${PKG_NAME}" >> $GITHUB_OUTPUT
 
       - name: "Artifact upload: tarball"
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.package.outputs.PKG_NAME }}
           path: ${{ steps.package.outputs.PKG_PATH }}
@@ -153,13 +153,10 @@ jobs:
       # before running, and would therefore delete the downloaded artifacts
       - uses: actions/checkout@v3
 
-      - uses: actions/download-artifact@v3
-        with:
-          path: ./artifacts
+      - uses: actions/download-artifact@vv4
 
       - name: Display structure of downloaded files
         run: ls -R
-        working-directory: ./artifacts
 
       - name: Set TAG_NAME
         run: |
