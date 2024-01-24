@@ -76,7 +76,8 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
             excluded_workflows,
             enable: true,
         };
-        let elixir_livebook = selected_addons.iter().find(|&addon| addon == "Elixir livebook");
+
+        let elixir_livebook_enabled = selected_addons.iter().find(|&addon| addon == "Elixir livebook");
 
         application_configs.application = Some(ApplicationConfig {
             name,
@@ -84,7 +85,7 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
             workflows: Some(workflows),
             namespaces,
             addons: Some(ApplicationAddonsConfig {
-                elixir_livebook: if elixir_livebook.is_none() {
+                elixir_livebook: if elixir_livebook_enabled.is_none() {
                     None
                 } else {
                     Some(ApplicationAddonElixirLivebookConfig {
