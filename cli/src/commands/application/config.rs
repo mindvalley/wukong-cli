@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     fs::{create_dir_all, File},
     io::Write,
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
 
 /// The application config.
@@ -13,6 +13,7 @@ pub struct ApplicationConfig {
     pub enable: bool,
     pub workflows: Option<ApplicationWorkflowConfig>,
     pub namespaces: Vec<ApplicationNamespaceConfig>,
+    pub addons: Option<ApplicationAddonsConfig>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -57,10 +58,22 @@ pub struct ApplicationWorkflowConfig {
     pub excluded_workflows: Vec<String>,
     pub enable: bool,
 }
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct ApplicationNamespaceCloudsqlConfig {
     pub enable: bool,
     pub project_id: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct ApplicationAddonElixirLivebookConfig {
+    pub enable: bool,
+    pub allowed_admins: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct ApplicationAddonsConfig {
+    pub elixir_livebook: Option<ApplicationAddonElixirLivebookConfig>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
