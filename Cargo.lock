@@ -5579,6 +5579,7 @@ name = "wukong"
 version = "2.0.2"
 dependencies = [
  "aion",
+ "anyhow",
  "assert_cmd",
  "assert_fs",
  "base64 0.21.7",
@@ -5618,6 +5619,7 @@ dependencies = [
  "tabled",
  "textwrap 0.16.0",
  "thiserror",
+ "time",
  "time-humanize",
  "tokio",
  "toml 0.7.8",

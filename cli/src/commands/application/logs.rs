@@ -32,7 +32,7 @@ pub async fn handle_logs(
     auth_loader.set_message("Checking if you're authenticated to Google Cloud...");
 
     let config = Config::load_from_default_path()?;
-    let gcloud_access_token = auth::google_cloud::get_token_or_login().await;
+    let gcloud_access_token = auth::google_cloud::get_token_or_login(None).await;
     let mut wk_client = WKClient::for_channel(&config, &context.channel)?;
 
     auth_loader.finish_and_clear();

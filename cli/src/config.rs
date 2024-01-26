@@ -1,4 +1,4 @@
-use crate::error::ConfigError;
+use crate::{auth::google_cloud::GoogleCloudConfig, error::ConfigError};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -53,9 +53,10 @@ pub static CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct Config {
     pub core: CoreConfig,
-    pub auth: Option<AuthConfig>,
-    pub vault: Option<VaultConfig>,
+    pub auth: AuthConfig,
     pub update_check: Option<UpdateCheck>,
+    #[serde(skip)]
+    config_path: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -80,13 +81,7 @@ pub struct VaultConfig {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-pub struct ConfigWithPath {
-    pub config: Config,
-    pub path: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-pub struct AuthConfig {
+pub struct OktaConfig {
     pub account: String,
     pub subject: String,
     pub id_token: String,
@@ -95,7 +90,13 @@ pub struct AuthConfig {
     pub refresh_token: String,
 }
 
-// ReleaseInfo stores information about a release
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct AuthConfig {
+    pub okta: Option<OktaConfig>,
+    pub vault: Option<VaultConfig>,
+    pub google_cloud: Option<GoogleCloudConfig>,
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct UpdateCheck {
     pub last_update_checked_at: String,
@@ -112,14 +113,25 @@ impl Default for Config {
                 wukong_api_url: WUKONG_API_URL.to_string(),
                 okta_client_id: OKTA_CLIENT_ID.to_string(),
             },
-            auth: None,
-            vault: None,
+            auth: AuthConfig {
+                okta: None,
+                vault: None,
+                google_cloud: None,
+            },
             update_check: None,
+            config_path: None,
         }
     }
 }
 
 impl Config {
+    pub fn with_path(self, config_path: String) -> Self {
+        Self {
+            config_path: Some(config_path),
+            ..self
+        }
+    }
+
     /// Load a configuration from default path.
     ///
     /// # Errors
@@ -165,7 +177,7 @@ impl Config {
     /// # Errors
     ///
     /// This function may return typical file I/O errors.
-    pub fn save_to_path(&self, path: &str) -> Result<(), ConfigError> {
+    fn save_to_path(&self, path: &str) -> Result<(), ConfigError> {
         let config_file_path = Path::new(path);
         let serialized = toml::to_string(self).map_err(ConfigError::SerializeTomlError)?;
 
@@ -179,11 +191,35 @@ impl Config {
     }
 
     pub fn save_to_default_path(&self) -> Result<(), ConfigError> {
-        self.save_to_path(
-            CONFIG_FILE
-                .as_ref()
-                .expect("Unable to identify user's home directory"),
-        )
+        if self.config_path.is_some() {
+            self.save_to_path(
+                self.config_path
+                    .as_ref()
+                    .expect("Unable to save on the given path."),
+            )
+        } else {
+            self.save_to_path(
+                CONFIG_FILE
+                    .as_ref()
+                    .expect("Unable to identify user's home directory"),
+            )
+        }
+    }
+
+    pub fn remove_config_from_path(&self) -> Result<(), ConfigError> {
+        let config_path = self
+            .config_path
+            .clone()
+            .expect("Config path is not set.")
+            .to_string();
+
+        let config_file_path = Path::new(&config_path);
+
+        if config_file_path.exists() {
+            std::fs::remove_file(config_file_path)?;
+        }
+
+        Ok(())
     }
 }
 

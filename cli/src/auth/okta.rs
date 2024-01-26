@@ -1,5 +1,5 @@
 use crate::{
-    config::{AuthConfig, Config},
+    config::{Config, OktaConfig},
     error::{AuthError, WKCliError},
     utils::compare_with_current_time,
 };
@@ -53,7 +53,7 @@ pub struct OktaAuth {
     pub expiry_time: String,
 }
 
-impl From<OktaAuth> for AuthConfig {
+impl From<OktaAuth> for OktaConfig {
     fn from(value: OktaAuth) -> Self {
         Self {
             account: value.account,
@@ -67,9 +67,13 @@ impl From<OktaAuth> for AuthConfig {
 }
 
 pub fn need_tokens_refresh(config: &Config) -> Result<bool, WKCliError> {
-    let auth_config = config.auth.as_ref().ok_or(WKCliError::UnAuthenticated)?;
+    let okta_config = config
+        .auth
+        .okta
+        .as_ref()
+        .ok_or(WKCliError::UnAuthenticated)?;
 
-    let remaining_duration = compare_with_current_time(&auth_config.expiry_time);
+    let remaining_duration = compare_with_current_time(&okta_config.expiry_time);
     Ok(remaining_duration < EXPIRY_REMAINING_TIME_IN_MINS.minutes())
 }
 
@@ -245,7 +249,11 @@ pub async fn login(config: &Config) -> Result<OktaAuth, WKCliError> {
 }
 
 pub async fn refresh_tokens(config: &Config) -> Result<OktaAuth, WKCliError> {
-    let auth_config = config.auth.as_ref().ok_or(WKCliError::UnAuthenticated)?;
+    let okta_config = config
+        .auth
+        .okta
+        .as_ref()
+        .ok_or(WKCliError::UnAuthenticated)?;
     let okta_client_id = ClientId::new(config.core.okta_client_id.clone());
 
     let issuer_url =
@@ -260,7 +268,7 @@ pub async fn refresh_tokens(config: &Config) -> Result<OktaAuth, WKCliError> {
     let client = CoreClient::from_provider_metadata(provider_metadata, okta_client_id, None);
 
     let token_exchange_result = client
-        .exchange_refresh_token(&RefreshToken::new(auth_config.refresh_token.clone()))
+        .exchange_refresh_token(&RefreshToken::new(okta_config.refresh_token.clone()))
         .request_async(async_http_client)
         .await;
 
@@ -276,7 +284,7 @@ pub async fn refresh_tokens(config: &Config) -> Result<OktaAuth, WKCliError> {
                         && error_description.contains("refresh token")
                         && error_description.contains("expired")
                     {
-                        introspect_token(config, &auth_config.refresh_token).await?;
+                        introspect_token(config, &okta_config.refresh_token).await?;
 
                         AuthError::OktaRefreshTokenExpired {
                             message: error_description,
@@ -318,8 +326,8 @@ pub async fn refresh_tokens(config: &Config) -> Result<OktaAuth, WKCliError> {
         .to_rfc3339();
 
     Ok(OktaAuth {
-        account: auth_config.account.clone(),
-        subject: auth_config.subject.clone(),
+        account: okta_config.account.clone(),
+        subject: okta_config.subject.clone(),
         id_token: id_token.to_string(),
         access_token: access_token.secret().to_owned(),
         expiry_time: expiry,

@@ -29,7 +29,7 @@ application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
 okta_client_id = "valid-okta-client-id"
 
-[auth]
+[auth.okta]
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
@@ -67,6 +67,8 @@ fn test_wukong_config_list_success_without_login() {
 application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
 okta_client_id = "valid-okta-client-id"
+
+[auth]
     "#,
         )
         .unwrap();
@@ -113,7 +115,7 @@ application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
 okta_client_id = "valid-okta-client-id"
 
-[auth]
+[auth.okta]
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
@@ -153,7 +155,7 @@ application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
 okta_client_id = "valid-okta-client-id"
 
-[auth]
+[auth.okta]
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
@@ -193,7 +195,7 @@ application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
 okta_client_id = "valid-okta-client-id"
 
-[auth]
+[auth.okta]
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
@@ -223,7 +225,7 @@ application = "new-application"
 wukong_api_url = "https://wukong-api.com"
 okta_client_id = "valid-okta-client-id"
 
-[auth]
+[auth.okta]
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
@@ -250,7 +252,7 @@ application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
 okta_client_id = "valid-okta-client-id"
 
-[auth]
+[auth.okta]
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"

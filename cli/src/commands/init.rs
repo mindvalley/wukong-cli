@@ -1,18 +1,27 @@
 use crate::{
-    auth,
+    auth::vault,
+    commands::google,
+    commands::login,
     config::{ApiChannel, Config},
-    error::{AuthError, ConfigError, WKCliError},
+    error::{ConfigError, WKCliError},
     loader::new_spinner,
     output::colored_println,
     wukong_client::WKClient,
 };
-use dialoguer::{theme::ColorfulTheme, Select};
-use log::debug;
+use dialoguer::{theme::ColorfulTheme, Confirm, Select};
+use once_cell::sync::Lazy;
+use owo_colors::OwoColorize;
+
+pub static TMP_CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
+    return dirs::home_dir().map(|mut path| {
+        path.extend([".config", "wukong", ".tmp", "config.toml"]);
+        path.to_str().unwrap().to_string()
+    });
+});
 
 pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
-
-    let config = match Config::load_from_default_path() {
+    let mut config = match Config::load_from_default_path() {
         Ok(config) => config,
         Err(error) => match error {
             // create new config if the config file not found or the config format is invalid
@@ -21,61 +30,92 @@ pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
         },
     };
 
-    let mut login_selections = vec!["Log in with a new account"];
-    if let Some(ref auth_config) = config.auth {
-        login_selections.splice(..0, vec![auth_config.account.as_str()]);
-    };
+    config = login::new_login_or_refresh_token(config).await?;
+    config = handle_application(config, channel).await?;
+    config = handle_gcloud_auth(config).await?;
+    config = handle_vault_auth(config).await?;
 
-    let selection = Select::with_theme(&ColorfulTheme::default())
-                .with_prompt("Choose the account you would like to use to perform operations for this configuration:")
-                .default(0)
-                .items(&login_selections[..])
-                .interact()?;
+    config
+        .save_to_default_path()
+        .expect("Config file save failed");
 
-    // "Log in with a new account" is selected
-    let mut new_config = if selection == login_selections.len() - 1 {
-        login_and_create_config(Config::default()).await?
-    } else {
-        // check access token expiry
-        let mut current_config = config.clone();
+    colored_println!(
+        r#"
+Your Wukong CLI is configured and ready to use!
 
-        if auth::okta::need_tokens_refresh(&config)? {
-            debug!("Access token expired. Refreshing tokens...");
+* Commands that require authentication will use {} by default
+* Commands will reference application {} by default
+Run `wukong config help` to learn how to change individual settings
 
-            let refresh_token_loader = new_spinner();
-            refresh_token_loader.set_message("Refreshing tokens...");
+Some things to try next:
 
-            let updated_config = match auth::okta::refresh_tokens(&config).await {
-                Ok(new_tokens) => {
-                    current_config.auth = Some(new_tokens.into());
-                    refresh_token_loader.finish_and_clear();
+* Run `wukong --help` to see the wukong command groups you can interact with. And run `wukong COMMAND help` to get help on any wukong command.
+                             "#,
+        config.auth.okta.as_ref().unwrap().account,
+        config.core.application
+    );
 
-                    current_config
-                }
-                Err(err) => {
-                    refresh_token_loader.finish_and_clear();
-                    match err {
-                        WKCliError::AuthError(AuthError::OktaRefreshTokenExpired { .. }) => {
-                            eprintln!("The refresh token is expired. You have to login again.");
-                            login_and_create_config(current_config).await?
-                        }
-                        err => return Err(err),
-                    }
-                }
-            };
+    Ok(true)
+}
 
-            current_config = updated_config;
-        } else {
-            colored_println!("You are logged in as: {}.\n", login_selections[selection]);
-        }
+async fn handle_vault_auth(mut config: Config) -> Result<Config, WKCliError> {
+    let agree_to_authenticate = Confirm::with_theme(&ColorfulTheme::default())
+        .with_prompt(format!(
+            "{} {}",
+            "(Optional)".bright_black(),
+            "Do you want to authenticate against Bunker? You may do it later when neccessary"
+        ))
+        .default(false)
+        .interact()?;
 
-        current_config
-    };
+    if agree_to_authenticate {
+        vault::get_token_or_login(&mut config).await?;
+    }
 
+    Ok(config)
+}
+
+async fn handle_gcloud_auth(mut config: Config) -> Result<Config, WKCliError> {
+    let agree_to_authenticate = Confirm::with_theme(&ColorfulTheme::default())
+        .with_prompt(format!(
+            "{} {}",
+            "(Optional)".bright_black(),
+            "Do you want to authenticate against Google Cloud? You may do it later when neccessary"
+        ))
+        .default(false)
+        .interact()?;
+
+    if agree_to_authenticate {
+        // Use temporary file to achieve atomic write for gcloud:
+        // GCloud does not support atomic write, so we use a temporary file to store the config
+        // and then move it to the original location after when the config is ready.
+        let tmp_config = Config::default()
+            .with_path(TMP_CONFIG_FILE.to_owned().expect("Unable to get tmp path"));
+
+        google::login::handle_login(Some(tmp_config.clone())).await?;
+
+        // Load the config again to get the latest token
+        let updated_config =
+            Config::load_from_path(TMP_CONFIG_FILE.as_ref().expect("Unable to get tmp path"))
+                .expect("Unable to load tmp config");
+
+        config.auth.google_cloud = updated_config.auth.google_cloud.clone();
+
+        tmp_config
+            .remove_config_from_path()
+            .expect("Config file failed to remove");
+
+        return Ok(config);
+    }
+
+    Ok(config)
+}
+
+async fn handle_application(mut config: Config, channel: ApiChannel) -> Result<Config, WKCliError> {
     let fetch_loader = new_spinner();
     fetch_loader.set_message("Fetching application list...");
 
-    let mut wk_client = WKClient::for_channel(&new_config, &channel)?;
+    let mut wk_client = WKClient::for_channel(&config, &channel)?;
 
     let applications_data: Vec<String> = wk_client
         .fetch_applications()
@@ -98,38 +138,7 @@ pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
         &applications_data[application_selection]
     );
 
-    new_config.core.application = applications_data[application_selection].clone();
-
-    colored_println!(
-        r#"
-Your Wukong CLI is configured and ready to use!
-
-* Commands that require authentication will use {} by default
-* Commands will reference application {} by default
-Run `wukong config help` to learn how to change individual settings
-
-Some things to try next:
-
-* Run `wukong --help` to see the wukong command groups you can interact with. And run `wukong COMMAND help` to get help on any wukong command.
-                         "#,
-        new_config.auth.as_ref().unwrap().account,
-        new_config.core.application
-    );
-
-    new_config
-        .save_to_default_path()
-        .expect("Config file save failed");
-
-    Ok(true)
-}
-
-async fn login_and_create_config(mut config: Config) -> Result<Config, WKCliError> {
-    let auth_info = auth::okta::login(&config).await?;
-    let acc = auth_info.account.clone();
-
-    config.auth = Some(auth_info.into());
-
-    colored_println!("You are logged in as: {acc}.\n");
+    config.core.application = applications_data[application_selection].clone();
 
     Ok(config)
 }
