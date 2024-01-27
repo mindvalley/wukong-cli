@@ -1376,3 +1376,567 @@ pub struct ResourceReference {
     #[prost(string, tag = "2")]
     pub child_type: ::prost::alloc::string::String,
 }
+/// Defines a metric type and its schema. Once a metric descriptor is created,
+/// deleting or altering it stops data collection and makes the metric type's
+/// existing data unusable.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct MetricDescriptor {
+    /// The resource name of the metric descriptor.
+    #[prost(string, tag = "1")]
+    pub name: ::prost::alloc::string::String,
+    /// The metric type, including its DNS name prefix. The type is not
+    /// URL-encoded. All user-defined metric types have the DNS name
+    /// `custom.googleapis.com` or `external.googleapis.com`. Metric types should
+    /// use a natural hierarchical grouping. For example:
+    ///
+    /// ```text
+    /// "custom.googleapis.com/invoice/paid/amount"
+    /// "external.googleapis.com/prometheus/up"
+    /// "appengine.googleapis.com/http/server/response_latencies"
+    /// ```
+    #[prost(string, tag = "8")]
+    pub r#type: ::prost::alloc::string::String,
+    /// The set of labels that can be used to describe a specific
+    /// instance of this metric type. For example, the
+    /// `appengine.googleapis.com/http/server/response_latencies` metric
+    /// type has a label for the HTTP response code, `response_code`, so
+    /// you can look at latencies for successful responses or just
+    /// for responses that failed.
+    #[prost(message, repeated, tag = "2")]
+    pub labels: ::prost::alloc::vec::Vec<LabelDescriptor>,
+    /// Whether the metric records instantaneous values, changes to a value, etc.
+    /// Some combinations of `metric_kind` and `value_type` might not be supported.
+    #[prost(enumeration = "metric_descriptor::MetricKind", tag = "3")]
+    pub metric_kind: i32,
+    /// Whether the measurement is an integer, a floating-point number, etc.
+    /// Some combinations of `metric_kind` and `value_type` might not be supported.
+    #[prost(enumeration = "metric_descriptor::ValueType", tag = "4")]
+    pub value_type: i32,
+    /// The units in which the metric value is reported. It is only applicable
+    /// if the `value_type` is `INT64`, `DOUBLE`, or `DISTRIBUTION`. The `unit`
+    /// defines the representation of the stored metric values.
+    ///
+    /// Different systems might scale the values to be more easily displayed (so a
+    /// value of `0.02kBy` *might* be displayed as `20By`, and a value of
+    /// `3523kBy` *might* be displayed as `3.5MBy`). However, if the `unit` is
+    /// `kBy`, then the value of the metric is always in thousands of bytes, no
+    /// matter how it might be displayed.
+    ///
+    /// If you want a custom metric to record the exact number of CPU-seconds used
+    /// by a job, you can create an `INT64 CUMULATIVE` metric whose `unit` is
+    /// `s{CPU}` (or equivalently `1s{CPU}` or just `s`). If the job uses 12,005
+    /// CPU-seconds, then the value is written as `12005`.
+    ///
+    /// Alternatively, if you want a custom metric to record data in a more
+    /// granular way, you can create a `DOUBLE CUMULATIVE` metric whose `unit` is
+    /// `ks{CPU}`, and then write the value `12.005` (which is `12005/1000`),
+    /// or use `Kis{CPU}` and write `11.723` (which is `12005/1024`).
+    ///
+    /// The supported units are a subset of [The Unified Code for Units of
+    /// Measure](<https://unitsofmeasure.org/ucum.html>) standard:
+    ///
+    /// **Basic units (UNIT)**
+    ///
+    /// * `bit`   bit
+    /// * `By`    byte
+    /// * `s`     second
+    /// * `min`   minute
+    /// * `h`     hour
+    /// * `d`     day
+    /// * `1`     dimensionless
+    ///
+    /// **Prefixes (PREFIX)**
+    ///
+    /// * `k`     kilo    (10^3)
+    ///
+    /// * `M`     mega    (10^6)
+    ///
+    /// * `G`     giga    (10^9)
+    ///
+    /// * `T`     tera    (10^12)
+    ///
+    /// * `P`     peta    (10^15)
+    ///
+    /// * `E`     exa     (10^18)
+    ///
+    /// * `Z`     zetta   (10^21)
+    ///
+    /// * `Y`     yotta   (10^24)
+    ///
+    /// * `m`     milli   (10^-3)
+    ///
+    /// * `u`     micro   (10^-6)
+    ///
+    /// * `n`     nano    (10^-9)
+    ///
+    /// * `p`     pico    (10^-12)
+    ///
+    /// * `f`     femto   (10^-15)
+    ///
+    /// * `a`     atto    (10^-18)
+    ///
+    /// * `z`     zepto   (10^-21)
+    ///
+    /// * `y`     yocto   (10^-24)
+    ///
+    /// * `Ki`    kibi    (2^10)
+    ///
+    /// * `Mi`    mebi    (2^20)
+    ///
+    /// * `Gi`    gibi    (2^30)
+    ///
+    /// * `Ti`    tebi    (2^40)
+    ///
+    /// * `Pi`    pebi    (2^50)
+    ///
+    /// **Grammar**
+    ///
+    /// The grammar also includes these connectors:
+    ///
+    /// * `/`    division or ratio (as an infix operator). For examples,
+    ///   `kBy/{email}` or `MiBy/10ms` (although you should almost never
+    ///   have `/s` in a metric `unit`; rates should always be computed at
+    ///   query time from the underlying cumulative or delta value).
+    /// * `.`    multiplication or composition (as an infix operator). For
+    ///   examples, `GBy.d` or `k{watt}.h`.
+    ///
+    /// The grammar for a unit is as follows:
+    ///
+    /// ```text
+    /// Expression = Component { "." Component } { "/" Component } ;
+    ///
+    /// Component = ( [ PREFIX ] UNIT | "%" ) [ Annotation ]
+    ///            | Annotation
+    ///            | "1"
+    ///            ;
+    ///
+    /// Annotation = "{" NAME "}" ;
+    /// ```
+    ///
+    /// Notes:
+    ///
+    /// * `Annotation` is just a comment if it follows a `UNIT`. If the annotation
+    ///   is used alone, then the unit is equivalent to `1`. For examples,
+    ///   `{request}/s == 1/s`, `By{transmitted}/s == By/s`.
+    /// * `NAME` is a sequence of non-blank printable ASCII characters not
+    ///   containing `{` or `}`.
+    /// * `1` represents a unitary [dimensionless
+    ///   unit](<https://en.wikipedia.org/wiki/Dimensionless_quantity>) of 1, such
+    ///   as in `1/s`. It is typically used when none of the basic units are
+    ///   appropriate. For example, "new users per day" can be represented as
+    ///   `1/d` or `{new-users}/d` (and a metric value `5` would mean "5 new
+    ///   users). Alternatively, "thousands of page views per day" would be
+    ///   represented as `1000/d` or `k1/d` or `k{page_views}/d` (and a metric
+    ///   value of `5.3` would mean "5300 page views per day").
+    /// * `%` represents dimensionless value of 1/100, and annotates values giving
+    ///   a percentage (so the metric values are typically in the range of 0..100,
+    ///   and a metric value `3` means "3 percent").
+    /// * `10^2.%` indicates a metric contains a ratio, typically in the range
+    ///   0..1, that will be multiplied by 100 and displayed as a percentage
+    ///   (so a metric value `0.03` means "3 percent").
+    #[prost(string, tag = "5")]
+    pub unit: ::prost::alloc::string::String,
+    /// A detailed description of the metric, which can be used in documentation.
+    #[prost(string, tag = "6")]
+    pub description: ::prost::alloc::string::String,
+    /// A concise name for the metric, which can be displayed in user interfaces.
+    /// Use sentence case without an ending period, for example "Request count".
+    /// This field is optional but it is recommended to be set for any metrics
+    /// associated with user-visible concepts, such as Quota.
+    #[prost(string, tag = "7")]
+    pub display_name: ::prost::alloc::string::String,
+    /// Optional. Metadata which can be used to guide usage of the metric.
+    #[prost(message, optional, tag = "10")]
+    pub metadata: ::core::option::Option<metric_descriptor::MetricDescriptorMetadata>,
+    /// Optional. The launch stage of the metric definition.
+    #[prost(enumeration = "LaunchStage", tag = "12")]
+    pub launch_stage: i32,
+    /// Read-only. If present, then a \[time
+    /// series\]\\[google.monitoring.v3.TimeSeries\\], which is identified partially by
+    /// a metric type and a
+    /// \\[MonitoredResourceDescriptor\]\[google.api.MonitoredResourceDescriptor\\], that
+    /// is associated with this metric type can only be associated with one of the
+    /// monitored resource types listed here.
+    #[prost(string, repeated, tag = "13")]
+    pub monitored_resource_types: ::prost::alloc::vec::Vec<
+        ::prost::alloc::string::String,
+    >,
+}
+/// Nested message and enum types in `MetricDescriptor`.
+pub mod metric_descriptor {
+    /// Additional annotations that can be used to guide the usage of a metric.
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct MetricDescriptorMetadata {
+        /// Deprecated. Must use the
+        /// \\[MetricDescriptor.launch_stage\]\[google.api.MetricDescriptor.launch_stage\\]
+        /// instead.
+        #[deprecated]
+        #[prost(enumeration = "super::LaunchStage", tag = "1")]
+        pub launch_stage: i32,
+        /// The sampling period of metric data points. For metrics which are written
+        /// periodically, consecutive data points are stored at this time interval,
+        /// excluding data loss due to errors. Metrics with a higher granularity have
+        /// a smaller sampling period.
+        #[prost(message, optional, tag = "2")]
+        pub sample_period: ::core::option::Option<::prost_types::Duration>,
+        /// The delay of data points caused by ingestion. Data points older than this
+        /// age are guaranteed to be ingested and available to be read, excluding
+        /// data loss due to errors.
+        #[prost(message, optional, tag = "3")]
+        pub ingest_delay: ::core::option::Option<::prost_types::Duration>,
+    }
+    /// The kind of measurement. It describes how the data is reported.
+    /// For information on setting the start time and end time based on
+    /// the MetricKind, see \\[TimeInterval\]\[google.monitoring.v3.TimeInterval\\].
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum MetricKind {
+        /// Do not use this default value.
+        Unspecified = 0,
+        /// An instantaneous measurement of a value.
+        Gauge = 1,
+        /// The change in a value during a time interval.
+        Delta = 2,
+        /// A value accumulated over a time interval.  Cumulative
+        /// measurements in a time series should have the same start time
+        /// and increasing end times, until an event resets the cumulative
+        /// value to zero and sets a new start time for the following
+        /// points.
+        Cumulative = 3,
+    }
+    impl MetricKind {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                MetricKind::Unspecified => "METRIC_KIND_UNSPECIFIED",
+                MetricKind::Gauge => "GAUGE",
+                MetricKind::Delta => "DELTA",
+                MetricKind::Cumulative => "CUMULATIVE",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "METRIC_KIND_UNSPECIFIED" => Some(Self::Unspecified),
+                "GAUGE" => Some(Self::Gauge),
+                "DELTA" => Some(Self::Delta),
+                "CUMULATIVE" => Some(Self::Cumulative),
+                _ => None,
+            }
+        }
+    }
+    /// The value type of a metric.
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum ValueType {
+        /// Do not use this default value.
+        Unspecified = 0,
+        /// The value is a boolean.
+        /// This value type can be used only if the metric kind is `GAUGE`.
+        Bool = 1,
+        /// The value is a signed 64-bit integer.
+        Int64 = 2,
+        /// The value is a double precision floating point number.
+        Double = 3,
+        /// The value is a text string.
+        /// This value type can be used only if the metric kind is `GAUGE`.
+        String = 4,
+        /// The value is a \\[`Distribution`\]\[google.api.Distribution\\].
+        Distribution = 5,
+        /// The value is money.
+        Money = 6,
+    }
+    impl ValueType {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                ValueType::Unspecified => "VALUE_TYPE_UNSPECIFIED",
+                ValueType::Bool => "BOOL",
+                ValueType::Int64 => "INT64",
+                ValueType::Double => "DOUBLE",
+                ValueType::String => "STRING",
+                ValueType::Distribution => "DISTRIBUTION",
+                ValueType::Money => "MONEY",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "VALUE_TYPE_UNSPECIFIED" => Some(Self::Unspecified),
+                "BOOL" => Some(Self::Bool),
+                "INT64" => Some(Self::Int64),
+                "DOUBLE" => Some(Self::Double),
+                "STRING" => Some(Self::String),
+                "DISTRIBUTION" => Some(Self::Distribution),
+                "MONEY" => Some(Self::Money),
+                _ => None,
+            }
+        }
+    }
+}
+/// A specific metric, identified by specifying values for all of the
+/// labels of a \\[`MetricDescriptor`\]\[google.api.MetricDescriptor\\].
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Metric {
+    /// An existing metric type, see
+    /// \\[google.api.MetricDescriptor\]\[google.api.MetricDescriptor\\]. For example,
+    /// `custom.googleapis.com/invoice/paid/amount`.
+    #[prost(string, tag = "3")]
+    pub r#type: ::prost::alloc::string::String,
+    /// The set of label values that uniquely identify this metric. All
+    /// labels listed in the `MetricDescriptor` must be assigned values.
+    #[prost(map = "string, string", tag = "2")]
+    pub labels: ::std::collections::HashMap<
+        ::prost::alloc::string::String,
+        ::prost::alloc::string::String,
+    >,
+}
+/// `Distribution` contains summary statistics for a population of values. It
+/// optionally contains a histogram representing the distribution of those values
+/// across a set of buckets.
+///
+/// The summary statistics are the count, mean, sum of the squared deviation from
+/// the mean, the minimum, and the maximum of the set of population of values.
+/// The histogram is based on a sequence of buckets and gives a count of values
+/// that fall into each bucket. The boundaries of the buckets are given either
+/// explicitly or by formulas for buckets of fixed or exponentially increasing
+/// widths.
+///
+/// Although it is not forbidden, it is generally a bad idea to include
+/// non-finite values (infinities or NaNs) in the population of values, as this
+/// will render the `mean` and `sum_of_squared_deviation` fields meaningless.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Distribution {
+    /// The number of values in the population. Must be non-negative. This value
+    /// must equal the sum of the values in `bucket_counts` if a histogram is
+    /// provided.
+    #[prost(int64, tag = "1")]
+    pub count: i64,
+    /// The arithmetic mean of the values in the population. If `count` is zero
+    /// then this field must be zero.
+    #[prost(double, tag = "2")]
+    pub mean: f64,
+    /// The sum of squared deviations from the mean of the values in the
+    /// population. For values x_i this is:
+    ///
+    /// ```text
+    /// Sum\[i=1..n\]((x_i - mean)^2)
+    /// ```
+    ///
+    /// Knuth, "The Art of Computer Programming", Vol. 2, page 232, 3rd edition
+    /// describes Welford's method for accumulating this sum in one pass.
+    ///
+    /// If `count` is zero then this field must be zero.
+    #[prost(double, tag = "3")]
+    pub sum_of_squared_deviation: f64,
+    /// If specified, contains the range of the population values. The field
+    /// must not be present if the `count` is zero.
+    #[prost(message, optional, tag = "4")]
+    pub range: ::core::option::Option<distribution::Range>,
+    /// Defines the histogram bucket boundaries. If the distribution does not
+    /// contain a histogram, then omit this field.
+    #[prost(message, optional, tag = "6")]
+    pub bucket_options: ::core::option::Option<distribution::BucketOptions>,
+    /// The number of values in each bucket of the histogram, as described in
+    /// `bucket_options`. If the distribution does not have a histogram, then omit
+    /// this field. If there is a histogram, then the sum of the values in
+    /// `bucket_counts` must equal the value in the `count` field of the
+    /// distribution.
+    ///
+    /// If present, `bucket_counts` should contain N values, where N is the number
+    /// of buckets specified in `bucket_options`. If you supply fewer than N
+    /// values, the remaining values are assumed to be 0.
+    ///
+    /// The order of the values in `bucket_counts` follows the bucket numbering
+    /// schemes described for the three bucket types. The first value must be the
+    /// count for the underflow bucket (number 0). The next N-2 values are the
+    /// counts for the finite buckets (number 1 through N-2). The N'th value in
+    /// `bucket_counts` is the count for the overflow bucket (number N-1).
+    #[prost(int64, repeated, tag = "7")]
+    pub bucket_counts: ::prost::alloc::vec::Vec<i64>,
+    /// Must be in increasing order of `value` field.
+    #[prost(message, repeated, tag = "10")]
+    pub exemplars: ::prost::alloc::vec::Vec<distribution::Exemplar>,
+}
+/// Nested message and enum types in `Distribution`.
+pub mod distribution {
+    /// The range of the population values.
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct Range {
+        /// The minimum of the population values.
+        #[prost(double, tag = "1")]
+        pub min: f64,
+        /// The maximum of the population values.
+        #[prost(double, tag = "2")]
+        pub max: f64,
+    }
+    /// `BucketOptions` describes the bucket boundaries used to create a histogram
+    /// for the distribution. The buckets can be in a linear sequence, an
+    /// exponential sequence, or each bucket can be specified explicitly.
+    /// `BucketOptions` does not include the number of values in each bucket.
+    ///
+    /// A bucket has an inclusive lower bound and exclusive upper bound for the
+    /// values that are counted for that bucket. The upper bound of a bucket must
+    /// be strictly greater than the lower bound. The sequence of N buckets for a
+    /// distribution consists of an underflow bucket (number 0), zero or more
+    /// finite buckets (number 1 through N - 2) and an overflow bucket (number N -
+    /// 1). The buckets are contiguous: the lower bound of bucket i (i > 0) is the
+    /// same as the upper bound of bucket i - 1. The buckets span the whole range
+    /// of finite values: lower bound of the underflow bucket is -infinity and the
+    /// upper bound of the overflow bucket is +infinity. The finite buckets are
+    /// so-called because both bounds are finite.
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct BucketOptions {
+        /// Exactly one of these three fields must be set.
+        #[prost(oneof = "bucket_options::Options", tags = "1, 2, 3")]
+        pub options: ::core::option::Option<bucket_options::Options>,
+    }
+    /// Nested message and enum types in `BucketOptions`.
+    pub mod bucket_options {
+        /// Specifies a linear sequence of buckets that all have the same width
+        /// (except overflow and underflow). Each bucket represents a constant
+        /// absolute uncertainty on the specific value in the bucket.
+        ///
+        /// There are `num_finite_buckets + 2` (= N) buckets. Bucket `i` has the
+        /// following boundaries:
+        ///
+        /// ```text
+        /// Upper bound (0 <= i < N-1):     offset + (width * i).
+        ///
+        /// Lower bound (1 <= i < N):       offset + (width * (i - 1)).
+        /// ```
+        #[allow(clippy::derive_partial_eq_without_eq)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct Linear {
+            /// Must be greater than 0.
+            #[prost(int32, tag = "1")]
+            pub num_finite_buckets: i32,
+            /// Must be greater than 0.
+            #[prost(double, tag = "2")]
+            pub width: f64,
+            /// Lower bound of the first bucket.
+            #[prost(double, tag = "3")]
+            pub offset: f64,
+        }
+        /// Specifies an exponential sequence of buckets that have a width that is
+        /// proportional to the value of the lower bound. Each bucket represents a
+        /// constant relative uncertainty on a specific value in the bucket.
+        ///
+        /// There are `num_finite_buckets + 2` (= N) buckets. Bucket `i` has the
+        /// following boundaries:
+        ///
+        /// ```text
+        /// Upper bound (0 <= i < N-1):     scale * (growth_factor ^ i).
+        ///
+        /// Lower bound (1 <= i < N):       scale * (growth_factor ^ (i - 1)).
+        /// ```
+        #[allow(clippy::derive_partial_eq_without_eq)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct Exponential {
+            /// Must be greater than 0.
+            #[prost(int32, tag = "1")]
+            pub num_finite_buckets: i32,
+            /// Must be greater than 1.
+            #[prost(double, tag = "2")]
+            pub growth_factor: f64,
+            /// Must be greater than 0.
+            #[prost(double, tag = "3")]
+            pub scale: f64,
+        }
+        /// Specifies a set of buckets with arbitrary widths.
+        ///
+        /// There are `size(bounds) + 1` (= N) buckets. Bucket `i` has the following
+        /// boundaries:
+        ///
+        /// ```text
+        /// Upper bound (0 <= i < N-1):     bounds\[i\]
+        /// Lower bound (1 <= i < N);       bounds[i - 1]
+        /// ```
+        ///
+        /// The `bounds` field must contain at least one element. If `bounds` has
+        /// only one element, then there are no finite buckets, and that single
+        /// element is the common boundary of the overflow and underflow buckets.
+        #[allow(clippy::derive_partial_eq_without_eq)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct Explicit {
+            /// The values must be monotonically increasing.
+            #[prost(double, repeated, tag = "1")]
+            pub bounds: ::prost::alloc::vec::Vec<f64>,
+        }
+        /// Exactly one of these three fields must be set.
+        #[allow(clippy::derive_partial_eq_without_eq)]
+        #[derive(Clone, PartialEq, ::prost::Oneof)]
+        pub enum Options {
+            /// The linear bucket.
+            #[prost(message, tag = "1")]
+            LinearBuckets(Linear),
+            /// The exponential buckets.
+            #[prost(message, tag = "2")]
+            ExponentialBuckets(Exponential),
+            /// The explicit buckets.
+            #[prost(message, tag = "3")]
+            ExplicitBuckets(Explicit),
+        }
+    }
+    /// Exemplars are example points that may be used to annotate aggregated
+    /// distribution values. They are metadata that gives information about a
+    /// particular value added to a Distribution bucket, such as a trace ID that
+    /// was active when a value was added. They may contain further information,
+    /// such as a example values and timestamps, origin, etc.
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct Exemplar {
+        /// Value of the exemplar point. This value determines to which bucket the
+        /// exemplar belongs.
+        #[prost(double, tag = "1")]
+        pub value: f64,
+        /// The observation (sampling) time of the above value.
+        #[prost(message, optional, tag = "2")]
+        pub timestamp: ::core::option::Option<::prost_types::Timestamp>,
+        /// Contextual information about the example value. Examples are:
+        ///
+        /// Trace: type.googleapis.com/google.monitoring.v3.SpanContext
+        ///
+        /// Literal string: type.googleapis.com/google.protobuf.StringValue
+        ///
+        /// Labels dropped during aggregation:
+        /// type.googleapis.com/google.monitoring.v3.DroppedLabels
+        ///
+        /// There may be only a single attachment of any given message type in a
+        /// single exemplar, and this is enforced by the system.
+        #[prost(message, repeated, tag = "3")]
+        pub attachments: ::prost::alloc::vec::Vec<::prost_types::Any>,
+    }
+}
