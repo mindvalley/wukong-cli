@@ -15,6 +15,7 @@ use std::fs;
 
 pub async fn handle_application_init() -> Result<bool, WKCliError> {
     println!("Welcome! Initializing per-repo configuration for your application.");
+
     let mut application_configs = ApplicationConfigs::new()?;
 
     let name = Input::with_theme(&ColorfulTheme::default())
@@ -56,15 +57,19 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
         namespaces.push(configure_namespace("staging".to_string())?);
     }
 
-    println!("\nPlease review your generated configurations below:");
-
     let agree_to_save = Confirm::with_theme(&ColorfulTheme::default())
         .with_prompt("Do you want to write this configuration into your repo?")
         .default(true)
         .interact()?;
 
     if agree_to_save {
-        println!("{}", "\nWriting configuration to .wukong.toml...".green().bold().italic());
+        println!(
+            "{}",
+            "\nWriting configuration to .wukong.toml..."
+                .green()
+                .bold()
+                .italic()
+        );
 
         let workflows = ApplicationWorkflowConfig {
             provider: "github_actions".to_string(),
