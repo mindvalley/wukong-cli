@@ -44,6 +44,8 @@ pub enum WKCliError {
     ApplicationInstanceError(#[from] ApplicationInstanceError),
     #[error("Operation timeout")]
     Timeout,
+    #[error("Unable to parse YML file")]
+    UnableToParseYmlFile,
 }
 
 #[derive(Debug, ThisError)]

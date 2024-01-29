@@ -1,15 +1,17 @@
 use crate::commands::application::config::{
-    ApplicationConfig, ApplicationConfigs, ApplicationNamespaceAppsignalConfig,
-    ApplicationNamespaceBuildConfig, ApplicationNamespaceCloudsqlConfig,
-    ApplicationNamespaceConfig, ApplicationNamespaceDeliveryConfig,
-    ApplicationNamespaceHoneycombConfig, ApplicationWorkflowConfig, ApplicationAddonsConfig, ApplicationAddonElixirLivebookConfig,
+    ApplicationAddonElixirLivebookConfig, ApplicationAddonsConfig, ApplicationConfig,
+    ApplicationConfigs, ApplicationNamespaceAppsignalConfig, ApplicationNamespaceBuildConfig,
+    ApplicationNamespaceCloudsqlConfig, ApplicationNamespaceConfig,
+    ApplicationNamespaceDeliveryConfig, ApplicationNamespaceHoneycombConfig,
+    ApplicationWorkflowConfig,
 };
-use crate::{error::WKCliError, loader::new_spinner};
+use crate::error::WKCliError;
 use crossterm::style::Stylize;
 use dialoguer::theme::ColorfulTheme;
 use dialoguer::{Confirm, Input, MultiSelect, Select};
 use heck::ToSnakeCase;
 use owo_colors::OwoColorize;
+use std::fs;
 
 pub async fn handle_application_init() -> Result<bool, WKCliError> {
     println!("Welcome! Initializing per-repo configuration for your application.");
@@ -20,14 +22,7 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
         .default("my-first-application".to_string())
         .interact_text()?;
 
-    // TODO: Check for available workflows
-    // Checking available Github Actions workflows.
-    let available_github_actions_loader = new_spinner();
-    available_github_actions_loader.set_message("Checking available Github Actions workflows...");
-
-    let workflows = vec!["Elixir CI", "Elixir Release Prod CD Image"];
-
-    available_github_actions_loader.finish_and_clear();
+    let workflows = get_workflows_from_current_dir()?;
 
     let excluded_workflows: Vec<String> = MultiSelect::with_theme(&ColorfulTheme::default())
         .with_prompt("Workflows to exclude")
@@ -69,7 +64,7 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
         .interact()?;
 
     if agree_to_save {
-        println!("{}", "Writing configuration...\n".green().bold().italic());
+        println!("{}", "\nWriting configuration to .wukong.toml...".green().bold().italic());
 
         let workflows = ApplicationWorkflowConfig {
             provider: "github_actions".to_string(),
@@ -77,7 +72,9 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
             enable: true,
         };
 
-        let elixir_livebook_enabled = selected_addons.iter().find(|&addon| addon == "Elixir livebook");
+        let elixir_livebook_enabled = selected_addons
+            .iter()
+            .find(|&addon| addon == "Elixir livebook");
 
         application_configs.application = Some(ApplicationConfig {
             name,
@@ -161,7 +158,7 @@ fn configure_namespace(namespace_type: String) -> Result<ApplicationNamespaceCon
     Ok(ApplicationNamespaceConfig {
         namespace_type: namespace_type.clone(),
         build: Some(ApplicationNamespaceBuildConfig {
-            build_workflow: format!("{}-workflow", namespace_type.clone()),
+            build_workflow: format!("{}_workflow", namespace_type.clone()),
         }),
         delivery: Some(ApplicationNamespaceDeliveryConfig {
             target: namespace_type.clone(),
@@ -194,4 +191,34 @@ fn configure_namespace(namespace_type: String) -> Result<ApplicationNamespaceCon
             })
         },
     })
+}
+
+fn get_workflows_from_current_dir() -> Result<Vec<String>, WKCliError> {
+    let mut workflow_names = Vec::new();
+    let workflows = fs::read_dir(".github/workflows")?;
+
+    for workflow in workflows {
+        let workflow = workflow?;
+
+        if workflow.file_type()?.is_file()
+            && workflow
+                .path()
+                .extension()
+                .map_or(false, |ext| ext == "yml")
+        {
+            let workflow_content = fs::read_to_string(workflow.path())?;
+
+            let workflow_values: serde_yaml::Value = serde_yaml::from_str(&workflow_content)
+                .map_err(|_| WKCliError::UnableToParseYmlFile)?;
+
+            if let Some(workflow_name) = workflow_values
+                .get("name")
+                .and_then(serde_yaml::Value::as_str)
+            {
+                workflow_names.push(workflow_name.to_string());
+            }
+        }
+    }
+
+    Ok(workflow_names)
 }
