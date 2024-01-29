@@ -119,7 +119,10 @@ mod test {
       "message": "Unauthorized",
       "path": [
         "kubernetesPods"
-      ]
+      ],
+      "extensions": {
+        "code": "unauthorized"
+      }
     }
   ]
 }"#;

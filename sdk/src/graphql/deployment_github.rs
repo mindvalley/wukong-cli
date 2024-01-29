@@ -100,9 +100,6 @@ mod test {
   },
   "errors": [
     {
-      "extensions": {
-        "code": "github_workflow_not_found"
-      },
       "locations": [
         {
           "column": 5,
@@ -113,7 +110,10 @@ mod test {
       "path": [
         "cdPipeline",
         "githubBuilds"
-      ]
+      ],
+      "extensions": {
+        "code": "github_workflow_not_found"
+      }
     }
   ]
 }"#;
@@ -135,18 +135,10 @@ mod test {
         let error = response.unwrap_err();
 
         match &error {
-            WKError::APIError(APIError::ResponseError {
-                message: _message,
-                code,
-            }) => {
-                assert_eq!(code, "Unable to get workflow");
-            }
+            WKError::APIError(APIError::GithubWorkflowNotFound) => {}
             _ => panic!("it should be returning APIError::UnableToGetPipelines"),
         };
 
-        assert_eq!(
-            format!("{error}"),
-            "API Response Error: cdPipeline/githubBuilds:12:5: Unable to get workflow"
-        );
+        assert_eq!(format!("{error}"), "Github Workflow not found.");
     }
 }

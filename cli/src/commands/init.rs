@@ -9,12 +9,19 @@ use crate::{
     wukong_client::WKClient,
 };
 use dialoguer::{theme::ColorfulTheme, Confirm, Select};
+use once_cell::sync::Lazy;
 use owo_colors::OwoColorize;
+
+pub static TMP_CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
+    return dirs::home_dir().map(|mut path| {
+        path.extend([".config", "wukong", ".tmp", "config.toml"]);
+        path.to_str().unwrap().to_string()
+    });
+});
 
 pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
-
-    let config = match Config::load_from_default_path() {
+    let mut config = match Config::load_from_default_path() {
         Ok(config) => config,
         Err(error) => match error {
             // create new config if the config file not found or the config format is invalid
@@ -23,44 +30,42 @@ pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
         },
     };
 
-    login::handle_login(Some(config)).await?;
+    config = login::new_login_or_refresh_token(config).await?;
+    config = handle_application(config, channel).await?;
+    config = handle_gcloud_auth(config).await?;
+    config = handle_vault_auth(config).await?;
 
-    let mut new_config = Config::load_from_default_path()?;
-    new_config = handle_application(new_config, channel).await?;
-    new_config = handle_gcloud_auth(new_config).await?;
-    new_config = handle_bunker_auth(new_config).await?;
+    config
+        .save_to_default_path()
+        .expect("Config file save failed");
 
     colored_println!(
         r#"
-    Your Wukong CLI is configured and ready to use!
+Your Wukong CLI is configured and ready to use!
 
-    * Commands that require authentication will use {} by default
-    * Commands will reference application {} by default
-    Run `wukong config help` to learn how to change individual settings
+* Commands that require authentication will use {} by default
+* Commands will reference application {} by default
+Run `wukong config help` to learn how to change individual settings
 
-    Some things to try next:
+Some things to try next:
 
-    * Run `wukong --help` to see the wukong command groups you can interact with. And run `wukong COMMAND help` to get help on any wukong command.
+* Run `wukong --help` to see the wukong command groups you can interact with. And run `wukong COMMAND help` to get help on any wukong command.
                              "#,
-        new_config.auth.okta.as_ref().unwrap().account,
-        new_config.core.application
+        config.auth.okta.as_ref().unwrap().account,
+        config.core.application
     );
-
-    new_config
-        .save_to_default_path()
-        .expect("Config file save failed");
 
     Ok(true)
 }
 
-async fn handle_bunker_auth(mut config: Config) -> Result<Config, WKCliError> {
+async fn handle_vault_auth(mut config: Config) -> Result<Config, WKCliError> {
     let agree_to_authenticate = Confirm::with_theme(&ColorfulTheme::default())
         .with_prompt(format!(
             "{} {}",
             "(Optional)".bright_black(),
             "Do you want to authenticate against Bunker? You may do it later when neccessary"
         ))
-        .default(true)
+        .default(false)
         .interact()?;
 
     if agree_to_authenticate {
@@ -70,7 +75,7 @@ async fn handle_bunker_auth(mut config: Config) -> Result<Config, WKCliError> {
     Ok(config)
 }
 
-async fn handle_gcloud_auth(config: Config) -> Result<Config, WKCliError> {
+async fn handle_gcloud_auth(mut config: Config) -> Result<Config, WKCliError> {
     let agree_to_authenticate = Confirm::with_theme(&ColorfulTheme::default())
         .with_prompt(format!(
             "{} {}",
@@ -81,10 +86,26 @@ async fn handle_gcloud_auth(config: Config) -> Result<Config, WKCliError> {
         .interact()?;
 
     if agree_to_authenticate {
-        google::login::handle_login().await?;
+        // Use temporary file to achieve atomic write for gcloud:
+        // GCloud does not support atomic write, so we use a temporary file to store the config
+        // and then move it to the original location after when the config is ready.
+        let tmp_config = Config::default()
+            .with_path(TMP_CONFIG_FILE.to_owned().expect("Unable to get tmp path"));
+
+        google::login::handle_login(Some(tmp_config.clone())).await?;
+
         // Load the config again to get the latest token
-        let updated_config = Config::load_from_default_path()?;
-        return Ok(updated_config);
+        let updated_config =
+            Config::load_from_path(TMP_CONFIG_FILE.as_ref().expect("Unable to get tmp path"))
+                .expect("Unable to load tmp config");
+
+        config.auth.google_cloud = updated_config.auth.google_cloud.clone();
+
+        tmp_config
+            .remove_config_from_path()
+            .expect("Config file failed to remove");
+
+        return Ok(config);
     }
 
     Ok(config)

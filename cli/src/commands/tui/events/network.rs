@@ -376,7 +376,7 @@ async fn get_gcloud_logs(
 
     drop(app_ref);
 
-    let gcloud_access_token = auth::google_cloud::get_token_or_login().await;
+    let gcloud_access_token = auth::google_cloud::get_token_or_login(None).await;
 
     if let Some(namespace) = namespace {
         if let Some(version) = version {

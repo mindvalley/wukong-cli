@@ -84,10 +84,13 @@ mod test {
           "line": 2
         }
       ],
-      "message": "application_not_found",
+      "message": "Application not found in application config",
       "path": [
         "changelogs"
-      ]
+      ],
+      "extensions": {
+        "code": "application_not_found"
+      }
     }
   ]
 }"#;
@@ -132,10 +135,13 @@ mod test {
           "line": 2
         }
       ],
-      "message": "unable_to_determine_changelog",
+      "message": "Unable to determine changelog",
       "path": [
         "changelogs"
-      ]
+      ],
+      "extensions": {
+        "code": "changelog_unable_to_determine"
+      }
     }
   ]
 }"#;
@@ -184,10 +190,13 @@ mod test {
           "line": 2
         }
       ],
-      "message": "comparing_same_build",
+      "message": "Changelog has same commit",
       "path": [
         "changelogs"
-      ]
+      ],
+      "extensions": {
+        "code": "changelog_same_commit"
+      }
     }
   ]
 }"#;

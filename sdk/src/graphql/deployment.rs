@@ -19,6 +19,14 @@ pub struct CdPipelineQuery;
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "src/graphql/schema.json",
+    query_path = "src/graphql/query/cd_pipeline_status.graphql",
+    response_derives = "Debug, Serialize, Deserialize"
+)]
+pub struct CdPipelineStatusQuery;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/graphql/schema.json",
     query_path = "src/graphql/query/cd_pipeline_for_rollback.graphql",
     response_derives = "Debug, Serialize, Deserialize"
 )]
@@ -116,10 +124,13 @@ mod test {
           "line": 2
         }
       ],
-      "message": "application_not_found",
+      "message": "Application not found in application config",
       "path": [
         "cdPipelines"
-      ]
+      ],
+      "extensions": {
+        "code": "application_not_found"
+      }
     }
   ]
 }"#;
@@ -251,10 +262,13 @@ mod test {
           "line": 2
         }
       ],
-      "message": "deploy_for_this_build_is_currently_running",
+      "message": "Deployment in progress",
       "path": [
         "executeCdPipeline"
-      ]
+      ],
+      "extensions": {
+        "code": "pipeline_deployment_in_progress"
+      }
     }
   ]
 }"#;

@@ -2143,5 +2143,9 @@ _wukong() {
     esac
 }
 
-complete -F _wukong -o nosort -o bashdefault -o default wukong
+if [[ "${BASH_VERSINFO[0]}" -eq 4 && "${BASH_VERSINFO[1]}" -ge 4 || "${BASH_VERSINFO[0]}" -gt 4 ]]; then
+    complete -F _wukong -o nosort -o bashdefault -o default wukong
+else
+    complete -F _wukong -o bashdefault -o default wukong
+fi
 
