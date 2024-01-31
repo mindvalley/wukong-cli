@@ -5,49 +5,12 @@ use crate::commands::application::config::{
     ApplicationNamespaceDeliveryConfig, ApplicationNamespaceHoneycombConfig,
     ApplicationWorkflowConfig,
 };
+use crate::config::get_inquire_render_config;
 use crate::error::WKCliError;
 use crossterm::style::Stylize;
 use heck::ToSnakeCase;
-use inquire::ui::{
-    Attributes, Color, ErrorMessageRenderConfig, IndexPrefix, RenderConfig, StyleSheet, Styled,
-};
 use inquire::{required, CustomType, Text};
 use std::fs;
-
-pub fn get_render_config() -> RenderConfig {
-    RenderConfig {
-        prompt_prefix: Styled::new("?").with_style_sheet(
-            StyleSheet::new()
-                .with_fg(inquire::ui::Color::LightCyan)
-                .with_attr(Attributes::BOLD),
-        ),
-        answered_prompt_prefix: Styled::new("❯").with_fg(Color::LightGreen),
-        prompt: StyleSheet::empty(),
-        default_value: StyleSheet::empty().with_fg(Color::DarkGrey),
-        placeholder: StyleSheet::new().with_fg(Color::DarkGrey),
-        help_message: StyleSheet::empty()
-            .with_fg(Color::LightMagenta)
-            .with_attr(Attributes::BOLD),
-        text_input: StyleSheet::empty(),
-        error_message: ErrorMessageRenderConfig::default_colored().with_prefix(Styled::new("")),
-        password_mask: '*',
-        answer: StyleSheet::empty()
-            .with_fg(Color::LightCyan)
-            .with_attr(Attributes::BOLD),
-        canceled_prompt_indicator: Styled::new("<canceled>").with_fg(Color::DarkRed),
-        highlighted_option_prefix: Styled::new("❯").with_fg(Color::LightCyan),
-        scroll_up_prefix: Styled::new("↑"),
-        scroll_down_prefix: Styled::new("↓"),
-        selected_checkbox: Styled::new("[x]")
-            .with_fg(Color::LightGreen)
-            .with_attr(Attributes::BOLD),
-        unselected_checkbox: Styled::new("[ ]").with_attr(Attributes::BOLD),
-        option_index_prefix: IndexPrefix::None,
-        option: StyleSheet::empty(),
-        selected_option: Some(StyleSheet::new().with_fg(Color::LightCyan)),
-        editor_prompt: StyleSheet::new().with_fg(Color::DarkCyan),
-    }
-}
 
 pub async fn handle_application_init() -> Result<bool, WKCliError> {
     println!("Welcome! Initializing per-repo configuration for your application.");
@@ -55,14 +18,14 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
     let mut application_configs = ApplicationConfigs::new()?;
 
     let name = Text::new("Application name")
-        .with_render_config(get_render_config())
+        .with_render_config(get_inquire_render_config())
         .with_validator(required!("Application name is required"))
         .with_placeholder("my-first-application")
         .prompt()?;
 
     let workflows = get_workflows_from_current_dir()?;
     let excluded_workflows = inquire::MultiSelect::new("Workflows to exclude", workflows)
-        .with_render_config(get_render_config())
+        .with_render_config(get_inquire_render_config())
         .with_help_message(
             "Leave blank to ignore, ↑↓ to move, space to select one, → to all, ← to none",
         )
@@ -73,7 +36,7 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
 
     let addons = vec!["Elixir livebook"];
     let selected_addons = inquire::MultiSelect::new("Addons", addons.to_vec())
-        .with_render_config(get_render_config())
+        .with_render_config(get_inquire_render_config())
         .with_help_message(
             "Leave blank to ignore, ↑↓ to move, space to select one, → to all, ← to none",
         )
@@ -82,7 +45,7 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
     println!();
 
     let configure_staging_namespace = inquire::Confirm::new("Configure the staging namespace?")
-        .with_render_config(get_render_config())
+        .with_render_config(get_inquire_render_config())
         .with_default(true)
         .prompt()?;
 
@@ -119,7 +82,7 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
 
     let updated_application_configs =
         inquire::Editor::new("Do you want to review the .wukong.toml file?")
-            .with_render_config(get_render_config())
+            .with_render_config(get_inquire_render_config())
             .with_file_extension("toml")
             .with_predefined_text(&application_configs.to_string()?)
             .prompt()?
@@ -130,7 +93,7 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
 
     let agree_to_save =
         inquire::Confirm::new("Do you want to write this configuration into your repo?")
-            .with_render_config(get_render_config())
+            .with_render_config(get_inquire_render_config())
             .with_default(true)
             .prompt()?;
 
@@ -161,29 +124,29 @@ fn configure_namespace(namespace_type: String) -> Result<ApplicationNamespaceCon
     let rollup_strategy_options = ["Rolling Upgrade", "Blue/Green", "Canary"];
     let rollout_strategy =
         inquire::Select::new("Rollup strategy", rollup_strategy_options.to_vec())
-            .with_render_config(get_render_config())
+            .with_render_config(get_inquire_render_config())
             .prompt()?;
 
     let base_replica = CustomType::<u32>::new("Baseline Replicas")
-        .with_render_config(get_render_config())
+        .with_render_config(get_inquire_render_config())
         .with_default(3)
         .with_error_message("Please enter a valid number")
         .prompt()?;
 
     let appsignal_environment = inquire::Text::new("AppSignal Environment")
-        .with_render_config(get_render_config())
+        .with_render_config(get_inquire_render_config())
         .with_placeholder(" Optional")
         .with_help_message("Leave it blank to disable AppSignal integration")
         .prompt()?;
 
     let honeycomb_dataset = inquire::Text::new("Honeycomb Dataset")
-        .with_render_config(get_render_config())
+        .with_render_config(get_inquire_render_config())
         .with_placeholder(" Optional")
         .with_help_message("Leave it blank to disable Honeycomb integration")
         .prompt()?;
 
     let cloudsql_project_id = inquire::Text::new("Google CloudSQL Project")
-        .with_render_config(get_render_config())
+        .with_render_config(get_inquire_render_config())
         .with_placeholder(" Optional")
         .with_help_message("Leave it blank to disable Google CloudSQL integration")
         .prompt()?;
