@@ -88,8 +88,8 @@ impl FromStr for ApplicationConfigs {
     type Err = ApplicationConfigError;
 
     fn from_str(application_config: &str) -> Result<Self, ApplicationConfigError> {
-        Ok(toml::from_str::<ApplicationConfigs>(&application_config)
-            .map_err(ApplicationConfigError::BadTomlData)?)
+        toml::from_str::<ApplicationConfigs>(application_config)
+            .map_err(ApplicationConfigError::BadTomlData)
     }
 }
 

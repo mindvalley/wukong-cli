@@ -1,5 +1,8 @@
 use crate::{auth::google_cloud::GoogleCloudConfig, error::ConfigError};
-use inquire::ui::{RenderConfig, StyleSheet, IndexPrefix, Styled, Color, ErrorMessageRenderConfig, Attributes, self};
+use inquire::ui::{
+    self, Attributes, Color, ErrorMessageRenderConfig, IndexPrefix, RenderConfig, StyleSheet,
+    Styled,
+};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::{
