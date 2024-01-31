@@ -15,8 +15,6 @@ use inquire::{required, CustomType, Text};
 use std::fs;
 
 pub fn get_render_config() -> RenderConfig {
-    // selected_checkbox: Styled::new("[x]").with_fg(Color::LightGreen),
-    // unselected_checkbox: Styled::new("[ ]"),
     RenderConfig {
         prompt_prefix: Styled::new("?").with_style_sheet(
             StyleSheet::new()
@@ -47,8 +45,6 @@ pub fn get_render_config() -> RenderConfig {
         option_index_prefix: IndexPrefix::None,
         option: StyleSheet::empty(),
         selected_option: Some(StyleSheet::new().with_fg(Color::LightCyan)),
-
-        #[cfg(feature = "editor")]
         editor_prompt: StyleSheet::new().with_fg(Color::DarkCyan),
     }
 }
@@ -94,6 +90,42 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
         namespaces.push(configure_namespace("staging".to_string())?);
     }
 
+    let workflows = ApplicationWorkflowConfig {
+        provider: "github_actions".to_string(),
+        excluded_workflows,
+        enable: true,
+    };
+
+    let elixir_livebook_enabled = selected_addons
+        .iter()
+        .find(|addon| addon == &&"Elixir livebook");
+
+    application_configs.application = Some(ApplicationConfig {
+        name,
+        enable: true,
+        workflows: Some(workflows),
+        namespaces,
+        addons: Some(ApplicationAddonsConfig {
+            elixir_livebook: if elixir_livebook_enabled.is_none() {
+                None
+            } else {
+                Some(ApplicationAddonElixirLivebookConfig {
+                    enable: true,
+                    allowed_admins: vec![],
+                })
+            },
+        }),
+    });
+
+    let updated_application_configs =
+        inquire::Editor::new("Do you want to review the .wukong.toml file?")
+            .with_render_config(get_render_config())
+            .with_file_extension("toml")
+            .with_predefined_text(&application_configs.to_string()?)
+            .prompt()?
+            .parse::<ApplicationConfigs>()?;
+
+    application_configs.application = updated_application_configs.application;
     println!();
 
     let agree_to_save =
@@ -110,33 +142,6 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
                 .bold()
                 .italic()
         );
-
-        let workflows = ApplicationWorkflowConfig {
-            provider: "github_actions".to_string(),
-            excluded_workflows,
-            enable: true,
-        };
-
-        let elixir_livebook_enabled = selected_addons
-            .iter()
-            .find(|addon| addon == &&"Elixir livebook");
-
-        application_configs.application = Some(ApplicationConfig {
-            name,
-            enable: true,
-            workflows: Some(workflows),
-            namespaces,
-            addons: Some(ApplicationAddonsConfig {
-                elixir_livebook: if elixir_livebook_enabled.is_none() {
-                    None
-                } else {
-                    Some(ApplicationAddonElixirLivebookConfig {
-                        enable: true,
-                        allowed_admins: vec![],
-                    })
-                },
-            }),
-        });
 
         application_configs.save()?;
 

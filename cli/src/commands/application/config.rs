@@ -4,6 +4,7 @@ use std::{
     fs::{create_dir_all, File},
     io::Write,
     path::PathBuf,
+    str::FromStr,
 };
 
 /// The application config.
@@ -83,6 +84,15 @@ pub struct ApplicationConfigs {
     config_path: PathBuf,
 }
 
+impl FromStr for ApplicationConfigs {
+    type Err = ApplicationConfigError;
+
+    fn from_str(application_config: &str) -> Result<Self, ApplicationConfigError> {
+        Ok(toml::from_str::<ApplicationConfigs>(&application_config)
+            .map_err(ApplicationConfigError::BadTomlData)?)
+    }
+}
+
 impl ApplicationConfigs {
     pub fn new() -> Result<Self, ApplicationConfigError> {
         let current_dir = std::env::current_dir().expect("Unable to get current working directory");
@@ -119,5 +129,12 @@ impl ApplicationConfigs {
         file.write_all(&serialized.into_bytes())?;
 
         Ok(())
+    }
+
+    pub fn to_string(&self) -> Result<String, ApplicationConfigError> {
+        let serialized =
+            toml::to_string(self).map_err(ApplicationConfigError::SerializeTomlError)?;
+
+        Ok(serialized)
     }
 }
