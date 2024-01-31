@@ -3,6 +3,7 @@ mod info;
 mod init;
 mod instances;
 mod logs;
+mod theme;
 
 pub use self::logs::generate_filter;
 use self::{init::handle_application_init, logs::handle_logs};

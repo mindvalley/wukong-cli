@@ -46,6 +46,8 @@ pub enum WKCliError {
     Timeout,
     #[error("Unable to parse YML file")]
     UnableToParseYmlFile,
+    #[error(transparent)]
+    InquireError(#[from] inquire::error::InquireError),
 }
 
 #[derive(Debug, ThisError)]

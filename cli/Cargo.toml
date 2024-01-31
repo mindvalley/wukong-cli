@@ -66,6 +66,7 @@ time = { version = "0.3.31", features = ["formatting", "parsing"] }
 anyhow = "1.0.79"
 heck = "0.4.1"
 serde_yaml = "0.9.31"
+inquire = "0.6.2"
 
 [dev-dependencies]
 httpmock = "0.6.7"
