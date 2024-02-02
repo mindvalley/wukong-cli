@@ -56,7 +56,6 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
     let workflows = ApplicationWorkflowConfig {
         provider: "github_actions".to_string(),
         excluded_workflows,
-        enable: true,
     };
 
     let elixir_livebook_enabled = selected_addons

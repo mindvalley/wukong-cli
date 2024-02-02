@@ -57,7 +57,6 @@ pub struct ApplicationNamespaceHoneycombConfig {
 pub struct ApplicationWorkflowConfig {
     pub provider: String,
     pub excluded_workflows: Vec<String>,
-    pub enable: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
