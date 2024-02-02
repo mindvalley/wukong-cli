@@ -116,18 +116,6 @@ pub enum ConfigError {
 
 #[derive(Debug, ThisError)]
 pub enum ApplicationConfigError {
-    #[error("Config file not found at \"{path}\".")]
-    NotFound {
-        path: &'static str,
-        #[source]
-        source: ::std::io::Error,
-    },
-    #[error("Permission denied: \"{path}\".")]
-    PermissionDenied {
-        path: &'static str,
-        #[source]
-        source: ::std::io::Error,
-    },
     #[error("Bad TOML data.")]
     BadTomlData(#[source] toml::de::Error),
     #[error("Failed to serialize configuration data into TOML.")]
