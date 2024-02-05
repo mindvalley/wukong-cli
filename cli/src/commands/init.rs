@@ -2,15 +2,14 @@ use crate::{
     auth::vault,
     commands::google,
     commands::login,
-    config::{ApiChannel, Config},
+    config::{get_inquire_render_config, ApiChannel, Config},
     error::{ConfigError, WKCliError},
     loader::new_spinner,
     output::colored_println,
     wukong_client::WKClient,
 };
-use dialoguer::{theme::ColorfulTheme, Confirm, Select};
+use crossterm::style::Stylize;
 use once_cell::sync::Lazy;
-use owo_colors::OwoColorize;
 
 pub static TMP_CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
     return dirs::home_dir().map(|mut path| {
@@ -41,32 +40,35 @@ pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
 
     colored_println!(
         r#"
-Your Wukong CLI is configured and ready to use!
+{}
 
-* Commands that require authentication will use {} by default
-* Commands will reference application {} by default
-Run `wukong config help` to learn how to change individual settings
+{} Commands that require authentication will use {} by default
+{} Commands will reference application {} by default
+{} Run `wukong config help` to learn how to change individual settings
 
-Some things to try next:
-
-* Run `wukong --help` to see the wukong command groups you can interact with. And run `wukong COMMAND help` to get help on any wukong command.
+{}
+{} Run `wukong --help` to see the wukong command groups you can interact with. And run `wukong COMMAND help` to get help on any wukong command.
                              "#,
-        config.auth.okta.as_ref().unwrap().account,
-        config.core.application
+        "Your Wukong CLI is configured and ready to use!".bold(),
+        "▸".green(),
+        config.auth.okta.expect("Okta account not found").account.dark_cyan(),
+        "▸".green(),
+        config.core.application.dark_cyan(),
+        "▸".green(),
+        "Some things to try next:".bold(),
+        "▸".green(),
     );
 
     Ok(true)
 }
 
 async fn handle_vault_auth(mut config: Config) -> Result<Config, WKCliError> {
-    let agree_to_authenticate = Confirm::with_theme(&ColorfulTheme::default())
-        .with_prompt(format!(
-            "{} {}",
-            "(Optional)".bright_black(),
-            "Do you want to authenticate against Bunker? You may do it later when neccessary"
-        ))
-        .default(false)
-        .interact()?;
+    let agree_to_authenticate =
+        inquire::Confirm::new("Do you want to authenticate against Bunker?")
+            .with_render_config(get_inquire_render_config())
+            .with_help_message("You may able to login later when neccessary.")
+            .with_default(false)
+            .prompt()?;
 
     if agree_to_authenticate {
         vault::get_token_or_login(&mut config).await?;
@@ -76,14 +78,12 @@ async fn handle_vault_auth(mut config: Config) -> Result<Config, WKCliError> {
 }
 
 async fn handle_gcloud_auth(mut config: Config) -> Result<Config, WKCliError> {
-    let agree_to_authenticate = Confirm::with_theme(&ColorfulTheme::default())
-        .with_prompt(format!(
-            "{} {}",
-            "(Optional)".bright_black(),
-            "Do you want to authenticate against Google Cloud? You may do it later when neccessary"
-        ))
-        .default(false)
-        .interact()?;
+    let agree_to_authenticate =
+        inquire::Confirm::new("Do you want to authenticate against Google Cloud?")
+            .with_render_config(get_inquire_render_config())
+            .with_help_message("You may able to login later when neccessary.")
+            .with_default(false)
+            .prompt()?;
 
     if agree_to_authenticate {
         // Use temporary file to achieve atomic write for gcloud:
@@ -127,18 +127,13 @@ async fn handle_application(mut config: Config, channel: ApiChannel) -> Result<C
 
     fetch_loader.finish_and_clear();
 
-    let application_selection = Select::with_theme(&ColorfulTheme::default())
-        .with_prompt("Please select the application")
-        .default(0)
-        .items(&applications_data[..])
-        .interact()?;
+    let selected_application =
+        inquire::Select::new("Please select the application", applications_data)
+            .with_render_config(get_inquire_render_config())
+            .with_page_size(15)
+            .prompt()?;
 
-    colored_println!(
-        "Your current application has been set to: {}.",
-        &applications_data[application_selection]
-    );
-
-    config.core.application = applications_data[application_selection].clone();
+    config.core.application = selected_application;
 
     Ok(config)
 }

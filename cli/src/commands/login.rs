@@ -5,6 +5,7 @@ use crate::{
     loader::new_spinner,
     output::colored_println,
 };
+use crossterm::style::Stylize;
 use log::debug;
 
 pub async fn handle_login() -> Result<bool, WKCliError> {
@@ -17,20 +18,20 @@ pub async fn handle_login() -> Result<bool, WKCliError> {
 }
 
 pub async fn new_login_or_refresh_token(config: Config) -> Result<Config, WKCliError> {
-    let mut login_selections = vec!["Log in with a new account"];
+    let mut login_selections = vec!["Login with a new account"];
     if let Some(ref okta_config) = config.auth.okta {
         login_selections.splice(..0, vec![okta_config.account.as_str()]);
     };
 
     let selected_account = inquire::Select::new(
-        "Choose the account you would like to use to perform operations for this configuration:",
+        "Choose the account you would like to continue with",
         login_selections,
     )
     .with_render_config(get_inquire_render_config())
     .prompt()?;
 
     // "Log in with a new account" is selected
-    let new_config = if selected_account == "Log in with a new account" {
+    let new_config = if selected_account == "Login with a new account" {
         login_and_create_config(config).await?
     } else {
         // check access token expiry
@@ -46,7 +47,7 @@ pub async fn new_login_or_refresh_token(config: Config) -> Result<Config, WKCliE
                     current_config.auth.okta = Some(new_tokens.into());
 
                     refresh_token_loader.finish_and_clear();
-                    colored_println!("You are logged in as: {}.\n", selected_account,);
+                    colored_println!("You are logged in as: {}", selected_account.dark_cyan());
 
                     current_config
                 }
@@ -64,7 +65,7 @@ pub async fn new_login_or_refresh_token(config: Config) -> Result<Config, WKCliE
 
             current_config = updated_config;
         } else {
-            colored_println!("You are logged in as: {}.\n", selected_account);
+            colored_println!("You are logged in as: {}", selected_account.dark_cyan());
         }
 
         current_config
@@ -79,7 +80,7 @@ async fn login_and_create_config(mut config: Config) -> Result<Config, WKCliErro
 
     config.auth.okta = Some(auth_info.into());
 
-    colored_println!("You are logged in as: {acc}.\n");
+    colored_println!("You are logged in as: {}", acc.dark_cyan());
 
     Ok(config)
 }
