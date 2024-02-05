@@ -114,7 +114,7 @@ pub async fn login(config: &Config) -> Result<OktaAuth, WKCliError> {
         .set_pkce_challenge(pkce_challenge)
         .url();
 
-    println!("Opening browser to: {authorize_url}\n");
+    println!("Opening browser to:\n\n\t{authorize_url}\n");
     let spinner = new_spinner().with_message("Waiting for login");
 
     webbrowser::open(authorize_url.as_str()).unwrap();
@@ -157,7 +157,6 @@ pub async fn login(config: &Config) -> Result<OktaAuth, WKCliError> {
         // state = CsrfToken::new(value.into_owned());
     }
 
-
     spinner.finish_and_clear();
 
     let message = "You are now authenticated with the wukong CLI! The authentication flow has completed successfully. You can close this window and go back to your terminal :)";
@@ -167,7 +166,6 @@ pub async fn login(config: &Config) -> Result<OktaAuth, WKCliError> {
         message
     );
     stream.write_all(response.as_bytes()).unwrap();
-
 
     // Exchange the code with a token.
     let token_response = client
