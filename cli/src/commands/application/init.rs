@@ -80,7 +80,7 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
     });
 
     let updated_application_configs =
-        inquire::Editor::new("Do you want to review the .wukong.toml file?")
+        inquire::Editor::new("Do you want to review the .wukong.toml file before writing to disk ?")
             .with_render_config(get_inquire_render_config())
             .with_file_extension("toml")
             .with_predefined_text(&application_configs.to_string()?)
