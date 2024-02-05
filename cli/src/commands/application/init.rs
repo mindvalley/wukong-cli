@@ -144,7 +144,7 @@ fn configure_namespace(namespace_type: String) -> Result<ApplicationNamespaceCon
         .with_help_message("Leave it blank to disable Honeycomb integration")
         .prompt()?;
 
-    let cloudsql_project_id = inquire::Text::new("Google CloudSQL Project")
+    let cloudsql_project_id = inquire::Text::new("Google Project of your CloudSQL instance(s)")
         .with_render_config(get_inquire_render_config())
         .with_placeholder(" Optional")
         .with_help_message("Leave it blank to disable Google CloudSQL integration")
