@@ -34,7 +34,7 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
     let mut namespaces: Vec<ApplicationNamespaceConfig> = Vec::new();
     namespaces.push(configure_namespace("prod".to_string())?);
 
-    let addons = ["Elixir livebook"];
+    let addons = ["Elixir Livebook"];
     let selected_addons = inquire::MultiSelect::new("Addons", addons.to_vec())
         .with_render_config(get_inquire_render_config())
         .with_help_message(
