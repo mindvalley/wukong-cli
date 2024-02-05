@@ -24,12 +24,13 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
         .prompt()?;
 
     let workflows = get_workflows_from_current_dir()?;
-    let excluded_workflows = inquire::MultiSelect::new("Workflows to exclude from the Wukong CLI & TUI", workflows)
-        .with_render_config(get_inquire_render_config())
-        .with_help_message(
-            "Leave blank to ignore, ↑↓ to move, space to select one, → to all, ← to none",
-        )
-        .prompt()?;
+    let excluded_workflows =
+        inquire::MultiSelect::new("Workflows to exclude from the Wukong CLI & TUI", workflows)
+            .with_render_config(get_inquire_render_config())
+            .with_help_message(
+                "Leave blank to ignore, ↑↓ to move, space to select one, → to all, ← to none",
+            )
+            .prompt()?;
 
     let mut namespaces: Vec<ApplicationNamespaceConfig> = Vec::new();
     namespaces.push(configure_namespace("prod".to_string())?);
@@ -44,10 +45,11 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
 
     println!();
 
-    let configure_staging_namespace = inquire::Confirm::new("Do you want to configure the staging namespace?")
-        .with_render_config(get_inquire_render_config())
-        .with_default(true)
-        .prompt()?;
+    let configure_staging_namespace =
+        inquire::Confirm::new("Do you want to configure the staging namespace?")
+            .with_render_config(get_inquire_render_config())
+            .with_default(true)
+            .prompt()?;
 
     if configure_staging_namespace {
         namespaces.push(configure_namespace("staging".to_string())?);
@@ -79,13 +81,14 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
         }),
     });
 
-    let updated_application_configs =
-        inquire::Editor::new("Do you want to review the .wukong.toml file before writing to disk ?")
-            .with_render_config(get_inquire_render_config())
-            .with_file_extension("toml")
-            .with_predefined_text(&application_configs.to_string()?)
-            .prompt()?
-            .parse::<ApplicationConfigs>()?;
+    let updated_application_configs = inquire::Editor::new(
+        "Do you want to review the .wukong.toml file before writing to disk ?",
+    )
+    .with_render_config(get_inquire_render_config())
+    .with_file_extension("toml")
+    .with_predefined_text(&application_configs.to_string()?)
+    .prompt()?
+    .parse::<ApplicationConfigs>()?;
 
     application_configs.application = updated_application_configs.application;
     println!();
