@@ -51,7 +51,12 @@ pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
                              "#,
         "Your Wukong CLI is configured and ready to use!".bold(),
         "▸".green(),
-        config.auth.okta.expect("Okta account not found").account.dark_cyan(),
+        config
+            .auth
+            .okta
+            .expect("Okta account not found")
+            .account
+            .dark_cyan(),
         "▸".green(),
         config.core.application.dark_cyan(),
         "▸".green(),
