@@ -126,7 +126,7 @@ fn configure_namespace(namespace_type: String) -> Result<ApplicationNamespaceCon
             .with_render_config(get_inquire_render_config())
             .prompt()?;
 
-    let base_replica = CustomType::<u32>::new("Baseline Replicas")
+    let base_replica = CustomType::<u32>::new("Number of replicas")
         .with_render_config(get_inquire_render_config())
         .with_default(3)
         .with_error_message("Please enter a valid number")
