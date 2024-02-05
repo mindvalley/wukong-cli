@@ -17,7 +17,7 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
 
     let mut application_configs = ApplicationConfigs::new()?;
 
-    let name = Text::new("Application name")
+    let name = Text::new("Name of your application")
         .with_render_config(get_inquire_render_config())
         .with_validator(required!("Application name is required"))
         .with_placeholder("my-first-application")
