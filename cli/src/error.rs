@@ -33,6 +33,8 @@ pub enum WKCliError {
     #[error(transparent)]
     ConfigError(#[from] ConfigError),
     #[error(transparent)]
+    ApplicationConfigError(#[from] ApplicationConfigError),
+    #[error(transparent)]
     DeploymentError(#[from] DeploymentError),
     #[error(transparent)]
     PipelineError(#[from] PipelineError),
@@ -42,6 +44,10 @@ pub enum WKCliError {
     ApplicationInstanceError(#[from] ApplicationInstanceError),
     #[error("Operation timeout")]
     Timeout,
+    #[error("Unable to parse YML file")]
+    UnableToParseYmlFile,
+    #[error(transparent)]
+    InquireError(#[from] inquire::error::InquireError),
 }
 
 #[derive(Debug, ThisError)]
@@ -100,6 +106,16 @@ pub enum ConfigError {
         #[source]
         source: ::std::io::Error,
     },
+    #[error("Bad TOML data.")]
+    BadTomlData(#[source] toml::de::Error),
+    #[error("Failed to serialize configuration data into TOML.")]
+    SerializeTomlError(#[source] toml::ser::Error),
+    #[error(transparent)]
+    Io(#[from] ::std::io::Error),
+}
+
+#[derive(Debug, ThisError)]
+pub enum ApplicationConfigError {
     #[error("Bad TOML data.")]
     BadTomlData(#[source] toml::de::Error),
     #[error("Failed to serialize configuration data into TOML.")]
