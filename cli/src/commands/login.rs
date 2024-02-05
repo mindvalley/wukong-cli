@@ -1,11 +1,10 @@
 use crate::{
     auth,
-    config::Config,
+    config::{get_inquire_render_config, Config},
     error::{AuthError, WKCliError},
     loader::new_spinner,
     output::colored_println,
 };
-use dialoguer::{theme::ColorfulTheme, Select};
 use log::debug;
 
 pub async fn handle_login() -> Result<bool, WKCliError> {
@@ -23,14 +22,15 @@ pub async fn new_login_or_refresh_token(config: Config) -> Result<Config, WKCliE
         login_selections.splice(..0, vec![okta_config.account.as_str()]);
     };
 
-    let selected_account = Select::with_theme(&ColorfulTheme::default())
-                .with_prompt("Choose the account you would like to use to perform operations for this configuration:")
-                .default(0)
-                .items(&login_selections[..])
-                .interact()?;
+    let selected_account = inquire::Select::new(
+        "Choose the account you would like to use to perform operations for this configuration:",
+        login_selections,
+    )
+    .with_render_config(get_inquire_render_config())
+    .prompt()?;
 
     // "Log in with a new account" is selected
-    let new_config = if selected_account == login_selections.len() - 1 {
+    let new_config = if selected_account == "Log in with a new account" {
         login_and_create_config(config).await?
     } else {
         // check access token expiry
@@ -46,10 +46,7 @@ pub async fn new_login_or_refresh_token(config: Config) -> Result<Config, WKCliE
                     current_config.auth.okta = Some(new_tokens.into());
 
                     refresh_token_loader.finish_and_clear();
-                    colored_println!(
-                        "You are logged in as: {}.\n",
-                        login_selections[selected_account]
-                    );
+                    colored_println!("You are logged in as: {}.\n", selected_account,);
 
                     current_config
                 }
@@ -67,10 +64,7 @@ pub async fn new_login_or_refresh_token(config: Config) -> Result<Config, WKCliE
 
             current_config = updated_config;
         } else {
-            colored_println!(
-                "You are logged in as: {}.\n",
-                login_selections[selected_account]
-            );
+            colored_println!("You are logged in as: {}.\n", selected_account);
         }
 
         current_config
