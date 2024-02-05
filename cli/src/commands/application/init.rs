@@ -44,7 +44,7 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
 
     println!();
 
-    let configure_staging_namespace = inquire::Confirm::new("Configure the staging namespace?")
+    let configure_staging_namespace = inquire::Confirm::new("Do you want to configure the staging namespace?")
         .with_render_config(get_inquire_render_config())
         .with_default(true)
         .prompt()?;
