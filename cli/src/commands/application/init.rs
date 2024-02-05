@@ -24,7 +24,7 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
         .prompt()?;
 
     let workflows = get_workflows_from_current_dir()?;
-    let excluded_workflows = inquire::MultiSelect::new("Workflows to exclude", workflows)
+    let excluded_workflows = inquire::MultiSelect::new("Workflows to exclude from the Wukong CLI & TUI", workflows)
         .with_render_config(get_inquire_render_config())
         .with_help_message(
             "Leave blank to ignore, ↑↓ to move, space to select one, → to all, ← to none",
