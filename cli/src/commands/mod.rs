@@ -118,7 +118,7 @@ impl ClapApp {
         debug!("API channel: {:?}", channel);
 
         let command = match &self.command_group {
-            CommandGroup::Init => handle_init(channel).await,
+            CommandGroup::Init => handle_init().await,
             CommandGroup::Completion { shell } => handle_completion(*shell),
             CommandGroup::Login => handle_login().await,
             CommandGroup::Google(google) => google.handle_command().await,

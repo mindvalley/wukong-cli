@@ -2,11 +2,9 @@ use crate::{
     auth::vault,
     commands::google,
     commands::login,
-    config::{get_inquire_render_config, ApiChannel, Config},
+    config::{get_inquire_render_config, Config},
     error::{ConfigError, WKCliError},
-    loader::new_spinner,
     output::colored_println,
-    wukong_client::WKClient,
 };
 use crossterm::style::Stylize;
 use once_cell::sync::Lazy;
@@ -18,7 +16,7 @@ pub static TMP_CONFIG_FILE: Lazy<Option<String>> = Lazy::new(|| {
     });
 });
 
-pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
+pub async fn handle_init() -> Result<bool, WKCliError> {
     println!("Welcome! This command will take you through the configuration of Wukong.\n");
     let mut config = match Config::load_from_default_path() {
         Ok(config) => config,
@@ -30,7 +28,6 @@ pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
     };
 
     config = login::new_login_or_refresh_token(config).await?;
-    config = handle_application(config, channel).await?;
     config = handle_gcloud_auth(config).await?;
     config = handle_vault_auth(config).await?;
 
@@ -43,7 +40,6 @@ pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
 {}
 
 {} Commands that require authentication will use {} by default
-{} Commands will reference application {} by default
 {} Run `wukong config help` to learn how to change individual settings
 
 {}
@@ -57,8 +53,6 @@ pub async fn handle_init(channel: ApiChannel) -> Result<bool, WKCliError> {
             .expect("Okta account not found")
             .account
             .dark_cyan(),
-        "▸".green(),
-        config.core.application.dark_cyan(),
         "▸".green(),
         "Some things to try next:".bold(),
         "▸".green(),
@@ -112,33 +106,6 @@ async fn handle_gcloud_auth(mut config: Config) -> Result<Config, WKCliError> {
 
         return Ok(config);
     }
-
-    Ok(config)
-}
-
-async fn handle_application(mut config: Config, channel: ApiChannel) -> Result<Config, WKCliError> {
-    let fetch_loader = new_spinner();
-    fetch_loader.set_message("Fetching application list...");
-
-    let mut wk_client = WKClient::for_channel(&config, &channel)?;
-
-    let applications_data: Vec<String> = wk_client
-        .fetch_applications()
-        .await?
-        .applications
-        .iter()
-        .map(|app| app.name.clone())
-        .collect();
-
-    fetch_loader.finish_and_clear();
-
-    let selected_application =
-        inquire::Select::new("Please select the application", applications_data)
-            .with_render_config(get_inquire_render_config())
-            .with_page_size(15)
-            .prompt()?;
-
-    config.core.application = selected_application;
 
     Ok(config)
 }
