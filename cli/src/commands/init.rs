@@ -71,7 +71,7 @@ async fn handle_vault_auth(mut config: Config) -> Result<Config, WKCliError> {
     let agree_to_authenticate =
         inquire::Confirm::new("Do you want to authenticate against Bunker?")
             .with_render_config(get_inquire_render_config())
-            .with_help_message("You may able to login later when neccessary.")
+            .with_help_message("You may able to login later when neccessary")
             .with_default(false)
             .prompt()?;
 
@@ -86,7 +86,7 @@ async fn handle_gcloud_auth(mut config: Config) -> Result<Config, WKCliError> {
     let agree_to_authenticate =
         inquire::Confirm::new("Do you want to authenticate against Google Cloud?")
             .with_render_config(get_inquire_render_config())
-            .with_help_message("You may able to login later when neccessary.")
+            .with_help_message("You may able to login later when neccessary")
             .with_default(false)
             .prompt()?;
 
