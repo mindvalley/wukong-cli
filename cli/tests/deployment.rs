@@ -67,9 +67,9 @@ fn test_wukong_deployment_list_success() {
 [core]
 application = "valid-application"
 wukong_api_url = "{}"
-okta_client_id = "valid-okta-client-id"
 
 [auth.okta]
+client_id = "valid-okta-client-id"
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
@@ -115,7 +115,6 @@ fn test_wukong_deployment_list_should_failed_when_unauthenticated() {
 [core]
 application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
-okta_client_id = "valid-okta-client-id"
 
 [auth]
     "#

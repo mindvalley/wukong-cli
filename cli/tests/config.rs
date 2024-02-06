@@ -27,9 +27,9 @@ fn test_wukong_config_list_success() {
 [core]
 application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
-okta_client_id = "valid-okta-client-id"
 
 [auth.okta]
+client_id = "valid-okta-client-id"
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
@@ -66,7 +66,6 @@ fn test_wukong_config_list_success_without_login() {
 [core]
 application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
-okta_client_id = "valid-okta-client-id"
 
 [auth]
     "#,
@@ -113,9 +112,9 @@ fn test_wukong_config_get_success() {
 [core]
 application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
-okta_client_id = "valid-okta-client-id"
 
 [auth.okta]
+client_id = "valid-okta-client-id"
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
@@ -153,9 +152,9 @@ fn test_wukong_config_get_should_failed_with_non_supported_field() {
 [core]
 application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
-okta_client_id = "valid-okta-client-id"
 
 [auth.okta]
+client_id = "valid-okta-client-id"
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
@@ -193,9 +192,9 @@ fn test_wukong_config_set_success_with_supported_field() {
 [core]
 application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
-okta_client_id = "valid-okta-client-id"
 
 [auth.okta]
+client_id = "valid-okta-client-id"
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
@@ -223,9 +222,9 @@ refresh_token = "refresh_token"
         r#"[core]
 application = "new-application"
 wukong_api_url = "https://wukong-api.com"
-okta_client_id = "valid-okta-client-id"
 
 [auth.okta]
+client_id = "valid-okta-client-id"
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
@@ -250,9 +249,9 @@ fn test_wukong_config_set_should_failed_with_non_supported_field() {
 [core]
 application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
-okta_client_id = "valid-okta-client-id"
 
 [auth.okta]
+client_id = "valid-okta-client-id"
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
