@@ -13,13 +13,9 @@ use std::{
 
 #[cfg(not(feature = "prod"))]
 static WUKONG_API_URL: &str = "http://localhost:4000/api";
-#[cfg(not(feature = "prod"))]
-static OKTA_CLIENT_ID: &str = "0oakfxaegyAV5JDD5357";
 
 #[cfg(feature = "prod")]
 static WUKONG_API_URL: &str = "https://wukong-api-proxy.mindvalley.dev/api";
-#[cfg(feature = "prod")]
-static OKTA_CLIENT_ID: &str = "0oakfxaegyAV5JDD5357";
 
 /// The default path to the CLI configuration file.
 ///
@@ -110,7 +106,6 @@ pub struct CoreConfig {
     /// The current application name
     pub application: String,
     pub wukong_api_url: String,
-    pub okta_client_id: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -121,6 +116,7 @@ pub struct VaultConfig {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct OktaConfig {
+    pub client_id: String,
     pub account: String,
     pub subject: String,
     pub id_token: String,
@@ -150,7 +146,6 @@ impl Default for Config {
             core: CoreConfig {
                 application: "".to_string(),
                 wukong_api_url: WUKONG_API_URL.to_string(),
-                okta_client_id: OKTA_CLIENT_ID.to_string(),
             },
             auth: AuthConfig {
                 okta: None,

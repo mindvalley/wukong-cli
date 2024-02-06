@@ -75,7 +75,7 @@ pub async fn new_login_or_refresh_token(config: Config) -> Result<Config, WKCliE
 }
 
 async fn login_and_create_config(mut config: Config) -> Result<Config, WKCliError> {
-    let auth_info = auth::okta::login(&config).await?;
+    let auth_info = auth::okta::login().await?;
     let acc = auth_info.account.clone();
 
     config.auth.okta = Some(auth_info.into());

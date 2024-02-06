@@ -25,6 +25,12 @@ use url::Url;
 
 const EXPIRY_REMAINING_TIME_IN_MINS: i64 = 5;
 
+#[cfg(feature = "prod")]
+static OKTA_CLIENT_ID: &str = "0oakfxaegyAV5JDD5357";
+
+#[cfg(not(feature = "prod"))]
+static OKTA_CLIENT_ID: &str = "0oakfxaegyAV5JDD5357";
+
 #[derive(Debug, Deserialize, Serialize)]
 struct OktaClaims;
 impl AdditionalClaims for OktaClaims {}
@@ -46,6 +52,7 @@ pub struct TokenIntrospection {
 
 #[derive(Debug, Clone)]
 pub struct OktaAuth {
+    pub client_id: String,
     pub account: String,
     pub subject: String,
     pub id_token: String,
@@ -57,6 +64,7 @@ pub struct OktaAuth {
 impl From<OktaAuth> for OktaConfig {
     fn from(value: OktaAuth) -> Self {
         Self {
+            client_id: value.client_id,
             account: value.account,
             subject: value.subject,
             id_token: value.id_token,
@@ -78,8 +86,8 @@ pub fn need_tokens_refresh(config: &Config) -> Result<bool, WKCliError> {
     Ok(remaining_duration < EXPIRY_REMAINING_TIME_IN_MINS.minutes())
 }
 
-pub async fn login(config: &Config) -> Result<OktaAuth, WKCliError> {
-    let okta_client_id = ClientId::new(config.core.okta_client_id.clone());
+pub async fn login() -> Result<OktaAuth, WKCliError> {
+    let okta_client_id = ClientId::new(OKTA_CLIENT_ID.to_string());
 
     let issuer_url =
         IssuerUrl::new("https://mindvalley.okta.com".to_string()).expect("Invalid issuer URL");
@@ -90,11 +98,12 @@ pub async fn login(config: &Config) -> Result<OktaAuth, WKCliError> {
         .map_err(|_err| AuthError::OpenIDDiscoveryError)?;
 
     // Set up the config for the Okta OAuth2 process.
-    let client = CoreClient::from_provider_metadata(provider_metadata, okta_client_id, None)
-        .set_redirect_uri(
-            RedirectUrl::new("http://localhost:6758/login/callback".to_string())
-                .expect("Invalid redirect URL"),
-        );
+    let client =
+        CoreClient::from_provider_metadata(provider_metadata, okta_client_id.clone(), None)
+            .set_redirect_uri(
+                RedirectUrl::new("http://localhost:6758/login/callback".to_string())
+                    .expect("Invalid redirect URL"),
+            );
 
     // Generate a PKCE challenge.
     let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
@@ -243,6 +252,7 @@ pub async fn login(config: &Config) -> Result<OktaAuth, WKCliError> {
         .to_rfc3339();
 
     Ok(OktaAuth {
+        client_id: okta_client_id.to_string(),
         account: current_user_email.to_string(),
         subject: id_token_claims.subject().to_string(),
         id_token: id_token.to_string(),
@@ -256,9 +266,10 @@ pub async fn refresh_tokens(config: &Config) -> Result<OktaAuth, WKCliError> {
     let okta_config = config
         .auth
         .okta
-        .as_ref()
+        .clone()
         .ok_or(WKCliError::UnAuthenticated)?;
-    let okta_client_id = ClientId::new(config.core.okta_client_id.clone());
+
+    let okta_client_id = ClientId::new(okta_config.client_id.clone());
 
     let issuer_url =
         IssuerUrl::new("https://mindvalley.okta.com".to_string()).expect("Invalid issuer URL");
@@ -330,6 +341,7 @@ pub async fn refresh_tokens(config: &Config) -> Result<OktaAuth, WKCliError> {
         .to_rfc3339();
 
     Ok(OktaAuth {
+        client_id: okta_config.client_id,
         account: okta_config.account.clone(),
         subject: okta_config.subject.clone(),
         id_token: id_token.to_string(),
@@ -343,7 +355,13 @@ pub async fn introspect_token(
     config: &Config,
     token: &str,
 ) -> Result<TokenIntrospection, WKCliError> {
-    let okta_client_id = ClientId::new(config.core.okta_client_id.clone());
+    let okta_config = config
+        .auth
+        .okta
+        .as_ref()
+        .ok_or(WKCliError::UnAuthenticated)?;
+
+    let okta_client_id = ClientId::new(okta_config.client_id.clone());
 
     let issuer_url =
         IssuerUrl::new("https://mindvalley.okta.com".to_string()).expect("Invalid issuer URL");
