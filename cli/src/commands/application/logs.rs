@@ -24,8 +24,8 @@ pub async fn handle_logs(
     since: &Option<String>,
     until: &Option<String>,
     limit: &i32,
-    include: &Vec<String>,
-    exclude: &Vec<String>,
+    include: &[String],
+    exclude: &[String],
     url_mode: &bool,
 ) -> Result<bool, WKCliError> {
     let auth_loader = new_spinner();
