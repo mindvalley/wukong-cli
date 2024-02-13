@@ -15,11 +15,16 @@ pub fn handle_set(config_name: &ConfigName, config_value: &str) -> Result<bool, 
             config.save_to_default_path()?;
             println!("Updated property [core/wukong_api_url].");
         }
-        ConfigName::OktaClientId => {
-            config.core.okta_client_id = config_value.trim().to_string();
-            config.save_to_default_path()?;
-            println!("Updated property [core/okta_client_id].");
-        }
+        ConfigName::OktaClientId => match &mut config.auth.okta {
+            Some(okta) => {
+                okta.client_id = config_value.trim().to_string();
+                config.save_to_default_path()?;
+                println!("Updated property [core/okta_client_id].");
+            }
+            None => {
+                eprintln!("Okta client id not set. Please use `wukong login`");
+            }
+        },
     };
     Ok(true)
 }

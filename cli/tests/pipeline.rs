@@ -61,9 +61,9 @@ fn test_wukong_pipeline_list_success() {
   [core]
   application = "valid-application"
   wukong_api_url = "{}"
-  okta_client_id = "valid-okta-client-id"
 
   [auth.okta]
+  client_id = "valid-okta-client-id"
   account = "test@email.com"
   subject = "subject"
   id_token = "id_token"
@@ -106,7 +106,6 @@ fn test_wukong_pipeline_list_should_failed_when_unauthenticated() {
 [core]
 application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
-okta_client_id = "valid-okta-client-id"
 
 [auth]
 "#
@@ -144,7 +143,6 @@ fn test_wukong_pipeline_describe_should_failed_when_unauthenticated() {
 [core]
 application = "valid-application"
 wukong_api_url = "{}"
-okta_client_id = "valid-okta-client-id"
 
 [auth]
 "#,
@@ -267,9 +265,9 @@ fn test_wukong_pipeline_describe_success() {
 [core]
 application = "valid-application"
 wukong_api_url = "{}"
-okta_client_id = "valid-okta-client-id"
 
 [auth.okta]
+client_id = "valid-okta-client-id"
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
@@ -346,9 +344,9 @@ fn test_wukong_pipeline_ci_status_success() {
 [core]
 application = "valid-application"
 wukong_api_url = "{}"
-okta_client_id = "valid-okta-client-id"
 
 [auth.okta]
+client_id = "valid-okta-client-id"
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
@@ -396,7 +394,6 @@ fn test_wukong_pipeline_ci_status_should_failed_when_unauthenticated() {
 [core]
 application = "valid-application"
 wukong_api_url = "{}"
-okta_client_id = "valid-okta-client-id"
 
 [auth]
 "#,

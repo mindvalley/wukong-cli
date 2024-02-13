@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::{config::Config, loader::new_spinner};
 use serde::{Deserialize, Serialize};
 use std::{future::Future, pin::Pin};
 use time::{format_description, OffsetDateTime};
@@ -22,7 +22,7 @@ struct JSONToken {
 async fn browser_user_url(url: &str, need_code: bool) -> Result<String, String> {
     let url = format!("{}&prompt=consent", url);
     if webbrowser::open(&url).is_ok() {
-        println!("Your browser has been opened to visit:\n\n\t{url}\n");
+        println!("Opening browser to:\n\n\t{url}\n");
         Ok(String::new())
     } else {
         let def_delegate = DefaultInstalledFlowDelegate;
@@ -115,6 +115,8 @@ impl TokenStorage for ConfigTokenStore {
 }
 
 pub async fn get_token_or_login(config: Option<Config>) -> String {
+    let loader = new_spinner().with_message("Logging in to Google Cloud ...");
+
     let secret = ApplicationSecret {
         client_id: GOOGLE_CLIENT_ID.to_string(),
         client_secret: GOOGLE_CLIENT_SECRET.to_string(),
@@ -151,6 +153,8 @@ pub async fn get_token_or_login(config: Option<Config>) -> String {
     .build()
     .await
     .unwrap();
+
+    loader.finish_and_clear();
 
     authenticator
         .token(&["https://www.googleapis.com/auth/logging.read"])

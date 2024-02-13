@@ -73,9 +73,9 @@ fn test_wukong_application_instances_list_success() {
 [core]
 application = "valid-application"
 wukong_api_url = "{}"
-okta_client_id = "valid-okta-client-id"
 
 [auth.okta]
+client_id = "valid-okta-client-id"
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
@@ -137,9 +137,9 @@ fn test_wukong_application_instances_list_failed_if_not_authorized() {
 [core]
 application = "valid-application"
 wukong_api_url = "{}"
-okta_client_id = "valid-okta-client-id"
 
 [auth.okta]
+client_id = "valid-okta-client-id"
 account = "test@email.com"
 subject = "subject"
 id_token = "id_token"
