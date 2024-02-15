@@ -1,0 +1,13 @@
+query AppsignalAverageLatencyQuery($app_id: String!, $namespace: String!, $start:
+String!, $until: String!, $timeframe: AppsignalTimeframe!) {
+    appsignalLatency(app_id: $app_id, namespace: $namespace, start: $start, until: $until, timeframe: $timeframe) {
+        average {
+            namespace
+            value {
+                mean
+                p90
+                p95
+            }
+        }
+    }
+}

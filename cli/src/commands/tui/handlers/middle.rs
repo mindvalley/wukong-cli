@@ -16,6 +16,17 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
                 );
             }
         }
+        Key::Char(character) => {
+            if let Some(digit) = character.to_digit(10) {
+                if let Some(newly_selected_tab) = SelectedTab::get_tab(digit) {
+                    app.state.selected_tab = newly_selected_tab;
+                    app.set_current_route_state(
+                        Some(Block::Log(app.state.selected_tab)),
+                        Some(Block::Log(app.state.selected_tab)),
+                    );
+                }
+            }
+        }
         // This is not working for now as the Key Event has bug
         // https://github.com/crossterm-rs/crossterm/issues/727
         // Key::Ctrl(character) => {

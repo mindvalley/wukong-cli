@@ -3,7 +3,6 @@ use ratatui::{
     backend::Backend,
     layout::Rect,
     style::{Color, Style},
-    symbols::DOT,
     text::Line,
     widgets::{Block as WidgetBlock, Borders, Tabs},
     Frame,
@@ -31,7 +30,7 @@ impl MiddleWidget {
         );
 
         let titles = SelectedTab::iter()
-            .map(|tab| format!("{tab}"))
+            .map(|tab| format!(" {tab} "))
             .map(Line::from)
             .collect::<Vec<_>>();
 
@@ -46,12 +45,11 @@ impl MiddleWidget {
                     )),
             )
             .style(Style::default().fg(Color::White))
-            .highlight_style(Style::default().fg(Color::Yellow))
-            .select(app.state.selected_tab as usize)
-            .divider(DOT);
+            .highlight_style(Style::default().fg(Color::Black).bg(Color::Green))
+            .select(app.state.selected_tab as usize);
         frame.render_widget(tab, rect);
 
-        let inner_rect = centered_rect_by_padding(1, 1, 0, 0, rect);
+        let inner_rect = centered_rect_by_padding(2, 2, 2, 0, rect);
         match app.state.selected_tab {
             SelectedTab::GCloud => LogsWidget::draw(app, frame, inner_rect),
             SelectedTab::AppSignal => AppsignalWidget::draw(app, frame, inner_rect),

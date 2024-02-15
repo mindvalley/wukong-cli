@@ -8,11 +8,12 @@ use std::collections::HashMap;
 use wukong_sdk::{
     graphql::{
         application_query, application_with_k8s_cluster_query, applications_query,
-        cd_pipeline_for_rollback_query, cd_pipeline_github_query, cd_pipeline_query,
-        cd_pipelines_query, changelogs_query, ci_status_query, deploy_livebook,
-        deployment::cd_pipeline_status_query, destroy_livebook, execute_cd_pipeline,
-        is_authorized_query, kubernetes_pods_query, livebook_resource_query,
-        multi_branch_pipeline_query, pipeline_query, pipelines_query,
+        appsignal_average_error_rate_query, appsignal_average_latency_query,
+        appsignal_average_throughput_query, cd_pipeline_for_rollback_query,
+        cd_pipeline_github_query, cd_pipeline_query, cd_pipelines_query, changelogs_query,
+        ci_status_query, deploy_livebook, deployment::cd_pipeline_status_query, destroy_livebook,
+        execute_cd_pipeline, is_authorized_query, kubernetes_pods_query, livebook_resource_query,
+        multi_branch_pipeline_query, pipeline_query, pipelines_query, AppsignalTimeFrame,
     },
     services::{
         gcloud::{LogEntries, LogEntriesOptions, TokenInfo},
@@ -359,5 +360,50 @@ impl WKClient {
         data: &HashMap<&str, &str>,
     ) -> Result<bool, WKCliError> {
         self.inner.update_secret(api_token, path, data).await
+    }
+
+    #[wukong_telemetry(api_event = "fetch_appsignal_average_error_rate")]
+    pub async fn fetch_appsignal_average_error_rate(
+        &mut self,
+        app_id: &str,
+        namespace: &str,
+        start: &str,
+        until: &str,
+        timeframe: AppsignalTimeFrame,
+    ) -> Result<appsignal_average_error_rate_query::ResponseData, WKCliError> {
+        self.check_and_refresh_tokens().await?;
+        self.inner
+            .fetch_appsignal_average_error_rate(app_id, namespace, start, until, timeframe)
+            .await
+    }
+
+    #[wukong_telemetry(api_event = "fetch_appsignal_average_latency")]
+    pub async fn fetch_appsignal_average_latency(
+        &mut self,
+        app_id: &str,
+        namespace: &str,
+        start: &str,
+        until: &str,
+        timeframe: AppsignalTimeFrame,
+    ) -> Result<appsignal_average_latency_query::ResponseData, WKCliError> {
+        self.check_and_refresh_tokens().await?;
+        self.inner
+            .fetch_appsignal_average_latency(app_id, namespace, start, until, timeframe)
+            .await
+    }
+
+    #[wukong_telemetry(api_event = "fetch_appsignal_average_throughput")]
+    pub async fn fetch_appsignal_average_throughput(
+        &mut self,
+        app_id: &str,
+        namespace: &str,
+        start: &str,
+        until: &str,
+        timeframe: AppsignalTimeFrame,
+    ) -> Result<appsignal_average_throughput_query::ResponseData, WKCliError> {
+        self.check_and_refresh_tokens().await?;
+        self.inner
+            .fetch_appsignal_average_throughput(app_id, namespace, start, until, timeframe)
+            .await
     }
 }

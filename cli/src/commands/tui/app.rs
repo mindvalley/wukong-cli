@@ -11,7 +11,7 @@ use super::{action::Action, events::network::NetworkEvent, StatefulList};
 
 const DEFAULT_ROUTE: Route = Route {
     active_block: Block::Empty,
-    hovered_block: Block::Build,
+    hovered_block: Block::Log(SelectedTab::GCloud),
 };
 
 #[derive(Default)]

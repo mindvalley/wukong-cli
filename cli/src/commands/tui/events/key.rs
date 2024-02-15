@@ -37,7 +37,6 @@ impl Display for Key {
 
 impl From<event::KeyEvent> for Key {
     fn from(event: event::KeyEvent) -> Self {
-        println!("event: {:?}", event);
         match event {
             event::KeyEvent {
                 code: event::KeyCode::Char(c),

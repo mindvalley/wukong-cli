@@ -8,6 +8,7 @@ mod log_search;
 mod logs;
 mod namespace_selection;
 // mod time_filter_selection;
+mod appsignal;
 mod middle;
 mod version_selection;
 
@@ -33,7 +34,7 @@ async fn handle_block_events(key: Key, app: &mut App) -> AppReturn {
             middle::handler(key, app).await;
             match selected_tab {
                 SelectedTab::GCloud => logs::handler(key, app).await,
-                SelectedTab::AppSignal => todo!(),
+                SelectedTab::AppSignal => appsignal::handler(key, app).await,
             }
         }
         Block::Dialog(DialogContext::NamespaceSelection) => {

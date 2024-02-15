@@ -40,16 +40,17 @@ impl LogsWidget {
                 ]
                 .as_ref(),
             )
-            .split(rect.inner(&Margin {
-                vertical: 1,
-                horizontal: 1,
-            }))
+            .split(rect)
+        // .split(rect.inner(&Margin {
+        //     vertical: 1,
+        //     horizontal: 1,
+        // }))
         else {
             return;
         };
 
-        // let title = create_title(&app.state);
-        // frame.render_widget(title, info);
+        let title = create_title(&app.state);
+        frame.render_widget(title, info);
 
         if app.state.show_search_bar {
             render_search_bar(frame, search_bar_area, app);
@@ -123,7 +124,7 @@ fn create_loading_block() -> Paragraph<'static> {
         "Loading...",
         Style::default().fg(Color::White),
     ))
-    .block(WidgetBlock::default().padding(Padding::new(1, 1, 0, 0)))
+    .block(WidgetBlock::default())
 }
 
 fn create_error_block(error: &str) -> Paragraph<'_> {
