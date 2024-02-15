@@ -16,10 +16,10 @@ pub struct LogsWidget;
 
 impl LogsWidget {
     pub fn draw<B: Backend>(app: &mut App, frame: &mut Frame<B>, rect: Rect) {
-        app.state.logs_widget_width = rect.width;
-        app.state.logs_widget_height = rect.height;
+        // app.state.logs_widget_width = rect.width;
+        // app.state.logs_widget_height = rect.height;
 
-        app.update_draw_lock(Block::Log, rect);
+        // app.update_draw_lock(Block::Log, rect);
 
         let main_block = create_main_block(app);
         frame.render_widget(main_block, rect);
@@ -48,8 +48,8 @@ impl LogsWidget {
             return;
         };
 
-        let title = create_title(&app.state);
-        frame.render_widget(title, info);
+        // let title = create_title(&app.state);
+        // frame.render_widget(title, info);
 
         if app.state.show_search_bar {
             render_search_bar(frame, search_bar_area, app);
@@ -77,21 +77,21 @@ impl LogsWidget {
 }
 
 fn create_main_block(app: &mut App) -> WidgetBlock<'static> {
-    let current_route = app.get_current_route();
+    // let current_route = app.get_current_route();
 
-    let highlight_state = (
-        current_route.active_block == Block::Log,
-        current_route.hovered_block == Block::Log,
-    );
+    // let highlight_state = (
+    //     current_route.active_block == Block::Log,
+    //     current_route.hovered_block == Block::Log,
+    // );
 
     WidgetBlock::default()
-        .title(" Logs ")
-        .borders(Borders::ALL)
-        .padding(Padding::new(1, 1, 0, 0))
-        .border_style(get_color(
-            highlight_state,
-            (Color::LightCyan, Color::LightGreen, Color::White),
-        ))
+    // .title(" Logs ")
+    // .borders(Borders::ALL)
+    // .padding(Padding::new(1, 1, 0, 0))
+    // .border_style(get_color(
+    //     highlight_state,
+    //     (Color::LightCyan, Color::LightGreen, Color::White),
+    // ))
 }
 
 fn create_title(state: &State) -> WidgetBlock {

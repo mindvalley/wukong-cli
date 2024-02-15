@@ -1,6 +1,7 @@
 use std::{collections::HashMap, fmt::Display, time::Instant};
 
 use ratatui::{prelude::Rect, widgets::ScrollbarState};
+use strum::{Display, EnumIter, FromRepr};
 use tokio::sync::mpsc::Sender;
 use wukong_sdk::services::gcloud::google::logging::{r#type::LogSeverity, v2::LogEntry};
 
@@ -10,7 +11,7 @@ use super::{action::Action, events::network::NetworkEvent, StatefulList};
 
 const DEFAULT_ROUTE: Route = Route {
     active_block: Block::Empty,
-    hovered_block: Block::Log,
+    hovered_block: Block::Build,
 };
 
 #[derive(Default)]
@@ -41,7 +42,7 @@ pub enum DialogContext {
 pub enum Block {
     Build,
     Deployment,
-    Log,
+    Log(SelectedTab),
     Empty,
     Dialog(DialogContext),
 }
@@ -70,6 +71,25 @@ impl Display for TimeFilter {
         match self {
             TimeFilter::Minute(x) => write!(f, "{}m", x),
             TimeFilter::Hour(x) => write!(f, "{}h", x),
+        }
+    }
+}
+
+#[derive(Default, Debug, Clone, Copy, Hash, PartialEq, Eq, Display, FromRepr, EnumIter)]
+pub enum SelectedTab {
+    #[default]
+    #[strum(to_string = "GCloud")]
+    GCloud,
+    #[strum(to_string = "AppSignal")]
+    AppSignal,
+}
+
+impl SelectedTab {
+    pub fn get_tab(index: u32) -> Option<Self> {
+        match index {
+            1 => Some(SelectedTab::GCloud),
+            2 => Some(SelectedTab::AppSignal),
+            _ => None,
         }
     }
 }
@@ -134,6 +154,7 @@ pub struct State {
     pub filter_bar_include_input: Input,
     pub filter_bar_exclude_input: Input,
     pub logs_textwrap: bool,
+    pub selected_tab: SelectedTab,
 
     pub logs_size: (u16, u16),
     pub welcome_screen_timer: Option<Instant>,
@@ -248,6 +269,7 @@ impl App {
                 logs_textwrap: false,
                 logs_size: (0, 0),
                 welcome_screen_timer: None,
+                selected_tab: SelectedTab::default(),
             },
             navigation_stack: vec![DEFAULT_ROUTE],
             block_map: HashMap::new(),

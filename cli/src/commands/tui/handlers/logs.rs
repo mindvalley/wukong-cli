@@ -10,10 +10,13 @@ use wukong_sdk::services::gcloud::google::logging::r#type::LogSeverity;
 pub async fn handler(key: Key, app: &mut App) -> AppReturn {
     match key {
         key if common_key_events::back_event(key) => {
-            if let Some(Block::Log) = app.state.expanded_block {
+            if let Some(Block::Log(_)) = app.state.expanded_block {
                 app.state.expanded_block = None;
             } else {
-                app.set_current_route_state(Some(Block::Empty), Some(Block::Log));
+                app.set_current_route_state(
+                    Some(Block::Empty),
+                    Some(Block::Log(app.state.selected_tab)),
+                );
             }
         }
         key if common_key_events::up_event(key) => {
@@ -103,7 +106,7 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
             }
         }
         key if Action::from_key(key) == Some(Action::ExpandToFullScreen) => {
-            app.state.expanded_block = Some(Block::Log);
+            app.state.expanded_block = Some(Block::Log(app.state.selected_tab));
         }
         key if Action::from_key(key) == Some(Action::LineWrapLogs) => {
             app.state.logs_textwrap = !app.state.logs_textwrap;

@@ -8,7 +8,10 @@ use crate::commands::tui::{
 pub async fn handler(key: Key, app: &mut App) -> AppReturn {
     match key {
         key if common_key_events::back_event(key) => {
-            app.set_current_route_state(Some(Block::Empty), Some(Block::Log));
+            app.set_current_route_state(
+                Some(Block::Empty),
+                Some(Block::Log(app.state.selected_tab)),
+            );
         }
         key if common_key_events::back_event(key) => app.push_navigation_stack(Block::Empty),
         key if common_key_events::down_event(key) => app.namespace_selections.next(),

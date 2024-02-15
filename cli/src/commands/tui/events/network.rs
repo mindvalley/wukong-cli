@@ -221,6 +221,12 @@ async fn update_logs_entries(app: Arc<Mutex<App>>, log_entries: Option<Vec<LogEn
             // so we need to set the scroll to the bottom manually by this hack
             // waiting this https://github.com/fdehau/tui-rs/issues/89
             if app_ref.state.logs_enable_auto_scroll_to_bottom {
+                // for some rare cases where the log widget is not rendered and the height is 0
+                // so add a check here to prevent overflow
+                if app_ref.state.logs_widget_height < 4 {
+                    return;
+                }
+
                 let widget_height = app_ref.state.logs_widget_height - 4;
 
                 app_ref.state.logs_vertical_scroll =
