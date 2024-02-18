@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use wukong_sdk::{
     graphql::{
         application_query, application_with_k8s_cluster_query, applications_query,
-        appsignal_average_error_rate_query, appsignal_average_latency_query,
+        appsignal_apps_query, appsignal_average_error_rate_query, appsignal_average_latency_query,
         appsignal_average_throughput_query, cd_pipeline_for_rollback_query,
         cd_pipeline_github_query, cd_pipeline_query, cd_pipelines_query, changelogs_query,
         ci_status_query, deploy_livebook, deployment::cd_pipeline_status_query, destroy_livebook,
@@ -405,5 +405,13 @@ impl WKClient {
         self.inner
             .fetch_appsignal_average_throughput(app_id, namespace, start, until, timeframe)
             .await
+    }
+
+    #[wukong_telemetry(api_event = "fetch_appsignal_apps")]
+    pub async fn fetch_appsignal_apps(
+        &mut self,
+    ) -> Result<appsignal_apps_query::ResponseData, WKCliError> {
+        self.check_and_refresh_tokens().await?;
+        self.inner.fetch_appsignal_apps().await
     }
 }

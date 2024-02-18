@@ -94,6 +94,25 @@ impl SelectedTab {
     }
 }
 
+#[derive(Default)]
+pub struct AppsignalState {
+    average_error_rates: AppsignalAverageValues,
+    average_latencies: AppsignalAverageValues,
+    average_throughputs: AppsignalAverageThoughputs,
+}
+#[derive(Default)]
+pub struct AppsignalAverageValues {
+    in_1_hour: f64,
+    in_8_hours: f64,
+    in_24_hours: f64,
+}
+#[derive(Default)]
+pub struct AppsignalAverageThoughputs {
+    mean: f64,
+    p90: f64,
+    p95: f64,
+}
+
 pub const MAX_LOG_ENTRIES_LENGTH: usize = 2_000;
 
 pub struct State {
@@ -103,12 +122,17 @@ pub struct State {
     pub current_time_filter: Option<TimeFilter>,
     pub show_namespace_selection: bool,
 
+    // appsignal config
+    pub appsignal_app_id: Option<String>,
+    pub appsignal_namespace: Option<String>,
+
     // loading state
     pub is_fetching_builds: bool,
     pub is_fetching_deployments: bool,
     pub is_checking_namespaces: bool,
     pub is_fetching_log_entries: bool,
     pub is_checking_version: bool,
+    pub is_fetching_appsignal_data: bool,
     pub start_polling_log_entries: bool,
 
     // fetch data
@@ -119,6 +143,8 @@ pub struct State {
     pub log_entries_error: Option<String>,
     pub builds_error: Option<String>,
     pub deployments_error: Option<String>,
+    pub appsignal: AppsignalState,
+    pub appsignal_error: Option<String>,
 
     // Auth
     pub is_gcloud_authenticated: Option<bool>,
@@ -221,12 +247,16 @@ impl App {
                 current_version: None,
                 current_time_filter: Some(default_time_filter),
 
+                appsignal_app_id: None,
+                appsignal_namespace: None,
+
                 show_namespace_selection: false,
                 is_fetching_builds: true,
                 is_fetching_deployments: true,
                 is_checking_namespaces: false,
                 is_checking_version: false,
                 is_fetching_log_entries: true,
+                is_fetching_appsignal_data: true,
                 start_polling_log_entries: false,
                 logs_enable_auto_scroll_to_bottom: true,
 
@@ -246,6 +276,8 @@ impl App {
                 builds_error: None,
                 deployments_error: None,
                 log_time_filter: TimeFilter::Minute(5),
+                appsignal: AppsignalState::default(),
+                appsignal_error: None,
 
                 logs_vertical_scroll_state: ScrollbarState::default(),
                 logs_horizontal_scroll_state: ScrollbarState::default(),

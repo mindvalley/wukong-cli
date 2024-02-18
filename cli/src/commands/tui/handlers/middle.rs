@@ -17,6 +17,7 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
             }
         }
         Key::Char(character) => {
+            // use number key to switch tab
             if let Some(digit) = character.to_digit(10) {
                 if let Some(newly_selected_tab) = SelectedTab::get_tab(digit) {
                     app.state.selected_tab = newly_selected_tab;

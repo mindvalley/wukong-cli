@@ -43,6 +43,7 @@ pub struct ApplicationNamespaceDeliveryConfig {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct ApplicationNamespaceAppsignalConfig {
     pub enable: bool,
+    pub app_id: String,
     pub environment: String,
     pub default_namespace: String,
 }

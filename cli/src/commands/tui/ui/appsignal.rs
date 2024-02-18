@@ -1,7 +1,9 @@
 use ratatui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
-    widgets::{Paragraph, Row, Table},
+    style::{Color, Style},
+    text::Text,
+    widgets::{Padding, Paragraph, Row, Table},
     Frame,
 };
 
@@ -23,6 +25,15 @@ impl AppsignalWidget {
         else {
             return;
         };
+
+        if app.state.is_fetching_appsignal_data {
+            let loading_widget = Paragraph::new(Text::styled(
+                "Loading...",
+                Style::default().fg(Color::White),
+            ));
+            frame.render_widget(loading_widget, rect);
+            return;
+        }
 
         let namespace = Paragraph::new(format!("namespace: web"));
         frame.render_widget(namespace, top);

@@ -13,8 +13,8 @@ pub use self::{
         ApplicationQuery, ApplicationWithK8sClusterQuery, ApplicationsQuery,
     },
     appsignal::{
-        appsignal_average_error_rate_query, appsignal_average_latency_query,
-        appsignal_average_throughput_query, AppsignalAverageErrorRateQuery,
+        appsignal_apps_query, appsignal_average_error_rate_query, appsignal_average_latency_query,
+        appsignal_average_throughput_query, AppsignalAppsQuery, AppsignalAverageErrorRateQuery,
         AppsignalAverageLatencyQuery, AppsignalAverageThroughputQuery, AppsignalTimeFrame,
     },
     changelog::{changelogs_query, ChangelogsQuery},
@@ -726,6 +726,20 @@ impl WKClient {
                     until: until.to_string(),
                     timeframe: timeframe.into(),
                 },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    pub async fn fetch_appsignal_apps(
+        &self,
+    ) -> Result<appsignal_apps_query::ResponseData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        gql_client
+            .post_graphql::<AppsignalAppsQuery, _>(
+                &self.api_url,
+                appsignal_apps_query::Variables {},
             )
             .await
             .map_err(|err| err.into())

@@ -1,4 +1,3 @@
-mod config;
 mod info;
 mod init;
 mod instances;
@@ -42,7 +41,7 @@ pub enum ApplicationSubcommand {
         /// Also accept datetime in RFC 3339 format.
         #[arg(long, short)]
         until: Option<String>,
-        /// Limiting the number of log entries to return.  
+        /// Limiting the number of log entries to return.
         #[arg(long, default_value_t = 500)]
         limit: i32,
         /// (allow multiple flags) Logs lines to include.
@@ -113,7 +112,7 @@ impl Application {
                 .await
             }
             ApplicationSubcommand::Instances(instances) => instances.handle_command(context).await,
-            ApplicationSubcommand::Init => handle_application_init().await,
+            ApplicationSubcommand::Init => handle_application_init(context).await,
         }
     }
 }

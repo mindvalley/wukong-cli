@@ -1,4 +1,6 @@
+pub mod inquire;
 pub mod line;
+
 use chrono::{DateTime, Duration, Local};
 
 pub fn compare_with_current_time(time: &str) -> Duration {
