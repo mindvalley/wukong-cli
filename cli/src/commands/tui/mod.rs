@@ -135,6 +135,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
     let mut show_welcome_screen = true;
     let mut is_first_render = true;
     let mut is_first_fetch_builds = true;
+    let mut is_first_fetch_appsignals = true;
 
     let mut app_ref = app.lock().await;
 
@@ -196,17 +197,23 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
 
             if is_first_render {
                 // fetch data on the first frame
+                // fetch deployments first, as we need the namespace and version to fetch builds and appsignal data
                 app_ref.dispatch(NetworkEvent::GetDeployments).await;
                 is_first_render = false;
             }
 
-            if is_first_fetch_builds
-                && app_ref.state.current_namespace.is_some()
-                && app_ref.state.current_version.is_some()
+            // builds and appsignal data require a namespace and version to be selected
+            // and we only know the namespace and version after deployments are fetched
+            if app_ref.state.current_namespace.is_some() && app_ref.state.current_version.is_some()
             {
-                app_ref.dispatch(NetworkEvent::GetBuilds).await;
-                app_ref.dispatch(NetworkEvent::GetAppsignalData).await;
-                is_first_fetch_builds = false;
+                if is_first_fetch_builds {
+                    app_ref.dispatch(NetworkEvent::GetBuilds).await;
+                    is_first_fetch_builds = false;
+                }
+                if is_first_fetch_appsignals {
+                    app_ref.dispatch(NetworkEvent::GetAppsignalData).await;
+                    is_first_fetch_appsignals = false;
+                }
             }
         }
     }

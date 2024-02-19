@@ -1,4 +1,7 @@
-use super::{common_key_events, logs::reset_log_panel_and_trigger_log_refetch};
+use super::{
+    appsignal::reset_appsignal_panel_and_trigger_appsignal_refetch, common_key_events,
+    logs::reset_log_panel_and_trigger_log_refetch,
+};
 
 use crate::commands::tui::{
     app::{App, AppReturn, Block},
@@ -48,5 +51,7 @@ async fn fetch_and_reset_polling(app: &mut App, selected_version: String) {
     // We also need to refresh the builds and appsignal data upon namespace change
     // as these data are based on the current namespace
     app.dispatch(NetworkEvent::GetBuilds).await;
+
+    reset_appsignal_panel_and_trigger_appsignal_refetch(app);
     app.dispatch(NetworkEvent::GetAppsignalData).await;
 }

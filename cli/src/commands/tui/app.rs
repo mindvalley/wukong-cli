@@ -135,6 +135,7 @@ pub struct State {
     pub is_checking_version: bool,
     pub is_fetching_appsignal_data: bool,
     pub start_polling_log_entries: bool,
+    pub start_polling_appsignal_data: bool,
 
     // fetch data
     pub builds: Vec<Build>,
@@ -169,6 +170,8 @@ pub struct State {
 
     // For log entries polling
     pub instant_since_last_log_entries_poll: Instant,
+    // For appsignal data polling
+    pub instant_since_last_appsignal_poll: Instant,
 
     // ui state
     pub logs_widget_height: u16,
@@ -260,6 +263,7 @@ impl App {
                 is_fetching_log_entries: true,
                 is_fetching_appsignal_data: true,
                 start_polling_log_entries: false,
+                start_polling_appsignal_data: false,
                 logs_enable_auto_scroll_to_bottom: true,
 
                 is_gcloud_authenticated: None,
@@ -286,6 +290,7 @@ impl App {
                 logs_vertical_scroll: 0,
                 logs_horizontal_scroll: 0,
                 instant_since_last_log_entries_poll: Instant::now(),
+                instant_since_last_appsignal_poll: Instant::now(),
                 logs_table_current_start_index: 0,
                 logs_table_current_last_index: 0,
                 logs_table_current_last_fully_rendered: true,
@@ -330,9 +335,15 @@ impl App {
     pub async fn update(&mut self) -> AppReturn {
         // Poll every 10 seconds
         let poll_interval_ms = 10_000;
-        let elapsed = self
+
+        let log_poll_elapsed = self
             .state
             .instant_since_last_log_entries_poll
+            .elapsed()
+            .as_millis();
+        let appsignal_poll_elapsed = self
+            .state
+            .instant_since_last_appsignal_poll
             .elapsed()
             .as_millis();
 
@@ -358,11 +369,25 @@ impl App {
 
             // if this is not the first call, check if it's time to fetch more log entries
             // if yes, fetch the log entries if the tailing is enabled
-            if elapsed >= poll_interval_ms {
+            if log_poll_elapsed >= poll_interval_ms {
                 self.state.instant_since_last_log_entries_poll = Instant::now();
 
                 if self.state.logs_tailing {
                     self.dispatch(NetworkEvent::GetGCloudLogsTail).await;
+                }
+
+                // refresh appsignal data every 10 seconds
+                if let Some(true) = self.state.is_appsignal_enabled {
+                    self.dispatch(NetworkEvent::GetAppsignalData).await;
+                }
+            }
+
+            // refresh appsignal data every 10 seconds
+            if appsignal_poll_elapsed >= poll_interval_ms {
+                self.state.instant_since_last_appsignal_poll = Instant::now();
+
+                if let Some(true) = self.state.is_appsignal_enabled {
+                    self.dispatch(NetworkEvent::GetAppsignalData).await;
                 }
             }
         }
