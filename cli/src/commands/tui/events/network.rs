@@ -1,14 +1,22 @@
 use std::sync::Arc;
 
 use tokio::sync::{Mutex, MutexGuard};
-use wukong_sdk::services::gcloud::{google::logging::v2::LogEntry, LogEntries, LogEntriesOptions};
+use wukong_sdk::{
+    graphql::AppsignalTimeFrame,
+    services::gcloud::{google::logging::v2::LogEntry, LogEntries, LogEntriesOptions},
+};
 
 use crate::{
+    application_config::{
+        ApplicationConfig, ApplicationConfigs, ApplicationNamespaceAppsignalConfig,
+    },
     auth::{self, okta::introspect_token},
     commands::{
         application::generate_filter,
         tui::{
-            app::{App, Build, Commit, Deployment, MAX_LOG_ENTRIES_LENGTH},
+            app::{
+                App, AppsignalAverageLatecies, Build, Commit, Deployment, MAX_LOG_ENTRIES_LENGTH,
+            },
             StatefulList,
         },
     },
@@ -24,6 +32,7 @@ pub enum NetworkEvent {
     GetDeployments,
     GetGCloudLogs,
     GetGCloudLogsTail,
+    GetAppsignalData,
     VerifyOktaRefreshToken,
     VerifyGCloudToken,
 }
@@ -43,6 +52,7 @@ pub async fn handle_network_event(
         NetworkEvent::GetGCloudLogsTail => get_gcloud_logs(app, &mut wk_client, true).await?,
         NetworkEvent::VerifyOktaRefreshToken => verify_okta_refresh_token(app).await?,
         NetworkEvent::VerifyGCloudToken => verify_gcloud_token(app, &mut wk_client).await?,
+        NetworkEvent::GetAppsignalData => fetch_appsignal_data(app, &mut wk_client).await?,
     }
 
     Ok(())
@@ -448,5 +458,180 @@ async fn get_gcloud_logs(
 
     let mut app_ref = app.lock().await;
     app_ref.state.is_fetching_log_entries = false;
+    Ok(())
+}
+
+async fn fetch_appsignal_data(
+    app: Arc<Mutex<App>>,
+    wk_client: &mut WKClient,
+) -> Result<(), WKCliError> {
+    let mut app_ref = app.lock().await;
+
+    let current_namespace = app_ref.state.current_namespace.clone().unwrap();
+    let is_appsignal_enabled = app_ref.state.is_appsignal_enabled;
+
+    // if appsignal is not loaded, load it from the config
+    // if the config is not available or not enabled, then appsignal is not enabled
+    if is_appsignal_enabled.is_none() {
+        let application_configs = ApplicationConfigs::load()?;
+        if let Some(ApplicationConfig {
+            enable: true,
+            namespaces,
+            ..
+        }) = application_configs.application
+        {
+            let appsignal_config = namespaces
+                .iter()
+                .find(|ns| ns.namespace_type == current_namespace)
+                .and_then(|ns| ns.appsignal.clone());
+
+            if let Some(ApplicationNamespaceAppsignalConfig {
+                enable,
+                app_id,
+                environment: _,
+                default_namespace,
+            }) = appsignal_config
+            {
+                app_ref.state.is_appsignal_enabled = Some(enable);
+                app_ref.state.appsignal_app_id = Some(app_id);
+                app_ref.state.appsignal_namespace = Some(default_namespace);
+            }
+        } else {
+            app_ref.state.is_appsignal_enabled = Some(false);
+            // return early if appsignal is not enabled
+            return Ok(());
+        }
+    }
+
+    app_ref.state.is_fetching_appsignal_data = true;
+    let app_id = app_ref.state.appsignal_app_id.clone().unwrap();
+    let namespace = app_ref.state.appsignal_namespace.clone().unwrap();
+    drop(app_ref);
+
+    let start = "2023-06-01T00:00:00.000Z";
+    let until = "2023-12-29T00:00:00.000Z";
+
+    let average_error_rate_1h = wk_client
+        .fetch_appsignal_average_error_rate(
+            &app_id,
+            &namespace,
+            start,
+            until,
+            AppsignalTimeFrame::R1H,
+        )
+        .await?;
+
+    let average_error_rate_8h = wk_client
+        .fetch_appsignal_average_error_rate(
+            &app_id,
+            &namespace,
+            start,
+            until,
+            AppsignalTimeFrame::R8H,
+        )
+        .await?;
+
+    let average_error_rate_24h = wk_client
+        .fetch_appsignal_average_error_rate(
+            &app_id,
+            &namespace,
+            start,
+            until,
+            AppsignalTimeFrame::R24H,
+        )
+        .await?;
+
+    let average_throughput_1h = wk_client
+        .fetch_appsignal_average_throughput(
+            &app_id,
+            &namespace,
+            start,
+            until,
+            AppsignalTimeFrame::R1H,
+        )
+        .await?;
+
+    let average_throughput_8h = wk_client
+        .fetch_appsignal_average_throughput(
+            &app_id,
+            &namespace,
+            start,
+            until,
+            AppsignalTimeFrame::R8H,
+        )
+        .await?;
+
+    let average_throughput_24h = wk_client
+        .fetch_appsignal_average_throughput(
+            &app_id,
+            &namespace,
+            start,
+            until,
+            AppsignalTimeFrame::R24H,
+        )
+        .await?;
+
+    let average_latency = wk_client
+        .fetch_appsignal_average_latency(&app_id, &namespace, start, until, AppsignalTimeFrame::R4H)
+        .await?;
+
+    // println!("{:?}", average_error_rate_1h);
+    // println!("{:?}", average_error_rate_8h);
+    // println!("{:?}", average_error_rate_24h);
+    // println!("{:?}", average_throughput_1h);
+    // println!("{:?}", average_throughput_8h);
+    // println!("{:?}", average_throughput_24h);
+    // println!("{:?}", average_latency);
+
+    let mut app_ref = app.lock().await;
+
+    app_ref.state.appsignal.average_error_rates.in_1_hour =
+        match average_error_rate_1h.appsignal_error_rate {
+            Some(error_rate) => error_rate.average[0].value,
+            None => 0.0,
+        };
+    app_ref.state.appsignal.average_error_rates.in_8_hours =
+        match average_error_rate_8h.appsignal_error_rate {
+            Some(error_rate) => error_rate.average[0].value,
+            None => 0.0,
+        };
+    app_ref.state.appsignal.average_error_rates.in_24_hours =
+        match average_error_rate_24h.appsignal_error_rate {
+            Some(error_rate) => error_rate.average[0].value,
+            None => 0.0,
+        };
+
+    app_ref.state.appsignal.average_throughputs.in_1_hour =
+        match average_throughput_1h.appsignal_throughput {
+            Some(throughput) => throughput.average[0].value,
+            None => 0.0,
+        };
+    app_ref.state.appsignal.average_throughputs.in_8_hours =
+        match average_throughput_8h.appsignal_throughput {
+            Some(throughput) => throughput.average[0].value,
+            None => 0.0,
+        };
+    app_ref.state.appsignal.average_throughputs.in_24_hours =
+        match average_throughput_24h.appsignal_throughput {
+            Some(throughput) => throughput.average[0].value,
+            None => 0.0,
+        };
+
+    app_ref.state.appsignal.average_latencies = match average_latency.appsignal_latency {
+        Some(latency) => AppsignalAverageLatecies {
+            mean: latency.average[0].value.mean,
+            p90: latency.average[0].value.p90,
+            p95: latency.average[0].value.p95,
+        },
+        None => AppsignalAverageLatecies {
+            mean: 0.0,
+            p90: 0.0,
+            p95: 0.0,
+        },
+    };
+
+    app_ref.state.is_fetching_appsignal_data = false;
+    drop(app_ref);
+
     Ok(())
 }

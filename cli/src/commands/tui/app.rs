@@ -96,21 +96,21 @@ impl SelectedTab {
 
 #[derive(Default)]
 pub struct AppsignalState {
-    average_error_rates: AppsignalAverageValues,
-    average_latencies: AppsignalAverageValues,
-    average_throughputs: AppsignalAverageThoughputs,
+    pub average_error_rates: AppsignalAverageValues,
+    pub average_latencies: AppsignalAverageLatecies,
+    pub average_throughputs: AppsignalAverageValues,
 }
 #[derive(Default)]
 pub struct AppsignalAverageValues {
-    in_1_hour: f64,
-    in_8_hours: f64,
-    in_24_hours: f64,
+    pub in_1_hour: f64,
+    pub in_8_hours: f64,
+    pub in_24_hours: f64,
 }
 #[derive(Default)]
-pub struct AppsignalAverageThoughputs {
-    mean: f64,
-    p90: f64,
-    p95: f64,
+pub struct AppsignalAverageLatecies {
+    pub mean: f64,
+    pub p90: f64,
+    pub p95: f64,
 }
 
 pub const MAX_LOG_ENTRIES_LENGTH: usize = 2_000;
@@ -123,6 +123,7 @@ pub struct State {
     pub show_namespace_selection: bool,
 
     // appsignal config
+    pub is_appsignal_enabled: Option<bool>, // None -> not loaded from config file yet, Some(true) -> enabled, Some(false) -> not enabled
     pub appsignal_app_id: Option<String>,
     pub appsignal_namespace: Option<String>,
 
@@ -247,6 +248,7 @@ impl App {
                 current_version: None,
                 current_time_filter: Some(default_time_filter),
 
+                is_appsignal_enabled: None,
                 appsignal_app_id: None,
                 appsignal_namespace: None,
 

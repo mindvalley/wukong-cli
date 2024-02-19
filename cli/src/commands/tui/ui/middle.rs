@@ -49,7 +49,7 @@ impl MiddleWidget {
             .select(app.state.selected_tab as usize);
         frame.render_widget(tab, rect);
 
-        let inner_rect = centered_rect_by_padding(2, 2, 2, 0, rect);
+        let inner_rect = centered_rect_by_padding(2, 2, 2, 1, rect);
         match app.state.selected_tab {
             SelectedTab::GCloud => LogsWidget::draw(app, frame, inner_rect),
             SelectedTab::AppSignal => AppsignalWidget::draw(app, frame, inner_rect),

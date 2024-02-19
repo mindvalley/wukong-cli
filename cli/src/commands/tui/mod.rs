@@ -205,6 +205,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
                 && app_ref.state.current_version.is_some()
             {
                 app_ref.dispatch(NetworkEvent::GetBuilds).await;
+                app_ref.dispatch(NetworkEvent::GetAppsignalData).await;
                 is_first_fetch_builds = false;
             }
         }

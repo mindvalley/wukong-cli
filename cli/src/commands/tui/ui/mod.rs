@@ -1,9 +1,8 @@
 use ratatui::{
     prelude::{Backend, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
-    symbols::DOT,
-    text::{Line, Text},
-    widgets::{Block as WidgetBlock, Borders, Paragraph, Tabs},
+    text::Text,
+    widgets::{Block as WidgetBlock, Paragraph},
     Frame,
 };
 
