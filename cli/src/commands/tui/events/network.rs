@@ -108,7 +108,7 @@ async fn verify_gcloud_token(
     Ok(())
 }
 
-fn set_version_selections(app_ref: &mut MutexGuard<'_, App>) {
+fn set_default_version_selections(app_ref: &mut MutexGuard<'_, App>) {
     let deployments = &app_ref.state.deployments;
 
     let version_selections: Vec<String> = match &app_ref.state.current_namespace {
@@ -140,7 +140,7 @@ fn set_version_selections(app_ref: &mut MutexGuard<'_, App>) {
     app_ref.state.is_checking_version = false;
 }
 
-fn set_namespace_selections(app_ref: &mut MutexGuard<'_, App>) {
+fn set_default_namespace_selections(app_ref: &mut MutexGuard<'_, App>) {
     let mut namespace_selections: Vec<String> = app_ref
         .state
         .deployments
@@ -361,8 +361,8 @@ async fn get_deployments(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Resu
 
     // we only know the available namespaces & versions after the deployments is fetched
     // so updated namespace selections & version selections are here
-    set_namespace_selections(&mut app_ref);
-    set_version_selections(&mut app_ref);
+    set_default_namespace_selections(&mut app_ref);
+    set_default_version_selections(&mut app_ref);
 
     app_ref.state.is_checking_namespaces = false;
     Ok(())
@@ -466,6 +466,7 @@ async fn fetch_appsignal_data(
     wk_client: &mut WKClient,
 ) -> Result<(), WKCliError> {
     let mut app_ref = app.lock().await;
+    app_ref.state.is_fetching_appsignal_data = true;
 
     let current_namespace = app_ref.state.current_namespace.clone().unwrap();
     let is_appsignal_enabled = app_ref.state.is_appsignal_enabled;
@@ -473,12 +474,21 @@ async fn fetch_appsignal_data(
     // if appsignal is not loaded, load it from the config
     // if the config is not available or not enabled, then appsignal is not enabled
     if is_appsignal_enabled.is_none() {
-        let application_configs = ApplicationConfigs::load()?;
+        let application_configs = ApplicationConfigs::load();
+
+        if let Err(error) = application_configs {
+            app_ref.state.appsignal_error = Some(format!("{error}"));
+            app_ref.state.is_fetching_appsignal_data = false;
+
+            // return early when error
+            return Ok(());
+        }
+
         if let Some(ApplicationConfig {
             enable: true,
             namespaces,
             ..
-        }) = application_configs.application
+        }) = application_configs.unwrap().application
         {
             let appsignal_config = namespaces
                 .iter()
@@ -498,6 +508,7 @@ async fn fetch_appsignal_data(
             }
         } else {
             app_ref.state.is_appsignal_enabled = Some(false);
+            app_ref.state.is_fetching_appsignal_data = false;
             // return early if appsignal is not enabled
             return Ok(());
         }
@@ -574,14 +585,6 @@ async fn fetch_appsignal_data(
     let average_latency = wk_client
         .fetch_appsignal_average_latency(&app_id, &namespace, start, until, AppsignalTimeFrame::R4H)
         .await?;
-
-    // println!("{:?}", average_error_rate_1h);
-    // println!("{:?}", average_error_rate_8h);
-    // println!("{:?}", average_error_rate_24h);
-    // println!("{:?}", average_throughput_1h);
-    // println!("{:?}", average_throughput_8h);
-    // println!("{:?}", average_throughput_24h);
-    // println!("{:?}", average_latency);
 
     let mut app_ref = app.lock().await;
 

@@ -12,6 +12,13 @@ pub struct AppsignalWidget;
 
 impl AppsignalWidget {
     pub fn draw<B: Backend>(app: &mut App, frame: &mut Frame<B>, rect: Rect) {
+        if let Some(ref error) = app.state.appsignal_error {
+            let error_widget =
+                Paragraph::new(Text::styled(error, Style::default().fg(Color::White)));
+            frame.render_widget(error_widget, rect);
+            return;
+        }
+
         if app.state.is_fetching_appsignal_data {
             let loading_widget = Paragraph::new(Text::styled(
                 "Loading...",
@@ -217,7 +224,7 @@ impl AppsignalWidget {
             }
             None => {
                 let widget = Paragraph::new(Text::styled(
-                    "Appsignal is not enabled.",
+                    "Appsignal configs are not loaded",
                     Style::default().fg(Color::White),
                 ));
                 frame.render_widget(widget, rect);
