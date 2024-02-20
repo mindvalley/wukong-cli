@@ -466,7 +466,6 @@ async fn fetch_appsignal_data(
     wk_client: &mut WKClient,
 ) -> Result<(), WKCliError> {
     let mut app_ref = app.lock().await;
-    app_ref.state.is_fetching_appsignal_data = true;
 
     let current_namespace = app_ref.state.current_namespace.clone().unwrap();
     let is_appsignal_enabled = app_ref.state.is_appsignal_enabled;
@@ -514,7 +513,6 @@ async fn fetch_appsignal_data(
         }
     }
 
-    app_ref.state.is_fetching_appsignal_data = true;
     let app_id = app_ref.state.appsignal_app_id.clone().unwrap();
     let namespace = app_ref.state.appsignal_namespace.clone().unwrap();
     drop(app_ref);

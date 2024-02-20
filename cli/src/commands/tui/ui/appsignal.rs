@@ -122,10 +122,13 @@ impl AppsignalWidget {
                                 .fg(Color::White)
                                 .add_modifier(Modifier::BOLD),
                         )),
+                        // the api return HourlyThroughput, so we need to convert it to k/min
                         Cell::from(Span::styled(
                             format!(
                                 "{:.2}k/min",
-                                app.state.appsignal.average_throughputs.in_24_hours.clone() // / 1000.0
+                                app.state.appsignal.average_throughputs.in_24_hours.clone()
+                                    / 1000.0
+                                    / 60.0
                             ),
                             Style::default()
                                 .fg(Color::White)
