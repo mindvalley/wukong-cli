@@ -107,7 +107,7 @@ impl AppsignalWidget {
                         Cell::from(Span::styled(
                             format!(
                                 "{:.2}k/min",
-                                app.state.appsignal.average_throughputs.in_1_hour.clone() / 1000.0
+                                app.state.appsignal.average_throughputs.in_1_hour / 1000.0
                             ),
                             Style::default()
                                 .fg(Color::White)
@@ -116,7 +116,7 @@ impl AppsignalWidget {
                         Cell::from(Span::styled(
                             format!(
                                 "{:.2}k/min",
-                                app.state.appsignal.average_throughputs.in_8_hours.clone() / 1000.0
+                                app.state.appsignal.average_throughputs.in_8_hours / 1000.0
                             ),
                             Style::default()
                                 .fg(Color::White)
@@ -126,9 +126,7 @@ impl AppsignalWidget {
                         Cell::from(Span::styled(
                             format!(
                                 "{:.2}k/min",
-                                app.state.appsignal.average_throughputs.in_24_hours.clone()
-                                    / 1000.0
-                                    / 60.0
+                                app.state.appsignal.average_throughputs.in_24_hours / 1000.0 / 60.0
                             ),
                             Style::default()
                                 .fg(Color::White)
