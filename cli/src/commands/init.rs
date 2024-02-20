@@ -1,7 +1,7 @@
 use crate::{
     auth::{self, vault},
     commands::login,
-    config::{get_inquire_render_config, Config},
+    config::Config,
     error::{ConfigError, WKCliError},
     loader::new_spinner,
     output::colored_println,
