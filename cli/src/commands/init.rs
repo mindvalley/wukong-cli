@@ -1,5 +1,5 @@
 use crate::{
-    auth::{vault, self},
+    auth::{self, vault},
     commands::login,
     config::{get_inquire_render_config, Config},
     error::{ConfigError, WKCliError},
