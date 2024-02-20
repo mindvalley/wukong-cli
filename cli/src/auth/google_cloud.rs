@@ -1,4 +1,4 @@
-use crate::{config::Config, loader::new_spinner};
+use crate::config::Config;
 use serde::{Deserialize, Serialize};
 use std::{future::Future, pin::Pin};
 use time::{format_description, OffsetDateTime};
@@ -115,8 +115,6 @@ impl TokenStorage for ConfigTokenStore {
 }
 
 pub async fn get_token_or_login(config: Option<Config>) -> String {
-    let loader = new_spinner().with_message("Logging in to Google Cloud ...");
-
     let secret = ApplicationSecret {
         client_id: GOOGLE_CLIENT_ID.to_string(),
         client_secret: GOOGLE_CLIENT_SECRET.to_string(),
@@ -153,8 +151,6 @@ pub async fn get_token_or_login(config: Option<Config>) -> String {
     .build()
     .await
     .unwrap();
-
-    loader.finish_and_clear();
 
     authenticator
         .token(&["https://www.googleapis.com/auth/logging.read"])

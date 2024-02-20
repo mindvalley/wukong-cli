@@ -1,8 +1,9 @@
 use crate::{
-    auth::vault,
-    commands::{google, login},
-    config::Config,
+    auth::{self, vault},
+    commands::login,
+    config::{get_inquire_render_config, Config},
     error::{ConfigError, WKCliError},
+    loader::new_spinner,
     output::colored_println,
     utils::inquire::inquire_render_config,
 };
@@ -91,7 +92,11 @@ async fn handle_gcloud_auth(mut config: Config) -> Result<Config, WKCliError> {
         let tmp_config = Config::default()
             .with_path(TMP_CONFIG_FILE.to_owned().expect("Unable to get tmp path"));
 
-        google::login::handle_login(Some(tmp_config.clone())).await?;
+        let loader = new_spinner().with_message("Logging in to Google Cloud ...");
+
+        auth::google_cloud::get_token_or_login(Some(tmp_config.clone())).await;
+        loader.finish_and_clear();
+        println!("You are logged into Google Cloud. You can now use Wukong to manage your Google Cloud resources");
 
         // Load the config again to get the latest token
         let updated_config =
