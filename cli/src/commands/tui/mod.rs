@@ -137,7 +137,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
     event_manager.spawn_event_listen_thread(tick_rate);
 
     let mut show_welcome_screen = true;
-    let mut is_first_render = true;
+    let mut is_welcome_screen_first_frame = true;
     let mut is_first_fetch_builds = true;
     let mut is_first_fetch_appsignals = true;
 
@@ -170,6 +170,10 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
                 if app_ref.state.welcome_screen_timer.is_none() {
                     app_ref.state.welcome_screen_timer =
                         Some(Instant::now() + Duration::from_secs(4));
+
+                    // fetch data on the first frame
+                    // fetch deployments first, as we need the namespace and version to fetch builds and appsignal data
+                    app_ref.dispatch(NetworkEvent::GetDeployments).await;
                 }
 
                 if let Some(timer) = app_ref.state.welcome_screen_timer {
@@ -178,7 +182,6 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
                     if time_remaining == Duration::from_secs(0) {
                         // Reset the timer
                         app_ref.state.welcome_screen_timer.take();
-                        is_first_render = true;
                         show_welcome_screen = false;
                     }
                 }
@@ -190,34 +193,26 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
         }
 
         if show_welcome_screen {
-            if is_first_render {
+            if is_welcome_screen_first_frame {
                 app_ref.dispatch(NetworkEvent::VerifyOktaRefreshToken).await;
                 app_ref.dispatch(NetworkEvent::VerifyGCloudToken).await;
             }
             terminal.draw(|frame| ui::draw_welcome_screen(frame, &mut app_ref))?;
-            is_first_render = false;
+            is_welcome_screen_first_frame = false;
         } else {
             terminal.draw(|frame| ui::draw_main_screen(frame, &mut app_ref))?;
+        }
 
-            if is_first_render {
-                // fetch data on the first frame
-                // fetch deployments first, as we need the namespace and version to fetch builds and appsignal data
-                app_ref.dispatch(NetworkEvent::GetDeployments).await;
-                is_first_render = false;
+        // builds and appsignal data require a namespace and version to be selected
+        // and we only know the namespace and version after deployments are fetched
+        if app_ref.state.current_namespace.is_some() && app_ref.state.current_version.is_some() {
+            if is_first_fetch_builds {
+                app_ref.dispatch(NetworkEvent::GetBuilds).await;
+                is_first_fetch_builds = false;
             }
-
-            // builds and appsignal data require a namespace and version to be selected
-            // and we only know the namespace and version after deployments are fetched
-            if app_ref.state.current_namespace.is_some() && app_ref.state.current_version.is_some()
-            {
-                if is_first_fetch_builds {
-                    app_ref.dispatch(NetworkEvent::GetBuilds).await;
-                    is_first_fetch_builds = false;
-                }
-                if is_first_fetch_appsignals {
-                    app_ref.dispatch(NetworkEvent::GetAppsignalData).await;
-                    is_first_fetch_appsignals = false;
-                }
+            if is_first_fetch_appsignals {
+                app_ref.dispatch(NetworkEvent::GetAppsignalData).await;
+                is_first_fetch_appsignals = false;
             }
         }
     }
