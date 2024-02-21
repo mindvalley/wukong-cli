@@ -15,7 +15,8 @@ use crate::{
         application::generate_filter,
         tui::{
             app::{
-                App, AppsignalAverageLatecies, Build, Commit, Deployment, MAX_LOG_ENTRIES_LENGTH,
+                App, AppsignalAverageLatecies, AppsignalState, Build, Commit, Deployment,
+                MAX_LOG_ENTRIES_LENGTH,
             },
             StatefulList,
         },
@@ -40,10 +41,10 @@ pub enum NetworkEvent {
 pub async fn handle_network_event(
     app: Arc<Mutex<App>>,
     network_event: NetworkEvent,
-    channel: &ApiChannel,
+    channel: Arc<ApiChannel>,
+    config: Arc<Config>,
 ) -> Result<(), WKCliError> {
-    let config = Config::load_from_default_path()?;
-    let mut wk_client = WKClient::for_channel(&config, channel)?;
+    let mut wk_client = WKClient::for_channel(&config, &channel)?;
 
     match network_event {
         NetworkEvent::GetBuilds => get_builds(app, &mut wk_client).await?,
@@ -52,7 +53,7 @@ pub async fn handle_network_event(
         NetworkEvent::GetGCloudLogsTail => get_gcloud_logs(app, &mut wk_client, true).await?,
         NetworkEvent::VerifyOktaRefreshToken => verify_okta_refresh_token(app).await?,
         NetworkEvent::VerifyGCloudToken => verify_gcloud_token(app, &mut wk_client).await?,
-        NetworkEvent::GetAppsignalData => fetch_appsignal_data(app, &mut wk_client).await?,
+        NetworkEvent::GetAppsignalData => fetch_appsignal_data(app, channel, config).await?,
     }
 
     Ok(())
@@ -463,8 +464,11 @@ async fn get_gcloud_logs(
 
 async fn fetch_appsignal_data(
     app: Arc<Mutex<App>>,
-    wk_client: &mut WKClient,
+    channel: Arc<ApiChannel>,
+    config: Arc<Config>,
 ) -> Result<(), WKCliError> {
+    let appsignal_state = Arc::new(Mutex::new(AppsignalState::default()));
+
     let mut app_ref = app.lock().await;
 
     let current_namespace = app_ref.state.current_namespace.clone().unwrap();
@@ -513,124 +517,239 @@ async fn fetch_appsignal_data(
         }
     }
 
-    let app_id = app_ref.state.appsignal_app_id.clone().unwrap();
-    let namespace = app_ref.state.appsignal_namespace.clone().unwrap();
+    let app_id = Arc::new(app_ref.state.appsignal_app_id.clone().unwrap());
+    let namespace = Arc::new(app_ref.state.appsignal_namespace.clone().unwrap());
     drop(app_ref);
 
     let start = "2023-06-01T00:00:00.000Z";
     let until = "2023-12-29T00:00:00.000Z";
 
-    let average_error_rate_1h = wk_client
-        .fetch_appsignal_average_error_rate(
-            &app_id,
-            &namespace,
-            start,
-            until,
-            AppsignalTimeFrame::R1H,
-        )
-        .await?;
+    let app_id_clone = Arc::clone(&app_id);
+    let namespace_clone = Arc::clone(&namespace);
+    let channel_clone = Arc::clone(&channel);
+    let config_clone = Arc::clone(&config);
+    let appsignal_state_clone = Arc::clone(&appsignal_state);
 
-    let average_error_rate_8h = wk_client
-        .fetch_appsignal_average_error_rate(
-            &app_id,
-            &namespace,
-            start,
-            until,
-            AppsignalTimeFrame::R8H,
-        )
-        .await?;
+    let t1: tokio::task::JoinHandle<Result<(), WKCliError>> = tokio::spawn(async move {
+        let mut wk_client = WKClient::for_channel(&config_clone, &channel_clone)?;
+        let average_error_rate_1h = wk_client
+            .fetch_appsignal_average_error_rate(
+                &app_id_clone,
+                &namespace_clone,
+                start,
+                until,
+                AppsignalTimeFrame::R1H,
+            )
+            .await?;
 
-    let average_error_rate_24h = wk_client
-        .fetch_appsignal_average_error_rate(
-            &app_id,
-            &namespace,
-            start,
-            until,
-            AppsignalTimeFrame::R24H,
-        )
-        .await?;
+        appsignal_state_clone
+            .lock()
+            .await
+            .average_error_rates
+            .in_1_hour = match average_error_rate_1h.appsignal_error_rate {
+            Some(error_rate) => error_rate.average[0].value,
+            None => 0.0,
+        };
 
-    let average_throughput_1h = wk_client
-        .fetch_appsignal_average_throughput(
-            &app_id,
-            &namespace,
-            start,
-            until,
-            AppsignalTimeFrame::R1H,
-        )
-        .await?;
+        Ok(())
+    });
 
-    let average_throughput_8h = wk_client
-        .fetch_appsignal_average_throughput(
-            &app_id,
-            &namespace,
-            start,
-            until,
-            AppsignalTimeFrame::R8H,
-        )
-        .await?;
+    let app_id_clone = Arc::clone(&app_id);
+    let namespace_clone = Arc::clone(&namespace);
+    let channel_clone = Arc::clone(&channel);
+    let config_clone = Arc::clone(&config);
+    let appsignal_state_clone = Arc::clone(&appsignal_state);
 
-    let average_throughput_24h = wk_client
-        .fetch_appsignal_average_throughput(
-            &app_id,
-            &namespace,
-            start,
-            until,
-            AppsignalTimeFrame::R24H,
-        )
-        .await?;
+    let t2: tokio::task::JoinHandle<Result<(), WKCliError>> = tokio::spawn(async move {
+        let mut wk_client = WKClient::for_channel(&config_clone, &channel_clone)?;
+        let average_error_rate_8h = wk_client
+            .fetch_appsignal_average_error_rate(
+                &app_id_clone,
+                &namespace_clone,
+                start,
+                until,
+                AppsignalTimeFrame::R8H,
+            )
+            .await?;
 
-    let average_latency = wk_client
-        .fetch_appsignal_average_latency(&app_id, &namespace, start, until, AppsignalTimeFrame::R4H)
-        .await?;
+        appsignal_state_clone
+            .lock()
+            .await
+            .average_error_rates
+            .in_8_hours = match average_error_rate_8h.appsignal_error_rate {
+            Some(error_rate) => error_rate.average[0].value,
+            None => 0.0,
+        };
+
+        Ok(())
+    });
+
+    let app_id_clone = Arc::clone(&app_id);
+    let namespace_clone = Arc::clone(&namespace);
+    let channel_clone = Arc::clone(&channel);
+    let config_clone = Arc::clone(&config);
+    let appsignal_state_clone = Arc::clone(&appsignal_state);
+
+    let t3: tokio::task::JoinHandle<Result<(), WKCliError>> = tokio::spawn(async move {
+        let mut wk_client = WKClient::for_channel(&config_clone, &channel_clone)?;
+        let average_error_rate_24h = wk_client
+            .fetch_appsignal_average_error_rate(
+                &app_id_clone,
+                &namespace_clone,
+                start,
+                until,
+                AppsignalTimeFrame::R24H,
+            )
+            .await?;
+
+        appsignal_state_clone
+            .lock()
+            .await
+            .average_error_rates
+            .in_24_hours = match average_error_rate_24h.appsignal_error_rate {
+            Some(error_rate) => error_rate.average[0].value,
+            None => 0.0,
+        };
+
+        Ok(())
+    });
+
+    let app_id_clone = Arc::clone(&app_id);
+    let namespace_clone = Arc::clone(&namespace);
+    let channel_clone = Arc::clone(&channel);
+    let config_clone = Arc::clone(&config);
+    let appsignal_state_clone = Arc::clone(&appsignal_state);
+
+    let t4: tokio::task::JoinHandle<Result<(), WKCliError>> = tokio::spawn(async move {
+        let mut wk_client = WKClient::for_channel(&config_clone, &channel_clone)?;
+        let average_throughput_1h = wk_client
+            .fetch_appsignal_average_throughput(
+                &app_id_clone,
+                &namespace_clone,
+                start,
+                until,
+                AppsignalTimeFrame::R1H,
+            )
+            .await?;
+
+        appsignal_state_clone
+            .lock()
+            .await
+            .average_throughputs
+            .in_1_hour = match average_throughput_1h.appsignal_throughput {
+            Some(throughput) => throughput.average[0].value,
+            None => 0.0,
+        };
+
+        Ok(())
+    });
+
+    let app_id_clone = Arc::clone(&app_id);
+    let namespace_clone = Arc::clone(&namespace);
+    let channel_clone = Arc::clone(&channel);
+    let config_clone = Arc::clone(&config);
+    let appsignal_state_clone = Arc::clone(&appsignal_state);
+
+    let t5: tokio::task::JoinHandle<Result<(), WKCliError>> = tokio::spawn(async move {
+        let mut wk_client = WKClient::for_channel(&config_clone, &channel_clone)?;
+        let average_throughput_8h = wk_client
+            .fetch_appsignal_average_throughput(
+                &app_id_clone,
+                &namespace_clone,
+                start,
+                until,
+                AppsignalTimeFrame::R8H,
+            )
+            .await?;
+
+        appsignal_state_clone
+            .lock()
+            .await
+            .average_throughputs
+            .in_8_hours = match average_throughput_8h.appsignal_throughput {
+            Some(throughput) => throughput.average[0].value,
+            None => 0.0,
+        };
+
+        Ok(())
+    });
+
+    let app_id_clone = Arc::clone(&app_id);
+    let namespace_clone = Arc::clone(&namespace);
+    let channel_clone = Arc::clone(&channel);
+    let config_clone = Arc::clone(&config);
+    let appsignal_state_clone = Arc::clone(&appsignal_state);
+
+    let t6: tokio::task::JoinHandle<Result<(), WKCliError>> = tokio::spawn(async move {
+        let mut wk_client = WKClient::for_channel(&config_clone, &channel_clone)?;
+        let average_throughput_24h = wk_client
+            .fetch_appsignal_average_throughput(
+                &app_id_clone,
+                &namespace_clone,
+                start,
+                until,
+                AppsignalTimeFrame::R24H,
+            )
+            .await?;
+
+        appsignal_state_clone
+            .lock()
+            .await
+            .average_throughputs
+            .in_24_hours = match average_throughput_24h.appsignal_throughput {
+            Some(throughput) => throughput.average[0].value,
+            None => 0.0,
+        };
+
+        Ok(())
+    });
+
+    let app_id_clone = Arc::clone(&app_id);
+    let namespace_clone = Arc::clone(&namespace);
+    let channel_clone = Arc::clone(&channel);
+    let config_clone = Arc::clone(&config);
+    let appsignal_state_clone = Arc::clone(&appsignal_state);
+
+    let t7: tokio::task::JoinHandle<Result<(), WKCliError>> = tokio::spawn(async move {
+        let mut wk_client = WKClient::for_channel(&config_clone, &channel_clone)?;
+        let average_latency = wk_client
+            .fetch_appsignal_average_latency(
+                &app_id_clone,
+                &namespace_clone,
+                start,
+                until,
+                AppsignalTimeFrame::R4H,
+            )
+            .await?;
+
+        appsignal_state_clone.lock().await.average_latencies =
+            match average_latency.appsignal_latency {
+                Some(latency) => AppsignalAverageLatecies {
+                    mean: latency.average[0].value.mean,
+                    p90: latency.average[0].value.p90,
+                    p95: latency.average[0].value.p95,
+                },
+                None => AppsignalAverageLatecies {
+                    mean: 0.0,
+                    p90: 0.0,
+                    p95: 0.0,
+                },
+            };
+
+        Ok(())
+    });
+
+    t1.await.unwrap()?;
+    t2.await.unwrap()?;
+    t3.await.unwrap()?;
+    t4.await.unwrap()?;
+    t5.await.unwrap()?;
+    t6.await.unwrap()?;
+    t7.await.unwrap()?;
 
     let mut app_ref = app.lock().await;
 
-    app_ref.state.appsignal.average_error_rates.in_1_hour =
-        match average_error_rate_1h.appsignal_error_rate {
-            Some(error_rate) => error_rate.average[0].value,
-            None => 0.0,
-        };
-    app_ref.state.appsignal.average_error_rates.in_8_hours =
-        match average_error_rate_8h.appsignal_error_rate {
-            Some(error_rate) => error_rate.average[0].value,
-            None => 0.0,
-        };
-    app_ref.state.appsignal.average_error_rates.in_24_hours =
-        match average_error_rate_24h.appsignal_error_rate {
-            Some(error_rate) => error_rate.average[0].value,
-            None => 0.0,
-        };
-
-    app_ref.state.appsignal.average_throughputs.in_1_hour =
-        match average_throughput_1h.appsignal_throughput {
-            Some(throughput) => throughput.average[0].value,
-            None => 0.0,
-        };
-    app_ref.state.appsignal.average_throughputs.in_8_hours =
-        match average_throughput_8h.appsignal_throughput {
-            Some(throughput) => throughput.average[0].value,
-            None => 0.0,
-        };
-    app_ref.state.appsignal.average_throughputs.in_24_hours =
-        match average_throughput_24h.appsignal_throughput {
-            Some(throughput) => throughput.average[0].value,
-            None => 0.0,
-        };
-
-    app_ref.state.appsignal.average_latencies = match average_latency.appsignal_latency {
-        Some(latency) => AppsignalAverageLatecies {
-            mean: latency.average[0].value.mean,
-            p90: latency.average[0].value.p90,
-            p95: latency.average[0].value.p95,
-        },
-        None => AppsignalAverageLatecies {
-            mean: 0.0,
-            p90: 0.0,
-            p95: 0.0,
-        },
-    };
-
+    app_ref.state.appsignal = appsignal_state.lock().await.clone();
     app_ref.state.is_fetching_appsignal_data = false;
     drop(app_ref);
 

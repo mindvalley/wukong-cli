@@ -94,19 +94,19 @@ impl SelectedTab {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct AppsignalState {
     pub average_error_rates: AppsignalAverageValues,
     pub average_latencies: AppsignalAverageLatecies,
     pub average_throughputs: AppsignalAverageValues,
 }
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct AppsignalAverageValues {
     pub in_1_hour: f64,
     pub in_8_hours: f64,
     pub in_24_hours: f64,
 }
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct AppsignalAverageLatecies {
     pub mean: f64,
     pub p90: f64,
