@@ -218,7 +218,7 @@ impl AppsignalWidget {
             }
             Some(false) => {
                 let widget = Paragraph::new(Text::styled(
-                    "Appsignal is not enabled.",
+                    "Appsignal is not enabled for the current namespace.",
                     Style::default().fg(Color::White),
                 ));
                 frame.render_widget(widget, rect);
