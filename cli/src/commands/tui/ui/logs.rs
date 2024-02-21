@@ -36,10 +36,6 @@ impl LogsWidget {
                 .as_ref(),
             )
             .split(rect)
-        // .split(rect.inner(&Margin {
-        //     vertical: 1,
-        //     horizontal: 1,
-        // }))
         else {
             return;
         };
