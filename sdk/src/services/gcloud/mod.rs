@@ -8,10 +8,16 @@ pub mod google {
         #[path = "google.logging.v2.rs"]
         pub mod v2;
     }
+    #[path = ""]
+    pub mod monitoring {
+        #[path = "google.monitoring.v3.rs"]
+        pub mod v3;
+    }
     #[path = "google.api.rs"]
     pub mod api;
     #[path = "google.rpc.rs"]
     pub mod rpc;
+
 }
 
 use self::google::logging::v2::{log_entry, LogEntry};
