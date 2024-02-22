@@ -24,6 +24,7 @@ pub enum NetworkEvent {
     GetDeployments,
     GetGCloudLogs,
     GetGCloudLogsTail,
+    GetGCloudSqlInstancesMetrics,
     VerifyOktaRefreshToken,
     VerifyGCloudToken,
 }
@@ -43,6 +44,10 @@ pub async fn handle_network_event(
         NetworkEvent::GetGCloudLogsTail => get_gcloud_logs(app, &mut wk_client, true).await?,
         NetworkEvent::VerifyOktaRefreshToken => verify_okta_refresh_token(app).await?,
         NetworkEvent::VerifyGCloudToken => verify_gcloud_token(app, &mut wk_client).await?,
+        NetworkEvent::GetGCloudSqlInstancesMetrics=> {
+            todo!();
+            // get_gcloud_sql_instances_metrics(app, &mut wk_client).await?
+        }
     }
 
     Ok(())
@@ -443,4 +448,24 @@ async fn get_gcloud_logs(
     let mut app_ref = app.lock().await;
     app_ref.state.is_fetching_log_entries = false;
     Ok(())
+}
+
+async fn get_gcloud_sql_instances_metrics(
+    app: Arc<Mutex<App>>,
+    wk_client: &mut WKClient,
+) -> Result<(), WKCliError>{
+
+    let gcloud_access_token = auth::google_cloud::get_token_or_login(None).await;
+
+    let _sql_status = match wk_client
+        .get_gcloud_sql_instances_metrics(gcloud_access_token)
+        .await
+    {
+        Ok(resp) => Ok(resp),
+        Err(err) => {
+            let mut app_ref = app.lock().await;
+            app_ref.state.sql_status_error = Some(format!("{err}"));
+            Err(err)
+        }
+    };
 }

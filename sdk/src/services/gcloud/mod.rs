@@ -1,5 +1,6 @@
 #[rustfmt::skip]
 #[path = "api"]
+use std::fmt;
 pub mod google {
     #[path = ""]
     pub mod logging {
@@ -8,10 +9,14 @@ pub mod google {
         #[path = "google.logging.v2.rs"]
         pub mod v2;
     }
-    #[path = "google.api.rs"]
-    pub mod api;
-    #[path = "google.rpc.rs"]
-    pub mod rpc;
+    // #[path = "google.api.rs"]
+    // pub mod api;
+    // #[path = "google.rpc.rs"]
+    // pub mod rpc;
+    // #[path = "google.cloud.sql.v1.rs"]
+    // pub mod cloud;
+    // #[path = "google.monitoring.v3.rs"]
+    // pub mod monitoring;
 }
 
 use self::google::logging::v2::{log_entry, LogEntry};
@@ -22,6 +27,10 @@ use crate::{
 use chrono::Duration;
 use google::logging::v2::{
     logging_service_v2_client::LoggingServiceV2Client, ListLogEntriesRequest,
+};
+use google_cloud_monitoring::{
+    v3::{MetricServiceClient, ListTimeSeriesRequest, TimeInterval},
+    MetricKind, ValueType,
 };
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
@@ -150,6 +159,10 @@ pub struct LogEntries {
     pub next_page_token: Option<String>,
 }
 
+pub struct CloudSqlInstances {
+    // pub instances: Option<Vec<google::cloud::sql::v1::DatabaseInstance>>,
+}
+
 pub struct GCloudClient {
     access_token: String,
 }
@@ -248,5 +261,58 @@ impl WKClient {
             .get_access_token_info()
             .await
             .map_err(|err| err.into())
+    }
+
+
+
+    // Get SQL status entries from Google Cloud.
+    pub async fn get_gcloud_sql_instances_metrics(
+        &self,
+        access_token: String,
+    ) -> Result<(), WKError> {
+        let project_id = "your-project-id";
+        let metric_service_client = MetricServiceClient::new();
+
+        let request = Request::new(ListTimeSeriesRequest {
+            name: format!("projects/{}", project_id),
+            filter: format!(
+                r#"metric.type="compute.googleapis.com/instance/cpu/utilization" OR metric.type="compute.googleapis.com/instance/memory/utilization""#
+            ),
+            interval: Some(TimeInterval {
+                end_time: Some(prost_types::Timestamp {
+                    seconds: chrono::Utc::now().timestamp(),
+                    nanos: 0,
+                }),
+                start_time: Some(prost_types::Timestamp {
+                    seconds: (chrono::Utc::now() - chrono::Duration::hours(1)).timestamp(),
+                    nanos: 0,
+                }),
+            }),
+            view: 2,
+            ..Default::default()
+        });
+
+        let response = metric_service_client.list_time_series(request).await?;
+
+        for time_series in response.into_inner().time_series {
+            let metric_kind = time_series.metric_kind.unwrap_or_default();
+            let value_type = time_series.value_type.unwrap_or_default();
+            let metric_name = time_series.metric.unwrap_or_default().type_;
+
+            match (metric_kind, value_type) {
+                (MetricKind::Gauge, ValueType::Double) => {
+                    let points = time_series.points.unwrap_or_default();
+                    for point in points {
+                        let value = point.value.unwrap_or_default().double_value;
+                        println!("Metric: {}, Value: {}", metric_name, value);
+                    }
+                }
+                _ => {
+                    println!("Unsupported metric kind or value type");
+                }
+            }
+        }
+
+        Ok(())
     }
 }

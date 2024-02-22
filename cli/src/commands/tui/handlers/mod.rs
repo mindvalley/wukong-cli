@@ -1,5 +1,6 @@
 mod build;
 mod common_key_events;
+mod databases;
 mod deployment;
 mod empty;
 mod log_filter_exclude;
@@ -29,6 +30,7 @@ async fn handle_block_events(key: Key, app: &mut App) -> AppReturn {
     match current_route.active_block {
         Block::Empty => empty::handler(key, app).await, // Main Input
         Block::Log => logs::handler(key, app).await,
+        Block::Database => databases::handler(key, app).await,
         Block::Dialog(DialogContext::NamespaceSelection) => {
             namespace_selection::handler(key, app).await
         }

@@ -7,18 +7,18 @@ use ratatui::{
 };
 
 use self::{
-    application::ApplicationWidget, builds::BuildsWidget, deployment::DeploymentWidget,
-    help::HelpWidget, logs::LogsWidget, namespace_selection::NamespaceSelectionWidget,
-    version_selection::VersionSelectionWidget, welcome::WelcomeWidget,
+    application::ApplicationWidget, builds::BuildsWidget, database::DatabaseWidget, deployment::DeploymentWidget, help::HelpWidget, logs::LogsWidget, middle_panel::MiddlePanelWidget, namespace_selection::NamespaceSelectionWidget, version_selection::VersionSelectionWidget, welcome::WelcomeWidget
 };
 
 use super::app::{App, Block, DialogContext};
 
 mod application;
 mod builds;
+mod database;
 mod deployment;
 mod help;
 mod logs;
+mod middle_panel;
 mod namespace_selection;
 // mod time_filter_selection;
 mod util;
@@ -41,6 +41,9 @@ where
         match expanded_block {
             Block::Build => {
                 BuildsWidget::draw(app, frame, bottom);
+            }
+            Block::Database => {
+                DatabaseWidget::draw(app, frame, bottom);
             }
             Block::Deployment => {
                 DeploymentWidget::draw(app, frame, bottom);
@@ -89,7 +92,7 @@ where
         HelpWidget::draw(app, frame, top_right);
 
         // MIDDLE
-        LogsWidget::draw(app, frame, mid);
+        MiddlePanelWidget::draw(app, frame, mid);
 
         // BOTTOM
         BuildsWidget::draw(app, frame, bottom_left);

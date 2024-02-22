@@ -13,6 +13,8 @@ const DEFAULT_ROUTE: Route = Route {
     hovered_block: Block::Log,
 };
 
+const DEFAULT_MIDDLE_BLOCK: Block = Block::Log;
+
 #[derive(Default)]
 pub struct Input {
     /// Current value of the input box
@@ -42,6 +44,7 @@ pub enum Block {
     Build,
     Deployment,
     Log,
+    Database,
     Empty,
     Dialog(DialogContext),
 }
@@ -89,6 +92,7 @@ pub struct State {
     pub is_checking_namespaces: bool,
     pub is_fetching_log_entries: bool,
     pub is_checking_version: bool,
+    pub is_fetching_sql_status: bool,
     pub start_polling_log_entries: bool,
 
     // fetch data
@@ -97,6 +101,8 @@ pub struct State {
     pub log_entries: (String, Vec<LogEntry>),
     pub log_entries_length: usize,
     pub log_entries_error: Option<String>,
+    pub sql_status_entries: Vec<String>,
+    pub sql_status_error: Option<String>,
     pub builds_error: Option<String>,
     pub deployments_error: Option<String>,
 
@@ -119,6 +125,7 @@ pub struct State {
     // useful to know if we need to scroll during textwrap
     pub logs_table_current_last_fully_rendered: bool,
     pub expanded_block: Option<Block>,
+    pub active_middle_block: Option<Block>,
 
     // For log entries polling
     pub instant_since_last_log_entries_poll: Instant,
@@ -235,6 +242,7 @@ impl App {
                 logs_table_current_last_index: 0,
                 logs_table_current_last_fully_rendered: true,
                 expanded_block: None,
+                active_middle_block: Some(DEFAULT_MIDDLE_BLOCK),
 
                 logs_widget_width: 0,
                 logs_widget_height: 0,
@@ -248,6 +256,9 @@ impl App {
                 logs_textwrap: false,
                 logs_size: (0, 0),
                 welcome_screen_timer: None,
+                is_fetching_sql_status: false,
+                sql_status_entries: Vec::new(),
+                sql_status_error: None,
             },
             navigation_stack: vec![DEFAULT_ROUTE],
             block_map: HashMap::new(),
@@ -259,6 +270,8 @@ impl App {
                 Action::OpenVersionSelection,
                 Action::Quit,
                 Action::Refresh,
+                Action::ShowDatabaseStatus,
+                Action::ShowLogs,
                 Action::ToggleLogsTailing,
                 Action::ShowErrorAndAbove,
                 Action::SearchLogs,
@@ -334,12 +347,20 @@ impl App {
         }
     }
 
+    pub fn get_active_middle_block(&self) -> Block {
+        self.state.active_middle_block.unwrap_or(Block::Log)
+    }
+
     fn get_current_route_mut(&mut self) -> &mut Route {
         self.navigation_stack.last_mut().unwrap()
     }
 
     pub fn get_current_route(&self) -> &Route {
         self.navigation_stack.last().unwrap_or(&DEFAULT_ROUTE)
+    }
+
+    pub fn set_active_middle_block(&mut self, active_block: Option<Block>) {
+        self.state.active_middle_block = active_block;
     }
 
     pub fn set_current_route_state(

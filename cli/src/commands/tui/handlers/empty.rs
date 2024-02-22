@@ -10,12 +10,14 @@ use super::{
     logs::reset_log_panel_and_trigger_log_refetch,
 };
 
-// In the absence of an selected block, handle standard events as usual.
+// In the absence of any selected block, handle standard events as usual.
 pub async fn handler(key: Key, app: &mut App) -> AppReturn {
     match Action::from_key(key) {
         Some(Action::Quit) => AppReturn::Exit,
+        Some(Action::ShowDatabaseStatus) => handle_show_database_status(app).await,
         Some(Action::OpenNamespaceSelection) => open_dialog(app, DialogContext::NamespaceSelection),
         Some(Action::OpenVersionSelection) => open_dialog(app, DialogContext::VersionSelection),
+        Some(Action::ShowLogs) => handle_show_logs(app).await,
         Some(Action::SearchLogs) => handle_search_logs(app).await,
         Some(Action::FilterLogs) => handle_filter_logs(app).await,
         Some(Action::ToggleLogsTailing) => {
@@ -46,6 +48,19 @@ async fn handle_search_logs(app: &mut App) -> AppReturn {
         log_search::reset_cursor(&mut app.state.search_bar_input);
         app.set_current_route_state(None, Some(Block::Log));
     }
+
+    AppReturn::Continue
+}
+// Show the database status in the middle panel. If it is already showing the database status,
+// leave it as is.
+async fn handle_show_database_status(app: &mut App) -> AppReturn {
+    app.set_active_middle_block(Some(Block::Database));
+    AppReturn::Continue
+}
+
+// Show logs in the middle panel. If it is already showing logs, leave it as is.
+async fn handle_show_logs(app: &mut App) -> AppReturn {
+    app.set_active_middle_block(Some(Block::Log));
 
     AppReturn::Continue
 }

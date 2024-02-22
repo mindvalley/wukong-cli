@@ -2,6 +2,11 @@
 strip = true
 lto = true
 
+[profile.dev]
+opt-level = 0
+debug = true
+split-debuginfo = "packed"
+
 [profile.dev.package.insta]
 opt-level = 3
 
