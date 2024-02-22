@@ -24,11 +24,15 @@ use crate::{
     WKClient,
 };
 use chrono::Duration;
-use google::logging::v2::logging_service_v2_client::{LoggingServiceV2Client, ListLogEntriesRequest,} ;
+use google::{
+    monitoring::{
+        metric_service_client::MetricServiceClient,
+        ListTimeSeriesRequest, TimeInterval
+    }, 
+    api::metric_descriptor::{ValueType, MetricKind},
 
-use google::monitoring::{
-    metric_service_client::{MetricServiceClient, MetricKind, ValueType,}
-    ListTimeSeriesRequest, TimeInterval, 
+    logging::v2::logging_service_v2_client::{LoggingServiceV2Client, ListLogEntriesRequest},
+
 };
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
