@@ -231,12 +231,12 @@ impl WKClient {
     /// Get log entries from Google Cloud.
     pub async fn get_gcloud_log_entries(
         &self,
-        optons: LogEntriesOptions,
+        options: LogEntriesOptions,
         access_token: String,
     ) -> Result<LogEntries, WKError> {
         let google_client = GCloudClient::new(access_token);
         google_client
-            .get_log_entries(optons)
+            .get_log_entries(options)
             .await
             .map_err(|err| err.into())
     }

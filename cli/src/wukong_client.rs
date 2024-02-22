@@ -315,11 +315,11 @@ impl WKClient {
     #[wukong_telemetry(api_event = "fetch_gcloud_log_entries")]
     pub async fn get_gcloud_log_entries(
         &self,
-        optons: LogEntriesOptions,
+        options: LogEntriesOptions,
         access_token: String,
     ) -> Result<LogEntries, WKCliError> {
         self.inner
-            .get_gcloud_log_entries(optons, access_token)
+            .get_gcloud_log_entries(options, access_token)
             .await
     }
 
