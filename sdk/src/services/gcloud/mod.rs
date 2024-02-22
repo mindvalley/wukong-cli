@@ -1,6 +1,5 @@
 #[rustfmt::skip]
 #[path = "api"]
-use std::fmt;
 pub mod google {
     #[path = ""]
     pub mod logging {
@@ -9,14 +8,14 @@ pub mod google {
         #[path = "google.logging.v2.rs"]
         pub mod v2;
     }
-    // #[path = "google.api.rs"]
-    // pub mod api;
-    // #[path = "google.rpc.rs"]
-    // pub mod rpc;
+    #[path = "google.api.rs"]
+    pub mod api;
+    #[path = "google.rpc.rs"]
+    pub mod rpc;
     // #[path = "google.cloud.sql.v1.rs"]
     // pub mod cloud;
-    // #[path = "google.monitoring.v3.rs"]
-    // pub mod monitoring;
+    #[path = "google.monitoring.v3.rs"]
+    pub mod monitoring;
 }
 
 use self::google::logging::v2::{log_entry, LogEntry};
@@ -25,12 +24,11 @@ use crate::{
     WKClient,
 };
 use chrono::Duration;
-use google::logging::v2::{
-    logging_service_v2_client::LoggingServiceV2Client, ListLogEntriesRequest,
-};
-use google_cloud_monitoring::{
-    v3::{MetricServiceClient, ListTimeSeriesRequest, TimeInterval},
-    MetricKind, ValueType,
+use google::logging::v2::logging_service_v2_client::{LoggingServiceV2Client, ListLogEntriesRequest,} ;
+
+use google::monitoring::{
+    metric_service_client::{MetricServiceClient, MetricKind, ValueType,}
+    ListTimeSeriesRequest, TimeInterval, 
 };
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
