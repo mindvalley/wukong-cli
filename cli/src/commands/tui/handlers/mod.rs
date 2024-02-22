@@ -35,6 +35,7 @@ async fn handle_block_events(key: Key, app: &mut App) -> AppReturn {
             match selected_tab {
                 SelectedTab::GCloud => logs::handler(key, app).await,
                 SelectedTab::AppSignal => appsignal::handler(key, app).await,
+                SelectedTab::Databases => build::handler(key, app).await,
             }
         }
         Block::Dialog(DialogContext::NamespaceSelection) => {

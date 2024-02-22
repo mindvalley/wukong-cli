@@ -82,6 +82,8 @@ pub enum SelectedTab {
     GCloud,
     #[strum(to_string = "AppSignal")]
     AppSignal,
+    #[strum(to_string = "Databases")]
+    Databases,
 }
 
 impl SelectedTab {
@@ -89,6 +91,7 @@ impl SelectedTab {
         match index {
             1 => Some(SelectedTab::GCloud),
             2 => Some(SelectedTab::AppSignal),
+            3 => Some(SelectedTab::Databases),
             _ => None,
         }
     }

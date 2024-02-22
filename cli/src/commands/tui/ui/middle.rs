@@ -10,7 +10,7 @@ use ratatui::{
 use strum::IntoEnumIterator;
 
 use super::{
-    appsignal::AppsignalWidget, centered_rect_by_padding, logs::LogsWidget, util::get_color,
+    appsignal::AppsignalWidget, databases::DatabasesWidget, centered_rect_by_padding, logs::LogsWidget, util::get_color
 };
 
 pub struct MiddleWidget;
@@ -53,6 +53,7 @@ impl MiddleWidget {
         match app.state.selected_tab {
             SelectedTab::GCloud => LogsWidget::draw(app, frame, inner_rect),
             SelectedTab::AppSignal => AppsignalWidget::draw(app, frame, inner_rect),
+            SelectedTab::Databases => DatabasesWidget::draw(app, frame, inner_rect),
         }
     }
 }

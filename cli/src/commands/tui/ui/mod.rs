@@ -17,6 +17,7 @@ use super::app::{App, Block, DialogContext, SelectedTab};
 
 mod application;
 mod builds;
+mod databases;
 mod deployment;
 mod help;
 mod logs;
@@ -51,6 +52,7 @@ where
             Block::Log(selected_tab) => match selected_tab {
                 SelectedTab::GCloud => LogsWidget::draw(app, frame, bottom),
                 SelectedTab::AppSignal => AppsignalWidget::draw(app, frame, bottom),
+                SelectedTab::Databases => BuildsWidget::draw(app, frame, bottom),
             },
             Block::Empty => todo!(),
             Block::Dialog(_) => todo!(),
