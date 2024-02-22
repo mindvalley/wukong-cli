@@ -322,15 +322,15 @@ impl WKClient {
             .await
     }
 
-    #[wukong_telemetry(api_event = "fetch_gcloud_sql_instances_metrics")]
-    pub async fn get_gcloud_sql_instances_metrics(
-        &self,
-        access_token: String,
-    ) -> Result<(), WKCliError> {
-        self.inner
-            .get_gcloud_sql_instances_metrics(access_token)
-            .await
-    }
+    // #[wukong_telemetry(api_event = "fetch_gcloud_sql_instances_metrics")]
+    // pub async fn get_gcloud_sql_instances_metrics(
+    //     &self,
+    //     access_token: String,
+    // ) -> Result<(), WKCliError> {
+    //     self.inner
+    //         .get_gcloud_sql_instances_metrics(access_token)
+    //         .await
+    // }
     
     #[wukong_telemetry(api_event = "get_access_token_info")]
     pub async fn get_access_token_info(

@@ -450,22 +450,22 @@ async fn get_gcloud_logs(
     Ok(())
 }
 
-async fn get_gcloud_sql_instances_metrics(
-    app: Arc<Mutex<App>>,
-    wk_client: &mut WKClient,
-) -> Result<(), WKCliError>{
+// async fn get_gcloud_sql_instances_metrics(
+//     app: Arc<Mutex<App>>,
+//     wk_client: &mut WKClient,
+// ) -> Result<(), WKCliError>{
 
-    let gcloud_access_token = auth::google_cloud::get_token_or_login(None).await;
+//     let gcloud_access_token = auth::google_cloud::get_token_or_login(None).await;
 
-    let _sql_status = match wk_client
-        .get_gcloud_sql_instances_metrics(gcloud_access_token)
-        .await
-    {
-        Ok(resp) => Ok(resp),
-        Err(err) => {
-            let mut app_ref = app.lock().await;
-            app_ref.state.sql_status_error = Some(format!("{err}"));
-            Err(err)
-        }
-    };
-}
+//     let _sql_status = match wk_client
+//         .get_gcloud_sql_instances_metrics(gcloud_access_token)
+//         .await
+//     {
+//         Ok(resp) => Ok(resp),
+//         Err(err) => {
+//             let mut app_ref = app.lock().await;
+//             app_ref.state.sql_status_error = Some(format!("{err}"));
+//             Err(err)
+//         }
+//     };
+// }
