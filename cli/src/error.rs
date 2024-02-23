@@ -116,6 +116,18 @@ pub enum ConfigError {
 
 #[derive(Debug, ThisError)]
 pub enum ApplicationConfigError {
+    #[error("Application Config file not found at \"{path}\".")]
+    NotFound {
+        path: &'static str,
+        #[source]
+        source: ::std::io::Error,
+    },
+    #[error("Permission denied: \"{path}\".")]
+    PermissionDenied {
+        path: &'static str,
+        #[source]
+        source: ::std::io::Error,
+    },
     #[error("Bad TOML data.")]
     BadTomlData(#[source] toml::de::Error),
     #[error("Failed to serialize configuration data into TOML.")]
@@ -168,7 +180,7 @@ impl WKCliError {
                         String::from("Please check your version value. It could be invalid."),
                     ),
                     APIError::CIStatusApplicationNotFound => Some(format!(
-    r#"You can follow these steps to remedy this error:  
+    r#"You can follow these steps to remedy this error:
 1. Confirm that you're in the correct working folder.
 2. If you're not, consider moving to the right location and run {} command again.
 If none of the above steps work for you, please contact the following people on Slack for assistance: @alex.tuan / @jk-gan / @Fadhil"#,
@@ -198,6 +210,18 @@ If none of the above steps work for you, please contact the following people on 
                 )),
                 ConfigError::BadTomlData(_) => Some(
                     "Check if your config.toml file is in valid TOML format.\nThis usually happen when the config file is accidentally modified or there is a breaking change to the cli config in the new version.\nYou may want to run \"wukong init\" to re-initialise configuration again.".to_string()
+                ),
+                _ => None,
+            },
+            WKCliError::ApplicationConfigError(error) => match error {
+                ApplicationConfigError::NotFound { .. } => Some(String::from(
+                    "Run \"wukong application init\" to initialise the application configuration.",
+                )),
+                ApplicationConfigError::PermissionDenied { path, .. } => Some(format!(
+                    "Run \"chmod +rw {path}\" to provide read and write permissions."
+                )),
+                ApplicationConfigError::BadTomlData(_) => Some(
+                    "Check if the `.wukong.toml` file is in valid TOML format.\nThis usually happen when the config file is accidentally modified or there is a breaking change to the application config in the new version.\nYou may want to run \"wukong application init\" to re-initialise configuration again.".to_string()
                 ),
                 _ => None,
             },

@@ -1,6 +1,7 @@
 use std::{collections::HashMap, fmt::Display, time::Instant};
 
 use ratatui::{prelude::Rect, widgets::ScrollbarState};
+use strum::{Display, EnumIter, FromRepr};
 use tokio::sync::mpsc::Sender;
 use wukong_sdk::services::gcloud::google::logging::{r#type::LogSeverity, v2::LogEntry};
 
@@ -10,7 +11,7 @@ use super::{action::Action, events::network::NetworkEvent, StatefulList};
 
 const DEFAULT_ROUTE: Route = Route {
     active_block: Block::Empty,
-    hovered_block: Block::Log,
+    hovered_block: Block::Log(SelectedTab::GCloud),
 };
 
 #[derive(Default)]
@@ -41,7 +42,7 @@ pub enum DialogContext {
 pub enum Block {
     Build,
     Deployment,
-    Log,
+    Log(SelectedTab),
     Empty,
     Dialog(DialogContext),
 }
@@ -74,6 +75,44 @@ impl Display for TimeFilter {
     }
 }
 
+#[derive(Default, Debug, Clone, Copy, Hash, PartialEq, Eq, Display, FromRepr, EnumIter)]
+pub enum SelectedTab {
+    #[default]
+    #[strum(to_string = "GCloud")]
+    GCloud,
+    #[strum(to_string = "AppSignal")]
+    AppSignal,
+}
+
+impl SelectedTab {
+    pub fn get_tab(index: u32) -> Option<Self> {
+        match index {
+            1 => Some(SelectedTab::GCloud),
+            2 => Some(SelectedTab::AppSignal),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Default, Clone)]
+pub struct AppsignalState {
+    pub average_error_rates: AppsignalAverageValues,
+    pub average_latencies: AppsignalAverageLatecies,
+    pub average_throughputs: AppsignalAverageValues,
+}
+#[derive(Default, Clone)]
+pub struct AppsignalAverageValues {
+    pub in_1_hour: f64,
+    pub in_8_hours: f64,
+    pub in_24_hours: f64,
+}
+#[derive(Default, Clone)]
+pub struct AppsignalAverageLatecies {
+    pub mean: f64,
+    pub p90: f64,
+    pub p95: f64,
+}
+
 pub const MAX_LOG_ENTRIES_LENGTH: usize = 2_000;
 
 pub struct State {
@@ -83,13 +122,20 @@ pub struct State {
     pub current_time_filter: Option<TimeFilter>,
     pub show_namespace_selection: bool,
 
+    // appsignal config
+    pub is_appsignal_enabled: Option<bool>, // None -> not loaded from config file yet, Some(true) -> enabled, Some(false) -> not enabled
+    pub appsignal_app_id: Option<String>,
+    pub appsignal_namespace: Option<String>,
+
     // loading state
     pub is_fetching_builds: bool,
     pub is_fetching_deployments: bool,
     pub is_checking_namespaces: bool,
     pub is_fetching_log_entries: bool,
     pub is_checking_version: bool,
+    pub is_fetching_appsignal_data: bool,
     pub start_polling_log_entries: bool,
+    pub start_polling_appsignal_data: bool,
 
     // fetch data
     pub builds: Vec<Build>,
@@ -99,6 +145,8 @@ pub struct State {
     pub log_entries_error: Option<String>,
     pub builds_error: Option<String>,
     pub deployments_error: Option<String>,
+    pub appsignal: AppsignalState,
+    pub appsignal_error: Option<String>,
 
     // Auth
     pub is_gcloud_authenticated: Option<bool>,
@@ -122,6 +170,8 @@ pub struct State {
 
     // For log entries polling
     pub instant_since_last_log_entries_poll: Instant,
+    // For appsignal data polling
+    pub instant_since_last_appsignal_poll: Instant,
 
     // ui state
     pub logs_widget_height: u16,
@@ -134,6 +184,7 @@ pub struct State {
     pub filter_bar_include_input: Input,
     pub filter_bar_exclude_input: Input,
     pub logs_textwrap: bool,
+    pub selected_tab: SelectedTab,
 
     pub logs_size: (u16, u16),
     pub welcome_screen_timer: Option<Instant>,
@@ -200,13 +251,19 @@ impl App {
                 current_version: None,
                 current_time_filter: Some(default_time_filter),
 
+                is_appsignal_enabled: None,
+                appsignal_app_id: None,
+                appsignal_namespace: None,
+
                 show_namespace_selection: false,
                 is_fetching_builds: true,
                 is_fetching_deployments: true,
                 is_checking_namespaces: false,
                 is_checking_version: false,
                 is_fetching_log_entries: true,
+                is_fetching_appsignal_data: true,
                 start_polling_log_entries: false,
+                start_polling_appsignal_data: false,
                 logs_enable_auto_scroll_to_bottom: true,
 
                 is_gcloud_authenticated: None,
@@ -225,12 +282,15 @@ impl App {
                 builds_error: None,
                 deployments_error: None,
                 log_time_filter: TimeFilter::Minute(5),
+                appsignal: AppsignalState::default(),
+                appsignal_error: None,
 
                 logs_vertical_scroll_state: ScrollbarState::default(),
                 logs_horizontal_scroll_state: ScrollbarState::default(),
                 logs_vertical_scroll: 0,
                 logs_horizontal_scroll: 0,
                 instant_since_last_log_entries_poll: Instant::now(),
+                instant_since_last_appsignal_poll: Instant::now(),
                 logs_table_current_start_index: 0,
                 logs_table_current_last_index: 0,
                 logs_table_current_last_fully_rendered: true,
@@ -248,6 +308,7 @@ impl App {
                 logs_textwrap: false,
                 logs_size: (0, 0),
                 welcome_screen_timer: None,
+                selected_tab: SelectedTab::default(),
             },
             navigation_stack: vec![DEFAULT_ROUTE],
             block_map: HashMap::new(),
@@ -274,9 +335,15 @@ impl App {
     pub async fn update(&mut self) -> AppReturn {
         // Poll every 10 seconds
         let poll_interval_ms = 10_000;
-        let elapsed = self
+
+        let log_poll_elapsed = self
             .state
             .instant_since_last_log_entries_poll
+            .elapsed()
+            .as_millis();
+        let appsignal_poll_elapsed = self
+            .state
+            .instant_since_last_appsignal_poll
             .elapsed()
             .as_millis();
 
@@ -302,11 +369,25 @@ impl App {
 
             // if this is not the first call, check if it's time to fetch more log entries
             // if yes, fetch the log entries if the tailing is enabled
-            if elapsed >= poll_interval_ms {
+            if log_poll_elapsed >= poll_interval_ms {
                 self.state.instant_since_last_log_entries_poll = Instant::now();
 
                 if self.state.logs_tailing {
                     self.dispatch(NetworkEvent::GetGCloudLogsTail).await;
+                }
+
+                // refresh appsignal data every 10 seconds
+                if let Some(true) = self.state.is_appsignal_enabled {
+                    self.dispatch(NetworkEvent::GetAppsignalData).await;
+                }
+            }
+
+            // refresh appsignal data every 10 seconds
+            if appsignal_poll_elapsed >= poll_interval_ms {
+                self.state.instant_since_last_appsignal_poll = Instant::now();
+
+                if let Some(true) = self.state.is_appsignal_enabled {
+                    self.dispatch(NetworkEvent::GetAppsignalData).await;
                 }
             }
         }

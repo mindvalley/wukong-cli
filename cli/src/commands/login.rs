@@ -1,9 +1,10 @@
 use crate::{
     auth,
-    config::{get_inquire_render_config, Config},
+    config::Config,
     error::{AuthError, WKCliError},
     loader::new_spinner,
     output::colored_println,
+    utils::inquire::inquire_render_config,
 };
 use crossterm::style::Stylize;
 use log::debug;
@@ -27,7 +28,7 @@ pub async fn new_login_or_refresh_token(config: Config) -> Result<Config, WKCliE
         "Choose the account you would like to continue with",
         login_selections,
     )
-    .with_render_config(get_inquire_render_config())
+    .with_render_config(inquire_render_config())
     .prompt()?;
 
     // "Log in with a new account" is selected

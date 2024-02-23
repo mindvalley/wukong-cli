@@ -7,12 +7,13 @@ use ratatui::{
 };
 
 use self::{
-    application::ApplicationWidget, builds::BuildsWidget, deployment::DeploymentWidget,
-    help::HelpWidget, logs::LogsWidget, namespace_selection::NamespaceSelectionWidget,
-    version_selection::VersionSelectionWidget, welcome::WelcomeWidget,
+    application::ApplicationWidget, appsignal::AppsignalWidget, builds::BuildsWidget,
+    deployment::DeploymentWidget, help::HelpWidget, logs::LogsWidget, middle::MiddleWidget,
+    namespace_selection::NamespaceSelectionWidget, version_selection::VersionSelectionWidget,
+    welcome::WelcomeWidget,
 };
 
-use super::app::{App, Block, DialogContext};
+use super::app::{App, Block, DialogContext, SelectedTab};
 
 mod application;
 mod builds;
@@ -21,6 +22,8 @@ mod help;
 mod logs;
 mod namespace_selection;
 // mod time_filter_selection;
+mod appsignal;
+mod middle;
 mod util;
 mod version_selection;
 mod welcome;
@@ -45,9 +48,10 @@ where
             Block::Deployment => {
                 DeploymentWidget::draw(app, frame, bottom);
             }
-            Block::Log => {
-                LogsWidget::draw(app, frame, bottom);
-            }
+            Block::Log(selected_tab) => match selected_tab {
+                SelectedTab::GCloud => LogsWidget::draw(app, frame, bottom),
+                SelectedTab::AppSignal => AppsignalWidget::draw(app, frame, bottom),
+            },
             Block::Empty => todo!(),
             Block::Dialog(_) => todo!(),
         }
@@ -89,7 +93,8 @@ where
         HelpWidget::draw(app, frame, top_right);
 
         // MIDDLE
-        LogsWidget::draw(app, frame, mid);
+        // LogsWidget::draw(app, frame, mid);
+        MiddleWidget::draw(app, frame, mid);
 
         // BOTTOM
         BuildsWidget::draw(app, frame, bottom_left);
@@ -135,6 +140,40 @@ pub fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
                 Constraint::Percentage((100 - percent_x) / 2),
                 Constraint::Percentage(percent_x),
                 Constraint::Percentage((100 - percent_x) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(popup_layout[1])[1] // Return the middle chunk
+}
+
+pub fn centered_rect_by_padding(
+    padding_left: u16,
+    padding_right: u16,
+    padding_top: u16,
+    padding_bottom: u16,
+    r: Rect,
+) -> Rect {
+    // Cut the given rectangle into three vertical pieces
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Length(padding_top),
+                Constraint::Min(5),
+                Constraint::Length(padding_bottom),
+            ]
+            .as_ref(),
+        )
+        .split(r);
+
+    // Then cut the middle vertical piece into three width-wise pieces
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            [
+                Constraint::Length(padding_left),
+                Constraint::Min(5),
+                Constraint::Length(padding_right),
             ]
             .as_ref(),
         )

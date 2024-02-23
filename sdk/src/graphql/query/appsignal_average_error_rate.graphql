@@ -1,0 +1,9 @@
+query AppsignalAverageErrorRateQuery($app_id: String!, $namespace: String!, $start:
+String!, $until: String!, $timeframe: AppsignalTimeframe!) {
+    appsignalErrorRate(app_id: $app_id, namespace: $namespace, start: $start, until: $until, timeframe: $timeframe) {
+        average {
+            namespace
+            value
+        }
+    }
+}

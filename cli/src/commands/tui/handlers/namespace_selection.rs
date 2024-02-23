@@ -1,4 +1,7 @@
-use super::{common_key_events, logs::reset_log_panel_and_trigger_log_refetch};
+use super::{
+    appsignal::reset_appsignal_panel_and_trigger_appsignal_refetch, common_key_events,
+    logs::reset_log_panel_and_trigger_log_refetch,
+};
 
 use crate::commands::tui::{
     app::{App, AppReturn, Block},
@@ -8,7 +11,10 @@ use crate::commands::tui::{
 pub async fn handler(key: Key, app: &mut App) -> AppReturn {
     match key {
         key if common_key_events::back_event(key) => {
-            app.set_current_route_state(Some(Block::Empty), Some(Block::Log));
+            app.set_current_route_state(
+                Some(Block::Empty),
+                Some(Block::Log(app.state.selected_tab)),
+            );
         }
         key if common_key_events::back_event(key) => app.push_navigation_stack(Block::Empty),
         key if common_key_events::down_event(key) => app.namespace_selections.next(),
@@ -42,5 +48,10 @@ async fn fetch_and_reset_polling(app: &mut App, selected_version: String) {
     app.state.current_namespace = Some(selected_version);
     reset_log_panel_and_trigger_log_refetch(app);
 
+    // We also need to refresh the builds and appsignal data upon namespace change
+    // as these data are based on the current namespace
     app.dispatch(NetworkEvent::GetBuilds).await;
+
+    reset_appsignal_panel_and_trigger_appsignal_refetch(app);
+    app.dispatch(NetworkEvent::GetAppsignalData).await;
 }

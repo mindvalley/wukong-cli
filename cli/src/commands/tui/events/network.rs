@@ -1,14 +1,23 @@
 use std::sync::Arc;
 
 use tokio::sync::{Mutex, MutexGuard};
-use wukong_sdk::services::gcloud::{google::logging::v2::LogEntry, LogEntries, LogEntriesOptions};
+use wukong_sdk::{
+    graphql::AppsignalTimeFrame,
+    services::gcloud::{google::logging::v2::LogEntry, LogEntries, LogEntriesOptions},
+};
 
 use crate::{
+    application_config::{
+        ApplicationConfig, ApplicationConfigs, ApplicationNamespaceAppsignalConfig,
+    },
     auth::{self, okta::introspect_token},
     commands::{
         application::generate_filter,
         tui::{
-            app::{App, Build, Commit, Deployment, MAX_LOG_ENTRIES_LENGTH},
+            app::{
+                App, AppsignalAverageLatecies, AppsignalState, Build, Commit, Deployment,
+                MAX_LOG_ENTRIES_LENGTH,
+            },
             StatefulList,
         },
     },
@@ -24,6 +33,7 @@ pub enum NetworkEvent {
     GetDeployments,
     GetGCloudLogs,
     GetGCloudLogsTail,
+    GetAppsignalData,
     VerifyOktaRefreshToken,
     VerifyGCloudToken,
 }
@@ -31,10 +41,10 @@ pub enum NetworkEvent {
 pub async fn handle_network_event(
     app: Arc<Mutex<App>>,
     network_event: NetworkEvent,
-    channel: &ApiChannel,
+    channel: Arc<ApiChannel>,
+    config: Arc<Config>,
 ) -> Result<(), WKCliError> {
-    let config = Config::load_from_default_path()?;
-    let mut wk_client = WKClient::for_channel(&config, channel)?;
+    let mut wk_client = WKClient::for_channel(&config, &channel)?;
 
     match network_event {
         NetworkEvent::GetBuilds => get_builds(app, &mut wk_client).await?,
@@ -43,6 +53,7 @@ pub async fn handle_network_event(
         NetworkEvent::GetGCloudLogsTail => get_gcloud_logs(app, &mut wk_client, true).await?,
         NetworkEvent::VerifyOktaRefreshToken => verify_okta_refresh_token(app).await?,
         NetworkEvent::VerifyGCloudToken => verify_gcloud_token(app, &mut wk_client).await?,
+        NetworkEvent::GetAppsignalData => fetch_appsignal_data(app, channel, config).await?,
     }
 
     Ok(())
@@ -98,7 +109,7 @@ async fn verify_gcloud_token(
     Ok(())
 }
 
-fn set_version_selections(app_ref: &mut MutexGuard<'_, App>) {
+fn set_default_version_selections(app_ref: &mut MutexGuard<'_, App>) {
     let deployments = &app_ref.state.deployments;
 
     let version_selections: Vec<String> = match &app_ref.state.current_namespace {
@@ -130,7 +141,7 @@ fn set_version_selections(app_ref: &mut MutexGuard<'_, App>) {
     app_ref.state.is_checking_version = false;
 }
 
-fn set_namespace_selections(app_ref: &mut MutexGuard<'_, App>) {
+fn set_default_namespace_selections(app_ref: &mut MutexGuard<'_, App>) {
     let mut namespace_selections: Vec<String> = app_ref
         .state
         .deployments
@@ -221,6 +232,12 @@ async fn update_logs_entries(app: Arc<Mutex<App>>, log_entries: Option<Vec<LogEn
             // so we need to set the scroll to the bottom manually by this hack
             // waiting this https://github.com/fdehau/tui-rs/issues/89
             if app_ref.state.logs_enable_auto_scroll_to_bottom {
+                // for some rare cases where the log widget is not rendered and the height is 0
+                // so add a check here to prevent overflow
+                if app_ref.state.logs_widget_height < 4 {
+                    return;
+                }
+
                 let widget_height = app_ref.state.logs_widget_height - 4;
 
                 app_ref.state.logs_vertical_scroll =
@@ -345,8 +362,8 @@ async fn get_deployments(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Resu
 
     // we only know the available namespaces & versions after the deployments is fetched
     // so updated namespace selections & version selections are here
-    set_namespace_selections(&mut app_ref);
-    set_version_selections(&mut app_ref);
+    set_default_namespace_selections(&mut app_ref);
+    set_default_version_selections(&mut app_ref);
 
     app_ref.state.is_checking_namespaces = false;
     Ok(())
@@ -442,5 +459,299 @@ async fn get_gcloud_logs(
 
     let mut app_ref = app.lock().await;
     app_ref.state.is_fetching_log_entries = false;
+    Ok(())
+}
+
+async fn fetch_appsignal_data(
+    app: Arc<Mutex<App>>,
+    channel: Arc<ApiChannel>,
+    config: Arc<Config>,
+) -> Result<(), WKCliError> {
+    let appsignal_state = Arc::new(Mutex::new(AppsignalState::default()));
+
+    let mut app_ref = app.lock().await;
+
+    let current_namespace = app_ref.state.current_namespace.clone().unwrap();
+    let is_appsignal_enabled = app_ref.state.is_appsignal_enabled;
+
+    // if appsignal is not loaded, load it from the config
+    // if the config is not available or not enabled, then appsignal is not enabled
+    if is_appsignal_enabled.is_none() {
+        let application_configs = ApplicationConfigs::load();
+
+        if let Err(error) = application_configs {
+            app_ref.state.appsignal_error = Some(format!("{error}"));
+            app_ref.state.is_fetching_appsignal_data = false;
+
+            // return early when error
+            return Ok(());
+        }
+
+        if let Some(ApplicationConfig {
+            enable: true,
+            namespaces,
+            ..
+        }) = application_configs.unwrap().application
+        {
+            let appsignal_config = namespaces
+                .iter()
+                .find(|ns| ns.namespace_type == current_namespace)
+                .and_then(|ns| ns.appsignal.clone());
+
+            if let Some(ApplicationNamespaceAppsignalConfig {
+                enable,
+                app_id,
+                environment: _,
+                default_namespace,
+            }) = appsignal_config
+            {
+                app_ref.state.is_appsignal_enabled = Some(enable);
+                app_ref.state.appsignal_app_id = Some(app_id);
+                app_ref.state.appsignal_namespace = Some(default_namespace);
+            }
+        } else {
+            app_ref.state.is_appsignal_enabled = Some(false);
+            app_ref.state.is_fetching_appsignal_data = false;
+            // return early if appsignal is not enabled
+            return Ok(());
+        }
+    }
+
+    let app_id = Arc::new(app_ref.state.appsignal_app_id.clone().unwrap());
+    let namespace = Arc::new(app_ref.state.appsignal_namespace.clone().unwrap());
+    drop(app_ref);
+
+    let start = "2023-06-01T00:00:00.000Z";
+    let until = "2023-12-29T00:00:00.000Z";
+
+    let app_id_clone = Arc::clone(&app_id);
+    let namespace_clone = Arc::clone(&namespace);
+    let channel_clone = Arc::clone(&channel);
+    let config_clone = Arc::clone(&config);
+    let appsignal_state_clone = Arc::clone(&appsignal_state);
+
+    let t1: tokio::task::JoinHandle<Result<(), WKCliError>> = tokio::spawn(async move {
+        let mut wk_client = WKClient::for_channel(&config_clone, &channel_clone)?;
+        let average_error_rate_1h = wk_client
+            .fetch_appsignal_average_error_rate(
+                &app_id_clone,
+                &namespace_clone,
+                start,
+                until,
+                AppsignalTimeFrame::R1H,
+            )
+            .await?;
+
+        appsignal_state_clone
+            .lock()
+            .await
+            .average_error_rates
+            .in_1_hour = match average_error_rate_1h.appsignal_error_rate {
+            Some(error_rate) => error_rate.average[0].value,
+            None => 0.0,
+        };
+
+        Ok(())
+    });
+
+    let app_id_clone = Arc::clone(&app_id);
+    let namespace_clone = Arc::clone(&namespace);
+    let channel_clone = Arc::clone(&channel);
+    let config_clone = Arc::clone(&config);
+    let appsignal_state_clone = Arc::clone(&appsignal_state);
+
+    let t2: tokio::task::JoinHandle<Result<(), WKCliError>> = tokio::spawn(async move {
+        let mut wk_client = WKClient::for_channel(&config_clone, &channel_clone)?;
+        let average_error_rate_8h = wk_client
+            .fetch_appsignal_average_error_rate(
+                &app_id_clone,
+                &namespace_clone,
+                start,
+                until,
+                AppsignalTimeFrame::R8H,
+            )
+            .await?;
+
+        appsignal_state_clone
+            .lock()
+            .await
+            .average_error_rates
+            .in_8_hours = match average_error_rate_8h.appsignal_error_rate {
+            Some(error_rate) => error_rate.average[0].value,
+            None => 0.0,
+        };
+
+        Ok(())
+    });
+
+    let app_id_clone = Arc::clone(&app_id);
+    let namespace_clone = Arc::clone(&namespace);
+    let channel_clone = Arc::clone(&channel);
+    let config_clone = Arc::clone(&config);
+    let appsignal_state_clone = Arc::clone(&appsignal_state);
+
+    let t3: tokio::task::JoinHandle<Result<(), WKCliError>> = tokio::spawn(async move {
+        let mut wk_client = WKClient::for_channel(&config_clone, &channel_clone)?;
+        let average_error_rate_24h = wk_client
+            .fetch_appsignal_average_error_rate(
+                &app_id_clone,
+                &namespace_clone,
+                start,
+                until,
+                AppsignalTimeFrame::R24H,
+            )
+            .await?;
+
+        appsignal_state_clone
+            .lock()
+            .await
+            .average_error_rates
+            .in_24_hours = match average_error_rate_24h.appsignal_error_rate {
+            Some(error_rate) => error_rate.average[0].value,
+            None => 0.0,
+        };
+
+        Ok(())
+    });
+
+    let app_id_clone = Arc::clone(&app_id);
+    let namespace_clone = Arc::clone(&namespace);
+    let channel_clone = Arc::clone(&channel);
+    let config_clone = Arc::clone(&config);
+    let appsignal_state_clone = Arc::clone(&appsignal_state);
+
+    let t4: tokio::task::JoinHandle<Result<(), WKCliError>> = tokio::spawn(async move {
+        let mut wk_client = WKClient::for_channel(&config_clone, &channel_clone)?;
+        let average_throughput_1h = wk_client
+            .fetch_appsignal_average_throughput(
+                &app_id_clone,
+                &namespace_clone,
+                start,
+                until,
+                AppsignalTimeFrame::R1H,
+            )
+            .await?;
+
+        appsignal_state_clone
+            .lock()
+            .await
+            .average_throughputs
+            .in_1_hour = match average_throughput_1h.appsignal_throughput {
+            Some(throughput) => throughput.average[0].value,
+            None => 0.0,
+        };
+
+        Ok(())
+    });
+
+    let app_id_clone = Arc::clone(&app_id);
+    let namespace_clone = Arc::clone(&namespace);
+    let channel_clone = Arc::clone(&channel);
+    let config_clone = Arc::clone(&config);
+    let appsignal_state_clone = Arc::clone(&appsignal_state);
+
+    let t5: tokio::task::JoinHandle<Result<(), WKCliError>> = tokio::spawn(async move {
+        let mut wk_client = WKClient::for_channel(&config_clone, &channel_clone)?;
+        let average_throughput_8h = wk_client
+            .fetch_appsignal_average_throughput(
+                &app_id_clone,
+                &namespace_clone,
+                start,
+                until,
+                AppsignalTimeFrame::R8H,
+            )
+            .await?;
+
+        appsignal_state_clone
+            .lock()
+            .await
+            .average_throughputs
+            .in_8_hours = match average_throughput_8h.appsignal_throughput {
+            Some(throughput) => throughput.average[0].value,
+            None => 0.0,
+        };
+
+        Ok(())
+    });
+
+    let app_id_clone = Arc::clone(&app_id);
+    let namespace_clone = Arc::clone(&namespace);
+    let channel_clone = Arc::clone(&channel);
+    let config_clone = Arc::clone(&config);
+    let appsignal_state_clone = Arc::clone(&appsignal_state);
+
+    let t6: tokio::task::JoinHandle<Result<(), WKCliError>> = tokio::spawn(async move {
+        let mut wk_client = WKClient::for_channel(&config_clone, &channel_clone)?;
+        let average_throughput_24h = wk_client
+            .fetch_appsignal_average_throughput(
+                &app_id_clone,
+                &namespace_clone,
+                start,
+                until,
+                AppsignalTimeFrame::R24H,
+            )
+            .await?;
+
+        appsignal_state_clone
+            .lock()
+            .await
+            .average_throughputs
+            .in_24_hours = match average_throughput_24h.appsignal_throughput {
+            Some(throughput) => throughput.average[0].value,
+            None => 0.0,
+        };
+
+        Ok(())
+    });
+
+    let app_id_clone = Arc::clone(&app_id);
+    let namespace_clone = Arc::clone(&namespace);
+    let channel_clone = Arc::clone(&channel);
+    let config_clone = Arc::clone(&config);
+    let appsignal_state_clone = Arc::clone(&appsignal_state);
+
+    let t7: tokio::task::JoinHandle<Result<(), WKCliError>> = tokio::spawn(async move {
+        let mut wk_client = WKClient::for_channel(&config_clone, &channel_clone)?;
+        let average_latency = wk_client
+            .fetch_appsignal_average_latency(
+                &app_id_clone,
+                &namespace_clone,
+                start,
+                until,
+                AppsignalTimeFrame::R4H,
+            )
+            .await?;
+
+        appsignal_state_clone.lock().await.average_latencies =
+            match average_latency.appsignal_latency {
+                Some(latency) => AppsignalAverageLatecies {
+                    mean: latency.average[0].value.mean,
+                    p90: latency.average[0].value.p90,
+                    p95: latency.average[0].value.p95,
+                },
+                None => AppsignalAverageLatecies {
+                    mean: 0.0,
+                    p90: 0.0,
+                    p95: 0.0,
+                },
+            };
+
+        Ok(())
+    });
+
+    t1.await.unwrap()?;
+    t2.await.unwrap()?;
+    t3.await.unwrap()?;
+    t4.await.unwrap()?;
+    t5.await.unwrap()?;
+    t6.await.unwrap()?;
+    t7.await.unwrap()?;
+
+    let mut app_ref = app.lock().await;
+
+    app_ref.state.appsignal = appsignal_state.lock().await.clone();
+    app_ref.state.is_fetching_appsignal_data = false;
+    drop(app_ref);
+
     Ok(())
 }

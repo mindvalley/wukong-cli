@@ -1,10 +1,11 @@
 use crate::{
     auth::{self, vault},
     commands::login,
-    config::{get_inquire_render_config, Config},
+    config::Config,
     error::{ConfigError, WKCliError},
     loader::new_spinner,
     output::colored_println,
+    utils::inquire::inquire_render_config,
 };
 use crossterm::style::Stylize;
 use once_cell::sync::Lazy;
@@ -64,7 +65,7 @@ pub async fn handle_init() -> Result<bool, WKCliError> {
 async fn handle_vault_auth(mut config: Config) -> Result<Config, WKCliError> {
     let agree_to_authenticate =
         inquire::Confirm::new("Do you want to authenticate against Bunker?")
-            .with_render_config(get_inquire_render_config())
+            .with_render_config(inquire_render_config())
             .with_help_message("You may able to login later when neccessary")
             .with_default(false)
             .prompt()?;
@@ -79,7 +80,7 @@ async fn handle_vault_auth(mut config: Config) -> Result<Config, WKCliError> {
 async fn handle_gcloud_auth(mut config: Config) -> Result<Config, WKCliError> {
     let agree_to_authenticate =
         inquire::Confirm::new("Do you want to authenticate against Google Cloud?")
-            .with_render_config(get_inquire_render_config())
+            .with_render_config(inquire_render_config())
             .with_help_message("You may able to login later when neccessary")
             .with_default(false)
             .prompt()?;

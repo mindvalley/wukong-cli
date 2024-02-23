@@ -44,7 +44,7 @@ async fn handle_search_logs(app: &mut App) -> AppReturn {
         );
     } else {
         log_search::reset_cursor(&mut app.state.search_bar_input);
-        app.set_current_route_state(None, Some(Block::Log));
+        app.set_current_route_state(None, Some(Block::Log(app.state.selected_tab)));
     }
 
     AppReturn::Continue
@@ -64,7 +64,7 @@ async fn handle_filter_logs(app: &mut App) -> AppReturn {
     } else {
         log_filter_exclude::reset_cursor(&mut app.state.filter_bar_exclude_input);
         log_filter_include::reset_cursor(&mut app.state.filter_bar_include_input);
-        app.set_current_route_state(None, Some(Block::Log));
+        app.set_current_route_state(None, Some(Block::Log(app.state.selected_tab)));
     }
 
     AppReturn::Continue
@@ -79,7 +79,7 @@ fn handle_key_events(key: Key, app: &mut App) -> AppReturn {
             AppReturn::Continue
         }
         key if common_key_events::down_event(key) => match app.get_current_route().hovered_block {
-            Block::Log => {
+            Block::Log(_) => {
                 app.set_current_route_state(None, Some(Block::Build));
                 AppReturn::Continue
             }
@@ -87,11 +87,11 @@ fn handle_key_events(key: Key, app: &mut App) -> AppReturn {
         },
         key if common_key_events::up_event(key) => match app.get_current_route().hovered_block {
             Block::Build => {
-                app.set_current_route_state(None, Some(Block::Log));
+                app.set_current_route_state(None, Some(Block::Log(app.state.selected_tab)));
                 AppReturn::Continue
             }
             Block::Deployment => {
-                app.set_current_route_state(None, Some(Block::Log));
+                app.set_current_route_state(None, Some(Block::Log(app.state.selected_tab)));
                 AppReturn::Continue
             }
             _ => AppReturn::Continue,

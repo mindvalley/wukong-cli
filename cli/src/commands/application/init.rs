@@ -1,24 +1,35 @@
-use crate::commands::application::config::{
-    ApplicationAddonElixirLivebookConfig, ApplicationAddonsConfig, ApplicationConfig,
-    ApplicationConfigs, ApplicationNamespaceAppsignalConfig, ApplicationNamespaceBuildConfig,
-    ApplicationNamespaceCloudsqlConfig, ApplicationNamespaceConfig,
-    ApplicationNamespaceDeliveryConfig, ApplicationNamespaceHoneycombConfig,
-    ApplicationWorkflowConfig,
+use crate::{
+    application_config::{
+        ApplicationAddonElixirLivebookConfig, ApplicationAddonsConfig, ApplicationConfig,
+        ApplicationConfigs, ApplicationNamespaceAppsignalConfig, ApplicationNamespaceBuildConfig,
+        ApplicationNamespaceCloudsqlConfig, ApplicationNamespaceConfig,
+        ApplicationNamespaceDeliveryConfig, ApplicationNamespaceHoneycombConfig,
+        ApplicationWorkflowConfig,
+    },
+    commands::Context,
+    config::Config,
+    error::WKCliError,
+    loader::new_spinner,
+    utils::inquire::inquire_render_config,
+    wukong_client::WKClient,
 };
-use crate::config::get_inquire_render_config;
-use crate::error::WKCliError;
 use crossterm::style::Stylize;
 use heck::ToSnakeCase;
 use inquire::{required, CustomType, Text};
 use std::fs;
+use wukong_sdk::graphql::appsignal_apps_query::AppsignalAppsQueryAppsignalApps;
 
-pub async fn handle_application_init() -> Result<bool, WKCliError> {
+pub async fn handle_application_init(context: Context) -> Result<bool, WKCliError> {
+    let config = Config::load_from_default_path()?;
+    let mut wk_client = WKClient::for_channel(&config, &context.channel)?;
+    let mut appsignall_apps = None;
+
     println!("Welcome! Initializing per-repo configuration for your application.");
 
     let mut application_configs = ApplicationConfigs::new()?;
 
     let name = Text::new("Name of your application")
-        .with_render_config(get_inquire_render_config())
+        .with_render_config(inquire_render_config())
         .with_validator(required!("Application name is required"))
         .with_placeholder("my-first-application")
         .prompt()?;
@@ -26,18 +37,19 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
     let workflows = get_workflows_from_current_dir()?;
     let excluded_workflows =
         inquire::MultiSelect::new("Workflows to exclude from the Wukong CLI & TUI", workflows)
-            .with_render_config(get_inquire_render_config())
+            .with_render_config(inquire_render_config())
             .with_help_message(
                 "Leave blank to ignore, ↑↓ to move, space to select one, → to all, ← to none",
             )
             .prompt()?;
 
     let mut namespaces: Vec<ApplicationNamespaceConfig> = Vec::new();
-    namespaces.push(configure_namespace("prod".to_string())?);
+    namespaces
+        .push(configure_namespace("prod".to_string(), &mut wk_client, &mut appsignall_apps).await?);
 
     let addons = ["Elixir Livebook"];
     let selected_addons = inquire::MultiSelect::new("Addons", addons.to_vec())
-        .with_render_config(get_inquire_render_config())
+        .with_render_config(inquire_render_config())
         .with_help_message(
             "Leave blank to ignore, ↑↓ to move, space to select one, → to all, ← to none",
         )
@@ -47,12 +59,15 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
 
     let configure_staging_namespace =
         inquire::Confirm::new("Do you want to configure the staging namespace?")
-            .with_render_config(get_inquire_render_config())
+            .with_render_config(inquire_render_config())
             .with_default(true)
             .prompt()?;
 
     if configure_staging_namespace {
-        namespaces.push(configure_namespace("staging".to_string())?);
+        namespaces.push(
+            configure_namespace("staging".to_string(), &mut wk_client, &mut appsignall_apps)
+                .await?,
+        );
     }
 
     let workflows = ApplicationWorkflowConfig {
@@ -84,7 +99,7 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
     let updated_application_configs = inquire::Editor::new(
         "Do you want to review the .wukong.toml file before writing to disk ?",
     )
-    .with_render_config(get_inquire_render_config())
+    .with_render_config(inquire_render_config())
     .with_file_extension("toml")
     .with_predefined_text(&application_configs.to_string()?)
     .prompt()?
@@ -95,7 +110,7 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
 
     let agree_to_save =
         inquire::Confirm::new("Do you want to write this configuration into your repo?")
-            .with_render_config(get_inquire_render_config())
+            .with_render_config(inquire_render_config())
             .with_default(true)
             .prompt()?;
 
@@ -122,33 +137,85 @@ pub async fn handle_application_init() -> Result<bool, WKCliError> {
     Ok(true)
 }
 
-fn configure_namespace(namespace_type: String) -> Result<ApplicationNamespaceConfig, WKCliError> {
+async fn configure_namespace(
+    namespace_type: String,
+    wk_client: &mut WKClient,
+    appsignal_apps: &mut Option<Vec<AppsignalAppsQueryAppsignalApps>>,
+) -> Result<ApplicationNamespaceConfig, WKCliError> {
     let rollup_strategy_options = ["Rolling Upgrade", "Blue/Green", "Canary"];
     let rollout_strategy =
         inquire::Select::new("Rollup strategy", rollup_strategy_options.to_vec())
-            .with_render_config(get_inquire_render_config())
+            .with_render_config(inquire_render_config())
             .prompt()?;
 
     let base_replica = CustomType::<u32>::new("Number of replicas")
-        .with_render_config(get_inquire_render_config())
+        .with_render_config(inquire_render_config())
         .with_default(3)
         .with_error_message("Please enter a valid number")
         .prompt()?;
 
-    let appsignal_environment = inquire::Text::new("AppSignal Environment")
-        .with_render_config(get_inquire_render_config())
-        .with_placeholder(" Optional")
-        .with_help_message("Leave it blank to disable AppSignal integration")
+    let mut selected_appsignal_app_id = None;
+    let mut selected_appsignal_environment = None;
+    let mut selected_appsignal_namespace = None;
+    let setup_appsignal_environment =
+        inquire::Confirm::new("Do you want to setup AppSignal integration?")
+            .with_default(false)
+            .with_help_message("This is Optional. You can setup this later.")
+            .prompt()?;
+
+    if setup_appsignal_environment {
+        if appsignal_apps.is_none() {
+            let fetch_loader = new_spinner();
+            fetch_loader.set_message("Fetching Appsignal apps ...");
+
+            let apps = wk_client.fetch_appsignal_apps().await?.appsignal_apps;
+
+            appsignal_apps.replace(apps);
+
+            fetch_loader.finish_and_clear();
+        }
+
+        let appsignal_environment = inquire::Select::new(
+            "AppSignal Environment",
+            appsignal_apps
+                .as_ref()
+                .unwrap() // SAFRTY: the appsignal_apps is fetched above so it will always be Some(x) here
+                .iter()
+                .map(|app| format!("{} - {}", app.name, app.environment))
+                .collect(),
+        )
+        .with_render_config(inquire_render_config())
         .prompt()?;
 
+        // WHY inquire don't return index ?!!!
+        let index = appsignal_apps
+            .as_ref()
+            .unwrap() // SAFRTY: the appsignal_apps is fetched above so it will always be Some(x) here
+            .iter()
+            .position(|app| format!("{} - {}", app.name, app.environment) == appsignal_environment)
+            .unwrap(); // SAFETY: the appsignal_environment value is from the appsignal_apps list, so it is always present in the list
+
+        let appsignal_namespace = inquire::Select::new(
+            "Appsignal Namespace",
+            appsignal_apps.as_ref().unwrap()[index].namespaces.clone(),
+        )
+        .with_render_config(inquire_render_config())
+        .prompt()?;
+
+        selected_appsignal_app_id = Some(appsignal_apps.as_ref().unwrap()[index].id.clone());
+        selected_appsignal_environment =
+            Some(appsignal_apps.as_ref().unwrap()[index].environment.clone());
+        selected_appsignal_namespace = Some(appsignal_namespace);
+    }
+
     let honeycomb_dataset = inquire::Text::new("Honeycomb Dataset")
-        .with_render_config(get_inquire_render_config())
+        .with_render_config(inquire_render_config())
         .with_placeholder(" Optional")
         .with_help_message("Leave it blank to disable Honeycomb integration")
         .prompt()?;
 
     let cloudsql_project_id = inquire::Text::new("Google Project of your CloudSQL instance(s)")
-        .with_render_config(get_inquire_render_config())
+        .with_render_config(inquire_render_config())
         .with_placeholder(" Optional")
         .with_help_message("Leave it blank to disable Google CloudSQL integration")
         .prompt()?;
@@ -163,14 +230,15 @@ fn configure_namespace(namespace_type: String) -> Result<ApplicationNamespaceCon
             base_replica,
             rollout_strategy: rollout_strategy.to_string().to_snake_case(),
         }),
-        appsignal: if appsignal_environment.is_empty() {
-            None
-        } else {
+        appsignal: if setup_appsignal_environment {
             Some(ApplicationNamespaceAppsignalConfig {
                 enable: true,
-                environment: appsignal_environment,
-                default_namespace: namespace_type.clone(),
+                app_id: selected_appsignal_app_id.unwrap(),
+                environment: selected_appsignal_environment.unwrap(),
+                default_namespace: selected_appsignal_namespace.unwrap(),
             })
+        } else {
+            None
         },
         honeycomb: if honeycomb_dataset.is_empty() {
             None

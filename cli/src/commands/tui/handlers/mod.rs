@@ -8,10 +8,12 @@ mod log_search;
 mod logs;
 mod namespace_selection;
 // mod time_filter_selection;
+mod appsignal;
+mod middle;
 mod version_selection;
 
 use super::{
-    app::{App, AppReturn, Block, DialogContext},
+    app::{App, AppReturn, Block, DialogContext, SelectedTab},
     events::key::Key,
 };
 use crossterm::event::{MouseEvent, MouseEventKind};
@@ -28,7 +30,13 @@ async fn handle_block_events(key: Key, app: &mut App) -> AppReturn {
 
     match current_route.active_block {
         Block::Empty => empty::handler(key, app).await, // Main Input
-        Block::Log => logs::handler(key, app).await,
+        Block::Log(selected_tab) => {
+            middle::handler(key, app).await;
+            match selected_tab {
+                SelectedTab::GCloud => logs::handler(key, app).await,
+                SelectedTab::AppSignal => appsignal::handler(key, app).await,
+            }
+        }
         Block::Dialog(DialogContext::NamespaceSelection) => {
             namespace_selection::handler(key, app).await
         }

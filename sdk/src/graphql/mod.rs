@@ -1,4 +1,5 @@
 pub mod application;
+pub mod appsignal;
 pub mod changelog;
 pub mod deployment;
 pub mod deployment_github;
@@ -10,6 +11,11 @@ pub use self::{
     application::{
         application_query, application_with_k8s_cluster_query, applications_query,
         ApplicationQuery, ApplicationWithK8sClusterQuery, ApplicationsQuery,
+    },
+    appsignal::{
+        appsignal_apps_query, appsignal_average_error_rate_query, appsignal_average_latency_query,
+        appsignal_average_throughput_query, AppsignalAppsQuery, AppsignalAverageErrorRateQuery,
+        AppsignalAverageLatencyQuery, AppsignalAverageThroughputQuery, AppsignalTimeFrame,
     },
     changelog::{changelogs_query, ChangelogsQuery},
     deployment::{
@@ -582,7 +588,7 @@ impl WKClient {
     /// Deploy the livebook instance for the `application` (with the `namespace` and `version`) from Wukong API Proxy.
     /// The `name` is the instance name the livebook connect to. The `port` is the livebook port.
     pub async fn deploy_livebook(
-        &mut self,
+        &self,
         application: &str,
         namespace: &str,
         version: &str,
@@ -630,7 +636,7 @@ impl WKClient {
 
     /// Fetch the application with k8s cluster info from Wukong API Proxy.
     pub async fn fetch_application_with_k8s_cluster(
-        &mut self,
+        &self,
         name: &str,
         namespace: &str,
         version: &str,
@@ -645,6 +651,95 @@ impl WKClient {
                     namespace: namespace.to_string(),
                     version: version.to_string(),
                 },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    pub async fn fetch_appsignal_average_error_rate(
+        &self,
+        app_id: &str,
+        namespace: &str,
+        start: &str,
+        until: &str,
+        timeframe: AppsignalTimeFrame,
+    ) -> Result<appsignal_average_error_rate_query::ResponseData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        gql_client
+            .post_graphql::<AppsignalAverageErrorRateQuery, _>(
+                &self.api_url,
+                appsignal_average_error_rate_query::Variables {
+                    app_id: app_id.to_string(),
+                    namespace: namespace.to_string(),
+                    start: start.to_string(),
+                    until: until.to_string(),
+                    timeframe: timeframe.into(),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    pub async fn fetch_appsignal_average_latency(
+        &self,
+        app_id: &str,
+        namespace: &str,
+        start: &str,
+        until: &str,
+        timeframe: AppsignalTimeFrame,
+    ) -> Result<appsignal_average_latency_query::ResponseData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        gql_client
+            .post_graphql::<AppsignalAverageLatencyQuery, _>(
+                &self.api_url,
+                appsignal_average_latency_query::Variables {
+                    app_id: app_id.to_string(),
+                    namespace: namespace.to_string(),
+                    start: start.to_string(),
+                    until: until.to_string(),
+                    timeframe: timeframe.into(),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    pub async fn fetch_appsignal_average_throughput(
+        &self,
+        app_id: &str,
+        namespace: &str,
+        start: &str,
+        until: &str,
+        timeframe: AppsignalTimeFrame,
+    ) -> Result<appsignal_average_throughput_query::ResponseData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        gql_client
+            .post_graphql::<AppsignalAverageThroughputQuery, _>(
+                &self.api_url,
+                appsignal_average_throughput_query::Variables {
+                    app_id: app_id.to_string(),
+                    namespace: namespace.to_string(),
+                    start: start.to_string(),
+                    until: until.to_string(),
+                    timeframe: timeframe.into(),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    pub async fn fetch_appsignal_apps(
+        &self,
+    ) -> Result<appsignal_apps_query::ResponseData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        gql_client
+            .post_graphql::<AppsignalAppsQuery, _>(
+                &self.api_url,
+                appsignal_apps_query::Variables {},
             )
             .await
             .map_err(|err| err.into())

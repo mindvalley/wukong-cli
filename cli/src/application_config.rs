@@ -2,7 +2,7 @@ use crate::error::ApplicationConfigError;
 use serde::{Deserialize, Serialize};
 use std::{
     fs::{create_dir_all, File},
-    io::Write,
+    io::{self, Write},
     path::PathBuf,
     str::FromStr,
 };
@@ -43,6 +43,7 @@ pub struct ApplicationNamespaceDeliveryConfig {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct ApplicationNamespaceAppsignalConfig {
     pub enable: bool,
+    pub app_id: String,
     pub environment: String,
     pub default_namespace: String,
 }
@@ -114,6 +115,32 @@ impl ApplicationConfigs {
             application: None,
             config_path,
         })
+    }
+
+    pub fn load() -> Result<Self, ApplicationConfigError> {
+        let current_dir = std::env::current_dir().expect("Unable to get current working directory");
+        let config_path = std::path::Path::new(&current_dir).join(".wukong.toml");
+
+        let content = std::fs::read_to_string(
+            config_path
+                .to_str()
+                .expect("The config file path is not valid"),
+        )
+        .map_err(|err| match err.kind() {
+            io::ErrorKind::NotFound => ApplicationConfigError::NotFound {
+                path: ".wukong.toml",
+                source: err,
+            },
+            io::ErrorKind::PermissionDenied => ApplicationConfigError::PermissionDenied {
+                path: ".wukong.toml",
+                source: err,
+            },
+            _ => err.into(),
+        })?;
+
+        let config = toml::from_str(&content).map_err(ApplicationConfigError::BadTomlData)?;
+
+        Ok(config)
     }
 
     pub fn save(&self) -> Result<(), ApplicationConfigError> {

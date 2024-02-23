@@ -1,0 +1,8 @@
+query AppsignalAppsQuery {
+    appsignalApps {
+        id
+        name
+        environment
+        namespaces
+    }
+}

@@ -16,11 +16,6 @@ pub struct LogsWidget;
 
 impl LogsWidget {
     pub fn draw<B: Backend>(app: &mut App, frame: &mut Frame<B>, rect: Rect) {
-        app.state.logs_widget_width = rect.width;
-        app.state.logs_widget_height = rect.height;
-
-        app.update_draw_lock(Block::Log, rect);
-
         let main_block = create_main_block(app);
         frame.render_widget(main_block, rect);
 
@@ -40,10 +35,7 @@ impl LogsWidget {
                 ]
                 .as_ref(),
             )
-            .split(rect.inner(&Margin {
-                vertical: 1,
-                horizontal: 1,
-            }))
+            .split(rect)
         else {
             return;
         };
@@ -76,22 +68,8 @@ impl LogsWidget {
     }
 }
 
-fn create_main_block(app: &mut App) -> WidgetBlock<'static> {
-    let current_route = app.get_current_route();
-
-    let highlight_state = (
-        current_route.active_block == Block::Log,
-        current_route.hovered_block == Block::Log,
-    );
-
+fn create_main_block(_app: &mut App) -> WidgetBlock<'static> {
     WidgetBlock::default()
-        .title(" Logs ")
-        .borders(Borders::ALL)
-        .padding(Padding::new(1, 1, 0, 0))
-        .border_style(get_color(
-            highlight_state,
-            (Color::LightCyan, Color::LightGreen, Color::White),
-        ))
 }
 
 fn create_title(state: &State) -> WidgetBlock {
@@ -123,7 +101,7 @@ fn create_loading_block() -> Paragraph<'static> {
         "Loading...",
         Style::default().fg(Color::White),
     ))
-    .block(WidgetBlock::default().padding(Padding::new(1, 1, 0, 0)))
+    .block(WidgetBlock::default())
 }
 
 fn create_error_block(error: &str) -> Paragraph<'_> {
