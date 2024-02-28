@@ -1,4 +1,5 @@
 use chrono::{DateTime, Local, NaiveDateTime, Utc};
+use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 use tabled::Tabled;
 use time_humanize::HumanTime;
@@ -147,7 +148,10 @@ pub async fn handle_status(
             }
             DisplayOrNot::NotDisplay(reason) => {
                 println!();
-                println!("{}", reason);
+                println!(
+                    "* Appsignal status is not display because {}",
+                    reason.bold()
+                );
             }
         }
     }
