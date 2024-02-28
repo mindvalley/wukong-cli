@@ -180,17 +180,7 @@ pub mod aggregation {
     /// example, if you apply a counting operation to boolean values, the data
     /// `value_type` in the original time series is `BOOLEAN`, but the `value_type`
     /// in the aligned result is `INT64`.
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum Aligner {
         /// No alignment. Raw data is returned. Not valid if cross-series reduction
@@ -378,17 +368,7 @@ pub mod aggregation {
     /// time series into a single time series, where the value of each data point
     /// in the resulting series is a function of all the already aligned values in
     /// the input time series.
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum Reducer {
         /// No cross-time series reduction. The output of the `Aligner` is
@@ -657,7 +637,10 @@ pub struct TimeSeries {
     /// metric's descriptor must be auto-created, then this field specifies the
     /// metric kind of the new descriptor and must be either `GAUGE` (the default)
     /// or `CUMULATIVE`.
-    #[prost(enumeration = "super::super::api::metric_descriptor::MetricKind", tag = "3")]
+    #[prost(
+        enumeration = "super::super::api::metric_descriptor::MetricKind",
+        tag = "3"
+    )]
     pub metric_kind: i32,
     /// The value type of the time series. When listing time series, this value
     /// type might be different from the value type of the associated metric if
@@ -665,7 +648,10 @@ pub struct TimeSeries {
     ///
     /// When creating a time series, this field is optional. If present, it must be
     /// the same as the type of the data in the `points` field.
-    #[prost(enumeration = "super::super::api::metric_descriptor::ValueType", tag = "4")]
+    #[prost(
+        enumeration = "super::super::api::metric_descriptor::ValueType",
+        tag = "4"
+    )]
     pub value_type: i32,
     /// The data points of this time series. When listing time series, points are
     /// returned in reverse time order.
@@ -692,9 +678,7 @@ pub struct TimeSeriesDescriptor {
     pub label_descriptors: ::prost::alloc::vec::Vec<super::super::api::LabelDescriptor>,
     /// Descriptors for the point data value columns.
     #[prost(message, repeated, tag = "5")]
-    pub point_descriptors: ::prost::alloc::vec::Vec<
-        time_series_descriptor::ValueDescriptor,
-    >,
+    pub point_descriptors: ::prost::alloc::vec::Vec<time_series_descriptor::ValueDescriptor>,
 }
 /// Nested message and enum types in `TimeSeriesDescriptor`.
 pub mod time_series_descriptor {

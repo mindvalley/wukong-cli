@@ -1,0 +1,7 @@
+query AppsignalDeployMarkersQuery($appId: String!, $limit: Int = 1) {
+    appsignalDeployMarkers(appId: $appId, limit: $limit) {
+        id
+        revision
+        deployedAt
+    }
+}

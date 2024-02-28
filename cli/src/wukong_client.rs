@@ -9,7 +9,8 @@ use wukong_sdk::{
     graphql::{
         application_query, application_with_k8s_cluster_query, applications_query,
         appsignal_apps_query, appsignal_average_error_rate_query, appsignal_average_latency_query,
-        appsignal_average_throughput_query, cd_pipeline_for_rollback_query,
+        appsignal_average_throughput_query, appsignal_deploy_markers_query,
+        appsignal_exception_incidents_query, cd_pipeline_for_rollback_query,
         cd_pipeline_github_query, cd_pipeline_query, cd_pipelines_query, changelogs_query,
         ci_status_query, deploy_livebook, deployment::cd_pipeline_status_query, destroy_livebook,
         execute_cd_pipeline, is_authorized_query, kubernetes_pods_query, livebook_resource_query,
@@ -413,5 +414,31 @@ impl WKClient {
     ) -> Result<appsignal_apps_query::ResponseData, WKCliError> {
         self.check_and_refresh_tokens().await?;
         self.inner.fetch_appsignal_apps().await
+    }
+
+    #[wukong_telemetry(api_event = "fetch_appsignal_deploy_markers")]
+    pub async fn fetch_appsignal_deploy_markers(
+        &mut self,
+        app_id: &str,
+        limit: Option<i64>,
+    ) -> Result<appsignal_deploy_markers_query::ResponseData, WKCliError> {
+        self.check_and_refresh_tokens().await?;
+        self.inner
+            .fetch_appsignal_deploy_markers(app_id, limit)
+            .await
+    }
+
+    #[wukong_telemetry(api_event = "fetch_appsignal_exception_incidents")]
+    pub async fn fetch_appsignal_exception_incidents(
+        &mut self,
+        app_id: &str,
+        namespaces: Vec<String>,
+        limit: Option<i64>,
+        marker: Option<String>,
+    ) -> Result<appsignal_exception_incidents_query::ResponseData, WKCliError> {
+        self.check_and_refresh_tokens().await?;
+        self.inner
+            .fetch_appsignal_exception_incidents(app_id, namespaces, limit, marker)
+            .await
     }
 }

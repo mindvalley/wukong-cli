@@ -1,0 +1,8 @@
+query AppsignalExceptionIncidentsQuery($appId: String!, $namespaces: [String!]!, $limit: Int, $marker: String) {
+    appsignalExceptionIncidents(appId: $appId, namespaces: $namespaces, limit: $limit, marker: $marker) {
+        id
+        name
+        count
+        perMarkerCount
+    }
+}
