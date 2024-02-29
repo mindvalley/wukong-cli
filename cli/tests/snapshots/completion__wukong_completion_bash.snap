@@ -139,6 +139,9 @@ _wukong() {
             wukong__deployment,rollback)
                 cmd="wukong__deployment__rollback"
                 ;;
+            wukong__deployment,status)
+                cmd="wukong__deployment__status"
+                ;;
             wukong__deployment__help,execute)
                 cmd="wukong__deployment__help__execute"
                 ;;
@@ -150,6 +153,9 @@ _wukong() {
                 ;;
             wukong__deployment__help,rollback)
                 cmd="wukong__deployment__help__rollback"
+                ;;
+            wukong__deployment__help,status)
+                cmd="wukong__deployment__help__status"
                 ;;
             wukong__dev,config)
                 cmd="wukong__dev__config"
@@ -285,6 +291,9 @@ _wukong() {
                 ;;
             wukong__help__deployment,rollback)
                 cmd="wukong__help__deployment__rollback"
+                ;;
+            wukong__help__deployment,status)
+                cmd="wukong__help__deployment__status"
                 ;;
             wukong__help__dev,config)
                 cmd="wukong__help__dev__config"
@@ -928,7 +937,7 @@ _wukong() {
             return 0
             ;;
         wukong__deployment)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help list execute rollback help"
+            opts="-a -v -q -h --application --verbose --quiet --report --canary --help list execute rollback status help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -984,7 +993,7 @@ _wukong() {
             return 0
             ;;
         wukong__deployment__help)
-            opts="list execute rollback help"
+            opts="list execute rollback status help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -1053,6 +1062,20 @@ _wukong() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
+        wukong__deployment__help__status)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
         wukong__deployment__list)
             opts="-a -v -q -h --application --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
@@ -1086,6 +1109,32 @@ _wukong() {
                     COMPREPLY=($(compgen -W "prod staging" -- "${cur}"))
                     return 0
                     ;;
+                --version)
+                    COMPREPLY=($(compgen -W "blue green" -- "${cur}"))
+                    return 0
+                    ;;
+                --application)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                -a)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__deployment__status)
+            opts="-a -v -q -h --version --application --verbose --quiet --report --canary --help"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
                 --version)
                     COMPREPLY=($(compgen -W "blue green" -- "${cur}"))
                     return 0
@@ -1688,7 +1737,7 @@ _wukong() {
             return 0
             ;;
         wukong__help__deployment)
-            opts="list execute rollback"
+            opts="list execute rollback status"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -1730,6 +1779,20 @@ _wukong() {
             return 0
             ;;
         wukong__help__deployment__rollback)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__help__deployment__status)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -2207,4 +2270,3 @@ if [[ "${BASH_VERSINFO[0]}" -eq 4 && "${BASH_VERSINFO[1]}" -ge 4 || "${BASH_VERS
 else
     complete -F _wukong -o bashdefault -o default wukong
 fi
-
