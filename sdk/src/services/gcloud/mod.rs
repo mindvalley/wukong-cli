@@ -20,15 +20,29 @@ pub mod google {
 
 }
 
-use self::google::logging::v2::{log_entry, LogEntry};
+use log::info;
+
+use self::google::{
+    logging::v2::{log_entry, LogEntry},
+    monitoring::v3::{
+        aggregation::{Aligner, Reducer},
+        list_time_series_request::TimeSeriesView,
+        metric_service_client::MetricServiceClient,
+        Aggregation, ListTimeSeriesRequest, ListTimeSeriesResponse, TimeInterval,
+    },
+};
 use crate::{
     error::{GCloudError, WKError},
     WKClient,
 };
-use chrono::Duration;
+use chrono::{DateTime, Duration, Utc};
+use core::panic;
 use google::logging::v2::{
     logging_service_v2_client::LoggingServiceV2Client, ListLogEntriesRequest,
 };
+use log::trace;
+use owo_colors::OwoColorize;
+use prost_types::Timestamp;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use tonic::{metadata::MetadataValue, transport::Channel, Request};
@@ -156,6 +170,14 @@ pub struct LogEntries {
     pub next_page_token: Option<String>,
 }
 
+#[derive(Debug)]
+pub struct DatabaseInstance {
+    pub name: String,
+    pub cpu_utilization: f64,
+    pub memory_utilization: f64,
+    pub connections_count: i64,
+}
+
 pub struct GCloudClient {
     access_token: String,
 }
@@ -230,6 +252,60 @@ impl GCloudClient {
 
         Ok(token_info)
     }
+
+    pub async fn get_database_metrics(
+        &self,
+        application: &str,
+        namespace: &str,
+        project_id: &str,
+    ) -> Result<Vec<DatabaseInstance>, GCloudError> {
+        let mut metric_types: Vec<&str> = Vec::new();
+        metric_types.push("metric.type=\"cloudsql.googleapis.com/database/cpu/utilization\"");
+        metric_types.push("metric.type=\"cloudsql.googleapis.com/database/memory/utilization\"");
+        metric_types.push("metric.type=\"cloudsql.googleapis.com/database/memory/components\"");
+
+        let mut database_instances = Vec::new();
+        let current_time = Utc::now();
+        let start_time = current_time - Duration::minutes(10);
+
+        let mut responses: Vec<ListTimeSeriesResponse> = Vec::new();
+        for metric_type in metric_types {
+            let bearer_token = format!("Bearer {}", self.access_token);
+            let header_value: MetadataValue<_> = bearer_token.parse().unwrap();
+            let channel = Channel::from_static("https://monitoring.googleapis.com")
+                .connect()
+                .await
+                .unwrap();
+
+            let mut service =
+                MetricServiceClient::with_interceptor(channel, move |mut req: Request<()>| {
+                    let metadata_map = req.metadata_mut();
+                    metadata_map.insert("authorization", header_value.clone());
+                    metadata_map.insert("user-agent", "grpc-go/1.14".parse().unwrap());
+
+                    Ok(req)
+                });
+
+            let request: ListTimeSeriesRequest =
+                generate_request(metric_type, project_id, &start_time, &current_time);
+
+            let response = service
+                .list_time_series(Request::new(request.clone()))
+                .await?
+                .into_inner();
+            responses.push(response);
+        }
+
+        info!("{:?}", responses);
+        database_instances.push(DatabaseInstance {
+            name: responses[0].time_series.iter().count().to_string(),
+            cpu_utilization: 10.0,
+            memory_utilization: 10.0,
+            connections_count: 1000,
+        });
+
+        Ok(database_instances)
+    }
 }
 
 /// Functions from Google Cloud service.
@@ -254,5 +330,55 @@ impl WKClient {
             .get_access_token_info()
             .await
             .map_err(|err| err.into())
+    }
+
+    pub async fn get_gcloud_database_metrics(
+        &self,
+        application: &str,
+        namespace: &str,
+        project_id: &str,
+        access_token: String,
+    ) -> Result<Vec<DatabaseInstance>, WKError> {
+        let google_client = GCloudClient::new(access_token);
+        google_client
+            .get_database_metrics(application, namespace, project_id)
+            .await
+            .map_err(|err| err.into())
+    }
+}
+
+fn generate_request(
+    metric_type: &str,
+    project_id: &str,
+    start_time: &DateTime<Utc>,
+    end_time: &DateTime<Utc>,
+) -> ListTimeSeriesRequest {
+    ListTimeSeriesRequest {
+        name: format!("projects/{}", project_id),
+        filter: metric_type.to_string(),
+        interval: Some(TimeInterval {
+            start_time: Some(Timestamp {
+                seconds: start_time.timestamp(),
+                nanos: 0,
+            }),
+            end_time: Some(Timestamp {
+                seconds: end_time.timestamp(),
+                nanos: 0,
+            }),
+        }),
+        view: TimeSeriesView::Full.into(),
+        aggregation: Some(Aggregation {
+            alignment_period: Some(prost_types::Duration {
+                seconds: 600,
+                nanos: 0,
+            }),
+            per_series_aligner: Aligner::AlignMin as i32,
+            cross_series_reducer: Reducer::ReduceNone as i32,
+            group_by_fields: Vec::new(),
+        }),
+        secondary_aggregation: None,
+        order_by: "".to_string(),
+        page_size: 10,
+        page_token: "".to_string(),
     }
 }

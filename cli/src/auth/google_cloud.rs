@@ -153,7 +153,11 @@ pub async fn get_token_or_login(config: Option<Config>) -> String {
     .unwrap();
 
     authenticator
-        .token(&["https://www.googleapis.com/auth/logging.read"])
+        .token(&[
+            "https://www.googleapis.com/auth/logging.read",
+            "https://www.googleapis.com/auth/cloud-platform.read-only",
+            "https://www.googleapis.com/auth/monitoring.read",
+        ])
         .await
         .unwrap()
         .token()

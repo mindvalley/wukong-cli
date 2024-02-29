@@ -1,15 +1,30 @@
-use crate::commands::tui::app::{App};
+use crate::commands::tui::app::App;
 use ratatui::{
     prelude::{Backend, Constraint, Rect},
     style::{Color, Style},
-    text::Span,
-    widgets::{Cell, Row, Table},
+    text::{Span, Text},
+    widgets::{Block as WidgetBlock, Cell, Padding, Paragraph, Row, Table},
     Frame,
 };
 pub struct DatabasesWidget;
 
 impl DatabasesWidget {
-    pub fn draw<B: Backend>(_app: &mut App, frame: &mut Frame<B>, rect: Rect) {
+    pub fn draw<B: Backend>(app: &mut App, frame: &mut Frame<B>, rect: Rect) {
+        if let Some(ref error) = app.state.databases.error {
+            let error_message = create_error_block(error);
+            frame.render_widget(error_message, rect);
+            return;
+        }
+        // it will show loader only on the first call
+        if app.state.databases.is_fetching {
+            let loading_message = create_loading_block();
+            frame.render_widget(loading_message, rect);
+            return;
+        }
+
+        create_custom_text_block("fucking up here".to_string());
+
+        // todo!();
         let name_style = Style::default().fg(Color::White);
 
         // Get database instances, cpu usage, free memory, and connections count from the cloudsql client
@@ -21,7 +36,10 @@ impl DatabasesWidget {
         let rows = vec![
             Row::new(vec![
                 Cell::from(Span::styled("Database Instances", name_style)),
-                Cell::from(Span::styled(database_instances.to_string(), name_style)),
+                Cell::from(Span::styled(
+                    app.state.databases.database_instances[0].name.to_string(),
+                    name_style,
+                )),
             ]),
             Row::new(vec![
                 Cell::from(Span::styled("CPU Usage", name_style)),
@@ -47,4 +65,22 @@ impl DatabasesWidget {
 
         frame.render_widget(widget, rect);
     }
+}
+
+fn create_loading_block() -> Paragraph<'static> {
+    Paragraph::new(Text::styled(
+        "Loading...",
+        Style::default().fg(Color::White),
+    ))
+    .block(WidgetBlock::default())
+}
+
+fn create_custom_text_block(text: String) -> Paragraph<'static> {
+    Paragraph::new(Text::styled(text, Style::default().fg(Color::White)))
+        .block(WidgetBlock::default())
+}
+
+fn create_error_block(error: &str) -> Paragraph<'_> {
+    Paragraph::new(Text::styled(error, Style::default().fg(Color::White)))
+        .block(WidgetBlock::default().padding(Padding::new(1, 1, 0, 0)))
 }

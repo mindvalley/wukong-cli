@@ -8,9 +8,9 @@ use ratatui::{
 
 use self::{
     application::ApplicationWidget, appsignal::AppsignalWidget, builds::BuildsWidget,
-    deployment::DeploymentWidget, help::HelpWidget, logs::LogsWidget, middle::MiddleWidget,
-    namespace_selection::NamespaceSelectionWidget, version_selection::VersionSelectionWidget,
-    welcome::WelcomeWidget,
+    databases::DatabasesWidget, deployment::DeploymentWidget, help::HelpWidget, logs::LogsWidget,
+    middle::MiddleWidget, namespace_selection::NamespaceSelectionWidget,
+    version_selection::VersionSelectionWidget, welcome::WelcomeWidget,
 };
 
 use super::app::{App, Block, DialogContext, SelectedTab};
@@ -52,7 +52,7 @@ where
             Block::Log(selected_tab) => match selected_tab {
                 SelectedTab::GCloud => LogsWidget::draw(app, frame, bottom),
                 SelectedTab::AppSignal => AppsignalWidget::draw(app, frame, bottom),
-                SelectedTab::Databases => BuildsWidget::draw(app, frame, bottom),
+                SelectedTab::Databases => DatabasesWidget::draw(app, frame, bottom),
             },
             Block::Empty => todo!(),
             Block::Dialog(_) => todo!(),

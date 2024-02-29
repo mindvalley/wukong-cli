@@ -1,5 +1,6 @@
 use super::{
     appsignal::reset_appsignal_panel_and_trigger_appsignal_refetch, common_key_events,
+    databases::reset_database_panel_and_trigger_database_refetch,
     logs::reset_log_panel_and_trigger_log_refetch,
 };
 
@@ -54,4 +55,7 @@ async fn fetch_and_reset_polling(app: &mut App, selected_version: String) {
 
     reset_appsignal_panel_and_trigger_appsignal_refetch(app);
     app.dispatch(NetworkEvent::GetAppsignalData).await;
+
+    reset_database_panel_and_trigger_database_refetch(app);
+    app.dispatch(NetworkEvent::GetDatabaseMetrics).await;
 }
