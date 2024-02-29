@@ -36,12 +36,9 @@ use crate::{
     WKClient,
 };
 use chrono::{DateTime, Duration, Utc};
-use core::panic;
 use google::logging::v2::{
     logging_service_v2_client::LoggingServiceV2Client, ListLogEntriesRequest,
 };
-use log::trace;
-use owo_colors::OwoColorize;
 use prost_types::Timestamp;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
@@ -255,8 +252,8 @@ impl GCloudClient {
 
     pub async fn get_database_metrics(
         &self,
-        application: &str,
-        namespace: &str,
+        _application: &str,
+        _namespace: &str,
         project_id: &str,
     ) -> Result<Vec<DatabaseInstance>, GCloudError> {
         let mut metric_types: Vec<&str> = Vec::new();
@@ -289,11 +286,9 @@ impl GCloudClient {
             let request: ListTimeSeriesRequest =
                 generate_request(metric_type, project_id, &start_time, &current_time);
 
-            let response = service
-                .list_time_series(Request::new(request.clone()))
-                .await?
-                .into_inner();
-            responses.push(response);
+            let response = service.list_time_series(Request::new(request.clone()));
+
+            responses.push(response.await?.into_inner());
         }
 
         info!("{:?}", responses);
