@@ -13,6 +13,11 @@ pub mod google {
         #[path = "google.monitoring.v3.rs"]
         pub mod v3;
     }
+    #[path = ""]
+    pub mod cloud {
+        #[path = "google.cloud.sql.v1.rs"]
+        pub mod sql;
+    }
     #[path = "google.api.rs"]
     pub mod api;
     #[path = "google.rpc.rs"]
@@ -23,6 +28,7 @@ pub mod google {
 use log::info;
 
 use self::google::{
+    cloud::sql::sql_instances_service_client::SqlInstancesServiceClient,
     logging::v2::{log_entry, LogEntry},
     monitoring::v3::{
         aggregation::{Aligner, Reducer},
@@ -33,6 +39,7 @@ use self::google::{
 };
 use crate::{
     error::{GCloudError, WKError},
+    services::gcloud::google::{cloud::sql::SqlInstancesListRequest, monitoring::v3::TimeSeries},
     WKClient,
 };
 use chrono::{DateTime, Duration, Utc};
@@ -41,7 +48,7 @@ use google::logging::v2::{
 };
 use prost_types::Timestamp;
 use serde::{Deserialize, Serialize};
-use std::fmt::Display;
+use std::{collections::HashMap, fmt::Display};
 use tonic::{metadata::MetadataValue, transport::Channel, Request};
 
 impl Display for LogEntry {
@@ -257,49 +264,105 @@ impl GCloudClient {
         project_id: &str,
     ) -> Result<Vec<DatabaseInstance>, GCloudError> {
         let mut metric_types: Vec<&str> = Vec::new();
-        metric_types.push("metric.type=\"cloudsql.googleapis.com/database/cpu/utilization\"");
-        metric_types.push("metric.type=\"cloudsql.googleapis.com/database/memory/utilization\"");
-        metric_types.push("metric.type=\"cloudsql.googleapis.com/database/memory/components\"");
+        // metric_types.push("metric.type=\"cloudsql.googleapis.com/database/cpu/utilization\"");
+        // metric_types.push("metric.type=\"cloudsql.googleapis.com/database/memory/utilization\"");
+        // metric_types.push("metric.type=\"cloudsql.googleapis.com/database/memory/components\"");
+        metric_types
+            .push("metric.type=\"cloudsql.googleapis.com/database/mysql/connections_count\"");
 
-        let mut database_instances = Vec::new();
+        let mut database_instances: Vec<DatabaseInstance> = Vec::new();
+
         let current_time = Utc::now();
         let start_time = current_time - Duration::minutes(10);
 
         let mut responses: Vec<ListTimeSeriesResponse> = Vec::new();
-        for metric_type in metric_types {
-            let bearer_token = format!("Bearer {}", self.access_token);
-            let header_value: MetadataValue<_> = bearer_token.parse().unwrap();
-            let channel = Channel::from_static("https://monitoring.googleapis.com")
-                .connect()
-                .await
-                .unwrap();
+        let bearer_token = format!("Bearer {}", self.access_token);
+        let header_value: MetadataValue<_> = bearer_token.parse().unwrap();
+        let channel = Channel::from_static("https://sqladmin.googleapis.com/")
+            .connect()
+            .await
+            .unwrap();
 
-            let mut service =
-                MetricServiceClient::with_interceptor(channel, move |mut req: Request<()>| {
-                    let metadata_map = req.metadata_mut();
-                    metadata_map.insert("authorization", header_value.clone());
-                    metadata_map.insert("user-agent", "grpc-go/1.14".parse().unwrap());
+        // let mut service: SqlInstancesServiceClient::with_interceptor(
+        //     channel,
+        //     move |mut req: Request<()>| {
+        //         let metadata_map = req.metadata_mut();
+        //         metadata_map.insert("authorization", header_value.clone());
+        //         metadata_map.insert("user-agent", "grpc-go/1.14".parse().unwrap());
 
-                    Ok(req)
-                });
+        //         Ok(req)
+        //     }
+        // );
+        let mut service =
+            SqlInstancesServiceClient::with_interceptor(channel, move |mut req: Request<()>| {
+                let metadata_map = req.metadata_mut();
+                metadata_map.insert("authorization", header_value.clone());
+                // metadata_map.insert("user-agent", "grpc-go/1.14".parse().unwrap());
 
-            let request: ListTimeSeriesRequest =
-                generate_request(metric_type, project_id, &start_time, &current_time);
+                Ok(req)
+            });
+        let request = SqlInstancesListRequest {
+            project: format!("{}", project_id),
+            max_results: 100,
+            ..Default::default()
+        };
+        info!("The request: {:?}", request);
+        let sql_instances = service.list(Request::new(request)).await?.into_inner();
+        info!("The Databases: {:?}", sql_instances);
 
-            let response = service.list_time_series(Request::new(request.clone()));
+        todo!();
+        // for metric_type in metric_types {
+        //     let cloned_channel = channel.clone();
+        //     let cloned_header = header_value.clone();
 
-            responses.push(response.await?.into_inner());
-        }
+        //     let mut service = MetricServiceClient::with_interceptor(
+        //         cloned_channel,
+        //         move |mut req: Request<()>| {
+        //             let metadata_map = req.metadata_mut();
+        //             metadata_map.insert("authorization", cloned_header.clone());
+        //             metadata_map.insert("user-agent", "grpc-go/1.14".parse().unwrap());
 
-        info!("{:?}", responses);
-        database_instances.push(DatabaseInstance {
-            name: responses[0].time_series.iter().count().to_string(),
-            cpu_utilization: 10.0,
-            memory_utilization: 10.0,
-            connections_count: 1000,
-        });
+        //             Ok(req)
+        //         },
+        //     );
 
-        Ok(database_instances)
+        //     let request: ListTimeSeriesRequest =
+        //         generate_request(metric_type, project_id, &start_time, &current_time);
+
+        //     let response = service.list_time_series(Request::new(request.clone()));
+
+        //     responses.push(response.await?.into_inner());
+        // }
+
+        // let mut grouped_responses: HashMap<String, Vec<TimeSeries>> = HashMap::new();
+
+        // for response in &responses {
+        //     let database_id = response.time_series[0]
+        //         .resource
+        //         .as_ref()
+        //         .unwrap()
+        //         .labels
+        //         .get("database_id");
+
+        //     match database_id {
+        //         Some(database_id) => {
+        //             grouped_responses.insert(database_id.to_string(), response.time_series.clone());
+        //         }
+        //         None => {
+        //             continue;
+        //         }
+        //     }
+        // }
+
+        // info!("{:?}", grouped_responses);
+        // database_instances.push(DatabaseInstance {
+        //     name: responses[0].time_series.iter().count().to_string(),
+        //     cpu_utilization: 10.0,
+        //     memory_utilization: 10.0,
+        //     connections_count: 1000,
+        // });
+
+        // Ok(database_instances)
     }
 }
 
