@@ -8,7 +8,7 @@ use std::{
 };
 
 /// The application config.
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct ApplicationConfig {
     pub name: String,
     pub enable: bool,
@@ -79,7 +79,7 @@ pub struct ApplicationAddonsConfig {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct ApplicationConfigs {
-    pub application: Option<ApplicationConfig>,
+    pub application: ApplicationConfig,
     #[serde(skip)]
     config_path: PathBuf,
 }
@@ -87,7 +87,7 @@ pub struct ApplicationConfigs {
 impl FromStr for ApplicationConfigs {
     type Err = ApplicationConfigError;
 
-    fn from_str(application_config: &str) -> Result<Self, ApplicationConfigError> {
+    fn from_str(application_config: &str) -> Result<Self, Self::Err> {
         toml::from_str::<ApplicationConfigs>(application_config)
             .map_err(ApplicationConfigError::BadTomlData)
     }
@@ -98,21 +98,8 @@ impl ApplicationConfigs {
         let current_dir = std::env::current_dir().expect("Unable to get current working directory");
         let config_path = std::path::Path::new(&current_dir).join(".wukong.toml");
 
-        if let Ok(file) = std::fs::read_to_string(
-            config_path
-                .to_str()
-                .expect("The config file path is not valid"),
-        ) {
-            let mut config: ApplicationConfigs =
-                toml::from_str(&file).map_err(ApplicationConfigError::BadTomlData)?;
-
-            config.config_path = config_path;
-
-            return Ok(config);
-        }
-
         Ok(Self {
-            application: None,
+            application: ApplicationConfig::default(),
             config_path,
         })
     }
@@ -138,7 +125,9 @@ impl ApplicationConfigs {
             _ => err.into(),
         })?;
 
-        let config = toml::from_str(&content).map_err(ApplicationConfigError::BadTomlData)?;
+        let mut config: ApplicationConfigs =
+            toml::from_str(&content).map_err(ApplicationConfigError::BadTomlData)?;
+        config.config_path = config_path;
 
         Ok(config)
     }

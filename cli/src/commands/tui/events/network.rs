@@ -487,11 +487,11 @@ async fn fetch_appsignal_data(
             return Ok(());
         }
 
-        if let Some(ApplicationConfig {
+        if let ApplicationConfig {
             enable: true,
             namespaces,
             ..
-        }) = application_configs.unwrap().application
+        } = application_configs.unwrap().application
         {
             let appsignal_config = namespaces
                 .iter()

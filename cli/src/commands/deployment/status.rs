@@ -12,7 +12,10 @@ use crate::{
     config::Config,
     error::WKCliError,
     loader::new_spinner,
-    output::table::{fmt_u64_separate_with_commas, TableOutput},
+    output::{
+        colored_println,
+        table::{fmt_u64_separate_with_commas, TableOutput},
+    },
     wukong_client::WKClient,
 };
 
@@ -97,6 +100,7 @@ pub async fn handle_status(
     fetch_loader.set_message("Checking application config ... ");
 
     let application_configs = ApplicationConfigs::load()?;
+    let application_name = application_configs.application.name.clone();
     let appsignal_config = get_appsignal_config(application_configs);
 
     match appsignal_config {
@@ -112,7 +116,8 @@ pub async fn handle_status(
     fetch_loader.finish_and_clear();
 
     if let DisplayOrNot::Display(deployment) = all_status.deployment {
-        println!("Deployed build artifact: {}", deployment.artifact);
+        colored_println!("Current Application: {}", application_name);
+        colored_println!("Deployed build artifact: {}", deployment.artifact);
 
         if let Some(last_deployed_at) = deployment.deployed_at {
             let naive = NaiveDateTime::from_timestamp_opt(
@@ -121,7 +126,7 @@ pub async fn handle_status(
             )
             .unwrap();
             let dt = DateTime::<Utc>::from_naive_utc_and_offset(naive, Utc).with_timezone(&Local);
-            println!(
+            colored_println!(
                 "Deployed since: {}",
                 HumanTime::from(Into::<std::time::SystemTime>::into(dt))
             );
@@ -136,17 +141,17 @@ pub async fn handle_status(
                 };
 
                 println!();
-                println!("PERFORMANCE DATA");
-                println!("{table}");
-                println!("To view more, open these magic links:");
-                println!(
+                colored_println!("PERFORMANCE DATA");
+                colored_println!("{table}");
+                colored_println!("To view more, open these magic links:");
+                colored_println!(
                     "AppSignal: https://appsignal.com/mindvalley/sites/{}/exceptions?incident_marker=last",
                     appsignal.app_id,
                 );
             }
             DisplayOrNot::NotDisplay(reason) => {
                 println!();
-                println!(
+                colored_println!(
                     "* Appsignal status is not display because {}",
                     reason.bold()
                 );
@@ -160,11 +165,11 @@ pub async fn handle_status(
 fn get_appsignal_config(
     application_configs: ApplicationConfigs,
 ) -> Result<ApplicationNamespaceAppsignalConfig, String> {
-    if let Some(ApplicationConfig {
+    if let ApplicationConfig {
         enable: true,
         namespaces,
         ..
-    }) = application_configs.application
+    } = application_configs.application
     {
         let appsignal_config = namespaces
             .iter()

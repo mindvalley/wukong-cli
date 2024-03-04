@@ -4,6 +4,7 @@ use clap_verbosity_flag::{LogLevel, Verbosity};
 use log::debug;
 
 use crate::{
+    application_config::ApplicationConfigs,
     commands::{
         completion::handle_completion, init::handle_init, login::handle_login, tui::handle_tui,
     },
@@ -36,11 +37,6 @@ pub struct Context {
 pub struct ClapApp {
     #[command(subcommand)]
     pub command_group: CommandGroup,
-
-    /// Override the application name that the CLI will perform the command against.
-    /// If the flag is not used, then the CLI will use the default application name from the config.
-    #[arg(long, short, global = true)]
-    pub application: Option<String>,
 
     #[command(flatten)]
     pub verbose: Verbosity<ErrorLevel>,
@@ -122,9 +118,7 @@ impl ClapApp {
             CommandGroup::Completion { shell } => handle_completion(*shell),
             CommandGroup::Login => handle_login().await,
             CommandGroup::Google(google) => google.handle_command().await,
-            CommandGroup::Application(application) => {
-                application.handle_command(get_context(self)?).await
-            }
+            CommandGroup::Application(application) => application.handle_command(self).await,
             CommandGroup::Pipeline(pipeline) => pipeline.handle_command(get_context(self)?).await,
             CommandGroup::Deployment(deployment) => {
                 deployment.handle_command(get_context(self)?).await
@@ -149,14 +143,30 @@ fn get_context(clap_app: &ClapApp) -> Result<Context, WKCliError> {
     let config = Config::load_from_default_path()?;
 
     let context = Context {
-        // overwritten by --application flag
-        current_application: match clap_app.application {
-            Some(ref application) => application.clone(),
-            None => {
-                let config = Config::load_from_default_path()?;
-                config.core.application
-            }
+        current_application: {
+            let application_configs = ApplicationConfigs::load()?;
+            application_configs.application.name
         },
+        sub: config.auth.okta.map(|auth_config| auth_config.subject),
+        // if the `--canary` flag is used, then the CLI will use the Canary channel API,
+        // otherwise, it will use the Stable channel API.
+        channel: if clap_app.canary {
+            ApiChannel::Canary
+        } else {
+            ApiChannel::Stable
+        },
+    };
+
+    Ok(context)
+}
+
+// some command need to be executed without application context, e.g. `wukong application init`
+// otherwise, it will cause an error when trying to get the current application name
+fn get_context_without_application(clap_app: &ClapApp) -> Result<Context, WKCliError> {
+    let config = Config::load_from_default_path()?;
+
+    let context = Context {
+        current_application: "".to_string(),
         sub: config.auth.okta.map(|auth_config| auth_config.subject),
         // if the `--canary` flag is used, then the CLI will use the Canary channel API,
         // otherwise, it will use the Stable channel API.

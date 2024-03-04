@@ -79,7 +79,7 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
         .iter()
         .find(|addon| addon == &&"Elixir livebook");
 
-    application_configs.application = Some(ApplicationConfig {
+    application_configs.application = ApplicationConfig {
         name,
         enable: true,
         workflows: Some(workflows),
@@ -94,7 +94,7 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
                 })
             },
         }),
-    });
+    };
 
     let updated_application_configs = inquire::Editor::new(
         "Do you want to review the .wukong.toml file before writing to disk ?",

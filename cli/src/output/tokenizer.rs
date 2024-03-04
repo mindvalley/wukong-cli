@@ -17,8 +17,9 @@ static GITHUB_USERNAME_REGEX: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"^@([a-z\d]+-)*[a-z\d]+$").unwrap());
 static PR_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^#([\d]+$)").unwrap());
 static JIRA_TICKET_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[A-Z]+-[\d]+$").unwrap());
-static BUILD_ARTIFACT_REGEX: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"^[a-zA-z]+-build-\d+$|^build-\d+$").unwrap());
+static BUILD_ARTIFACT_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^gh-[a-zA-z]+-build-\d+$|^[a-zA-z]+-build-\d+$|^build-\d+$").unwrap()
+});
 static WORD_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\w+$").unwrap());
 
 #[derive(Clone, Debug, PartialEq)]
