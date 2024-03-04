@@ -43,7 +43,6 @@ struct DeploymentStatus {
 struct AppsignalStatus {
     data: AppsignalData,
     app_id: String,
-    deploy_marker: String,
 }
 enum DisplayOrNot<T, String> {
     Display(T),
@@ -132,7 +131,7 @@ pub async fn handle_status(
             DisplayOrNot::Display(appsignal) => {
                 let table = TableOutput {
                     title: None,
-                    header: Some("Staging".to_string()),
+                    header: Some("Prod".to_string()),
                     data: vec![appsignal.data],
                 };
 
@@ -141,9 +140,8 @@ pub async fn handle_status(
                 println!("{table}");
                 println!("To view more, open these magic links:");
                 println!(
-                    "AppSignal: https://appsignal.com/mindvalley/sites/{}/exceptions?incident_marker={}",
+                    "AppSignal: https://appsignal.com/mindvalley/sites/{}/exceptions?incident_marker=last",
                     appsignal.app_id,
-                    appsignal.deploy_marker
                 );
             }
             DisplayOrNot::NotDisplay(reason) => {
@@ -227,7 +225,6 @@ async fn get_appsignal_status(
                 total: total_count as u64,
             },
             app_id: app_id.clone(),
-            deploy_marker: latest_deploy_marker.id.clone(),
         }))
     } else {
         Ok(DisplayOrNot::NotDisplay(
