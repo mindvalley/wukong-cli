@@ -270,7 +270,7 @@ fn get_workflows_from_current_dir() -> Result<Vec<String>, WKCliError> {
             && workflow
                 .path()
                 .extension()
-                .map_or(false, |ext| ext == "yml")
+                .map_or(false, |ext| ext == "yml" || ext == "yaml")
         {
             let workflow_content = fs::read_to_string(workflow.path())?;
 
