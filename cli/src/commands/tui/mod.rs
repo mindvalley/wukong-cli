@@ -140,6 +140,7 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
     let mut is_welcome_screen_first_frame = true;
     let mut is_first_fetch_builds = true;
     let mut is_first_fetch_appsignals = true;
+    let mut is_first_fetch_database_metrics = true;
 
     let mut app_ref = app.lock().await;
 
@@ -213,6 +214,11 @@ pub async fn start_ui(app: &Arc<Mutex<App>>) -> std::io::Result<bool> {
             if is_first_fetch_appsignals {
                 app_ref.dispatch(NetworkEvent::GetAppsignalData).await;
                 is_first_fetch_appsignals = false;
+            }
+
+            if is_first_fetch_database_metrics {
+                app_ref.dispatch(NetworkEvent::GetDatabaseMetrics).await;
+                is_first_fetch_database_metrics = false;
             }
         }
     }

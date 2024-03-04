@@ -3,7 +3,10 @@ use std::{collections::HashMap, fmt::Display, time::Instant};
 use ratatui::{prelude::Rect, widgets::ScrollbarState};
 use strum::{Display, EnumIter, FromRepr};
 use tokio::sync::mpsc::Sender;
-use wukong_sdk::services::gcloud::google::logging::{r#type::LogSeverity, v2::LogEntry};
+use wukong_sdk::services::gcloud::{
+    google::logging::{r#type::LogSeverity, v2::LogEntry},
+    DatabaseInstance,
+};
 
 use crate::config::Config;
 
@@ -118,6 +121,13 @@ pub struct AppsignalAverageLatecies {
 
 pub const MAX_LOG_ENTRIES_LENGTH: usize = 2_000;
 
+#[derive(Debug, Default)]
+pub struct DatabasesState {
+    pub is_fetching: bool,
+    pub is_active: bool,
+    pub error: Option<String>,
+    pub database_instances: Vec<DatabaseInstance>,
+}
 pub struct State {
     pub current_application: String,
     pub current_namespace: Option<String>,
@@ -150,6 +160,7 @@ pub struct State {
     pub deployments_error: Option<String>,
     pub appsignal: AppsignalState,
     pub appsignal_error: Option<String>,
+    pub databases: DatabasesState,
 
     // Auth
     pub is_gcloud_authenticated: Option<bool>,
@@ -274,6 +285,7 @@ impl App {
 
                 builds: vec![],
                 deployments: vec![],
+                databases: DatabasesState::default(),
                 last_log_entry_timestamp: None,
 
                 log_entries_length: 0,
@@ -392,6 +404,10 @@ impl App {
                 if let Some(true) = self.state.is_appsignal_enabled {
                     self.dispatch(NetworkEvent::GetAppsignalData).await;
                 }
+            }
+
+            if self.state.databases.is_active {
+                self.dispatch(NetworkEvent::GetDatabaseMetrics).await;
             }
         }
 
