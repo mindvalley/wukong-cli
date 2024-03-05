@@ -508,6 +508,11 @@ async fn fetch_appsignal_data(
                 app_ref.state.is_appsignal_enabled = Some(enable);
                 app_ref.state.appsignal_app_id = Some(app_id);
                 app_ref.state.appsignal_namespace = Some(default_namespace);
+            } else {
+                app_ref.state.is_appsignal_enabled = None;
+                app_ref.state.is_fetching_appsignal_data = false;
+                // return early if appsignal is not setup
+                return Ok(());
             }
         } else {
             app_ref.state.is_appsignal_enabled = Some(false);

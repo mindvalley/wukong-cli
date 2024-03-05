@@ -64,8 +64,6 @@ pub enum ApiChannel {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct CoreConfig {
-    /// The current application name
-    pub application: String,
     pub wukong_api_url: String,
 }
 
@@ -105,7 +103,6 @@ impl Default for Config {
 
         Self {
             core: CoreConfig {
-                application: "".to_string(),
                 wukong_api_url: WUKONG_API_URL.to_string(),
             },
             auth: AuthConfig {

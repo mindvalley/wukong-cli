@@ -6,6 +6,7 @@ use std::{
 };
 
 use crate::{
+    application_config::ApplicationConfigs,
     config::{ApiChannel, Config},
     error::WKCliError,
 };
@@ -88,16 +89,14 @@ impl<T> StatefulList<T> {
 }
 
 pub async fn handle_tui(channel: ApiChannel) -> Result<bool, WKCliError> {
-    let config = Config::load_from_default_path()?;
-
+    let application_config = ApplicationConfigs::load()?;
     let (sender, mut receiver) = tokio::sync::mpsc::channel::<NetworkEvent>(100);
 
-    let app = Arc::new(Mutex::new(App::new(&config, sender)));
+    let app = Arc::new(Mutex::new(App::new(&application_config, sender)));
     let app_ui = Arc::clone(&app);
 
-    let channel = Arc::new(channel);
-
     let config = Arc::new(Config::load_from_default_path()?);
+    let channel = Arc::new(channel);
 
     // Set panic hook
     panic::set_hook(Box::new(panic_hook));
