@@ -65,7 +65,6 @@ fn test_wukong_deployment_list_success() {
             format!(
                 r#"
 [core]
-application = "valid-application"
 wukong_api_url = "{}"
 
 [auth.okta]
@@ -84,10 +83,27 @@ refresh_token = "refresh_token"
         )
         .unwrap();
 
+    let application_config_file = temp.child(".wukong.toml");
+    application_config_file.touch().unwrap();
+
+    application_config_file
+        .write_str(
+            r#"
+[application]
+name = "valid-application"
+enable = true
+
+[[application.namespaces]]
+type = "prod"
+"#,
+        )
+        .unwrap();
+
     let cmd = common::wukong_raw_command()
         .arg("deployment")
         .arg("list")
         .env("WUKONG_DEV_CONFIG_FILE", config_file.path())
+        .env("WUKONG_DEV_APP_CONFIG_FILE", application_config_file.path())
         .assert()
         .success();
 
@@ -123,10 +139,27 @@ wukong_api_url = "https://wukong-api.com"
         )
         .unwrap();
 
+    let application_config_file = temp.child(".wukong.toml");
+    application_config_file.touch().unwrap();
+
+    application_config_file
+        .write_str(
+            r#"
+[application]
+name = "valid-application"
+enable = true
+
+[[application.namespaces]]
+type = "prod"
+"#,
+        )
+        .unwrap();
+
     let cmd = common::wukong_raw_command()
         .arg("deployment")
         .arg("list")
         .env("WUKONG_DEV_CONFIG_FILE", config_file.path())
+        .env("WUKONG_DEV_APP_CONFIG_FILE", application_config_file.path())
         .assert()
         .failure();
 
@@ -143,6 +176,46 @@ fn test_wukong_deployment_list_should_failed_when_config_file_not_exist() {
         .arg("deployment")
         .arg("list")
         .env("WUKONG_DEV_CONFIG_FILE", "/path/to/non/exist/config.toml")
+        .assert()
+        .failure();
+
+    let output = cmd.get_output();
+
+    insta::assert_snapshot!(std::str::from_utf8(&output.stderr).unwrap());
+}
+
+#[test]
+fn test_wukong_deployment_list_should_failed_when_application_config_file_not_exist() {
+    let temp = assert_fs::TempDir::new().unwrap();
+    let config_file = temp.child("config.toml");
+    config_file.touch().unwrap();
+
+    config_file
+        .write_str(
+            format!(
+                r#"
+[core]
+wukong_api_url = "https://wukong-api.com"
+
+[auth.okta]
+client_id = "valid-okta-client-id"
+account = "test@email.com"
+subject = "subject"
+id_token = "id_token"
+access_token = "access_token"
+expiry_time = "{}"
+refresh_token = "refresh_token"
+    "#,
+                2.days().from_now().to_rfc3339()
+            )
+            .as_str(),
+        )
+        .unwrap();
+
+    let cmd = common::wukong_raw_command()
+        .arg("deployment")
+        .arg("list")
+        .env("WUKONG_DEV_CONFIG_FILE", config_file.path())
         .assert()
         .failure();
 

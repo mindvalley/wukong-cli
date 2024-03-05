@@ -105,33 +105,101 @@ impl ApplicationConfigs {
     }
 
     pub fn load() -> Result<Self, ApplicationConfigError> {
-        let current_dir = std::env::current_dir().expect("Unable to get current working directory");
+        #[cfg(feature = "prod")]
+        {
+            let current_dir =
+                std::env::current_dir().expect("Unable to get current working directory");
 
-        for dir in current_dir.ancestors() {
-            let config_path = dir.join(".wukong.toml");
-            if config_path.exists() {
-                let content = std::fs::read_to_string(
-                    config_path
-                        .to_str()
-                        .expect("The config file path is not valid"),
-                )
-                .map_err(|err| match err.kind() {
-                    io::ErrorKind::NotFound => ApplicationConfigError::NotFound {
-                        path: ".wukong.toml",
-                        source: err,
-                    },
-                    io::ErrorKind::PermissionDenied => ApplicationConfigError::PermissionDenied {
-                        path: ".wukong.toml",
-                        source: err,
-                    },
-                    _ => err.into(),
-                })?;
+            for dir in current_dir.ancestors() {
+                let config_path = dir.join(".wukong.toml");
+                if config_path.exists() {
+                    let content = std::fs::read_to_string(
+                        config_path
+                            .to_str()
+                            .expect("The config file path is not valid"),
+                    )
+                    .map_err(|err| match err.kind() {
+                        io::ErrorKind::NotFound => ApplicationConfigError::NotFound {
+                            path: ".wukong.toml",
+                            source: err,
+                        },
+                        io::ErrorKind::PermissionDenied => {
+                            ApplicationConfigError::PermissionDenied {
+                                path: ".wukong.toml",
+                                source: err,
+                            }
+                        }
+                        _ => err.into(),
+                    })?;
 
-                let mut config: ApplicationConfigs =
-                    toml::from_str(&content).map_err(ApplicationConfigError::BadTomlData)?;
-                config.config_path = config_path;
+                    let mut config: ApplicationConfigs =
+                        toml::from_str(&content).map_err(ApplicationConfigError::BadTomlData)?;
+                    config.config_path = config_path;
 
-                return Ok(config);
+                    return Ok(config);
+                }
+            }
+        }
+
+        #[cfg(not(feature = "prod"))]
+        {
+            match std::env::var("WUKONG_DEV_APP_CONFIG_FILE") {
+                Ok(config_path) => {
+                    let content =
+                        std::fs::read_to_string(&config_path).map_err(|err| match err.kind() {
+                            io::ErrorKind::NotFound => ApplicationConfigError::NotFound {
+                                path: ".wukong.toml",
+                                source: err,
+                            },
+                            io::ErrorKind::PermissionDenied => {
+                                ApplicationConfigError::PermissionDenied {
+                                    path: ".wukong.toml",
+                                    source: err,
+                                }
+                            }
+                            _ => err.into(),
+                        })?;
+
+                    let mut config: ApplicationConfigs =
+                        toml::from_str(&content).map_err(ApplicationConfigError::BadTomlData)?;
+                    config.config_path = std::path::PathBuf::from(config_path);
+
+                    return Ok(config);
+                }
+                Err(_) => {
+                    let current_dir =
+                        std::env::current_dir().expect("Unable to get current working directory");
+
+                    for dir in current_dir.ancestors() {
+                        let config_path = dir.join(".wukong.toml");
+                        if config_path.exists() {
+                            let content = std::fs::read_to_string(
+                                config_path
+                                    .to_str()
+                                    .expect("The config file path is not valid"),
+                            )
+                            .map_err(|err| match err.kind() {
+                                io::ErrorKind::NotFound => ApplicationConfigError::NotFound {
+                                    path: ".wukong.toml",
+                                    source: err,
+                                },
+                                io::ErrorKind::PermissionDenied => {
+                                    ApplicationConfigError::PermissionDenied {
+                                        path: ".wukong.toml",
+                                        source: err,
+                                    }
+                                }
+                                _ => err.into(),
+                            })?;
+
+                            let mut config: ApplicationConfigs = toml::from_str(&content)
+                                .map_err(ApplicationConfigError::BadTomlData)?;
+                            config.config_path = config_path;
+
+                            return Ok(config);
+                        }
+                    }
+                }
             }
         }
 

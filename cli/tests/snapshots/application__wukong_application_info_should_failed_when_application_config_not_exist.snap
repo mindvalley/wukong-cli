@@ -1,0 +1,9 @@
+---
+source: cli/tests/application.rs
+expression: "std::str::from_utf8(&output.stderr).unwrap()"
+---
+[31mError[39m [38;5;244m-[39m Application Config file not found at ".wukong.toml".
+[38;2;245;245;245mCaused by[39m [38;5;244m-[39m The `.wukong.toml` file is not found in the current directory or any of its parent directories.
+[36mSuggestion[39m [38;5;244m-[39m 
+	Wukong command only works in the directory contains `.wukong.toml` file. Check if you are in the correct directory.
+	If so, run [33mwukong application init[39m to initialise the application configuration.

@@ -19,8 +19,6 @@ _wukong() {
 
     local context curcontext="$curcontext" state line
     _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -54,8 +52,6 @@ By default, it'\''ll only report errors.
         case $line[1] in
             (init)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -80,8 +76,6 @@ By default, it'\''ll only report errors.
 ;;
 (application)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -114,8 +108,6 @@ By default, it'\''ll only report errors.
         case $line[1] in
             (info)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -151,8 +143,6 @@ _arguments "${_arguments_options[@]}" \
 '*--include=[(allow multiple flags) Logs lines to include]:INCLUDE: ' \
 '*-e+[(allow multiple flags) Logs lines to exclude]:EXCLUDE: ' \
 '*--exclude=[(allow multiple flags) Logs lines to exclude]:EXCLUDE: ' \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '--errors[Only print out logs line with severity >= ERROR]' \
 '--url-mode[Generate the URL to view the logs in browser]' \
 '*-v[Use verbos output. More output per occurrence.
@@ -179,8 +169,6 @@ By default, it'\''ll only report errors.
 ;;
 (instances)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -215,8 +203,6 @@ By default, it'\''ll only report errors.
 _arguments "${_arguments_options[@]}" \
 '--namespace=[(optional) The namespace to list the running instances]:NAMESPACE:(prod staging)' \
 '--version=[(optional) The version of the application to filter the returning running instances]:VERSION:(blue green)' \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -243,8 +229,6 @@ By default, it'\''ll only report errors.
 _arguments "${_arguments_options[@]}" \
 '--namespace=[(optional) The namespace to list the running instances]:NAMESPACE:(prod staging)' \
 '--version=[(optional) The version of the application to filter the returning running instances]:VERSION:(blue green)' \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -301,8 +285,6 @@ esac
 ;;
 (init)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -387,8 +369,6 @@ esac
 ;;
 (pipeline)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -421,8 +401,6 @@ By default, it'\''ll only report errors.
         case $line[1] in
             (list)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -447,8 +425,6 @@ By default, it'\''ll only report errors.
 ;;
 (describe)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -476,8 +452,6 @@ By default, it'\''ll only report errors.
 _arguments "${_arguments_options[@]}" \
 '--repo-url=[Repository url]:REPO_URL: ' \
 '--branch=[Branch name]:BRANCH: ' \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -538,8 +512,6 @@ esac
 ;;
 (deployment)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -572,8 +544,6 @@ By default, it'\''ll only report errors.
         case $line[1] in
             (list)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -601,8 +571,6 @@ _arguments "${_arguments_options[@]}" \
 '--namespace=[The namespace to deploy to]:NAMESPACE:(prod staging)' \
 '--version=[The version that the deployment will perform against]:VERSION:(blue green)' \
 '--artifact=[The build artifact that the deployment will use]:ARTIFACT: ' \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -629,8 +597,6 @@ By default, it'\''ll only report errors.
 _arguments "${_arguments_options[@]}" \
 '--namespace=[The namespace to deploy to]:NAMESPACE:(prod staging)' \
 '--version=[The version that the deployment will perform against]:VERSION:(blue green)' \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -656,8 +622,6 @@ By default, it'\''ll only report errors.
 (status)
 _arguments "${_arguments_options[@]}" \
 '--version=[The version of the deployment]:VERSION:(blue green)' \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -722,8 +686,6 @@ esac
 ;;
 (dev)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -756,8 +718,6 @@ By default, it'\''ll only report errors.
         case $line[1] in
             (config)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -790,8 +750,6 @@ By default, it'\''ll only report errors.
         case $line[1] in
             (push)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -816,8 +774,6 @@ By default, it'\''ll only report errors.
 ;;
 (diff)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -842,8 +798,6 @@ By default, it'\''ll only report errors.
 ;;
 (pull)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -869,8 +823,6 @@ By default, it'\''ll only report errors.
 ;;
 (lint)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -992,8 +944,6 @@ esac
 ;;
 (config)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -1026,8 +976,6 @@ By default, it'\''ll only report errors.
         case $line[1] in
             (list)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -1052,8 +1000,6 @@ By default, it'\''ll only report errors.
 ;;
 (set)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -1074,14 +1020,12 @@ By default, it'\''ll only report errors.
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
-':config_name -- The config name:(application wukong-api-url okta-client-id)' \
+':config_name -- The config name:(wukong-api-url okta-client-id)' \
 ':config_value -- The config value:' \
 && ret=0
 ;;
 (get)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -1102,7 +1046,7 @@ By default, it'\''ll only report errors.
 '--canary[Use the Canary channel API]' \
 '-h[Print help]' \
 '--help[Print help]' \
-':config_name -- The config name:(application wukong-api-url okta-client-id)' \
+':config_name -- The config name:(wukong-api-url okta-client-id)' \
 && ret=0
 ;;
 (help)
@@ -1143,8 +1087,6 @@ esac
 ;;
 (login)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -1169,8 +1111,6 @@ By default, it'\''ll only report errors.
 ;;
 (google)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -1203,8 +1143,6 @@ By default, it'\''ll only report errors.
         case $line[1] in
             (login)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -1257,8 +1195,6 @@ esac
 ;;
 (completion)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.
@@ -1284,8 +1220,6 @@ By default, it'\''ll only report errors.
 ;;
 (tui)
 _arguments "${_arguments_options[@]}" \
-'-a+[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
-'--application=[Override the application name that the CLI will perform the command against. If the flag is not used, then the CLI will use the default application name from the config]:APPLICATION: ' \
 '*-v[Use verbos output. More output per occurrence.
 
 By default, it'\''ll only report errors.

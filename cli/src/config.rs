@@ -230,7 +230,7 @@ mod test {
         // 2. load the config file
         let saved_config = Config::load_from_path(path).unwrap();
 
-        assert_eq!(saved_config.core.application, config.core.application);
+        assert_eq!(saved_config.core.wukong_api_url, config.core.wukong_api_url);
 
         // remove the config file
         std::fs::remove_file(path).unwrap();
