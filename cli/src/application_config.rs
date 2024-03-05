@@ -94,42 +94,54 @@ impl FromStr for ApplicationConfigs {
 }
 
 impl ApplicationConfigs {
-    pub fn new() -> Result<Self, ApplicationConfigError> {
+    pub fn new() -> Self {
         let current_dir = std::env::current_dir().expect("Unable to get current working directory");
         let config_path = std::path::Path::new(&current_dir).join(".wukong.toml");
 
-        Ok(Self {
+        Self {
             application: ApplicationConfig::default(),
             config_path,
-        })
+        }
     }
 
     pub fn load() -> Result<Self, ApplicationConfigError> {
         let current_dir = std::env::current_dir().expect("Unable to get current working directory");
-        let config_path = std::path::Path::new(&current_dir).join(".wukong.toml");
 
-        let content = std::fs::read_to_string(
-            config_path
-                .to_str()
-                .expect("The config file path is not valid"),
-        )
-        .map_err(|err| match err.kind() {
-            io::ErrorKind::NotFound => ApplicationConfigError::NotFound {
-                path: ".wukong.toml",
-                source: err,
-            },
-            io::ErrorKind::PermissionDenied => ApplicationConfigError::PermissionDenied {
-                path: ".wukong.toml",
-                source: err,
-            },
-            _ => err.into(),
-        })?;
+        for dir in current_dir.ancestors() {
+            let config_path = dir.join(".wukong.toml");
+            if config_path.exists() {
+                let content = std::fs::read_to_string(
+                    config_path
+                        .to_str()
+                        .expect("The config file path is not valid"),
+                )
+                .map_err(|err| match err.kind() {
+                    io::ErrorKind::NotFound => ApplicationConfigError::NotFound {
+                        path: ".wukong.toml",
+                        source: err,
+                    },
+                    io::ErrorKind::PermissionDenied => ApplicationConfigError::PermissionDenied {
+                        path: ".wukong.toml",
+                        source: err,
+                    },
+                    _ => err.into(),
+                })?;
 
-        let mut config: ApplicationConfigs =
-            toml::from_str(&content).map_err(ApplicationConfigError::BadTomlData)?;
-        config.config_path = config_path;
+                let mut config: ApplicationConfigs =
+                    toml::from_str(&content).map_err(ApplicationConfigError::BadTomlData)?;
+                config.config_path = config_path;
 
-        Ok(config)
+                return Ok(config);
+            }
+        }
+
+        Err(ApplicationConfigError::NotFound {
+            path: ".wukong.toml",
+            source: io::Error::new(
+                io::ErrorKind::NotFound,
+                "The `.wukong.toml` file is not found in the current directory or any of its parent directories.",
+            ),
+        })
     }
 
     pub fn save(&self) -> Result<(), ApplicationConfigError> {

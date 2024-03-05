@@ -136,7 +136,7 @@ pub async fn handle_status(
             DisplayOrNot::Display(appsignal) => {
                 let table = TableOutput {
                     title: None,
-                    header: Some("Prod".to_string()),
+                    header: Some("APM".to_string()),
                     data: vec![appsignal.data],
                 };
 
