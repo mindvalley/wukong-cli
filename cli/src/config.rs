@@ -217,9 +217,12 @@ impl Config {
 
 #[cfg(test)]
 mod test {
+    use serial_test::serial;
+
     use super::*;
 
     #[test]
+    #[serial]
     fn save_and_load_config_file() {
         let path = "./config.toml";
         let config = Config::default();
@@ -237,6 +240,7 @@ mod test {
     }
 
     #[test]
+    #[serial]
     fn load_non_exist_file() {
         let path = "./non/exist/path";
         let result = Config::load_from_path(path);

@@ -233,3 +233,66 @@ impl ApplicationConfigs {
         Ok(serialized)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use serial_test::serial;
+
+    use super::*;
+
+    #[test]
+    #[serial]
+    fn save_and_load_application_config_file() {
+        let current_dir = std::env::current_dir().expect("Unable to get current working directory");
+        let config_path = std::path::Path::new(&current_dir).join(".wukong.toml");
+        let mut config = ApplicationConfigs::new();
+
+        config.config_path = config_path.clone();
+        config.application.name = "Wukong".to_string();
+
+        // 1. save the application config file
+        config.save().unwrap();
+
+        // 2. load the application config file
+        let saved_config = ApplicationConfigs::load().unwrap();
+
+        assert_eq!(saved_config.application.name, config.application.name);
+        assert_eq!(saved_config.config_path, config.config_path);
+
+        // remove the config file
+        std::fs::remove_file(config_path).unwrap();
+    }
+
+    #[test]
+    #[serial]
+    fn load_application_config_file_from_parent_directory() {
+        let current_dir = std::env::current_dir().expect("Unable to get current working directory");
+
+        let temp_dir = current_dir.join("test_temp");
+        println!("temp dir: {:?}", temp_dir);
+        std::fs::create_dir(&temp_dir).unwrap();
+
+        let config_path = std::path::Path::new(&current_dir).join(".wukong.toml");
+        let mut config = ApplicationConfigs::new();
+
+        config.config_path = config_path.clone();
+        config.application.name = "Wukong".to_string();
+
+        // 1. save the application config file
+        config.save().unwrap();
+
+        // 2. change to a child directory
+        std::env::set_current_dir(temp_dir.as_path().to_str().unwrap()).unwrap();
+
+        // 3. load the application config file
+        let saved_config = ApplicationConfigs::load().unwrap();
+
+        assert_eq!(saved_config.application.name, config.application.name);
+        assert_eq!(saved_config.config_path, config.config_path);
+
+        // remove the config file
+        std::fs::remove_dir(temp_dir).unwrap();
+        std::fs::remove_file(config_path).unwrap();
+        std::env::set_current_dir(current_dir.as_path().to_str().unwrap()).unwrap();
+    }
+}
