@@ -35,13 +35,19 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
         .prompt()?;
 
     let workflows = get_workflows_from_current_dir()?;
-    let excluded_workflows =
-        inquire::MultiSelect::new("Workflows to exclude from the Wukong CLI & TUI", workflows)
-            .with_render_config(inquire_render_config())
-            .with_help_message(
-                "Leave blank to ignore, ↑↓ to move, space to select one, → to all, ← to none",
-            )
-            .prompt()?;
+    let mut excluded_workflows = Vec::new();
+
+    if !workflows.is_empty() {
+        excluded_workflows = inquire::MultiSelect::new(
+            "Workflows to exclude from the Wukong CLI & TUI",
+            workflows.to_vec(),
+        )
+        .with_render_config(inquire_render_config())
+        .with_help_message(
+            "Leave blank to ignore, ↑↓ to move, space to select one, → to all, ← to none",
+        )
+        .prompt()?;
+    }
 
     let mut namespaces: Vec<ApplicationNamespaceConfig> = Vec::new();
     namespaces
@@ -261,27 +267,28 @@ async fn configure_namespace(
 
 fn get_workflows_from_current_dir() -> Result<Vec<String>, WKCliError> {
     let mut workflow_names = Vec::new();
-    let workflows = fs::read_dir(".github/workflows")?;
 
-    for workflow in workflows {
-        let workflow = workflow?;
+    if let Ok(workflows) = fs::read_dir(".github/workflows") {
+        for workflow in workflows {
+            let workflow = workflow?;
 
-        if workflow.file_type()?.is_file()
-            && workflow
-                .path()
-                .extension()
-                .map_or(false, |ext| ext == "yml" || ext == "yaml")
-        {
-            let workflow_content = fs::read_to_string(workflow.path())?;
-
-            let workflow_values: serde_yaml::Value = serde_yaml::from_str(&workflow_content)
-                .map_err(|_| WKCliError::UnableToParseYmlFile)?;
-
-            if let Some(workflow_name) = workflow_values
-                .get("name")
-                .and_then(serde_yaml::Value::as_str)
+            if workflow.file_type()?.is_file()
+                && workflow
+                    .path()
+                    .extension()
+                    .map_or(false, |ext| ext == "yml" || ext == "yaml")
             {
-                workflow_names.push(workflow_name.to_string());
+                let workflow_content = fs::read_to_string(workflow.path())?;
+
+                let workflow_values: serde_yaml::Value = serde_yaml::from_str(&workflow_content)
+                    .map_err(|_| WKCliError::UnableToParseYmlFile)?;
+
+                if let Some(workflow_name) = workflow_values
+                    .get("name")
+                    .and_then(serde_yaml::Value::as_str)
+                {
+                    workflow_names.push(workflow_name.to_string());
+                }
             }
         }
     }
