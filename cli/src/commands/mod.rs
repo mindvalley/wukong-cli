@@ -50,7 +50,7 @@ pub struct ClapApp {
     pub report: bool,
 
     /// Use the Canary channel API
-    #[arg(long, global = true)]
+    #[arg(long, global = true, default_value_t = true)]
     canary: bool,
 }
 
@@ -110,9 +110,12 @@ pub enum CommandGroup {
 impl ClapApp {
     pub async fn execute(&self) -> Result<bool, WKCliError> {
         debug!("current cli version: {}", crate_version!());
+        let channel = if self.canary {
+            ApiChannel::Canary
+        } else {
+            ApiChannel::Stable
+        };
 
-        // starting from v2.1.0, the CLI will use the Canary channel API by default.
-        let channel = ApiChannel::Canary;
         debug!("API channel: {:?}", channel);
 
         let command = match &self.command_group {
