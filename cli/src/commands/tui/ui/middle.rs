@@ -10,7 +10,8 @@ use ratatui::{
 use strum::IntoEnumIterator;
 
 use super::{
-    appsignal::AppsignalWidget, databases::DatabasesWidget, centered_rect_by_padding, logs::LogsWidget, util::get_color
+    appsignal::AppsignalWidget, centered_rect_by_padding, databases::DatabasesWidget,
+    logs::LogsWidget, util::get_color,
 };
 
 pub struct MiddleWidget;
@@ -20,13 +21,13 @@ impl MiddleWidget {
         app.state.logs_widget_width = rect.width;
         app.state.logs_widget_height = rect.height;
 
-        app.update_draw_lock(Block::Log(app.state.selected_tab), rect);
+        app.update_draw_lock(Block::Middle(app.state.selected_tab), rect);
 
         let current_route = app.get_current_route();
 
         let highlight_state = (
-            matches!(current_route.active_block, Block::Log(_)),
-            matches!(current_route.hovered_block, Block::Log(_)),
+            matches!(current_route.active_block, Block::Middle(_)),
+            matches!(current_route.hovered_block, Block::Middle(_)),
         );
 
         let titles = SelectedTab::iter()

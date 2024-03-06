@@ -31,7 +31,7 @@ async fn handle_block_events(key: Key, app: &mut App) -> AppReturn {
 
     match current_route.active_block {
         Block::Empty => empty::handler(key, app).await, // Main Input
-        Block::Log(selected_tab) => {
+        Block::Middle(selected_tab) => {
             middle::handler(key, app).await;
             match selected_tab {
                 SelectedTab::GCloud => logs::handler(key, app).await,

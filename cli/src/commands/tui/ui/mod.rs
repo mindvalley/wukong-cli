@@ -49,7 +49,7 @@ where
             Block::Deployment => {
                 DeploymentWidget::draw(app, frame, bottom);
             }
-            Block::Log(selected_tab) => match selected_tab {
+            Block::Middle(selected_tab) => match selected_tab {
                 SelectedTab::GCloud => LogsWidget::draw(app, frame, bottom),
                 SelectedTab::AppSignal => AppsignalWidget::draw(app, frame, bottom),
                 SelectedTab::Databases => DatabasesWidget::draw(app, frame, bottom),

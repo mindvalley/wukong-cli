@@ -7,12 +7,12 @@ use crate::commands::tui::{
 pub async fn handler(key: Key, app: &mut App) -> AppReturn {
     match key {
         key if common_key_events::back_event(key) => {
-            if let Some(Block::Log(_)) = app.state.expanded_block {
+            if let Some(Block::Middle(_)) = app.state.expanded_block {
                 app.state.expanded_block = None;
             } else {
                 app.set_current_route_state(
                     Some(Block::Empty),
-                    Some(Block::Log(app.state.selected_tab)),
+                    Some(Block::Middle(app.state.selected_tab)),
                 );
             }
         }
@@ -22,8 +22,8 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
                 if let Some(newly_selected_tab) = SelectedTab::get_tab(digit) {
                     app.state.selected_tab = newly_selected_tab;
                     app.set_current_route_state(
-                        Some(Block::Log(app.state.selected_tab)),
-                        Some(Block::Log(app.state.selected_tab)),
+                        Some(Block::Middle(app.state.selected_tab)),
+                        Some(Block::Middle(app.state.selected_tab)),
                     );
                 }
             }
@@ -35,8 +35,8 @@ pub async fn handler(key: Key, app: &mut App) -> AppReturn {
         //         if let Some(newly_selected_tab) = SelectedTab::get_tab(digit) {
         //             app.state.selected_tab = newly_selected_tab;
         //             app.set_current_route_state(
-        //                 Some(Block::Log(app.state.selected_tab)),
-        //                 Some(Block::Log(app.state.selected_tab)),
+        //                 Some(Block::Middle(app.state.selected_tab)),
+        //                 Some(Block::Middle(app.state.selected_tab)),
         //             );
         //         }
         //     }
