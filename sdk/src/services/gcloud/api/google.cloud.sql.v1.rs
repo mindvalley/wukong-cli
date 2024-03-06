@@ -33,17 +33,7 @@ pub struct ApiWarning {
 }
 /// Nested message and enum types in `ApiWarning`.
 pub mod api_warning {
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum SqlApiWarningCode {
         /// An unknown or unset warning type from Cloud SQL API.
@@ -95,17 +85,7 @@ pub struct BackupRetentionSettings {
 /// Nested message and enum types in `BackupRetentionSettings`.
 pub mod backup_retention_settings {
     /// The units that retained_backups specifies, we only support COUNT.
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum RetentionUnit {
         /// Backup retention unit is unspecified, will be treated as COUNT.
@@ -311,9 +291,7 @@ pub struct DemoteMasterConfiguration {
     /// replication connection and is stored by MySQL in a file named
     /// `master.info` in the data directory.
     #[prost(message, optional, tag = "2")]
-    pub mysql_replica_configuration: ::core::option::Option<
-        DemoteMasterMySqlReplicaConfiguration,
-    >,
+    pub mysql_replica_configuration: ::core::option::Option<DemoteMasterMySqlReplicaConfiguration>,
 }
 /// Read-replica configuration specific to MySQL databases.
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -420,9 +398,7 @@ pub mod export_context {
         #[prost(message, optional, tag = "2")]
         pub schema_only: ::core::option::Option<bool>,
         #[prost(message, optional, tag = "3")]
-        pub mysql_export_options: ::core::option::Option<
-            sql_export_options::MysqlExportOptions,
-        >,
+        pub mysql_export_options: ::core::option::Option<sql_export_options::MysqlExportOptions>,
     }
     /// Nested message and enum types in `SqlExportOptions`.
     pub mod sql_export_options {
@@ -529,9 +505,7 @@ pub mod import_context {
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct SqlBakImportOptions {
         #[prost(message, optional, tag = "1")]
-        pub encryption_options: ::core::option::Option<
-            sql_bak_import_options::EncryptionOptions,
-        >,
+        pub encryption_options: ::core::option::Option<sql_bak_import_options::EncryptionOptions>,
         /// Whether or not the backup set being restored is striped.
         /// Applies only to Cloud SQL for SQL Server.
         #[prost(message, optional, tag = "2")]
@@ -864,17 +838,7 @@ pub struct Operation {
 /// Nested message and enum types in `Operation`.
 pub mod operation {
     /// The type of Cloud SQL operation.
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum SqlOperationType {
         /// Unknown operation type.
@@ -1053,17 +1017,7 @@ pub mod operation {
         }
     }
     /// The status of an operation.
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum SqlOperationStatus {
         /// The state of the operation is unknown.
@@ -1152,17 +1106,7 @@ pub struct PasswordValidationPolicy {
 /// Nested message and enum types in `PasswordValidationPolicy`.
 pub mod password_validation_policy {
     /// The complexity choices of the password.
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum Complexity {
         /// Complexity check is not specified.
@@ -1214,9 +1158,7 @@ pub struct Settings {
     /// (Deprecated) Applied to First Generation instances only.
     #[deprecated]
     #[prost(string, repeated, tag = "2")]
-    pub authorized_gae_applications: ::prost::alloc::vec::Vec<
-        ::prost::alloc::string::String,
-    >,
+    pub authorized_gae_applications: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
     /// The tier (or machine type) for this instance, for example
     /// `db-custom-1-3840`. WARNING: Changing this restarts the instance.
     #[prost(string, tag = "3")]
@@ -1227,10 +1169,8 @@ pub struct Settings {
     /// User-provided labels, represented as a dictionary where each label is a
     /// single key value pair.
     #[prost(map = "string, string", tag = "5")]
-    pub user_labels: ::std::collections::HashMap<
-        ::prost::alloc::string::String,
-        ::prost::alloc::string::String,
-    >,
+    pub user_labels:
+        ::std::collections::HashMap<::prost::alloc::string::String, ::prost::alloc::string::String>,
     /// Availability type. Potential values:
     ///
     /// * `ZONAL`: The instance serves data from only one zone. Outages in that
@@ -1358,17 +1298,7 @@ pub struct Settings {
 /// Nested message and enum types in `Settings`.
 pub mod settings {
     /// Specifies when the instance is activated.
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum SqlActivationPolicy {
         /// Unknown activation plan.
@@ -1405,17 +1335,7 @@ pub mod settings {
         }
     }
     /// The edition of the instance, can be ENTERPRISE or ENTERPRISE_PLUS.
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum Edition {
         /// The instance did not specify the edition.
@@ -1448,17 +1368,7 @@ pub mod settings {
         }
     }
     /// The options for enforcing Cloud SQL connectors in the instance.
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum ConnectorEnforcement {
         /// The requirement for Cloud SQL connectors is unknown.
@@ -2179,7 +2089,7 @@ pub struct SqlInstancesInsertRequest {
     #[prost(string, tag = "1")]
     pub project: ::prost::alloc::string::String,
     #[prost(message, optional, tag = "100")]
-    pub body: ::core::option::Option<DatabaseInstance>,
+    pub body: ::core::option::Option<DatabaseMetrics>,
 }
 /// Instance list request.
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -2232,7 +2142,7 @@ pub struct SqlInstancesPatchRequest {
     #[prost(string, tag = "2")]
     pub project: ::prost::alloc::string::String,
     #[prost(message, optional, tag = "100")]
-    pub body: ::core::option::Option<DatabaseInstance>,
+    pub body: ::core::option::Option<DatabaseMetrics>,
 }
 /// Instance promote replica request.
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -2353,7 +2263,7 @@ pub struct SqlInstancesUpdateRequest {
     #[prost(string, tag = "2")]
     pub project: ::prost::alloc::string::String,
     #[prost(message, optional, tag = "100")]
-    pub body: ::core::option::Option<DatabaseInstance>,
+    pub body: ::core::option::Option<DatabaseMetrics>,
 }
 /// Instance reschedule maintenance request.
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -2398,23 +2308,17 @@ pub struct BackupReencryptionConfig {
     #[prost(int32, optional, tag = "1")]
     pub backup_limit: ::core::option::Option<i32>,
     /// Type of backups users want to re-encrypt.
-    #[prost(enumeration = "backup_reencryption_config::BackupType", optional, tag = "2")]
+    #[prost(
+        enumeration = "backup_reencryption_config::BackupType",
+        optional,
+        tag = "2"
+    )]
     pub backup_type: ::core::option::Option<i32>,
 }
 /// Nested message and enum types in `BackupReencryptionConfig`.
 pub mod backup_reencryption_config {
     /// Backup type for re-encryption
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum BackupType {
         /// Unknown backup type, will be defaulted to AUTOMATIC backup type
@@ -2484,23 +2388,12 @@ pub struct SqlInstancesVerifyExternalSyncSettingsRequest {
         oneof = "sql_instances_verify_external_sync_settings_request::SyncConfig",
         tags = "6"
     )]
-    pub sync_config: ::core::option::Option<
-        sql_instances_verify_external_sync_settings_request::SyncConfig,
-    >,
+    pub sync_config:
+        ::core::option::Option<sql_instances_verify_external_sync_settings_request::SyncConfig>,
 }
 /// Nested message and enum types in `SqlInstancesVerifyExternalSyncSettingsRequest`.
 pub mod sql_instances_verify_external_sync_settings_request {
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum ExternalSyncMode {
         /// Unknown external sync mode, will be defaulted to ONLINE mode
@@ -2568,25 +2461,16 @@ pub struct SqlInstancesStartExternalSyncRequest {
         tag = "7"
     )]
     pub sync_parallel_level: i32,
-    #[prost(oneof = "sql_instances_start_external_sync_request::SyncConfig", tags = "6")]
-    pub sync_config: ::core::option::Option<
-        sql_instances_start_external_sync_request::SyncConfig,
-    >,
+    #[prost(
+        oneof = "sql_instances_start_external_sync_request::SyncConfig",
+        tags = "6"
+    )]
+    pub sync_config: ::core::option::Option<sql_instances_start_external_sync_request::SyncConfig>,
 }
 /// Nested message and enum types in `SqlInstancesStartExternalSyncRequest`.
 pub mod sql_instances_start_external_sync_request {
     /// External Sync parallel level.
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum ExternalSyncParallelLevel {
         /// Unknown sync parallel level. Will be defaulted to OPTIMAL.
@@ -2719,7 +2603,7 @@ pub struct InstancesListResponse {
     pub warnings: ::prost::alloc::vec::Vec<ApiWarning>,
     /// List of database instance resources.
     #[prost(message, repeated, tag = "3")]
-    pub items: ::prost::alloc::vec::Vec<DatabaseInstance>,
+    pub items: ::prost::alloc::vec::Vec<DatabaseMetrics>,
     /// The continuation token, used to page through large result sets. Provide
     /// this value in a subsequent request to return the next page of results.
     #[prost(string, tag = "4")]
@@ -2843,7 +2727,7 @@ pub struct BinLogCoordinates {
 /// A Cloud SQL instance resource.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct DatabaseInstance {
+pub struct DatabaseMetrics {
     /// This is always `sql#instance`.
     #[prost(string, tag = "1")]
     pub kind: ::prost::alloc::string::String,
@@ -2957,9 +2841,7 @@ pub struct DatabaseInstance {
     pub secondary_gce_zone: ::prost::alloc::string::String,
     /// Disk encryption configuration specific to an instance.
     #[prost(message, optional, tag = "26")]
-    pub disk_encryption_configuration: ::core::option::Option<
-        DiskEncryptionConfiguration,
-    >,
+    pub disk_encryption_configuration: ::core::option::Option<DiskEncryptionConfiguration>,
     /// Disk encryption status specific to an instance.
     #[prost(message, optional, tag = "27")]
     pub disk_encryption_status: ::core::option::Option<DiskEncryptionStatus>,
@@ -2969,9 +2851,7 @@ pub struct DatabaseInstance {
     pub root_password: ::prost::alloc::string::String,
     /// The start time of any upcoming scheduled maintenance for this instance.
     #[prost(message, optional, tag = "30")]
-    pub scheduled_maintenance: ::core::option::Option<
-        database_instance::SqlScheduledMaintenance,
-    >,
+    pub scheduled_maintenance: ::core::option::Option<database_instance::SqlScheduledMaintenance>,
     /// The status indicating if instance satisfiesPzs.
     /// Reserved for future use.
     #[prost(message, optional, tag = "35")]
@@ -2988,9 +2868,7 @@ pub struct DatabaseInstance {
     /// * Readers:
     /// * the proactive database wellness job
     #[prost(message, optional, tag = "38")]
-    pub out_of_disk_report: ::core::option::Option<
-        database_instance::SqlOutOfDiskReport,
-    >,
+    pub out_of_disk_report: ::core::option::Option<database_instance::SqlOutOfDiskReport>,
     /// Output only. The time when the instance was created in
     /// [RFC 3339](<https://tools.ietf.org/html/rfc3339>) format, for example
     /// `2012-11-15T16:19:00.094Z`.
@@ -2998,14 +2876,12 @@ pub struct DatabaseInstance {
     pub create_time: ::core::option::Option<::prost_types::Timestamp>,
     /// Output only. List all maintenance versions applicable on the instance
     #[prost(string, repeated, tag = "41")]
-    pub available_maintenance_versions: ::prost::alloc::vec::Vec<
-        ::prost::alloc::string::String,
-    >,
+    pub available_maintenance_versions: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
     /// The current software version on the instance.
     #[prost(string, tag = "42")]
     pub maintenance_version: ::prost::alloc::string::String,
 }
-/// Nested message and enum types in `DatabaseInstance`.
+/// Nested message and enum types in `DatabaseMetrics`.
 pub mod database_instance {
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
@@ -3068,15 +2944,7 @@ pub mod database_instance {
     pub mod sql_out_of_disk_report {
         /// This enum lists all possible states regarding out-of-disk issues.
         #[derive(
-            Clone,
-            Copy,
-            Debug,
-            PartialEq,
-            Eq,
-            Hash,
-            PartialOrd,
-            Ord,
-            ::prost::Enumeration
+            Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
         )]
         #[repr(i32)]
         pub enum SqlOutOfDiskState {
@@ -3112,17 +2980,7 @@ pub mod database_instance {
         }
     }
     /// The current serving state of the database instance.
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum SqlInstanceState {
         /// The state of the instance is unknown.
@@ -3182,9 +3040,8 @@ pub mod database_instance {
 pub struct SqlInstancesRescheduleMaintenanceRequestBody {
     /// Required. The type of the reschedule the user wants.
     #[prost(message, optional, tag = "3")]
-    pub reschedule: ::core::option::Option<
-        sql_instances_reschedule_maintenance_request_body::Reschedule,
-    >,
+    pub reschedule:
+        ::core::option::Option<sql_instances_reschedule_maintenance_request_body::Reschedule>,
 }
 /// Nested message and enum types in `SqlInstancesRescheduleMaintenanceRequestBody`.
 pub mod sql_instances_reschedule_maintenance_request_body {
@@ -3201,17 +3058,7 @@ pub mod sql_instances_reschedule_maintenance_request_body {
         #[prost(message, optional, tag = "2")]
         pub schedule_time: ::core::option::Option<::prost_types::Timestamp>,
     }
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum RescheduleType {
         Unspecified = 0,
@@ -3350,17 +3197,7 @@ pub struct SqlExternalSyncSettingError {
 }
 /// Nested message and enum types in `SqlExternalSyncSettingError`.
 pub mod sql_external_sync_setting_error {
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum SqlExternalSyncSettingErrorType {
         Unspecified = 0,
@@ -3443,25 +3280,17 @@ pub mod sql_external_sync_setting_error {
                 SqlExternalSyncSettingErrorType::Unspecified => {
                     "SQL_EXTERNAL_SYNC_SETTING_ERROR_TYPE_UNSPECIFIED"
                 }
-                SqlExternalSyncSettingErrorType::ConnectionFailure => {
-                    "CONNECTION_FAILURE"
-                }
+                SqlExternalSyncSettingErrorType::ConnectionFailure => "CONNECTION_FAILURE",
                 SqlExternalSyncSettingErrorType::BinlogNotEnabled => "BINLOG_NOT_ENABLED",
                 SqlExternalSyncSettingErrorType::IncompatibleDatabaseVersion => {
                     "INCOMPATIBLE_DATABASE_VERSION"
                 }
-                SqlExternalSyncSettingErrorType::ReplicaAlreadySetup => {
-                    "REPLICA_ALREADY_SETUP"
-                }
-                SqlExternalSyncSettingErrorType::InsufficientPrivilege => {
-                    "INSUFFICIENT_PRIVILEGE"
-                }
+                SqlExternalSyncSettingErrorType::ReplicaAlreadySetup => "REPLICA_ALREADY_SETUP",
+                SqlExternalSyncSettingErrorType::InsufficientPrivilege => "INSUFFICIENT_PRIVILEGE",
                 SqlExternalSyncSettingErrorType::UnsupportedMigrationType => {
                     "UNSUPPORTED_MIGRATION_TYPE"
                 }
-                SqlExternalSyncSettingErrorType::NoPglogicalInstalled => {
-                    "NO_PGLOGICAL_INSTALLED"
-                }
+                SqlExternalSyncSettingErrorType::NoPglogicalInstalled => "NO_PGLOGICAL_INSTALLED",
                 SqlExternalSyncSettingErrorType::PglogicalNodeAlreadyExists => {
                     "PGLOGICAL_NODE_ALREADY_EXISTS"
                 }
@@ -3478,34 +3307,24 @@ pub mod sql_external_sync_setting_error {
                 SqlExternalSyncSettingErrorType::InsufficientMaxWorkerProcesses => {
                     "INSUFFICIENT_MAX_WORKER_PROCESSES"
                 }
-                SqlExternalSyncSettingErrorType::UnsupportedExtensions => {
-                    "UNSUPPORTED_EXTENSIONS"
-                }
+                SqlExternalSyncSettingErrorType::UnsupportedExtensions => "UNSUPPORTED_EXTENSIONS",
                 SqlExternalSyncSettingErrorType::InvalidRdsLogicalReplication => {
                     "INVALID_RDS_LOGICAL_REPLICATION"
                 }
-                SqlExternalSyncSettingErrorType::InvalidLoggingSetup => {
-                    "INVALID_LOGGING_SETUP"
-                }
+                SqlExternalSyncSettingErrorType::InvalidLoggingSetup => "INVALID_LOGGING_SETUP",
                 SqlExternalSyncSettingErrorType::InvalidDbParam => "INVALID_DB_PARAM",
-                SqlExternalSyncSettingErrorType::UnsupportedGtidMode => {
-                    "UNSUPPORTED_GTID_MODE"
-                }
+                SqlExternalSyncSettingErrorType::UnsupportedGtidMode => "UNSUPPORTED_GTID_MODE",
                 SqlExternalSyncSettingErrorType::SqlserverAgentNotRunning => {
                     "SQLSERVER_AGENT_NOT_RUNNING"
                 }
                 SqlExternalSyncSettingErrorType::UnsupportedTableDefinition => {
                     "UNSUPPORTED_TABLE_DEFINITION"
                 }
-                SqlExternalSyncSettingErrorType::UnsupportedDefiner => {
-                    "UNSUPPORTED_DEFINER"
-                }
+                SqlExternalSyncSettingErrorType::UnsupportedDefiner => "UNSUPPORTED_DEFINER",
                 SqlExternalSyncSettingErrorType::SqlserverServernameMismatch => {
                     "SQLSERVER_SERVERNAME_MISMATCH"
                 }
-                SqlExternalSyncSettingErrorType::PrimaryAlreadySetup => {
-                    "PRIMARY_ALREADY_SETUP"
-                }
+                SqlExternalSyncSettingErrorType::PrimaryAlreadySetup => "PRIMARY_ALREADY_SETUP",
                 SqlExternalSyncSettingErrorType::UnsupportedBinlogFormat => {
                     "UNSUPPORTED_BINLOG_FORMAT"
                 }
@@ -3515,9 +3334,7 @@ pub mod sql_external_sync_setting_error {
                 SqlExternalSyncSettingErrorType::UnsupportedStorageEngine => {
                     "UNSUPPORTED_STORAGE_ENGINE"
                 }
-                SqlExternalSyncSettingErrorType::LimitedSupportTables => {
-                    "LIMITED_SUPPORT_TABLES"
-                }
+                SqlExternalSyncSettingErrorType::LimitedSupportTables => "LIMITED_SUPPORT_TABLES",
                 SqlExternalSyncSettingErrorType::ExistingDataInReplica => {
                     "EXISTING_DATA_IN_REPLICA"
                 }
@@ -3539,43 +3356,29 @@ pub mod sql_external_sync_setting_error {
         /// Creates an enum from field names used in the ProtoBuf definition.
         pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
             match value {
-                "SQL_EXTERNAL_SYNC_SETTING_ERROR_TYPE_UNSPECIFIED" => {
-                    Some(Self::Unspecified)
-                }
+                "SQL_EXTERNAL_SYNC_SETTING_ERROR_TYPE_UNSPECIFIED" => Some(Self::Unspecified),
                 "CONNECTION_FAILURE" => Some(Self::ConnectionFailure),
                 "BINLOG_NOT_ENABLED" => Some(Self::BinlogNotEnabled),
-                "INCOMPATIBLE_DATABASE_VERSION" => {
-                    Some(Self::IncompatibleDatabaseVersion)
-                }
+                "INCOMPATIBLE_DATABASE_VERSION" => Some(Self::IncompatibleDatabaseVersion),
                 "REPLICA_ALREADY_SETUP" => Some(Self::ReplicaAlreadySetup),
                 "INSUFFICIENT_PRIVILEGE" => Some(Self::InsufficientPrivilege),
                 "UNSUPPORTED_MIGRATION_TYPE" => Some(Self::UnsupportedMigrationType),
                 "NO_PGLOGICAL_INSTALLED" => Some(Self::NoPglogicalInstalled),
                 "PGLOGICAL_NODE_ALREADY_EXISTS" => Some(Self::PglogicalNodeAlreadyExists),
                 "INVALID_WAL_LEVEL" => Some(Self::InvalidWalLevel),
-                "INVALID_SHARED_PRELOAD_LIBRARY" => {
-                    Some(Self::InvalidSharedPreloadLibrary)
-                }
-                "INSUFFICIENT_MAX_REPLICATION_SLOTS" => {
-                    Some(Self::InsufficientMaxReplicationSlots)
-                }
+                "INVALID_SHARED_PRELOAD_LIBRARY" => Some(Self::InvalidSharedPreloadLibrary),
+                "INSUFFICIENT_MAX_REPLICATION_SLOTS" => Some(Self::InsufficientMaxReplicationSlots),
                 "INSUFFICIENT_MAX_WAL_SENDERS" => Some(Self::InsufficientMaxWalSenders),
-                "INSUFFICIENT_MAX_WORKER_PROCESSES" => {
-                    Some(Self::InsufficientMaxWorkerProcesses)
-                }
+                "INSUFFICIENT_MAX_WORKER_PROCESSES" => Some(Self::InsufficientMaxWorkerProcesses),
                 "UNSUPPORTED_EXTENSIONS" => Some(Self::UnsupportedExtensions),
-                "INVALID_RDS_LOGICAL_REPLICATION" => {
-                    Some(Self::InvalidRdsLogicalReplication)
-                }
+                "INVALID_RDS_LOGICAL_REPLICATION" => Some(Self::InvalidRdsLogicalReplication),
                 "INVALID_LOGGING_SETUP" => Some(Self::InvalidLoggingSetup),
                 "INVALID_DB_PARAM" => Some(Self::InvalidDbParam),
                 "UNSUPPORTED_GTID_MODE" => Some(Self::UnsupportedGtidMode),
                 "SQLSERVER_AGENT_NOT_RUNNING" => Some(Self::SqlserverAgentNotRunning),
                 "UNSUPPORTED_TABLE_DEFINITION" => Some(Self::UnsupportedTableDefinition),
                 "UNSUPPORTED_DEFINER" => Some(Self::UnsupportedDefiner),
-                "SQLSERVER_SERVERNAME_MISMATCH" => {
-                    Some(Self::SqlserverServernameMismatch)
-                }
+                "SQLSERVER_SERVERNAME_MISMATCH" => Some(Self::SqlserverServernameMismatch),
                 "PRIMARY_ALREADY_SETUP" => Some(Self::PrimaryAlreadySetup),
                 "UNSUPPORTED_BINLOG_FORMAT" => Some(Self::UnsupportedBinlogFormat),
                 "BINLOG_RETENTION_SETTING" => Some(Self::BinlogRetentionSetting),
@@ -3586,9 +3389,7 @@ pub mod sql_external_sync_setting_error {
                 "RISKY_BACKUP_ADMIN_PRIVILEGE" => Some(Self::RiskyBackupAdminPrivilege),
                 "INSUFFICIENT_GCS_PERMISSIONS" => Some(Self::InsufficientGcsPermissions),
                 "INVALID_FILE_INFO" => Some(Self::InvalidFileInfo),
-                "UNSUPPORTED_DATABASE_SETTINGS" => {
-                    Some(Self::UnsupportedDatabaseSettings)
-                }
+                "UNSUPPORTED_DATABASE_SETTINGS" => Some(Self::UnsupportedDatabaseSettings),
                 _ => None,
             }
         }
@@ -3735,8 +3536,8 @@ impl SqlSuspensionReason {
 /// Generated client implementations.
 pub mod sql_instances_service_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
-    use tonic::codegen::*;
     use tonic::codegen::http::Uri;
+    use tonic::codegen::*;
     /// Service to manage Cloud SQL instances.
     #[derive(Debug, Clone)]
     pub struct SqlInstancesServiceClient<T> {
@@ -3781,9 +3582,8 @@ pub mod sql_instances_service_client {
                     <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
                 >,
             >,
-            <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
-            >>::Error: Into<StdError> + Send + Sync,
+            <T as tonic::codegen::Service<http::Request<tonic::body::BoxBody>>>::Error:
+                Into<StdError> + Send + Sync,
         {
             SqlInstancesServiceClient::new(InterceptedService::new(inner, interceptor))
         }
@@ -3827,27 +3627,21 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesAddServerCaRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/AddServerCa",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new(
-                        "google.cloud.sql.v1.SqlInstancesService",
-                        "AddServerCa",
-                    ),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "AddServerCa",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Creates a Cloud SQL instance as a clone of the source instance. Using this
@@ -3856,24 +3650,21 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesCloneRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/Clone",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new("google.cloud.sql.v1.SqlInstancesService", "Clone"),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "Clone",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Deletes a Cloud SQL instance.
@@ -3881,24 +3672,21 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesDeleteRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/Delete",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new("google.cloud.sql.v1.SqlInstancesService", "Delete"),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "Delete",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Demotes the stand-alone instance to be a Cloud SQL read replica for an
@@ -3907,27 +3695,21 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesDemoteMasterRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/DemoteMaster",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new(
-                        "google.cloud.sql.v1.SqlInstancesService",
-                        "DemoteMaster",
-                    ),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "DemoteMaster",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Exports data from a Cloud SQL instance to a Cloud Storage bucket as a SQL
@@ -3936,24 +3718,21 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesExportRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/Export",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new("google.cloud.sql.v1.SqlInstancesService", "Export"),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "Export",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Initiates a manual failover of a high availability (HA) primary instance
@@ -3968,27 +3747,21 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesFailoverRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/Failover",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new(
-                        "google.cloud.sql.v1.SqlInstancesService",
-                        "Failover",
-                    ),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "Failover",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Reencrypt CMEK instance with latest key version.
@@ -3996,55 +3769,43 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesReencryptRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/Reencrypt",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new(
-                        "google.cloud.sql.v1.SqlInstancesService",
-                        "Reencrypt",
-                    ),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "Reencrypt",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Retrieves a resource containing information about a Cloud SQL instance.
         pub async fn get(
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesGetRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::DatabaseInstance>,
-            tonic::Status,
-        > {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+        ) -> std::result::Result<tonic::Response<super::DatabaseMetrics>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/Get",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new("google.cloud.sql.v1.SqlInstancesService", "Get"),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "Get",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Imports data into a Cloud SQL instance from a SQL dump  or CSV file in
@@ -4053,24 +3814,21 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesImportRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/Import",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new("google.cloud.sql.v1.SqlInstancesService", "Import"),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "Import",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Creates a new Cloud SQL instance.
@@ -4078,52 +3836,44 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesInsertRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/Insert",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new("google.cloud.sql.v1.SqlInstancesService", "Insert"),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "Insert",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Lists instances under a given project.
         pub async fn list(
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesListRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::InstancesListResponse>,
-            tonic::Status,
-        > {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+        ) -> std::result::Result<tonic::Response<super::InstancesListResponse>, tonic::Status>
+        {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/List",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new("google.cloud.sql.v1.SqlInstancesService", "List"),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "List",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Lists all of the trusted Certificate Authorities (CAs) for the specified
@@ -4138,27 +3888,21 @@ pub mod sql_instances_service_client {
             tonic::Response<super::InstancesListServerCasResponse>,
             tonic::Status,
         > {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/ListServerCas",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new(
-                        "google.cloud.sql.v1.SqlInstancesService",
-                        "ListServerCas",
-                    ),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "ListServerCas",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Partially updates settings of a Cloud SQL instance by merging the request
@@ -4167,24 +3911,21 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesPatchRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/Patch",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new("google.cloud.sql.v1.SqlInstancesService", "Patch"),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "Patch",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Promotes the read replica instance to be a stand-alone Cloud SQL instance.
@@ -4193,27 +3934,21 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesPromoteReplicaRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/PromoteReplica",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new(
-                        "google.cloud.sql.v1.SqlInstancesService",
-                        "PromoteReplica",
-                    ),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "PromoteReplica",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Deletes all client certificates and generates a new server SSL certificate
@@ -4222,27 +3957,21 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesResetSslConfigRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/ResetSslConfig",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new(
-                        "google.cloud.sql.v1.SqlInstancesService",
-                        "ResetSslConfig",
-                    ),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "ResetSslConfig",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Restarts a Cloud SQL instance.
@@ -4250,24 +3979,21 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesRestartRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/Restart",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new("google.cloud.sql.v1.SqlInstancesService", "Restart"),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "Restart",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Restores a backup of a Cloud SQL instance. Using this operation might cause
@@ -4276,27 +4002,21 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesRestoreBackupRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/RestoreBackup",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new(
-                        "google.cloud.sql.v1.SqlInstancesService",
-                        "RestoreBackup",
-                    ),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "RestoreBackup",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Rotates the server certificate to one signed by the Certificate Authority
@@ -4305,27 +4025,21 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesRotateServerCaRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/RotateServerCa",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new(
-                        "google.cloud.sql.v1.SqlInstancesService",
-                        "RotateServerCa",
-                    ),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "RotateServerCa",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Starts the replication in the read replica instance.
@@ -4333,27 +4047,21 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesStartReplicaRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/StartReplica",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new(
-                        "google.cloud.sql.v1.SqlInstancesService",
-                        "StartReplica",
-                    ),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "StartReplica",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Stops the replication in the read replica instance.
@@ -4361,27 +4069,21 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesStopReplicaRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/StopReplica",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new(
-                        "google.cloud.sql.v1.SqlInstancesService",
-                        "StopReplica",
-                    ),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "StopReplica",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Truncate MySQL general and slow query log tables
@@ -4390,27 +4092,21 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesTruncateLogRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/TruncateLog",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new(
-                        "google.cloud.sql.v1.SqlInstancesService",
-                        "TruncateLog",
-                    ),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "TruncateLog",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Updates settings of a Cloud SQL instance. Using this operation might cause
@@ -4419,24 +4115,21 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesUpdateRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/Update",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new("google.cloud.sql.v1.SqlInstancesService", "Update"),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "Update",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Generates a short-lived X509 certificate containing the provided public key
@@ -4445,94 +4138,70 @@ pub mod sql_instances_service_client {
         /// database.
         pub async fn create_ephemeral(
             &mut self,
-            request: impl tonic::IntoRequest<
-                super::SqlInstancesCreateEphemeralCertRequest,
-            >,
+            request: impl tonic::IntoRequest<super::SqlInstancesCreateEphemeralCertRequest>,
         ) -> std::result::Result<tonic::Response<super::SslCert>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/CreateEphemeral",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new(
-                        "google.cloud.sql.v1.SqlInstancesService",
-                        "CreateEphemeral",
-                    ),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "CreateEphemeral",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Reschedules the maintenance on the given instance.
         pub async fn reschedule_maintenance(
             &mut self,
-            request: impl tonic::IntoRequest<
-                super::SqlInstancesRescheduleMaintenanceRequest,
-            >,
+            request: impl tonic::IntoRequest<super::SqlInstancesRescheduleMaintenanceRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/RescheduleMaintenance",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new(
-                        "google.cloud.sql.v1.SqlInstancesService",
-                        "RescheduleMaintenance",
-                    ),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "RescheduleMaintenance",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Verify External primary instance external sync settings.
         pub async fn verify_external_sync_settings(
             &mut self,
-            request: impl tonic::IntoRequest<
-                super::SqlInstancesVerifyExternalSyncSettingsRequest,
-            >,
+            request: impl tonic::IntoRequest<super::SqlInstancesVerifyExternalSyncSettingsRequest>,
         ) -> std::result::Result<
             tonic::Response<super::SqlInstancesVerifyExternalSyncSettingsResponse>,
             tonic::Status,
         > {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/VerifyExternalSyncSettings",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new(
-                        "google.cloud.sql.v1.SqlInstancesService",
-                        "VerifyExternalSyncSettings",
-                    ),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "VerifyExternalSyncSettings",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Start External primary instance migration.
@@ -4540,27 +4209,21 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesStartExternalSyncRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/StartExternalSync",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new(
-                        "google.cloud.sql.v1.SqlInstancesService",
-                        "StartExternalSync",
-                    ),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "StartExternalSync",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Perform Disk Shrink on primary instance.
@@ -4568,60 +4231,46 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesPerformDiskShrinkRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/PerformDiskShrink",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new(
-                        "google.cloud.sql.v1.SqlInstancesService",
-                        "PerformDiskShrink",
-                    ),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "PerformDiskShrink",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Get Disk Shrink Config for a given instance.
         pub async fn get_disk_shrink_config(
             &mut self,
-            request: impl tonic::IntoRequest<
-                super::SqlInstancesGetDiskShrinkConfigRequest,
-            >,
+            request: impl tonic::IntoRequest<super::SqlInstancesGetDiskShrinkConfigRequest>,
         ) -> std::result::Result<
             tonic::Response<super::SqlInstancesGetDiskShrinkConfigResponse>,
             tonic::Status,
         > {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/GetDiskShrinkConfig",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new(
-                        "google.cloud.sql.v1.SqlInstancesService",
-                        "GetDiskShrinkConfig",
-                    ),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "GetDiskShrinkConfig",
+            ));
             self.inner.unary(req, path, codec).await
         }
         /// Reset Replica Size to primary instance disk size.
@@ -4629,27 +4278,21 @@ pub mod sql_instances_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SqlInstancesResetReplicaSizeRequest>,
         ) -> std::result::Result<tonic::Response<super::Operation>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/google.cloud.sql.v1.SqlInstancesService/ResetReplicaSize",
             );
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new(
-                        "google.cloud.sql.v1.SqlInstancesService",
-                        "ResetReplicaSize",
-                    ),
-                );
+            req.extensions_mut().insert(GrpcMethod::new(
+                "google.cloud.sql.v1.SqlInstancesService",
+                "ResetReplicaSize",
+            ));
             self.inner.unary(req, path, codec).await
         }
     }

@@ -3,9 +3,7 @@ use std::sync::Arc;
 use tokio::sync::{Mutex, MutexGuard};
 use wukong_sdk::{
     graphql::AppsignalTimeFrame,
-    services::gcloud::{
-        google::logging::v2::LogEntry, DatabaseInstance, LogEntries, LogEntriesOptions,
-    },
+    services::gcloud::{google::logging::v2::LogEntry, LogEntries, LogEntriesOptions},
 };
 
 use crate::{
@@ -764,12 +762,10 @@ async fn get_database_metrics(
     app: Arc<Mutex<App>>,
     wk_client: &mut WKClient,
 ) -> Result<(), WKCliError> {
-    let mut app_ref = app.lock().await;
+    let app_ref = app.lock().await;
     let application = app_ref.state.current_application.clone();
     let namespace = app_ref.state.current_namespace.clone();
     let version = app_ref.state.current_version.clone();
-
-    app_ref.state.databases.is_fetching = true;
 
     drop(app_ref);
     let gcloud_access_token = auth::google_cloud::get_token_or_login(None).await;
@@ -816,7 +812,7 @@ async fn get_database_metrics(
     };
 
     let mut app_ref = app.lock().await;
-    app_ref.state.databases.is_fetching = false;
+    app_ref.state.is_fetching_database_metrics = false;
 
     Ok(())
 }

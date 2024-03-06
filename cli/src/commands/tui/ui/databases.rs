@@ -16,7 +16,7 @@ impl DatabasesWidget {
             return;
         }
         // it will show loader only on the first call
-        if app.state.databases.is_fetching {
+        if app.state.is_fetching_database_metrics {
             let loading_message = create_loading_block();
             frame.render_widget(loading_message, rect);
             return;

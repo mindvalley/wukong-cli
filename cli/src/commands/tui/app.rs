@@ -5,7 +5,7 @@ use strum::{Display, EnumIter, FromRepr};
 use tokio::sync::mpsc::Sender;
 use wukong_sdk::services::gcloud::{
     google::logging::{r#type::LogSeverity, v2::LogEntry},
-    DatabaseInstance,
+    DatabaseMetrics,
 };
 
 use crate::config::Config;
@@ -123,10 +123,9 @@ pub const MAX_LOG_ENTRIES_LENGTH: usize = 2_000;
 
 #[derive(Debug, Default)]
 pub struct DatabasesState {
-    pub is_fetching: bool,
     pub is_active: bool,
     pub error: Option<String>,
-    pub database_instances: Vec<DatabaseInstance>,
+    pub database_instances: Vec<DatabaseMetrics>,
 }
 pub struct State {
     pub current_application: String,
@@ -142,6 +141,7 @@ pub struct State {
 
     // loading state
     pub is_fetching_builds: bool,
+    pub is_fetching_database_metrics: bool,
     pub is_fetching_deployments: bool,
     pub is_checking_namespaces: bool,
     pub is_fetching_log_entries: bool,
@@ -186,6 +186,8 @@ pub struct State {
     pub instant_since_last_log_entries_poll: Instant,
     // For appsignal data polling
     pub instant_since_last_appsignal_poll: Instant,
+    // For database data polling
+    pub instant_since_last_database_poll: Instant,
 
     // ui state
     pub logs_widget_height: u16,
@@ -271,6 +273,7 @@ impl App {
 
                 show_namespace_selection: false,
                 is_fetching_builds: true,
+                is_fetching_database_metrics: true,
                 is_fetching_deployments: true,
                 is_checking_namespaces: false,
                 is_checking_version: false,
@@ -306,6 +309,7 @@ impl App {
                 logs_horizontal_scroll: 0,
                 instant_since_last_log_entries_poll: Instant::now(),
                 instant_since_last_appsignal_poll: Instant::now(),
+                instant_since_last_database_poll: Instant::now(),
                 logs_table_current_start_index: 0,
                 logs_table_current_last_index: 0,
                 logs_table_current_last_fully_rendered: true,
@@ -362,6 +366,12 @@ impl App {
             .elapsed()
             .as_millis();
 
+        let database_poll_elapsed = self
+            .state
+            .instant_since_last_database_poll
+            .elapsed()
+            .as_millis();
+
         if self.state.current_namespace.is_some() && self.state.current_version.is_some() {
             // if this is the first log entries api call, fetch the log entries
             // even if the tail is not enabled
@@ -406,7 +416,8 @@ impl App {
                 }
             }
 
-            if self.state.databases.is_active {
+            if database_poll_elapsed >= poll_interval_ms {
+                self.state.instant_since_last_database_poll = Instant::now();
                 self.dispatch(NetworkEvent::GetDatabaseMetrics).await;
             }
         }

@@ -16,7 +16,7 @@ use wukong_sdk::{
         multi_branch_pipeline_query, pipeline_query, pipelines_query, AppsignalTimeFrame,
     },
     services::{
-        gcloud::{DatabaseInstance, LogEntries, LogEntriesOptions, TokenInfo},
+        gcloud::{DatabaseMetrics, LogEntries, LogEntriesOptions, TokenInfo},
         vault::client::FetchSecretsData,
     },
     WKClient as WKSdkClient, WKConfig,
@@ -422,7 +422,7 @@ impl WKClient {
         application: &str,
         project_id: &str,
         access_token: String,
-    ) -> Result<Vec<DatabaseInstance>, WKCliError> {
+    ) -> Result<Vec<DatabaseMetrics>, WKCliError> {
         self.inner
             .get_gcloud_database_metrics(application, namespace, project_id, access_token)
             .await

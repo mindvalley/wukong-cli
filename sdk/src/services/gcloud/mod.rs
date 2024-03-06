@@ -264,7 +264,7 @@ pub struct LogEntries {
 }
 
 #[derive(Debug)]
-pub struct DatabaseInstance {
+pub struct DatabaseMetrics {
     pub name: String,
     pub cpu_utilization: f64,
     pub memory_usage: f64,
@@ -350,16 +350,16 @@ impl GCloudClient {
 
     /// Here we get the database metrics from Google Cloud by sending a request using the `MetricServiceClient`
     /// for each `MetricTypeFilter` that we have defined. The responses for the requests are then extracted into
-    /// a Vector of `DatabaseInstance`s that is updated on the App's `state.databases.database_instances`.
+    /// a Vector of `DatabaseMetrics`s that is updated on the App's `state.databases.database_instances`.
     pub async fn get_database_metrics(
         &self,
         _application: &str,
         _namespace: &str,
         project_id: &str,
-    ) -> Result<Vec<DatabaseInstance>, GCloudError> {
+    ) -> Result<Vec<DatabaseMetrics>, GCloudError> {
         let mut database_instances = Vec::new();
         let current_time = Utc::now();
-        let start_time = current_time - Duration::minutes(10);
+        let start_time = current_time - Duration::minutes(3);
         let mut responses: Vec<ListTimeSeriesResponse> = Vec::new();
 
         for metric_type in MetricTypeFilter::iter() {
@@ -582,7 +582,7 @@ impl GCloudClient {
                 _ => 0,
             };
 
-            database_instances.push(DatabaseInstance {
+            database_instances.push(DatabaseMetrics {
                 name: key.to_string(),
                 cpu_utilization: cpu_utilization,
                 memory_usage: memory_usage.clone(),
@@ -626,7 +626,7 @@ impl WKClient {
         namespace: &str,
         project_id: &str,
         access_token: String,
-    ) -> Result<Vec<DatabaseInstance>, WKError> {
+    ) -> Result<Vec<DatabaseMetrics>, WKError> {
         let google_client = GCloudClient::new(access_token);
         google_client
             .get_database_metrics(application, namespace, project_id)
@@ -657,7 +657,7 @@ fn generate_request(
         view: TimeSeriesView::Full.into(),
         aggregation: Some(Aggregation {
             alignment_period: Some(prost_types::Duration {
-                seconds: 600,
+                seconds: 180,
                 nanos: 0,
             }),
             per_series_aligner: Aligner::AlignMean as i32,
