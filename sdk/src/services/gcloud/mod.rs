@@ -436,10 +436,6 @@ impl GCloudClient {
                                         MetricType::CpuUtilization,
                                         MetricValue::CpuUtilization(cpu_utilization),
                                     );
-                                    // metrics_values.insert(
-                                    //     MetricType::ConnectionsCount,
-                                    //     MetricValue::ConnectionsCount(0),
-                                    // );
                                 }
                                 MetricType::MemoryComponents => {
                                     let memory_cache_point =
@@ -492,11 +488,23 @@ impl GCloudClient {
                                             usage: memory_usage,
                                         }),
                                     );
-                                    // metrics_values.insert(
-                                    //     MetricType::ConnectionsCount,
-                                    //     MetricValue::ConnectionsCount(0),
-                                    // );
                                 }
+                                // TODO: Implement the connections count metric. Currently we are able
+                                // get the metric from the response which returns a list of time series
+                                // for connections by apps (e.g. `mv_wukong_api_proxy_db`, `cloudsqladmin`
+                                // and `postgres`). However, we are unable to get an aggregated sum of the
+                                // number of connections (which is what we want to display in the dashboard),
+                                // i.e. the total number of connections across all apps.
+                                //
+                                // We tried adding a Reducer::ReduceSum to the aggregation for the request,
+                                // but that returned an empty list. We tried a few combinations of Aggregator
+                                // and Reducer without much luck.
+                                //
+                                // To complete this feature, we need to figure out to either get the sum of
+                                // the connections across all apps, or to get the connections for only the
+                                // app (e.g. `mv_wukong_api_proxy_db`), which adds the requirement of knowing
+                                // the app name (which we don't have at the moment).
+                                //
                                 MetricType::ConnectionsCount => {
                                     metrics_values.insert(
                                         MetricType::ConnectionsCount,
@@ -635,6 +643,10 @@ impl WKClient {
     }
 }
 
+// For all working metric types, we are able to use this generic request with Aligner::AlignMean
+// and Reducer::ReduceNone to get the metric values. However, for the connections count metric, we
+// might need to introduce a different request to get the metric values, either by introducing a
+// a new variable to this function, or introducing a separate function for it.
 fn generate_request(
     metric_type: &str,
     project_id: &str,
