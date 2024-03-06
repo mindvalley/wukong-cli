@@ -32,19 +32,19 @@ impl DatabasesWidget {
                 Row::new(vec![
                     Cell::from(Span::styled(database_instance.name.to_string(), name_style)),
                     Cell::from(Span::styled(
-                        format!("{:>15.2}", database_instance.cpu_utilization),
+                        format!("{:>14.2}%", database_instance.cpu_utilization),
                         name_style,
                     )),
                     Cell::from(Span::styled(
-                        format!("{:>12.2}", database_instance.memory_usage),
+                        format!("{:>11.2}%", database_instance.memory_usage),
                         name_style,
                     )),
                     Cell::from(Span::styled(
-                        format!("{:>11.2}", database_instance.memory_free),
+                        format!("{:>10.2}%", database_instance.memory_free),
                         name_style,
                     )),
                     Cell::from(Span::styled(
-                        format!("{:>13.2}", database_instance.memory_cache),
+                        format!("{:>12.2}%", database_instance.memory_cache),
                         name_style,
                     )),
                     Cell::from(Span::styled(
