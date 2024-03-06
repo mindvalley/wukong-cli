@@ -30,10 +30,7 @@ impl DatabasesWidget {
             .iter()
             .map(|database_instance| {
                 Row::new(vec![
-                    Cell::from(Span::styled(
-                        format!("{:}", database_instance.name),
-                        name_style,
-                    )),
+                    Cell::from(Span::styled(database_instance.name.to_string(), name_style)),
                     Cell::from(Span::styled(
                         format!("{:>15.2}", database_instance.cpu_utilization),
                         name_style,

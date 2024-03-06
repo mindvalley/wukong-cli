@@ -416,16 +416,18 @@ impl GCloudClient {
                                         let cpu_utilization_point =
                                             response.time_series[0].points[0].clone();
                                         let cpu_utilization = match cpu_utilization_point.value {
-                                            Some(typed_value) => match typed_value {
-                                                TypedValue { value } => match value {
+                                            Some(typed_value) => {
+                                                let TypedValue { value } = typed_value;
+                                                match value {
                                                     Some(google::monitoring::v3::typed_value::Value::DoubleValue(
                                                         double_value,
                                                     )) => double_value * 100.0, // Convert to percentage
                                                     _ => 0.0,
-                                                },
-                                            },
+                                                    }
+                                            }
                                             None => 0.0,
                                         };
+
                                         metrics_values.insert(
                                             MetricType::CpuUtilization,
                                             MetricValue::CpuUtilization(cpu_utilization),
@@ -435,42 +437,45 @@ impl GCloudClient {
                                         let memory_cache_point =
                                             response.time_series[0].points[0].clone();
                                         let memory_cache = match memory_cache_point.value {
-                                            Some(typed_value) => match typed_value {
-                                                TypedValue { value } => match value {
+                                            Some(typed_value) => {
+                                                let TypedValue { value } = typed_value;
+                                                match value {
                                                     Some(google::monitoring::v3::typed_value::Value::DoubleValue(
                                                         double_value,
                                                     )) => double_value, // Already a percentage
                                                     _ => 0.0,
-                                                },
-                                            },
+                                                }
+                                            }
                                             None => 0.0,
                                         };
 
                                         let memory_free_point =
                                             response.time_series[1].points[0].clone();
                                         let memory_free = match memory_free_point.value {
-                                            Some(typed_value) => match typed_value {
-                                                TypedValue { value } => match value {
+                                            Some(typed_value) => {
+                                                let TypedValue { value } = typed_value;
+                                                match value {
                                                     Some(google::monitoring::v3::typed_value::Value::DoubleValue(
                                                         double_value,
                                                     )) => double_value, // Already a percentage
                                                     _ => 0.0,
-                                                },
-                                            },
+                                                }
+                                            }
                                             None => 0.0,
                                         };
 
                                         let memory_usage_point =
                                             response.time_series[2].points[0].clone();
                                         let memory_usage = match memory_usage_point.value {
-                                            Some(typed_value) => match typed_value {
-                                                TypedValue { value } => match value {
+                                            Some(typed_value) => {
+                                                let TypedValue { value } = typed_value;
+                                                match value {
                                                     Some(google::monitoring::v3::typed_value::Value::DoubleValue(
                                                         double_value,
                                                     )) => double_value, // Already a percentage
                                                     _ => 0.0,
-                                                },
-                                            },
+                                                }
+                                            }
                                             None => 0.0,
                                         };
 
@@ -540,7 +545,7 @@ impl GCloudClient {
             }
         }
 
-        grouped_responses.keys().into_iter().for_each(|key| {
+        grouped_responses.keys().for_each(|key| {
             let cpu_utilization_option = grouped_responses
                 .get(key)
                 .unwrap()
@@ -590,10 +595,10 @@ impl GCloudClient {
             database_metrics.push(DatabaseMetrics {
                 name: key.to_string(),
                 cpu_utilization,
-                memory_usage: memory_usage.clone(),
-                memory_free: memory_free.clone(),
-                memory_cache: memory_cache.clone(),
-                connections_count: connections_count.clone(),
+                memory_usage,
+                memory_free,
+                memory_cache,
+                connections_count,
             });
         });
 
