@@ -350,14 +350,14 @@ impl GCloudClient {
 
     /// Here we get the database metrics from Google Cloud by sending a request using the `MetricServiceClient`
     /// for each `MetricTypeFilter` that we have defined. The responses for the requests are then extracted into
-    /// a Vector of `DatabaseMetrics`s that is updated on the App's `state.databases.database_instances`.
+    /// a Vector of `DatabaseMetrics`s that is updated on the App's `state.databases.database_metrics`.
     pub async fn get_database_metrics(
         &self,
         _application: &str,
         _namespace: &str,
         project_id: &str,
     ) -> Result<Vec<DatabaseMetrics>, GCloudError> {
-        let mut database_instances = Vec::new();
+        let mut database_metrics = Vec::new();
         let current_time = Utc::now();
         let start_time = current_time - Duration::minutes(3);
         let mut responses: Vec<ListTimeSeriesResponse> = Vec::new();
@@ -590,7 +590,7 @@ impl GCloudClient {
                 _ => 0,
             };
 
-            database_instances.push(DatabaseMetrics {
+            database_metrics.push(DatabaseMetrics {
                 name: key.to_string(),
                 cpu_utilization: cpu_utilization,
                 memory_usage: memory_usage.clone(),
@@ -600,7 +600,7 @@ impl GCloudClient {
             });
         });
 
-        Ok(database_instances)
+        Ok(database_metrics)
     }
 }
 

@@ -26,7 +26,7 @@ impl DatabasesWidget {
         let rows = app
             .state
             .databases
-            .database_instances
+            .database_metrics
             .iter()
             .map(|database_instance| {
                 Row::new(vec![

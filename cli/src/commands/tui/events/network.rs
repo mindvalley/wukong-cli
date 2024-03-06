@@ -804,7 +804,7 @@ async fn get_database_metrics(
                     };
                     if let Ok(database_metrics) = database_metrics {
                         let mut app_ref = app.lock().await;
-                        app_ref.state.databases.database_instances = database_metrics;
+                        app_ref.state.databases.database_metrics = database_metrics;
                     }
                 }
             }

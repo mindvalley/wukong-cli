@@ -125,7 +125,7 @@ pub const MAX_LOG_ENTRIES_LENGTH: usize = 2_000;
 pub struct DatabasesState {
     pub is_active: bool,
     pub error: Option<String>,
-    pub database_instances: Vec<DatabaseMetrics>,
+    pub database_metrics: Vec<DatabaseMetrics>,
 }
 pub struct State {
     pub current_application: String,
