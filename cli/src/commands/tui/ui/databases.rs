@@ -21,46 +21,48 @@ impl DatabasesWidget {
             frame.render_widget(loading_message, rect);
             return;
         }
-
-        // todo!();
         let name_style = Style::default().fg(Color::White);
 
-        // Get database instances, cpu usage, free memory, and connections count from the cloudsql client
-        let cpu_usage = "90%"; //cloudsql_client.get_cpu_usage();
-        let free_memory = "10M"; //cloudsql_client.get_free_memory();
-        let connections_count = "1000/5000"; //cloudsql_client.get_connections_count();
-
-        let rows = vec![
-            Row::new(vec![
-                Cell::from(Span::styled("Database Instances", name_style)),
-                Cell::from(Span::styled(
-                    app.state.databases.database_instances[0].name.to_string(),
-                    name_style,
-                )),
-            ]),
-            Row::new(vec![
-                Cell::from(Span::styled("CPU Utilization", name_style)),
-                Cell::from(Span::styled(
-                    app.state.databases.database_instances[0]
-                        .cpu_utilization
-                        .to_string(),
-                    name_style,
-                )),
-            ]),
-            Row::new(vec![
-                Cell::from(Span::styled("Free Memory", name_style)),
-                Cell::from(Span::styled(free_memory.to_string(), name_style)),
-            ]),
-            Row::new(vec![
-                Cell::from(Span::styled("Connections Count", name_style)),
-                Cell::from(Span::styled(connections_count.to_string(), name_style)),
-            ]),
-        ];
+        let rows = app
+            .state
+            .databases
+            .database_instances
+            .iter()
+            .map(|database_instance| {
+                Row::new(vec![
+                    Cell::from(Span::styled(database_instance.name.to_string(), name_style)),
+                    Cell::from(Span::styled(
+                        database_instance.cpu_utilization.to_string(),
+                        name_style,
+                    )),
+                    Cell::from(Span::styled(
+                        database_instance.memory_usage.to_string(),
+                        name_style,
+                    )),
+                    Cell::from(Span::styled(
+                        database_instance.memory_free.to_string(),
+                        name_style,
+                    )),
+                    Cell::from(Span::styled(
+                        database_instance.memory_cache.to_string(),
+                        name_style,
+                    )),
+                    Cell::from(Span::styled(
+                        database_instance.connections_count.to_string(),
+                        name_style,
+                    )),
+                ])
+            })
+            .collect::<Vec<Row>>();
 
         let widget = Table::new(rows)
             .header(Row::new(vec![
-                Cell::from(Span::styled("Metric", name_style)),
-                Cell::from(Span::styled("Value", name_style)),
+                Cell::from(Span::styled("Database ID", name_style)),
+                Cell::from(Span::styled("CPU Utilization", name_style)),
+                Cell::from(Span::styled("Memory Usage", name_style)),
+                Cell::from(Span::styled("Memory Free", name_style)),
+                Cell::from(Span::styled("Memory Cached", name_style)),
+                Cell::from(Span::styled("Connections Count", name_style)),
             ]))
             .widths(&[Constraint::Min(20), Constraint::Length(1000)])
             .column_spacing(1);

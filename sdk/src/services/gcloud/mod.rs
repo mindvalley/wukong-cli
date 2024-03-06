@@ -135,7 +135,7 @@ enum MetricValue {
     ConnectionsCount(i64),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 struct MetricsMemoryComponents {
     cache: f64,
     free: f64,
@@ -269,7 +269,9 @@ pub struct LogEntries {
 pub struct DatabaseInstance {
     pub name: String,
     pub cpu_utilization: f64,
-    pub memory_utilization: f64,
+    pub memory_usage: f64,
+    pub memory_free: f64,
+    pub memory_cache: f64,
     pub connections_count: i64,
 }
 
@@ -393,154 +395,192 @@ impl GCloudClient {
         let mut grouped_responses: HashMap<String, MetricHash> = HashMap::new();
 
         for response in &responses {
-            let database_id = response.time_series[0]
-                .resource
-                .as_ref()
-                .unwrap()
-                .labels
-                .get("database_id");
-            match database_id {
-                Some(database_id) => {
-                    if grouped_responses.get(database_id).is_none() {
-                        grouped_responses.insert(database_id.to_string(), HashMap::new());
-                    };
-                    let mut metrics_values = grouped_responses[database_id].clone();
+            if response.time_series.len() > 0 {
+                let database_id = response.time_series[0]
+                    .resource
+                    .as_ref()
+                    .unwrap()
+                    .labels
+                    .get("database_id");
+                match database_id {
+                    Some(database_id) => {
+                        if grouped_responses.get(database_id).is_none() {
+                            grouped_responses.insert(database_id.to_string(), HashMap::new());
+                        };
+                        let mut metrics_values = grouped_responses[database_id].clone();
 
-                    let metric_type = MetricType::from_str(
-                        response.time_series[0]
-                            .metric
-                            .as_ref()
-                            .unwrap()
-                            .r#type
-                            .as_str(),
-                    );
+                        let metric_type = MetricType::from_str(
+                            response.time_series[0]
+                                .metric
+                                .as_ref()
+                                .unwrap()
+                                .r#type
+                                .as_str(),
+                        );
 
-                    match metric_type {
-                        Ok(valid_type) => match valid_type {
-                            MetricType::CpuUtilization => {
-                                let cpu_utilization_point =
-                                    response.time_series[0].points[0].clone();
-                                let cpu_utilization = match cpu_utilization_point.value {
-                                    Some(typed_value) => match typed_value {
-                                        TypedValue { value } => match value {
-                                            Some(google::monitoring::v3::typed_value::Value::DoubleValue(
-                                                double_value,
-                                            )) => double_value * 100.0, // Convert to percentage
-                                            _ => 0.0,
+                        match metric_type {
+                            Ok(valid_type) => match valid_type {
+                                MetricType::CpuUtilization => {
+                                    let cpu_utilization_point =
+                                        response.time_series[0].points[0].clone();
+                                    let cpu_utilization = match cpu_utilization_point.value {
+                                        Some(typed_value) => match typed_value {
+                                            TypedValue { value } => match value {
+                                                Some(google::monitoring::v3::typed_value::Value::DoubleValue(
+                                                    double_value,
+                                                )) => double_value * 100.0, // Convert to percentage
+                                                _ => 0.0,
+                                            },
                                         },
-                                    },
-                                    None => 0.0,
-                                };
-                                metrics_values.insert(
-                                    MetricType::CpuUtilization,
-                                    MetricValue::CpuUtilization(cpu_utilization),
-                                );
-                            }
-                            MetricType::MemoryComponents => {
-                                let memory_cache_point = response.time_series[0].points[0].clone();
-                                let memory_cache = match memory_cache_point.value {
-                                    Some(typed_value) => match typed_value {
-                                        TypedValue { value } => match value {
-                                            Some(google::monitoring::v3::typed_value::Value::DoubleValue(
-                                                double_value,
-                                            )) => double_value, // Already a percentage
-                                            _ => 0.0,
+                                        None => 0.0,
+                                    };
+                                    metrics_values.insert(
+                                        MetricType::CpuUtilization,
+                                        MetricValue::CpuUtilization(cpu_utilization),
+                                    );
+                                    // metrics_values.insert(
+                                    //     MetricType::ConnectionsCount,
+                                    //     MetricValue::ConnectionsCount(0),
+                                    // );
+                                }
+                                MetricType::MemoryComponents => {
+                                    let memory_cache_point =
+                                        response.time_series[0].points[0].clone();
+                                    let memory_cache = match memory_cache_point.value {
+                                        Some(typed_value) => match typed_value {
+                                            TypedValue { value } => match value {
+                                                Some(google::monitoring::v3::typed_value::Value::DoubleValue(
+                                                    double_value,
+                                                )) => double_value, // Already a percentage
+                                                _ => 0.0,
+                                            },
                                         },
-                                    },
-                                    None => 0.0,
-                                };
+                                        None => 0.0,
+                                    };
 
-                                let memory_free_point = response.time_series[1].points[0].clone();
-                                let memory_free = match memory_free_point.value {
-                                    Some(typed_value) => match typed_value {
-                                        TypedValue { value } => match value {
-                                            Some(google::monitoring::v3::typed_value::Value::DoubleValue(
-                                                double_value,
-                                            )) => double_value, // Already a percentage
-                                            _ => 0.0,
+                                    let memory_free_point =
+                                        response.time_series[1].points[0].clone();
+                                    let memory_free = match memory_free_point.value {
+                                        Some(typed_value) => match typed_value {
+                                            TypedValue { value } => match value {
+                                                Some(google::monitoring::v3::typed_value::Value::DoubleValue(
+                                                    double_value,
+                                                )) => double_value, // Already a percentage
+                                                _ => 0.0,
+                                            },
                                         },
-                                    },
-                                    None => 0.0,
-                                };
+                                        None => 0.0,
+                                    };
 
-                                let memory_usage_point = response.time_series[2].points[0].clone();
-                                let memory_usage = match memory_usage_point.value {
-                                    Some(typed_value) => match typed_value {
-                                        TypedValue { value } => match value {
-                                            Some(google::monitoring::v3::typed_value::Value::DoubleValue(
-                                                double_value,
-                                            )) => double_value, // Already a percentage
-                                            _ => 0.0,
+                                    let memory_usage_point =
+                                        response.time_series[2].points[0].clone();
+                                    let memory_usage = match memory_usage_point.value {
+                                        Some(typed_value) => match typed_value {
+                                            TypedValue { value } => match value {
+                                                Some(google::monitoring::v3::typed_value::Value::DoubleValue(
+                                                    double_value,
+                                                )) => double_value, // Already a percentage
+                                                _ => 0.0,
+                                            },
                                         },
-                                    },
-                                    None => 0.0,
-                                };
+                                        None => 0.0,
+                                    };
 
-                                metrics_values.insert(
-                                    MetricType::MemoryComponents,
-                                    MetricValue::MemoryComponents(MetricsMemoryComponents {
-                                        cache: memory_cache,
-                                        free: memory_free,
-                                        usage: memory_usage,
-                                    }),
-                                );
-                            }
-                            MetricType::ConnectionsCount => {
-                                metrics_values.insert(
-                                    MetricType::ConnectionsCount,
-                                    MetricValue::ConnectionsCount(0),
-                                );
-                            }
-                        },
-                        Err(_err) => continue,
+                                    metrics_values.insert(
+                                        MetricType::MemoryComponents,
+                                        MetricValue::MemoryComponents(MetricsMemoryComponents {
+                                            cache: memory_cache,
+                                            free: memory_free,
+                                            usage: memory_usage,
+                                        }),
+                                    );
+                                    // metrics_values.insert(
+                                    //     MetricType::ConnectionsCount,
+                                    //     MetricValue::ConnectionsCount(0),
+                                    // );
+                                }
+                                MetricType::ConnectionsCount => {
+                                    metrics_values.insert(
+                                        MetricType::ConnectionsCount,
+                                        MetricValue::ConnectionsCount(0),
+                                    );
+
+                                    // let connections_count_point =
+                                    //     response.time_series[0].points[0].clone();
+                                    // let connections_count= match connections_count_point.value {
+                                    //     Some(typed_value) => match typed_value {
+                                    //         TypedValue { value } => match value {
+                                    //             Some(google::monitoring::v3::typed_value::Value::Int64Value(
+                                    //                 int_value,
+                                    //             )) => int_value,
+                                    //             _ => 0,
+                                    //         },
+                                    //     },
+                                    //     None => 0,
+                                    // };
+                                    // todo!("Connections Count response {:?}", response);
+                                    // metrics_values.insert(
+                                    //     MetricType::ConnectionsCount,
+                                    //     MetricValue::ConnectionsCount(connections_count),
+                                    // );
+                                }
+                            },
+                            Err(_err) => continue,
+                        }
+
+                        grouped_responses.insert(database_id.to_string(), metrics_values);
                     }
-
-                    grouped_responses.insert(database_id.to_string(), metrics_values);
-                }
-                None => {
-                    continue; // We don't do anything with the response if we can't get the database_id
+                    None => {
+                        continue; // We don't do anything with the response if we can't get the database_id
+                    }
                 }
             }
         }
 
-        todo!("Get memory utilization {:?}", grouped_responses);
-        // grouped_responses.keys().into_iter().for_each(|key| {
-        //     let time_series = grouped_responses.get(key).unwrap();
-        //     let cpu_utilization_point = time_series[0][0].points[0].clone();
+        grouped_responses.keys().into_iter().for_each(|key| {
+            let cpu_utilization_option = grouped_responses
+                .get(key)
+                .unwrap()
+                .get(&MetricType::CpuUtilization)
+                .unwrap()
+                .clone();
 
-        //     let cpu_utilization = match cpu_utilization_point.value {
-        //         Some(typed_value) => match typed_value {
-        //             TypedValue { value } => match value {
-        //                 Some(google::monitoring::v3::typed_value::Value::DoubleValue(
-        //                     double_value,
-        //                 )) => double_value * 100.0,
-        //                 _ => 0.0,
-        //             },
-        //         },
-        //         None => 0.0,
-        //     };
+            let cpu_utilization = match cpu_utilization_option {
+                MetricValue::CpuUtilization(cpu_utilization) => cpu_utilization,
+                _ => 0.0,
+            };
 
-        //     let memory_utilization_point = time_series[1][0].points[0].clone();
+            let memory_components_option = grouped_responses
+                .get(key)
+                .unwrap()
+                .get(&MetricType::MemoryComponents)
+                .unwrap()
+                .clone();
 
-        //     let memory_utilization = match memory_utilization_point.value {
-        //         Some(typed_value) => match typed_value {
-        //             TypedValue { value } => match value {
-        //                 Some(google::monitoring::v3::typed_value::Value::DoubleValue(
-        //                     double_value,
-        //                 )) => double_value * 100.0,
-        //                 _ => 0.0,
-        //             },
-        //         },
-        //         None => 0.0,
-        //     };
+            let memory_usage = match memory_components_option {
+                MetricValue::MemoryComponents(memory_components) => memory_components.usage,
+                _ => 0.0,
+            };
 
-        //     database_instances.push(DatabaseInstance {
-        //         name: key.to_string(),
-        //         cpu_utilization: cpu_utilization,
-        //         memory_utilization: memory_utilization,
-        //         connections_count: 3,
-        //     });
-        // });
+            let memory_free = match memory_components_option {
+                MetricValue::MemoryComponents(memory_components) => memory_components.free,
+                _ => 0.0,
+            };
+
+            let memory_cache = match memory_components_option {
+                MetricValue::MemoryComponents(memory_components) => memory_components.cache,
+                _ => 0.0,
+            };
+
+            database_instances.push(DatabaseInstance {
+                name: key.to_string(),
+                cpu_utilization: cpu_utilization,
+                memory_usage: memory_usage.clone(),
+                memory_free: memory_free.clone(),
+                memory_cache: memory_cache.clone(),
+                connections_count: 0,
+            });
+        });
 
         Ok(database_instances)
     }
@@ -610,7 +650,7 @@ fn generate_request(
                 seconds: 600,
                 nanos: 0,
             }),
-            per_series_aligner: Aligner::AlignMin as i32,
+            per_series_aligner: Aligner::AlignMean as i32,
             cross_series_reducer: Reducer::ReduceNone as i32,
             group_by_fields: Vec::new(),
         }),
