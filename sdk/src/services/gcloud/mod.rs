@@ -21,14 +21,12 @@ pub mod google {
 }
 
 use self::google::{
-    api::Metric,
     logging::v2::{log_entry, LogEntry},
     monitoring::v3::{
         aggregation::{Aligner, Reducer},
         list_time_series_request::TimeSeriesView,
         metric_service_client::MetricServiceClient,
-        Aggregation, ListTimeSeriesRequest, ListTimeSeriesResponse, Point, TimeInterval,
-        TimeSeries, TypedValue,
+        Aggregation, ListTimeSeriesRequest, ListTimeSeriesResponse, TimeInterval, TypedValue,
     },
 };
 use crate::{
@@ -39,7 +37,7 @@ use chrono::{DateTime, Duration, Utc};
 use google::logging::v2::{
     logging_service_v2_client::LoggingServiceV2Client, ListLogEntriesRequest,
 };
-use log::info;
+
 use prost_types::Timestamp;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -502,7 +500,7 @@ impl GCloudClient {
                                 MetricType::ConnectionsCount => {
                                     metrics_values.insert(
                                         MetricType::ConnectionsCount,
-                                        MetricValue::ConnectionsCount(0),
+                                        MetricValue::ConnectionsCount(2000),
                                     );
 
                                     // let connections_count_point =
@@ -572,13 +570,25 @@ impl GCloudClient {
                 _ => 0.0,
             };
 
+            let connections_counts_option = grouped_responses
+                .get(key)
+                .unwrap()
+                .get(&MetricType::ConnectionsCount)
+                .unwrap()
+                .clone();
+
+            let connections_count = match connections_counts_option {
+                MetricValue::ConnectionsCount(connections_count) => connections_count,
+                _ => 0,
+            };
+
             database_instances.push(DatabaseInstance {
                 name: key.to_string(),
                 cpu_utilization: cpu_utilization,
                 memory_usage: memory_usage.clone(),
                 memory_free: memory_free.clone(),
                 memory_cache: memory_cache.clone(),
-                connections_count: 0,
+                connections_count: connections_count.clone(),
             });
         });
 

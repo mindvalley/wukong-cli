@@ -30,25 +30,28 @@ impl DatabasesWidget {
             .iter()
             .map(|database_instance| {
                 Row::new(vec![
-                    Cell::from(Span::styled(database_instance.name.to_string(), name_style)),
                     Cell::from(Span::styled(
-                        database_instance.cpu_utilization.to_string(),
+                        format!("{:}", database_instance.name),
                         name_style,
                     )),
                     Cell::from(Span::styled(
-                        database_instance.memory_usage.to_string(),
+                        format!("{:>15.2}", database_instance.cpu_utilization),
                         name_style,
                     )),
                     Cell::from(Span::styled(
-                        database_instance.memory_free.to_string(),
+                        format!("{:>12.2}", database_instance.memory_usage),
                         name_style,
                     )),
                     Cell::from(Span::styled(
-                        database_instance.memory_cache.to_string(),
+                        format!("{:>11.2}", database_instance.memory_free),
                         name_style,
                     )),
                     Cell::from(Span::styled(
-                        database_instance.connections_count.to_string(),
+                        format!("{:>13.2}", database_instance.memory_cache),
+                        name_style,
+                    )),
+                    Cell::from(Span::styled(
+                        format!("{:>17}", database_instance.connections_count),
                         name_style,
                     )),
                 ])
@@ -64,7 +67,14 @@ impl DatabasesWidget {
                 Cell::from(Span::styled("Memory Cached", name_style)),
                 Cell::from(Span::styled("Connections Count", name_style)),
             ]))
-            .widths(&[Constraint::Min(20), Constraint::Length(1000)])
+            .widths(&[
+                Constraint::Min(70),
+                Constraint::Length(18),
+                Constraint::Length(15),
+                Constraint::Length(15),
+                Constraint::Length(15),
+                Constraint::Length(18),
+            ])
             .column_spacing(1);
 
         frame.render_widget(widget, rect);
@@ -77,11 +87,6 @@ fn create_loading_block() -> Paragraph<'static> {
         Style::default().fg(Color::White),
     ))
     .block(WidgetBlock::default())
-}
-
-fn create_custom_text_block(text: String) -> Paragraph<'static> {
-    Paragraph::new(Text::styled(text, Style::default().fg(Color::White)))
-        .block(WidgetBlock::default())
 }
 
 fn create_error_block(error: &str) -> Paragraph<'_> {
