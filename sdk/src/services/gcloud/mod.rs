@@ -433,6 +433,10 @@ impl GCloudClient {
                                             MetricValue::CpuUtilization(cpu_utilization),
                                         );
                                     }
+                                    // For the other MetricTypes, we've aggregated them so that there
+                                    // is only one TimeSeries with one point in the response, so we can
+                                    // just take the first. But for MemoryComponents, we get three TimeSeries,
+                                    // one for each component (cache, free, usage).
                                     MetricType::MemoryComponents => {
                                         let memory_cache_point =
                                             response.time_series[0].points[0].clone();
