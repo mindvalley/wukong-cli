@@ -392,150 +392,161 @@ impl GCloudClient {
 
         for response in &responses {
             if response.time_series.len() > 0 {
-                let database_id = response.time_series[0]
-                    .resource
-                    .as_ref()
-                    .unwrap()
-                    .labels
-                    .get("database_id");
-                match database_id {
-                    Some(database_id) => {
-                        if grouped_responses.get(database_id).is_none() {
-                            grouped_responses.insert(database_id.to_string(), HashMap::new());
-                        };
-                        let mut metrics_values = grouped_responses[database_id].clone();
+                let database_ids: Vec<Option<&String>> = response
+                    .time_series
+                    .iter()
+                    .map(|time_series| {
+                        time_series
+                            .resource
+                            .as_ref()
+                            .unwrap()
+                            .labels
+                            .get("database_id")
+                    })
+                    .collect();
 
-                        let metric_type = MetricType::from_str(
-                            response.time_series[0]
-                                .metric
-                                .as_ref()
-                                .unwrap()
-                                .r#type
-                                .as_str(),
-                        );
+                for database_id in database_ids {
+                    match database_id {
+                        Some(database_id) => {
+                            if grouped_responses.get(database_id).is_none() {
+                                grouped_responses.insert(database_id.to_string(), HashMap::new());
+                            };
+                            let mut metrics_values = grouped_responses[database_id].clone();
 
-                        match metric_type {
-                            Ok(valid_type) => match valid_type {
-                                MetricType::CpuUtilization => {
-                                    let cpu_utilization_point =
-                                        response.time_series[0].points[0].clone();
-                                    let cpu_utilization = match cpu_utilization_point.value {
-                                        Some(typed_value) => match typed_value {
-                                            TypedValue { value } => match value {
-                                                Some(google::monitoring::v3::typed_value::Value::DoubleValue(
-                                                    double_value,
-                                                )) => double_value * 100.0, // Convert to percentage
-                                                _ => 0.0,
+                            let metric_type = MetricType::from_str(
+                                response.time_series[0]
+                                    .metric
+                                    .as_ref()
+                                    .unwrap()
+                                    .r#type
+                                    .as_str(),
+                            );
+
+                            match metric_type {
+                                Ok(valid_type) => match valid_type {
+                                    MetricType::CpuUtilization => {
+                                        let cpu_utilization_point =
+                                            response.time_series[0].points[0].clone();
+                                        let cpu_utilization = match cpu_utilization_point.value {
+                                            Some(typed_value) => match typed_value {
+                                                TypedValue { value } => match value {
+                                                    Some(google::monitoring::v3::typed_value::Value::DoubleValue(
+                                                        double_value,
+                                                    )) => double_value * 100.0, // Convert to percentage
+                                                    _ => 0.0,
+                                                },
                                             },
-                                        },
-                                        None => 0.0,
-                                    };
-                                    metrics_values.insert(
-                                        MetricType::CpuUtilization,
-                                        MetricValue::CpuUtilization(cpu_utilization),
-                                    );
-                                }
-                                MetricType::MemoryComponents => {
-                                    let memory_cache_point =
-                                        response.time_series[0].points[0].clone();
-                                    let memory_cache = match memory_cache_point.value {
-                                        Some(typed_value) => match typed_value {
-                                            TypedValue { value } => match value {
-                                                Some(google::monitoring::v3::typed_value::Value::DoubleValue(
-                                                    double_value,
-                                                )) => double_value, // Already a percentage
-                                                _ => 0.0,
+                                            None => 0.0,
+                                        };
+                                        metrics_values.insert(
+                                            MetricType::CpuUtilization,
+                                            MetricValue::CpuUtilization(cpu_utilization),
+                                        );
+                                    }
+                                    MetricType::MemoryComponents => {
+                                        let memory_cache_point =
+                                            response.time_series[0].points[0].clone();
+                                        let memory_cache = match memory_cache_point.value {
+                                            Some(typed_value) => match typed_value {
+                                                TypedValue { value } => match value {
+                                                    Some(google::monitoring::v3::typed_value::Value::DoubleValue(
+                                                        double_value,
+                                                    )) => double_value, // Already a percentage
+                                                    _ => 0.0,
+                                                },
                                             },
-                                        },
-                                        None => 0.0,
-                                    };
+                                            None => 0.0,
+                                        };
 
-                                    let memory_free_point =
-                                        response.time_series[1].points[0].clone();
-                                    let memory_free = match memory_free_point.value {
-                                        Some(typed_value) => match typed_value {
-                                            TypedValue { value } => match value {
-                                                Some(google::monitoring::v3::typed_value::Value::DoubleValue(
-                                                    double_value,
-                                                )) => double_value, // Already a percentage
-                                                _ => 0.0,
+                                        let memory_free_point =
+                                            response.time_series[1].points[0].clone();
+                                        let memory_free = match memory_free_point.value {
+                                            Some(typed_value) => match typed_value {
+                                                TypedValue { value } => match value {
+                                                    Some(google::monitoring::v3::typed_value::Value::DoubleValue(
+                                                        double_value,
+                                                    )) => double_value, // Already a percentage
+                                                    _ => 0.0,
+                                                },
                                             },
-                                        },
-                                        None => 0.0,
-                                    };
+                                            None => 0.0,
+                                        };
 
-                                    let memory_usage_point =
-                                        response.time_series[2].points[0].clone();
-                                    let memory_usage = match memory_usage_point.value {
-                                        Some(typed_value) => match typed_value {
-                                            TypedValue { value } => match value {
-                                                Some(google::monitoring::v3::typed_value::Value::DoubleValue(
-                                                    double_value,
-                                                )) => double_value, // Already a percentage
-                                                _ => 0.0,
+                                        let memory_usage_point =
+                                            response.time_series[2].points[0].clone();
+                                        let memory_usage = match memory_usage_point.value {
+                                            Some(typed_value) => match typed_value {
+                                                TypedValue { value } => match value {
+                                                    Some(google::monitoring::v3::typed_value::Value::DoubleValue(
+                                                        double_value,
+                                                    )) => double_value, // Already a percentage
+                                                    _ => 0.0,
+                                                },
                                             },
-                                        },
-                                        None => 0.0,
-                                    };
+                                            None => 0.0,
+                                        };
 
-                                    metrics_values.insert(
-                                        MetricType::MemoryComponents,
-                                        MetricValue::MemoryComponents(MetricsMemoryComponents {
-                                            cache: memory_cache,
-                                            free: memory_free,
-                                            usage: memory_usage,
-                                        }),
-                                    );
-                                }
-                                // TODO: Implement the connections count metric. Currently we are able
-                                // get the metric from the response which returns a list of time series
-                                // for connections by apps (e.g. `mv_wukong_api_proxy_db`, `cloudsqladmin`
-                                // and `postgres`). However, we are unable to get an aggregated sum of the
-                                // number of connections (which is what we want to display in the dashboard),
-                                // i.e. the total number of connections across all apps.
-                                //
-                                // We tried adding a Reducer::ReduceSum to the aggregation for the request,
-                                // but that returned an empty list. We tried a few combinations of Aggregator
-                                // and Reducer without much luck.
-                                //
-                                // To complete this feature, we need to figure out to either get the sum of
-                                // the connections across all apps, or to get the connections for only the
-                                // app (e.g. `mv_wukong_api_proxy_db`), which adds the requirement of knowing
-                                // the app name (which we don't have at the moment).
-                                //
-                                MetricType::ConnectionsCount => {
-                                    metrics_values.insert(
-                                        MetricType::ConnectionsCount,
-                                        MetricValue::ConnectionsCount(2000),
-                                    );
+                                        metrics_values.insert(
+                                            MetricType::MemoryComponents,
+                                            MetricValue::MemoryComponents(
+                                                MetricsMemoryComponents {
+                                                    cache: memory_cache,
+                                                    free: memory_free,
+                                                    usage: memory_usage,
+                                                },
+                                            ),
+                                        );
+                                    }
+                                    // TODO: Implement the connections count metric. Currently we are able
+                                    // get the metric from the response which returns a list of time series
+                                    // for connections by apps (e.g. `mv_wukong_api_proxy_db`, `cloudsqladmin`
+                                    // and `postgres`). However, we are unable to get an aggregated sum of the
+                                    // number of connections (which is what we want to display in the dashboard),
+                                    // i.e. the total number of connections across all apps.
+                                    //
+                                    // We tried adding a Reducer::ReduceSum to the aggregation for the request,
+                                    // but that returned an empty list. We tried a few combinations of Aggregator
+                                    // and Reducer without much luck.
+                                    //
+                                    // To complete this feature, we need to figure out to either get the sum of
+                                    // the connections across all apps, or to get the connections for only the
+                                    // app (e.g. `mv_wukong_api_proxy_db`), which adds the requirement of knowing
+                                    // the app name (which we don't have at the moment).
+                                    //
+                                    MetricType::ConnectionsCount => {
+                                        metrics_values.insert(
+                                            MetricType::ConnectionsCount,
+                                            MetricValue::ConnectionsCount(2000),
+                                        );
 
-                                    // let connections_count_point =
-                                    //     response.time_series[0].points[0].clone();
-                                    // let connections_count= match connections_count_point.value {
-                                    //     Some(typed_value) => match typed_value {
-                                    //         TypedValue { value } => match value {
-                                    //             Some(google::monitoring::v3::typed_value::Value::Int64Value(
-                                    //                 int_value,
-                                    //             )) => int_value,
-                                    //             _ => 0,
-                                    //         },
-                                    //     },
-                                    //     None => 0,
-                                    // };
-                                    // todo!("Connections Count response {:?}", response);
-                                    // metrics_values.insert(
-                                    //     MetricType::ConnectionsCount,
-                                    //     MetricValue::ConnectionsCount(connections_count),
-                                    // );
-                                }
-                            },
-                            Err(_err) => continue,
+                                        // let connections_count_point =
+                                        //     response.time_series[0].points[0].clone();
+                                        // let connections_count= match connections_count_point.value {
+                                        //     Some(typed_value) => match typed_value {
+                                        //         TypedValue { value } => match value {
+                                        //             Some(google::monitoring::v3::typed_value::Value::Int64Value(
+                                        //                 int_value,
+                                        //             )) => int_value,
+                                        //             _ => 0,
+                                        //         },
+                                        //     },
+                                        //     None => 0,
+                                        // };
+                                        // todo!("Connections Count response {:?}", response);
+                                        // metrics_values.insert(
+                                        //     MetricType::ConnectionsCount,
+                                        //     MetricValue::ConnectionsCount(connections_count),
+                                        // );
+                                    }
+                                },
+                                Err(_err) => continue,
+                            }
+
+                            grouped_responses.insert(database_id.to_string(), metrics_values);
                         }
-
-                        grouped_responses.insert(database_id.to_string(), metrics_values);
-                    }
-                    None => {
-                        continue; // We don't do anything with the response if we can't get the database_id
+                        None => {
+                            continue; // We don't do anything with the response if we can't get the database_id
+                        }
                     }
                 }
             }
