@@ -160,13 +160,13 @@ fn get_context(clap_app: &ClapApp) -> Result<Context, WKCliError> {
     Ok(context)
 }
 
-// some command need to be executed without application context, e.g. `wukong application init`
+// some command need to be executed without application context, e.g. `wukong application init` and `wukong dev config pull`
 // otherwise, it will cause an error when trying to get the current application name
 fn get_context_without_application(clap_app: &ClapApp) -> Result<Context, WKCliError> {
     let config = Config::load_from_default_path()?;
 
     let context = Context {
-        current_application: "".to_string(),
+        current_application: "unknown".to_string(),
         sub: config.auth.okta.map(|auth_config| auth_config.subject),
         // if the `--canary` flag is used, then the CLI will use the Canary channel API,
         // otherwise, it will use the Stable channel API.
