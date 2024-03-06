@@ -788,8 +788,6 @@ async fn get_database_metrics(
                 if let Some(cluster) = application_data.k8s_cluster {
                     let database_metrics = match wk_client
                         .get_gcloud_database_metrics(
-                            &namespace,
-                            &version,
                             &cluster.google_project_id,
                             gcloud_access_token,
                         )

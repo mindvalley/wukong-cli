@@ -418,13 +418,11 @@ impl WKClient {
     #[wukong_telemetry(api_event = "get_gcloud_database_metrics")]
     pub async fn get_gcloud_database_metrics(
         &self,
-        namespace: &str,
-        application: &str,
         project_id: &str,
         access_token: String,
     ) -> Result<Vec<DatabaseMetrics>, WKCliError> {
         self.inner
-            .get_gcloud_database_metrics(application, namespace, project_id, access_token)
+            .get_gcloud_database_metrics(project_id, access_token)
             .await
     }
 }

@@ -353,8 +353,6 @@ impl GCloudClient {
     /// a Vector of `DatabaseMetrics`s that is updated on the App's `state.databases.database_metrics`.
     pub async fn get_database_metrics(
         &self,
-        _application: &str,
-        _namespace: &str,
         project_id: &str,
     ) -> Result<Vec<DatabaseMetrics>, GCloudError> {
         let mut database_metrics = Vec::new();
@@ -630,14 +628,12 @@ impl WKClient {
 
     pub async fn get_gcloud_database_metrics(
         &self,
-        application: &str,
-        namespace: &str,
         project_id: &str,
         access_token: String,
     ) -> Result<Vec<DatabaseMetrics>, WKError> {
         let google_client = GCloudClient::new(access_token);
         google_client
-            .get_database_metrics(application, namespace, project_id)
+            .get_database_metrics(project_id)
             .await
             .map_err(|err| err.into())
     }
