@@ -37,7 +37,7 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
     let workflows = get_workflows_from_current_dir()?;
     let mut excluded_workflows = Vec::new();
 
-    if let Some(workflows) = &workflows {
+    if !workflows.is_empty() {
         excluded_workflows = inquire::MultiSelect::new(
             "Workflows to exclude from the Wukong CLI & TUI",
             workflows.to_vec(),
@@ -265,7 +265,7 @@ async fn configure_namespace(
     })
 }
 
-fn get_workflows_from_current_dir() -> Result<Option<Vec<String>>, WKCliError> {
+fn get_workflows_from_current_dir() -> Result<Vec<String>, WKCliError> {
     let mut workflow_names = Vec::new();
 
     if let Ok(workflows) = fs::read_dir(".github/workflows") {
@@ -291,9 +291,7 @@ fn get_workflows_from_current_dir() -> Result<Option<Vec<String>>, WKCliError> {
                 }
             }
         }
-
-        Ok(Some(workflow_names))
-    } else {
-        Ok(None)
     }
+
+    Ok(workflow_names)
 }
