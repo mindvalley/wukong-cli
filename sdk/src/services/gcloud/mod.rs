@@ -102,25 +102,13 @@ impl Display for MetricTypeFilter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             MetricTypeFilter::CpuUtilization => {
-                write!(
-                    f,
-                    "metric.type=\"{}\"",
-                    format!("{}", MetricType::CpuUtilization)
-                )
+                write!(f, "metric.type=\"{}\"", MetricType::CpuUtilization)
             }
             MetricTypeFilter::MemoryComponents => {
-                write!(
-                    f,
-                    "metric.type=\"{}\"",
-                    format!("{}", MetricType::MemoryComponents)
-                )
+                write!(f, "metric.type=\"{}\"", MetricType::MemoryComponents)
             }
             MetricTypeFilter::ConnectionsCount => {
-                write!(
-                    f,
-                    "metric.type=\"{}\"",
-                    format!("{}", MetricType::ConnectionsCount)
-                )
+                write!(f, "metric.type=\"{}\"", MetricType::ConnectionsCount)
             }
         }
     }
@@ -378,7 +366,7 @@ impl GCloudClient {
                 });
 
             let request: ListTimeSeriesRequest = generate_request(
-                &format!("{}", metric_type).as_str(),
+                format!("{}", metric_type).as_str(),
                 project_id,
                 &start_time,
                 &current_time,
@@ -391,7 +379,7 @@ impl GCloudClient {
         let mut grouped_responses: HashMap<String, MetricHash> = HashMap::new();
 
         for response in &responses {
-            if response.time_series.len() > 0 {
+            if !response.time_series.is_empty() {
                 let database_ids: Vec<Option<&String>> = response
                     .time_series
                     .iter()
@@ -601,7 +589,7 @@ impl GCloudClient {
 
             database_metrics.push(DatabaseMetrics {
                 name: key.to_string(),
-                cpu_utilization: cpu_utilization,
+                cpu_utilization,
                 memory_usage: memory_usage.clone(),
                 memory_free: memory_free.clone(),
                 memory_cache: memory_cache.clone(),
