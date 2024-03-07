@@ -439,6 +439,8 @@ impl WKClient {
         self.check_and_refresh_tokens().await?;
         self.inner
             .fetch_appsignal_exception_incidents(app_id, namespaces, limit, marker)
+            .await
+    }
 
     #[wukong_telemetry(api_event = "get_gcloud_database_metrics")]
     pub async fn get_gcloud_database_metrics(
