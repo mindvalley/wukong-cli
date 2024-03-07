@@ -314,22 +314,22 @@ impl WKClient {
     }
 
     #[wukong_telemetry(api_event = "fetch_gcloud_log_entries")]
-    pub async fn get_gcloud_log_entries(
+    pub async fn fetch_gcloud_log_entries(
         &self,
         options: LogEntriesOptions,
         access_token: String,
     ) -> Result<LogEntries, WKCliError> {
         self.inner
-            .get_gcloud_log_entries(options, access_token)
+            .fetch_gcloud_log_entries(options, access_token)
             .await
     }
 
     #[wukong_telemetry(api_event = "get_access_token_info")]
-    pub async fn get_access_token_info(
+    pub async fn fetch_access_token_info(
         &self,
         access_token: String,
     ) -> Result<TokenInfo, WKCliError> {
-        self.inner.get_access_token_info(access_token).await
+        self.inner.fetch_access_token_info(access_token).await
     }
 
     #[wukong_telemetry(api_event = "fetch_vault_secrets")]
@@ -442,14 +442,14 @@ impl WKClient {
             .await
     }
 
-    #[wukong_telemetry(api_event = "get_gcloud_database_metrics")]
-    pub async fn get_gcloud_database_metrics(
+    #[wukong_telemetry(api_event = "fetch_gcloud_database_metrics")]
+    pub async fn fetch_gcloud_database_metrics(
         &self,
         project_id: &str,
         access_token: String,
     ) -> Result<Vec<DatabaseMetrics>, WKCliError> {
         self.inner
-            .get_gcloud_database_metrics(project_id, access_token)
+            .fetch_gcloud_database_metrics(project_id, access_token)
             .await
     }
 }
