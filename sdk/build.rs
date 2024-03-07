@@ -19,6 +19,10 @@ fn main() {
                     "{}/proto/googleapis/google/monitoring/v3/metric.proto",
                     cargo_manifest_dir
                 ),
+                format!(
+                    "{}/proto/googleapis/google/monitoring/v3/metric_service.proto",
+                    cargo_manifest_dir
+                ),
             ],
             &[format!("{}/proto/googleapis", cargo_manifest_dir)], // specify the root location to search proto dependencies
         )

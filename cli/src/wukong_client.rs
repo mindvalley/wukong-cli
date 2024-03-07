@@ -16,7 +16,7 @@ use wukong_sdk::{
         multi_branch_pipeline_query, pipeline_query, pipelines_query, AppsignalTimeFrame,
     },
     services::{
-        gcloud::{LogEntries, LogEntriesOptions, TokenInfo},
+        gcloud::{DatabaseMetrics, LogEntries, LogEntriesOptions, TokenInfo},
         vault::client::FetchSecretsData,
     },
     WKClient as WKSdkClient, WKConfig,
@@ -315,11 +315,11 @@ impl WKClient {
     #[wukong_telemetry(api_event = "fetch_gcloud_log_entries")]
     pub async fn get_gcloud_log_entries(
         &self,
-        optons: LogEntriesOptions,
+        options: LogEntriesOptions,
         access_token: String,
     ) -> Result<LogEntries, WKCliError> {
         self.inner
-            .get_gcloud_log_entries(optons, access_token)
+            .get_gcloud_log_entries(options, access_token)
             .await
     }
 
@@ -413,5 +413,16 @@ impl WKClient {
     ) -> Result<appsignal_apps_query::ResponseData, WKCliError> {
         self.check_and_refresh_tokens().await?;
         self.inner.fetch_appsignal_apps().await
+    }
+
+    #[wukong_telemetry(api_event = "get_gcloud_database_metrics")]
+    pub async fn get_gcloud_database_metrics(
+        &self,
+        project_id: &str,
+        access_token: String,
+    ) -> Result<Vec<DatabaseMetrics>, WKCliError> {
+        self.inner
+            .get_gcloud_database_metrics(project_id, access_token)
+            .await
     }
 }

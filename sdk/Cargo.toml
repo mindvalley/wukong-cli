@@ -80,6 +80,9 @@ futures = { version = "0.3.28", default-features = false, features = [
 ] }
 urlencoding = "2.1.2"
 
+# Utils
+strum = { version = "0.26.1", features = ["derive"] }
+
 [dependencies.tree-sitter-elixir]
 git = "https://github.com/elixir-lang/tree-sitter-elixir"
 tag = "v0.1.0"
