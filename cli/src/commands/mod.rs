@@ -46,7 +46,7 @@ pub struct ClapApp {
     pub report: bool,
 
     /// Use the Canary channel API
-    #[arg(long, global = true)]
+    #[arg(long, global = true, default_value_t = true)]
     canary: bool,
 }
 
@@ -111,6 +111,7 @@ impl ClapApp {
         } else {
             ApiChannel::Stable
         };
+
         debug!("API channel: {:?}", channel);
 
         let command = match &self.command_group {

@@ -185,6 +185,8 @@ pub enum GCloudError {
     ResponseError(#[from] tonic::Status),
     #[error(transparent)]
     ReqwestError(#[from] reqwest::Error),
+    #[error("Invalid metric type.")]
+    InvalidMetricType,
 }
 
 // Secret Extractor Error

@@ -8,7 +8,7 @@ use crate::commands::tui::{
 pub async fn handler(key: Key, app: &mut App) -> AppReturn {
     match key {
         key if common_key_events::back_event(key) => {
-            app.set_current_route_state(Some(Block::Log), Some(Block::Log));
+            app.set_current_route_state(Some(Block::Middle), Some(Block::Middle));
         }
         key if common_key_events::back_event(key) => app.push_navigation_stack(Block::Empty),
         key if common_key_events::down_event(key) => app.time_filter_selections.next(),
@@ -37,5 +37,5 @@ async fn handle_enter_key(app: &mut App) {
         reset_log_panel_and_trigger_log_refetch(app);
     }
 
-    app.push_navigation_stack(Block::Log)
+    app.push_navigation_stack(Block::Middle)
 }

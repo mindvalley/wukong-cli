@@ -861,3 +861,791 @@ pub mod text_locator {
         pub column: i32,
     }
 }
+/// The `ListMonitoredResourceDescriptors` request.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ListMonitoredResourceDescriptorsRequest {
+    /// Required. The \[project\](<https://cloud.google.com/monitoring/api/v3#project_name>) on
+    /// which to execute the request. The format is:
+    ///
+    /// ```text
+    /// projects/\[PROJECT_ID_OR_NUMBER\]
+    /// ```
+    #[prost(string, tag = "5")]
+    pub name: ::prost::alloc::string::String,
+    /// An optional \[filter\](<https://cloud.google.com/monitoring/api/v3/filters>)
+    /// describing the descriptors to be returned.  The filter can reference the
+    /// descriptor's type and labels. For example, the following filter returns
+    /// only Google Compute Engine descriptors that have an `id` label:
+    ///
+    /// ```text
+    /// resource.type = starts_with("gce_") AND resource.label:id
+    /// ```
+    #[prost(string, tag = "2")]
+    pub filter: ::prost::alloc::string::String,
+    /// A positive number that is the maximum number of results to return.
+    #[prost(int32, tag = "3")]
+    pub page_size: i32,
+    /// If this field is not empty then it must contain the `nextPageToken` value
+    /// returned by a previous call to this method.  Using this field causes the
+    /// method to return additional results from the previous method call.
+    #[prost(string, tag = "4")]
+    pub page_token: ::prost::alloc::string::String,
+}
+/// The `ListMonitoredResourceDescriptors` response.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ListMonitoredResourceDescriptorsResponse {
+    /// The monitored resource descriptors that are available to this project
+    /// and that match `filter`, if present.
+    #[prost(message, repeated, tag = "1")]
+    pub resource_descriptors: ::prost::alloc::vec::Vec<
+        super::super::api::MonitoredResourceDescriptor,
+    >,
+    /// If there are more results than have been returned, then this field is set
+    /// to a non-empty value.  To see the additional results,
+    /// use that value as `page_token` in the next call to this method.
+    #[prost(string, tag = "2")]
+    pub next_page_token: ::prost::alloc::string::String,
+}
+/// The `GetMonitoredResourceDescriptor` request.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GetMonitoredResourceDescriptorRequest {
+    /// Required. The monitored resource descriptor to get.  The format is:
+    ///
+    /// ```text
+    /// projects/\[PROJECT_ID_OR_NUMBER]/monitoredResourceDescriptors/[RESOURCE_TYPE\]
+    /// ```
+    ///
+    /// The `\[RESOURCE_TYPE\]` is a predefined type, such as
+    /// `cloudsql_database`.
+    #[prost(string, tag = "3")]
+    pub name: ::prost::alloc::string::String,
+}
+/// The `ListMetricDescriptors` request.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ListMetricDescriptorsRequest {
+    /// Required. The \[project\](<https://cloud.google.com/monitoring/api/v3#project_name>) on
+    /// which to execute the request. The format is:
+    ///
+    /// ```text
+    /// projects/\[PROJECT_ID_OR_NUMBER\]
+    /// ```
+    #[prost(string, tag = "5")]
+    pub name: ::prost::alloc::string::String,
+    /// If this field is empty, all custom and
+    /// system-defined metric descriptors are returned.
+    /// Otherwise, the \[filter\](<https://cloud.google.com/monitoring/api/v3/filters>)
+    /// specifies which metric descriptors are to be
+    /// returned. For example, the following filter matches all
+    /// [custom metrics](<https://cloud.google.com/monitoring/custom-metrics>):
+    ///
+    /// ```text
+    /// metric.type = starts_with("custom.googleapis.com/")
+    /// ```
+    #[prost(string, tag = "2")]
+    pub filter: ::prost::alloc::string::String,
+    /// A positive number that is the maximum number of results to return.
+    #[prost(int32, tag = "3")]
+    pub page_size: i32,
+    /// If this field is not empty then it must contain the `nextPageToken` value
+    /// returned by a previous call to this method.  Using this field causes the
+    /// method to return additional results from the previous method call.
+    #[prost(string, tag = "4")]
+    pub page_token: ::prost::alloc::string::String,
+}
+/// The `ListMetricDescriptors` response.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ListMetricDescriptorsResponse {
+    /// The metric descriptors that are available to the project
+    /// and that match the value of `filter`, if present.
+    #[prost(message, repeated, tag = "1")]
+    pub metric_descriptors: ::prost::alloc::vec::Vec<
+        super::super::api::MetricDescriptor,
+    >,
+    /// If there are more results than have been returned, then this field is set
+    /// to a non-empty value.  To see the additional results,
+    /// use that value as `page_token` in the next call to this method.
+    #[prost(string, tag = "2")]
+    pub next_page_token: ::prost::alloc::string::String,
+}
+/// The `GetMetricDescriptor` request.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GetMetricDescriptorRequest {
+    /// Required. The metric descriptor on which to execute the request. The format is:
+    ///
+    /// ```text
+    /// projects/\[PROJECT_ID_OR_NUMBER]/metricDescriptors/[METRIC_ID\]
+    /// ```
+    ///
+    /// An example value of `\[METRIC_ID\]` is
+    /// `"compute.googleapis.com/instance/disk/read_bytes_count"`.
+    #[prost(string, tag = "3")]
+    pub name: ::prost::alloc::string::String,
+}
+/// The `CreateMetricDescriptor` request.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CreateMetricDescriptorRequest {
+    /// Required. The \[project\](<https://cloud.google.com/monitoring/api/v3#project_name>) on
+    /// which to execute the request. The format is:
+    /// 4
+    /// projects/\\[PROJECT_ID_OR_NUMBER\\]
+    #[prost(string, tag = "3")]
+    pub name: ::prost::alloc::string::String,
+    /// Required. The new [custom metric](<https://cloud.google.com/monitoring/custom-metrics>)
+    /// descriptor.
+    #[prost(message, optional, tag = "2")]
+    pub metric_descriptor: ::core::option::Option<super::super::api::MetricDescriptor>,
+}
+/// The `DeleteMetricDescriptor` request.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct DeleteMetricDescriptorRequest {
+    /// Required. The metric descriptor on which to execute the request. The format is:
+    ///
+    /// ```text
+    /// projects/\[PROJECT_ID_OR_NUMBER]/metricDescriptors/[METRIC_ID\]
+    /// ```
+    ///
+    /// An example of `\[METRIC_ID\]` is:
+    /// `"custom.googleapis.com/my_test_metric"`.
+    #[prost(string, tag = "3")]
+    pub name: ::prost::alloc::string::String,
+}
+/// The `ListTimeSeries` request.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ListTimeSeriesRequest {
+    /// Required. The \[project\](<https://cloud.google.com/monitoring/api/v3#project_name>),
+    /// organization or folder on which to execute the request. The format is:
+    ///
+    /// ```text
+    /// projects/\[PROJECT_ID_OR_NUMBER\]
+    /// organizations/\[ORGANIZATION_ID\]
+    /// folders/\[FOLDER_ID\]
+    /// ```
+    #[prost(string, tag = "10")]
+    pub name: ::prost::alloc::string::String,
+    /// Required. A [monitoring filter](<https://cloud.google.com/monitoring/api/v3/filters>)
+    /// that specifies which time series should be returned.  The filter must
+    /// specify a single metric type, and can additionally specify metric labels
+    /// and other information. For example:
+    ///
+    /// ```text
+    /// metric.type = "compute.googleapis.com/instance/cpu/usage_time" AND
+    ///      metric.labels.instance_name = "my-instance-name"
+    /// ```
+    #[prost(string, tag = "2")]
+    pub filter: ::prost::alloc::string::String,
+    /// Required. The time interval for which results should be returned. Only time series
+    /// that contain data points in the specified interval are included
+    /// in the response.
+    #[prost(message, optional, tag = "4")]
+    pub interval: ::core::option::Option<TimeInterval>,
+    /// Specifies the alignment of data points in individual time series as
+    /// well as how to combine the retrieved time series across specified labels.
+    ///
+    /// By default (if no `aggregation` is explicitly specified), the raw time
+    /// series data is returned.
+    #[prost(message, optional, tag = "5")]
+    pub aggregation: ::core::option::Option<Aggregation>,
+    /// Apply a second aggregation after `aggregation` is applied. May only be
+    /// specified if `aggregation` is specified.
+    #[prost(message, optional, tag = "11")]
+    pub secondary_aggregation: ::core::option::Option<Aggregation>,
+    /// Unsupported: must be left blank. The points in each time series are
+    /// currently returned in reverse time order (most recent to oldest).
+    #[prost(string, tag = "6")]
+    pub order_by: ::prost::alloc::string::String,
+    /// Required. Specifies which information is returned about the time series.
+    #[prost(enumeration = "list_time_series_request::TimeSeriesView", tag = "7")]
+    pub view: i32,
+    /// A positive number that is the maximum number of results to return. If
+    /// `page_size` is empty or more than 100,000 results, the effective
+    /// `page_size` is 100,000 results. If `view` is set to `FULL`, this is the
+    /// maximum number of `Points` returned. If `view` is set to `HEADERS`, this is
+    /// the maximum number of `TimeSeries` returned.
+    #[prost(int32, tag = "8")]
+    pub page_size: i32,
+    /// If this field is not empty then it must contain the `nextPageToken` value
+    /// returned by a previous call to this method.  Using this field causes the
+    /// method to return additional results from the previous method call.
+    #[prost(string, tag = "9")]
+    pub page_token: ::prost::alloc::string::String,
+}
+/// Nested message and enum types in `ListTimeSeriesRequest`.
+pub mod list_time_series_request {
+    /// Controls which fields are returned by `ListTimeSeries`.
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        ::prost::Enumeration
+    )]
+    #[repr(i32)]
+    pub enum TimeSeriesView {
+        /// Returns the identity of the metric(s), the time series,
+        /// and the time series data.
+        Full = 0,
+        /// Returns the identity of the metric and the time series resource,
+        /// but not the time series data.
+        Headers = 1,
+    }
+    impl TimeSeriesView {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                TimeSeriesView::Full => "FULL",
+                TimeSeriesView::Headers => "HEADERS",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "FULL" => Some(Self::Full),
+                "HEADERS" => Some(Self::Headers),
+                _ => None,
+            }
+        }
+    }
+}
+/// The `ListTimeSeries` response.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ListTimeSeriesResponse {
+    /// One or more time series that match the filter included in the request.
+    #[prost(message, repeated, tag = "1")]
+    pub time_series: ::prost::alloc::vec::Vec<TimeSeries>,
+    /// If there are more results than have been returned, then this field is set
+    /// to a non-empty value.  To see the additional results,
+    /// use that value as `page_token` in the next call to this method.
+    #[prost(string, tag = "2")]
+    pub next_page_token: ::prost::alloc::string::String,
+    /// Query execution errors that may have caused the time series data returned
+    /// to be incomplete.
+    #[prost(message, repeated, tag = "3")]
+    pub execution_errors: ::prost::alloc::vec::Vec<super::super::rpc::Status>,
+    /// The unit in which all `time_series` point values are reported. `unit`
+    /// follows the UCUM format for units as seen in
+    /// <https://unitsofmeasure.org/ucum.html.>
+    /// If different `time_series` have different units (for example, because they
+    /// come from different metric types, or a unit is absent), then `unit` will be
+    /// "{not_a_unit}".
+    #[prost(string, tag = "5")]
+    pub unit: ::prost::alloc::string::String,
+}
+/// The `CreateTimeSeries` request.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CreateTimeSeriesRequest {
+    /// Required. The \[project\](<https://cloud.google.com/monitoring/api/v3#project_name>) on
+    /// which to execute the request. The format is:
+    ///
+    /// ```text
+    /// projects/\[PROJECT_ID_OR_NUMBER\]
+    /// ```
+    #[prost(string, tag = "3")]
+    pub name: ::prost::alloc::string::String,
+    /// Required. The new data to be added to a list of time series.
+    /// Adds at most one data point to each of several time series.  The new data
+    /// point must be more recent than any other point in its time series.  Each
+    /// `TimeSeries` value must fully specify a unique time series by supplying
+    /// all label values for the metric and the monitored resource.
+    ///
+    /// The maximum number of `TimeSeries` objects per `Create` request is 200.
+    #[prost(message, repeated, tag = "2")]
+    pub time_series: ::prost::alloc::vec::Vec<TimeSeries>,
+}
+/// DEPRECATED. Used to hold per-time-series error status.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CreateTimeSeriesError {
+    /// DEPRECATED. Time series ID that resulted in the `status` error.
+    #[deprecated]
+    #[prost(message, optional, tag = "1")]
+    pub time_series: ::core::option::Option<TimeSeries>,
+    /// DEPRECATED. The status of the requested write operation for `time_series`.
+    #[deprecated]
+    #[prost(message, optional, tag = "2")]
+    pub status: ::core::option::Option<super::super::rpc::Status>,
+}
+/// Summary of the result of a failed request to write data to a time series.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CreateTimeSeriesSummary {
+    /// The number of points in the request.
+    #[prost(int32, tag = "1")]
+    pub total_point_count: i32,
+    /// The number of points that were successfully written.
+    #[prost(int32, tag = "2")]
+    pub success_point_count: i32,
+    /// The number of points that failed to be written. Order is not guaranteed.
+    #[prost(message, repeated, tag = "3")]
+    pub errors: ::prost::alloc::vec::Vec<create_time_series_summary::Error>,
+}
+/// Nested message and enum types in `CreateTimeSeriesSummary`.
+pub mod create_time_series_summary {
+    /// Detailed information about an error category.
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct Error {
+        /// The status of the requested write operation.
+        #[prost(message, optional, tag = "1")]
+        pub status: ::core::option::Option<super::super::super::rpc::Status>,
+        /// The number of points that couldn't be written because of `status`.
+        #[prost(int32, tag = "2")]
+        pub point_count: i32,
+    }
+}
+/// The `QueryTimeSeries` request.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct QueryTimeSeriesRequest {
+    /// Required. The \[project\](<https://cloud.google.com/monitoring/api/v3#project_name>) on
+    /// which to execute the request. The format is:
+    ///
+    /// ```text
+    /// projects/\[PROJECT_ID_OR_NUMBER\]
+    /// ```
+    #[prost(string, tag = "1")]
+    pub name: ::prost::alloc::string::String,
+    /// Required. The query in the [Monitoring Query
+    /// Language](<https://cloud.google.com/monitoring/mql/reference>) format.
+    /// The default time zone is in UTC.
+    #[prost(string, tag = "7")]
+    pub query: ::prost::alloc::string::String,
+    /// A positive number that is the maximum number of time_series_data to return.
+    #[prost(int32, tag = "9")]
+    pub page_size: i32,
+    /// If this field is not empty then it must contain the `nextPageToken` value
+    /// returned by a previous call to this method.  Using this field causes the
+    /// method to return additional results from the previous method call.
+    #[prost(string, tag = "10")]
+    pub page_token: ::prost::alloc::string::String,
+}
+/// The `QueryTimeSeries` response.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct QueryTimeSeriesResponse {
+    /// The descriptor for the time series data.
+    #[prost(message, optional, tag = "8")]
+    pub time_series_descriptor: ::core::option::Option<TimeSeriesDescriptor>,
+    /// The time series data.
+    #[prost(message, repeated, tag = "9")]
+    pub time_series_data: ::prost::alloc::vec::Vec<TimeSeriesData>,
+    /// If there are more results than have been returned, then this field is set
+    /// to a non-empty value.  To see the additional results, use that value as
+    /// `page_token` in the next call to this method.
+    #[prost(string, tag = "10")]
+    pub next_page_token: ::prost::alloc::string::String,
+    /// Query execution errors that may have caused the time series data returned
+    /// to be incomplete. The available data will be available in the
+    /// response.
+    #[prost(message, repeated, tag = "11")]
+    pub partial_errors: ::prost::alloc::vec::Vec<super::super::rpc::Status>,
+}
+/// This is an error detail intended to be used with INVALID_ARGUMENT errors.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct QueryErrorList {
+    /// Errors in parsing the time series query language text. The number of errors
+    /// in the response may be limited.
+    #[prost(message, repeated, tag = "1")]
+    pub errors: ::prost::alloc::vec::Vec<QueryError>,
+    /// A summary of all the errors.
+    #[prost(string, tag = "2")]
+    pub error_summary: ::prost::alloc::string::String,
+}
+/// Generated client implementations.
+pub mod metric_service_client {
+    #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
+    use tonic::codegen::*;
+    use tonic::codegen::http::Uri;
+    /// Manages metric descriptors, monitored resource descriptors, and
+    /// time series data.
+    #[derive(Debug, Clone)]
+    pub struct MetricServiceClient<T> {
+        inner: tonic::client::Grpc<T>,
+    }
+    impl MetricServiceClient<tonic::transport::Channel> {
+        /// Attempt to create a new client by connecting to a given endpoint.
+        pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
+        where
+            D: TryInto<tonic::transport::Endpoint>,
+            D::Error: Into<StdError>,
+        {
+            let conn = tonic::transport::Endpoint::new(dst)?.connect().await?;
+            Ok(Self::new(conn))
+        }
+    }
+    impl<T> MetricServiceClient<T>
+    where
+        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T::Error: Into<StdError>,
+        T::ResponseBody: Body<Data = Bytes> + Send + 'static,
+        <T::ResponseBody as Body>::Error: Into<StdError> + Send,
+    {
+        pub fn new(inner: T) -> Self {
+            let inner = tonic::client::Grpc::new(inner);
+            Self { inner }
+        }
+        pub fn with_origin(inner: T, origin: Uri) -> Self {
+            let inner = tonic::client::Grpc::with_origin(inner, origin);
+            Self { inner }
+        }
+        pub fn with_interceptor<F>(
+            inner: T,
+            interceptor: F,
+        ) -> MetricServiceClient<InterceptedService<T, F>>
+        where
+            F: tonic::service::Interceptor,
+            T::ResponseBody: Default,
+            T: tonic::codegen::Service<
+                http::Request<tonic::body::BoxBody>,
+                Response = http::Response<
+                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                >,
+            >,
+            <T as tonic::codegen::Service<
+                http::Request<tonic::body::BoxBody>,
+            >>::Error: Into<StdError> + Send + Sync,
+        {
+            MetricServiceClient::new(InterceptedService::new(inner, interceptor))
+        }
+        /// Compress requests with the given encoding.
+        ///
+        /// This requires the server to support it otherwise it might respond with an
+        /// error.
+        #[must_use]
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.inner = self.inner.send_compressed(encoding);
+            self
+        }
+        /// Enable decompressing responses.
+        #[must_use]
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.inner = self.inner.accept_compressed(encoding);
+            self
+        }
+        /// Limits the maximum size of a decoded message.
+        ///
+        /// Default: `4MB`
+        #[must_use]
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
+            self.inner = self.inner.max_decoding_message_size(limit);
+            self
+        }
+        /// Limits the maximum size of an encoded message.
+        ///
+        /// Default: `usize::MAX`
+        #[must_use]
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
+            self.inner = self.inner.max_encoding_message_size(limit);
+            self
+        }
+        /// Lists monitored resource descriptors that match a filter. This method does not require a Workspace.
+        pub async fn list_monitored_resource_descriptors(
+            &mut self,
+            request: impl tonic::IntoRequest<
+                super::ListMonitoredResourceDescriptorsRequest,
+            >,
+        ) -> std::result::Result<
+            tonic::Response<super::ListMonitoredResourceDescriptorsResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/google.monitoring.v3.MetricService/ListMonitoredResourceDescriptors",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new(
+                        "google.monitoring.v3.MetricService",
+                        "ListMonitoredResourceDescriptors",
+                    ),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        /// Gets a single monitored resource descriptor. This method does not require a Workspace.
+        pub async fn get_monitored_resource_descriptor(
+            &mut self,
+            request: impl tonic::IntoRequest<
+                super::GetMonitoredResourceDescriptorRequest,
+            >,
+        ) -> std::result::Result<
+            tonic::Response<super::super::super::api::MonitoredResourceDescriptor>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/google.monitoring.v3.MetricService/GetMonitoredResourceDescriptor",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new(
+                        "google.monitoring.v3.MetricService",
+                        "GetMonitoredResourceDescriptor",
+                    ),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        /// Lists metric descriptors that match a filter. This method does not require a Workspace.
+        pub async fn list_metric_descriptors(
+            &mut self,
+            request: impl tonic::IntoRequest<super::ListMetricDescriptorsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::ListMetricDescriptorsResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/google.monitoring.v3.MetricService/ListMetricDescriptors",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new(
+                        "google.monitoring.v3.MetricService",
+                        "ListMetricDescriptors",
+                    ),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        /// Gets a single metric descriptor. This method does not require a Workspace.
+        pub async fn get_metric_descriptor(
+            &mut self,
+            request: impl tonic::IntoRequest<super::GetMetricDescriptorRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::super::super::api::MetricDescriptor>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/google.monitoring.v3.MetricService/GetMetricDescriptor",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new(
+                        "google.monitoring.v3.MetricService",
+                        "GetMetricDescriptor",
+                    ),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        /// Creates a new metric descriptor.
+        /// The creation is executed asynchronously and callers may check the returned
+        /// operation to track its progress.
+        /// User-created metric descriptors define
+        /// [custom metrics](https://cloud.google.com/monitoring/custom-metrics).
+        pub async fn create_metric_descriptor(
+            &mut self,
+            request: impl tonic::IntoRequest<super::CreateMetricDescriptorRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::super::super::api::MetricDescriptor>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/google.monitoring.v3.MetricService/CreateMetricDescriptor",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new(
+                        "google.monitoring.v3.MetricService",
+                        "CreateMetricDescriptor",
+                    ),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        /// Deletes a metric descriptor. Only user-created
+        /// [custom metrics](https://cloud.google.com/monitoring/custom-metrics) can be
+        /// deleted.
+        pub async fn delete_metric_descriptor(
+            &mut self,
+            request: impl tonic::IntoRequest<super::DeleteMetricDescriptorRequest>,
+        ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/google.monitoring.v3.MetricService/DeleteMetricDescriptor",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new(
+                        "google.monitoring.v3.MetricService",
+                        "DeleteMetricDescriptor",
+                    ),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        /// Lists time series that match a filter. This method does not require a Workspace.
+        pub async fn list_time_series(
+            &mut self,
+            request: impl tonic::IntoRequest<super::ListTimeSeriesRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::ListTimeSeriesResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/google.monitoring.v3.MetricService/ListTimeSeries",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new(
+                        "google.monitoring.v3.MetricService",
+                        "ListTimeSeries",
+                    ),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        /// Creates or adds data to one or more time series.
+        /// The response is empty if all time series in the request were written.
+        /// If any time series could not be written, a corresponding failure message is
+        /// included in the error response.
+        pub async fn create_time_series(
+            &mut self,
+            request: impl tonic::IntoRequest<super::CreateTimeSeriesRequest>,
+        ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/google.monitoring.v3.MetricService/CreateTimeSeries",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new(
+                        "google.monitoring.v3.MetricService",
+                        "CreateTimeSeries",
+                    ),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        /// Creates or adds data to one or more service time series. A service time
+        /// series is a time series for a metric from a Google Cloud service. The
+        /// response is empty if all time series in the request were written. If any
+        /// time series could not be written, a corresponding failure message is
+        /// included in the error response. This endpoint rejects writes to
+        /// user-defined metrics.
+        /// This method is only for use by Google Cloud services. Use
+        /// \[projects.timeSeries.create\]\[google.monitoring.v3.MetricService.CreateTimeSeries\]
+        /// instead.
+        pub async fn create_service_time_series(
+            &mut self,
+            request: impl tonic::IntoRequest<super::CreateTimeSeriesRequest>,
+        ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/google.monitoring.v3.MetricService/CreateServiceTimeSeries",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new(
+                        "google.monitoring.v3.MetricService",
+                        "CreateServiceTimeSeries",
+                    ),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+    }
+}

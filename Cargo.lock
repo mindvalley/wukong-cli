@@ -5767,6 +5767,7 @@ dependencies = [
  "serde_json",
  "serial_test",
  "similar",
+ "strum 0.26.1",
  "tabled",
  "thiserror",
  "time-humanize",

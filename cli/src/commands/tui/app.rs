@@ -3,7 +3,10 @@ use std::{collections::HashMap, fmt::Display, time::Instant};
 use ratatui::{prelude::Rect, widgets::ScrollbarState};
 use strum::{Display, EnumIter, FromRepr};
 use tokio::sync::mpsc::Sender;
-use wukong_sdk::services::gcloud::google::logging::{r#type::LogSeverity, v2::LogEntry};
+use wukong_sdk::services::gcloud::{
+    google::logging::{r#type::LogSeverity, v2::LogEntry},
+    DatabaseMetrics,
+};
 
 use crate::application_config::ApplicationConfigs;
 
@@ -11,7 +14,7 @@ use super::{action::Action, events::network::NetworkEvent, StatefulList};
 
 const DEFAULT_ROUTE: Route = Route {
     active_block: Block::Empty,
-    hovered_block: Block::Log(SelectedTab::GCloud),
+    hovered_block: Block::Middle(SelectedTab::GCloud),
 };
 
 #[derive(Default)]
@@ -42,7 +45,7 @@ pub enum DialogContext {
 pub enum Block {
     Build,
     Deployment,
-    Log(SelectedTab),
+    Middle(SelectedTab),
     Empty,
     Dialog(DialogContext),
 }
@@ -82,6 +85,8 @@ pub enum SelectedTab {
     GCloud,
     #[strum(to_string = "AppSignal")]
     AppSignal,
+    #[strum(to_string = "Databases")]
+    Databases,
 }
 
 impl SelectedTab {
@@ -89,6 +94,7 @@ impl SelectedTab {
         match index {
             1 => Some(SelectedTab::GCloud),
             2 => Some(SelectedTab::AppSignal),
+            3 => Some(SelectedTab::Databases),
             _ => None,
         }
     }
@@ -115,6 +121,12 @@ pub struct AppsignalAverageLatecies {
 
 pub const MAX_LOG_ENTRIES_LENGTH: usize = 2_000;
 
+#[derive(Debug, Default)]
+pub struct DatabasesState {
+    pub is_active: bool,
+    pub error: Option<String>,
+    pub database_metrics: Vec<DatabaseMetrics>,
+}
 pub struct State {
     pub current_application: String,
     pub current_namespace: Option<String>,
@@ -129,6 +141,7 @@ pub struct State {
 
     // loading state
     pub is_fetching_builds: bool,
+    pub is_fetching_database_metrics: bool,
     pub is_fetching_deployments: bool,
     pub is_checking_namespaces: bool,
     pub is_fetching_log_entries: bool,
@@ -147,6 +160,7 @@ pub struct State {
     pub deployments_error: Option<String>,
     pub appsignal: AppsignalState,
     pub appsignal_error: Option<String>,
+    pub databases: DatabasesState,
 
     // Auth
     pub is_gcloud_authenticated: Option<bool>,
@@ -172,6 +186,8 @@ pub struct State {
     pub instant_since_last_log_entries_poll: Instant,
     // For appsignal data polling
     pub instant_since_last_appsignal_poll: Instant,
+    // For database data polling
+    pub instant_since_last_database_poll: Instant,
 
     // ui state
     pub logs_widget_height: u16,
@@ -257,6 +273,7 @@ impl App {
 
                 show_namespace_selection: false,
                 is_fetching_builds: true,
+                is_fetching_database_metrics: true,
                 is_fetching_deployments: true,
                 is_checking_namespaces: false,
                 is_checking_version: false,
@@ -271,6 +288,7 @@ impl App {
 
                 builds: vec![],
                 deployments: vec![],
+                databases: DatabasesState::default(),
                 last_log_entry_timestamp: None,
 
                 log_entries_length: 0,
@@ -291,6 +309,7 @@ impl App {
                 logs_horizontal_scroll: 0,
                 instant_since_last_log_entries_poll: Instant::now(),
                 instant_since_last_appsignal_poll: Instant::now(),
+                instant_since_last_database_poll: Instant::now(),
                 logs_table_current_start_index: 0,
                 logs_table_current_last_index: 0,
                 logs_table_current_last_fully_rendered: true,
@@ -347,6 +366,12 @@ impl App {
             .elapsed()
             .as_millis();
 
+        let database_poll_elapsed = self
+            .state
+            .instant_since_last_database_poll
+            .elapsed()
+            .as_millis();
+
         if self.state.current_namespace.is_some() && self.state.current_version.is_some() {
             // if this is the first log entries api call, fetch the log entries
             // even if the tail is not enabled
@@ -389,6 +414,11 @@ impl App {
                 if let Some(true) = self.state.is_appsignal_enabled {
                     self.dispatch(NetworkEvent::GetAppsignalData).await;
                 }
+            }
+
+            if database_poll_elapsed >= poll_interval_ms {
+                self.state.instant_since_last_database_poll = Instant::now();
+                self.dispatch(NetworkEvent::GetDatabaseMetrics).await;
             }
         }
 

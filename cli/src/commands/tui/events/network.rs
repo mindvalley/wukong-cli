@@ -34,6 +34,7 @@ pub enum NetworkEvent {
     GetGCloudLogs,
     GetGCloudLogsTail,
     GetAppsignalData,
+    GetDatabaseMetrics,
     VerifyOktaRefreshToken,
     VerifyGCloudToken,
 }
@@ -54,6 +55,7 @@ pub async fn handle_network_event(
         NetworkEvent::VerifyOktaRefreshToken => verify_okta_refresh_token(app).await?,
         NetworkEvent::VerifyGCloudToken => verify_gcloud_token(app, &mut wk_client).await?,
         NetworkEvent::GetAppsignalData => fetch_appsignal_data(app, channel, config).await?,
+        NetworkEvent::GetDatabaseMetrics => get_database_metrics(app, &mut wk_client).await?,
     }
 
     Ok(())
@@ -757,6 +759,63 @@ async fn fetch_appsignal_data(
     app_ref.state.appsignal = appsignal_state.lock().await.clone();
     app_ref.state.is_fetching_appsignal_data = false;
     drop(app_ref);
+
+    Ok(())
+}
+
+async fn get_database_metrics(
+    app: Arc<Mutex<App>>,
+    wk_client: &mut WKClient,
+) -> Result<(), WKCliError> {
+    let app_ref = app.lock().await;
+    let application = app_ref.state.current_application.clone();
+    let namespace = app_ref.state.current_namespace.clone();
+    let version = app_ref.state.current_version.clone();
+
+    drop(app_ref);
+    let gcloud_access_token = auth::google_cloud::get_token_or_login(None).await;
+    if let Some(namespace) = namespace {
+        if let Some(version) = version {
+            let application_resp = match wk_client
+                .fetch_application_with_k8s_cluster(&application, &namespace, &version)
+                .await
+            {
+                Ok(resp) => Ok(resp),
+                Err(err) => {
+                    let mut app_ref = app.lock().await;
+                    app_ref.state.databases.error = Some(format!("{err}"));
+                    Err(err)
+                }
+            }?
+            .application;
+
+            if let Some(application_data) = application_resp {
+                if let Some(cluster) = application_data.k8s_cluster {
+                    let database_metrics = match wk_client
+                        .get_gcloud_database_metrics(
+                            &cluster.google_project_id,
+                            gcloud_access_token,
+                        )
+                        .await
+                    {
+                        Ok(resp) => Ok(resp),
+                        Err(err) => {
+                            let mut app_ref = app.lock().await;
+                            app_ref.state.databases.error = Some(format!("{err}"));
+                            Err(err)
+                        }
+                    };
+                    if let Ok(database_metrics) = database_metrics {
+                        let mut app_ref = app.lock().await;
+                        app_ref.state.databases.database_metrics = database_metrics;
+                    }
+                }
+            }
+        }
+    };
+
+    let mut app_ref = app.lock().await;
+    app_ref.state.is_fetching_database_metrics = false;
 
     Ok(())
 }
