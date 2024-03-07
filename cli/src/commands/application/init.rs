@@ -22,7 +22,7 @@ use wukong_sdk::graphql::appsignal_apps_query::AppsignalAppsQueryAppsignalApps;
 pub async fn handle_application_init(context: Context) -> Result<bool, WKCliError> {
     let config = Config::load_from_default_path()?;
     let mut wk_client = WKClient::for_channel(&config, &context.channel)?;
-    let mut appsignall_apps = None;
+    let mut appsignal_apps = None;
 
     println!("Welcome! Initializing per-repo configuration for your application.");
 
@@ -51,7 +51,7 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
 
     let mut namespaces: Vec<ApplicationNamespaceConfig> = Vec::new();
     namespaces
-        .push(configure_namespace("prod".to_string(), &mut wk_client, &mut appsignall_apps).await?);
+        .push(configure_namespace("prod".to_string(), &mut wk_client, &mut appsignal_apps).await?);
 
     let addons = ["Elixir Livebook"];
     let selected_addons = inquire::MultiSelect::new("Addons", addons.to_vec())
@@ -71,7 +71,7 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
 
     if configure_staging_namespace {
         namespaces.push(
-            configure_namespace("staging".to_string(), &mut wk_client, &mut appsignall_apps)
+            configure_namespace("staging".to_string(), &mut wk_client, &mut appsignal_apps)
                 .await?,
         );
     }
