@@ -79,7 +79,7 @@ fn get_secret_mock<'a>(server: &'a MockServer, custom_data: Option<&'a str>) -> 
     })
 }
 
-fn mock_user_config(wk_temp: &assert_fs::TempDir, server_url: String) -> ChildPath {
+fn mock_wukong_config(wk_temp: &assert_fs::TempDir, server_url: String) -> ChildPath {
     let wk_config_file = wk_temp.child("config.toml");
     wk_config_file.touch().unwrap();
 
@@ -136,7 +136,7 @@ fn test_wukong_dev_config_diff_for_wukong_toml_success() {
 
     let verify_token_mock = verify_token_mock(&server);
     let secret_data_mock = get_secret_mock(&server, None);
-    let wk_config_file = mock_user_config(&wk_temp, server.base_url());
+    let wk_config_file = mock_wukong_config(&wk_temp, server.base_url());
 
     let wukong_toml_config_file = elixir_temp.child(".wukong.toml");
     wukong_toml_config_file.touch().unwrap();
@@ -185,7 +185,7 @@ fn test_wukong_dev_config_diff_for_dev_exs_success() {
 
     let verify_token_mock = verify_token_mock(&server);
     let secret_data_mock = get_secret_mock(&server, None);
-    let wk_config_file = mock_user_config(&wk_temp, server.base_url());
+    let wk_config_file = mock_wukong_config(&wk_temp, server.base_url());
 
     let dev_config_file = elixir_temp.child("config/dev.exs");
     dev_config_file.touch().unwrap();
@@ -263,7 +263,7 @@ fn test_wukong_dev_config_diff_when_secret_key_not_found_from_bunker() {
         }"#,
         ),
     );
-    let wk_config_file = mock_user_config(&wk_temp, server.base_url());
+    let wk_config_file = mock_wukong_config(&wk_temp, server.base_url());
 
     let dev_config_file = elixir_temp.child("config/dev.exs");
     dev_config_file.touch().unwrap();
@@ -334,7 +334,7 @@ fn test_wukong_dev_config_diff_when_secret_file_not_found() {
             }"#,
         ),
     );
-    let wk_config_file = mock_user_config(&wk_temp, server.base_url());
+    let wk_config_file = mock_wukong_config(&wk_temp, server.base_url());
     let dev_config_file = elixir_temp.child("config/dev.exs");
     dev_config_file.touch().unwrap();
 
@@ -399,7 +399,7 @@ fn test_wukong_dev_config_diff_when_no_changes_found() {
             }"#,
         ),
     );
-    let wk_config_file = mock_user_config(&wk_temp, server.base_url());
+    let wk_config_file = mock_wukong_config(&wk_temp, server.base_url());
 
     let dev_config_file = elixir_temp.child("config/dev.exs");
     dev_config_file.touch().unwrap();
@@ -458,7 +458,7 @@ config :application, Application.Repo"#,
 fn test_wukong_dev_config_diff_when_config_not_found() {
     let server = MockServer::start();
     let (wk_temp, elixir_temp) = setup();
-    let wk_config_file = mock_user_config(&wk_temp, server.base_url());
+    let wk_config_file = mock_wukong_config(&wk_temp, server.base_url());
 
     let cmd = common::wukong_raw_command()
         .arg("dev")
@@ -491,7 +491,7 @@ fn test_wukong_dev_config_pull_for_wukong_toml_success() {
         ),
     );
     let verify_token_mock = verify_token_mock(&server);
-    let wk_config_file = mock_user_config(&wk_temp, server.base_url());
+    let wk_config_file = mock_wukong_config(&wk_temp, server.base_url());
 
     wk_config_file.touch().unwrap();
 
@@ -582,7 +582,7 @@ fn test_wukong_dev_config_pull_for_dev_exs_success() {
         ),
     );
     let verify_token_mock = verify_token_mock(&server);
-    let wk_config_file = mock_user_config(&wk_temp, server.base_url());
+    let wk_config_file = mock_wukong_config(&wk_temp, server.base_url());
 
     wk_config_file.touch().unwrap();
 

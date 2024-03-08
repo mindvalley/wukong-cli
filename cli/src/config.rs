@@ -64,8 +64,6 @@ pub enum ApiChannel {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct CoreConfig {
-    /// The current application name
-    pub application: String,
     pub wukong_api_url: String,
 }
 
@@ -105,7 +103,6 @@ impl Default for Config {
 
         Self {
             core: CoreConfig {
-                application: "".to_string(),
                 wukong_api_url: WUKONG_API_URL.to_string(),
             },
             auth: AuthConfig {
@@ -220,9 +217,12 @@ impl Config {
 
 #[cfg(test)]
 mod test {
+    use serial_test::serial;
+
     use super::*;
 
     #[test]
+    #[serial]
     fn save_and_load_config_file() {
         let path = "./config.toml";
         let config = Config::default();
@@ -233,13 +233,14 @@ mod test {
         // 2. load the config file
         let saved_config = Config::load_from_path(path).unwrap();
 
-        assert_eq!(saved_config.core.application, config.core.application);
+        assert_eq!(saved_config.core.wukong_api_url, config.core.wukong_api_url);
 
         // remove the config file
         std::fs::remove_file(path).unwrap();
     }
 
     #[test]
+    #[serial]
     fn load_non_exist_file() {
         let path = "./non/exist/path";
         let result = Config::load_from_path(path);

@@ -9,7 +9,7 @@ use clap::{command, Args, Subcommand, ValueEnum};
 
 use crate::error::WKCliError;
 
-use super::Context;
+use super::{get_context, get_context_without_application, ClapApp};
 use info::handle_info;
 
 #[derive(Debug, Args)]
@@ -91,9 +91,9 @@ impl ToString for ApplicationNamespace {
 }
 
 impl Application {
-    pub async fn handle_command(&self, context: Context) -> Result<bool, WKCliError> {
+    pub async fn handle_command(&self, clap_app: &ClapApp) -> Result<bool, WKCliError> {
         match &self.subcommand {
-            ApplicationSubcommand::Info => handle_info(context).await,
+            ApplicationSubcommand::Info => handle_info(get_context(clap_app)?).await,
             ApplicationSubcommand::Logs {
                 namespace,
                 version,
@@ -106,13 +106,25 @@ impl Application {
                 url_mode,
             } => {
                 handle_logs(
-                    context, namespace, version, errors, since, until, limit, include, exclude,
+                    get_context(clap_app)?,
+                    namespace,
+                    version,
+                    errors,
+                    since,
+                    until,
+                    limit,
+                    include,
+                    exclude,
                     url_mode,
                 )
                 .await
             }
-            ApplicationSubcommand::Instances(instances) => instances.handle_command(context).await,
-            ApplicationSubcommand::Init => handle_application_init(context).await,
+            ApplicationSubcommand::Instances(instances) => {
+                instances.handle_command(get_context(clap_app)?).await
+            }
+            ApplicationSubcommand::Init => {
+                handle_application_init(get_context_without_application(clap_app)?).await
+            }
         }
     }
 }

@@ -8,7 +8,7 @@ use wukong_sdk::services::gcloud::{
     DatabaseMetrics,
 };
 
-use crate::config::Config;
+use crate::application_config::ApplicationConfigs;
 
 use super::{action::Action, events::network::NetworkEvent, StatefulList};
 
@@ -240,7 +240,7 @@ pub struct Deployment {
 }
 
 impl App {
-    pub fn new(config: &Config, sender: Sender<NetworkEvent>) -> Self {
+    pub fn new(application_configs: &ApplicationConfigs, sender: Sender<NetworkEvent>) -> Self {
         let mut namespace_selections =
             StatefulList::with_items(vec![String::from("prod"), String::from("staging")]);
         namespace_selections.select(0);
@@ -262,7 +262,7 @@ impl App {
 
         Self {
             state: State {
-                current_application: config.core.application.clone(),
+                current_application: application_configs.application.name.clone(),
                 current_namespace: None,
                 current_version: None,
                 current_time_filter: Some(default_time_filter),

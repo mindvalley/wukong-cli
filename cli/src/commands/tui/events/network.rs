@@ -95,7 +95,7 @@ async fn verify_gcloud_token(
 
     if let Some(gcloud_access_token) = gcloud_access_token {
         let mut app_ref = app.lock().await;
-        match wk_client.get_access_token_info(gcloud_access_token).await {
+        match wk_client.fetch_access_token_info(gcloud_access_token).await {
             Ok(_token_info) => {
                 app_ref.state.is_gcloud_authenticated = Some(true);
             }
@@ -182,7 +182,7 @@ async fn fetch_log_entries(
     wk_client: &mut WKClient,
 ) -> Result<LogEntries, WKCliError> {
     wk_client
-        .get_gcloud_log_entries(
+        .fetch_gcloud_log_entries(
             LogEntriesOptions {
                 resource_names,
                 page_size,
@@ -489,11 +489,11 @@ async fn fetch_appsignal_data(
             return Ok(());
         }
 
-        if let Some(ApplicationConfig {
+        if let ApplicationConfig {
             enable: true,
             namespaces,
             ..
-        }) = application_configs.unwrap().application
+        } = application_configs.unwrap().application
         {
             let appsignal_config = namespaces
                 .iter()
@@ -510,6 +510,11 @@ async fn fetch_appsignal_data(
                 app_ref.state.is_appsignal_enabled = Some(enable);
                 app_ref.state.appsignal_app_id = Some(app_id);
                 app_ref.state.appsignal_namespace = Some(default_namespace);
+            } else {
+                app_ref.state.is_appsignal_enabled = None;
+                app_ref.state.is_fetching_appsignal_data = false;
+                // return early if appsignal is not setup
+                return Ok(());
             }
         } else {
             app_ref.state.is_appsignal_enabled = Some(false);
@@ -787,7 +792,7 @@ async fn get_database_metrics(
             if let Some(application_data) = application_resp {
                 if let Some(cluster) = application_data.k8s_cluster {
                     let database_metrics = match wk_client
-                        .get_gcloud_database_metrics(
+                        .fetch_gcloud_database_metrics(
                             &cluster.google_project_id,
                             gcloud_access_token,
                         )

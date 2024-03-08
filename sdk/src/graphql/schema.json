@@ -1221,6 +1221,61 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
+              "name": "deployedAt",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "id",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "revision",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            }
+          ],
+          "inputFields": null,
+          "interfaces": [],
+          "kind": "OBJECT",
+          "name": "AppsignalDeployMarker",
+          "possibleTypes": null
+        },
+        {
+          "description": null,
+          "enumValues": null,
+          "fields": [
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
               "name": "average",
               "type": {
                 "kind": "NON_NULL",
@@ -1369,6 +1424,18 @@
                   "name": "Int",
                   "ofType": null
                 }
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "perMarkerCount",
+              "type": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
               }
             },
             {
@@ -3701,8 +3768,57 @@
                   }
                 },
                 {
+                  "defaultValue": "1",
+                  "description": null,
+                  "name": "limit",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                }
+              ],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "appsignalDeployMarkers",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "OBJECT",
+                      "name": "AppsignalDeployMarker",
+                      "ofType": null
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "args": [
+                {
                   "defaultValue": null,
                   "description": null,
+                  "name": "appId",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": "\"*\" for all namespaces.",
                   "name": "namespace",
                   "type": {
                     "kind": "NON_NULL",
@@ -3785,21 +3901,27 @@
                 },
                 {
                   "defaultValue": null,
-                  "description": null,
+                  "description": "nil for no limit, n for n incidents.",
                   "name": "limit",
                   "type": {
-                    "kind": "NON_NULL",
-                    "name": null,
-                    "ofType": {
-                      "kind": "SCALAR",
-                      "name": "Int",
-                      "ofType": null
-                    }
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
                   }
                 },
                 {
                   "defaultValue": null,
-                  "description": null,
+                  "description": "nil for all markers, n for marker with id = n.",
+                  "name": "marker",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": "[] for all namespaces.",
                   "name": "namespaces",
                   "type": {
                     "kind": "NON_NULL",
@@ -3823,7 +3945,7 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
-              "name": "appsignalExceptionIncident",
+              "name": "appsignalExceptionIncidents",
               "type": {
                 "kind": "NON_NULL",
                 "name": null,
@@ -3860,7 +3982,7 @@
                 },
                 {
                   "defaultValue": null,
-                  "description": null,
+                  "description": "\"*\" for all namespaces.",
                   "name": "namespace",
                   "type": {
                     "kind": "NON_NULL",
@@ -3957,7 +4079,7 @@
                 },
                 {
                   "defaultValue": null,
-                  "description": null,
+                  "description": "[] for all namespaces.",
                   "name": "namespaces",
                   "type": {
                     "kind": "NON_NULL",
@@ -3981,7 +4103,7 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
-              "name": "appsignalPerformanceIncident",
+              "name": "appsignalPerformanceIncidents",
               "type": {
                 "kind": "NON_NULL",
                 "name": null,
@@ -4018,7 +4140,7 @@
                 },
                 {
                   "defaultValue": null,
-                  "description": null,
+                  "description": "\"*\" for all namespaces.",
                   "name": "namespace",
                   "type": {
                     "kind": "NON_NULL",
