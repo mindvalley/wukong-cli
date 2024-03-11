@@ -751,21 +751,21 @@ impl WKClient {
     }
 
     pub async fn fetch_application_config(
-      &self,
-      name: &str,
-  ) -> Result<application_config_query::ResponseData, WKError> {
-      let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+        &self,
+        name: &str,
+    ) -> Result<application_config_query::ResponseData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
-      gql_client
-          .post_graphql::<ApplicationConfigQuery, _>(
-              &self.api_url,
-              application_config_query::Variables {
-                  name: name.to_string(),
-              },
-          )
-          .await
-          .map_err(|err| err.into())
-  }
+        gql_client
+            .post_graphql::<ApplicationConfigQuery, _>(
+                &self.api_url,
+                application_config_query::Variables {
+                    name: name.to_string(),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
 
     /// Fetch the deploy markers from Appsignal
     /// the default value for `limit` is 1
