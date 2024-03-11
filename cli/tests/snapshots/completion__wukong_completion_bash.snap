@@ -139,6 +139,9 @@ _wukong() {
             wukong__deployment,rollback)
                 cmd="wukong__deployment__rollback"
                 ;;
+            wukong__deployment,status)
+                cmd="wukong__deployment__status"
+                ;;
             wukong__deployment__help,execute)
                 cmd="wukong__deployment__help__execute"
                 ;;
@@ -150,6 +153,9 @@ _wukong() {
                 ;;
             wukong__deployment__help,rollback)
                 cmd="wukong__deployment__help__rollback"
+                ;;
+            wukong__deployment__help,status)
+                cmd="wukong__deployment__help__status"
                 ;;
             wukong__dev,config)
                 cmd="wukong__dev__config"
@@ -286,6 +292,9 @@ _wukong() {
             wukong__help__deployment,rollback)
                 cmd="wukong__help__deployment__rollback"
                 ;;
+            wukong__help__deployment,status)
+                cmd="wukong__help__deployment__status"
+                ;;
             wukong__help__dev,config)
                 cmd="wukong__help__dev__config"
                 ;;
@@ -344,20 +353,12 @@ _wukong() {
 
     case "${cmd}" in
         wukong)
-            opts="-a -v -q -h -V --application --verbose --quiet --report --canary --help --version init application pipeline deployment dev config login google completion tui help"
+            opts="-v -q -h -V --verbose --quiet --report --canary --help --version init application pipeline deployment dev config login google completion tui help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -366,20 +367,12 @@ _wukong() {
             return 0
             ;;
         wukong__application)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help info logs instances init help"
+            opts="-v -q -h --verbose --quiet --report --canary --help info logs instances init help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -500,20 +493,12 @@ _wukong() {
             return 0
             ;;
         wukong__application__info)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help"
+            opts="-v -q -h --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -522,20 +507,12 @@ _wukong() {
             return 0
             ;;
         wukong__application__init)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help"
+            opts="-v -q -h --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -544,20 +521,12 @@ _wukong() {
             return 0
             ;;
         wukong__application__instances)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help list connect help"
+            opts="-v -q -h --verbose --quiet --report --canary --help list connect help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -566,7 +535,7 @@ _wukong() {
             return 0
             ;;
         wukong__application__instances__connect)
-            opts="-a -v -q -h --namespace --version --application --verbose --quiet --report --canary --help"
+            opts="-v -q -h --namespace --version --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -578,14 +547,6 @@ _wukong() {
                     ;;
                 --version)
                     COMPREPLY=($(compgen -W "blue green" -- "${cur}"))
-                    return 0
-                    ;;
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
                     return 0
                     ;;
                 *)
@@ -652,7 +613,7 @@ _wukong() {
             return 0
             ;;
         wukong__application__instances__list)
-            opts="-a -v -q -h --namespace --version --application --verbose --quiet --report --canary --help"
+            opts="-v -q -h --namespace --version --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -666,14 +627,6 @@ _wukong() {
                     COMPREPLY=($(compgen -W "blue green" -- "${cur}"))
                     return 0
                     ;;
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -682,7 +635,7 @@ _wukong() {
             return 0
             ;;
         wukong__application__logs)
-            opts="-s -u -i -e -a -v -q -h --namespace --version --errors --since --until --limit --include --exclude --url-mode --application --verbose --quiet --report --canary --help"
+            opts="-s -u -i -e -v -q -h --namespace --version --errors --since --until --limit --include --exclude --url-mode --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -732,14 +685,6 @@ _wukong() {
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0
                     ;;
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -748,20 +693,12 @@ _wukong() {
             return 0
             ;;
         wukong__completion)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help bash elvish fish powershell zsh"
+            opts="-v -q -h --verbose --quiet --report --canary --help bash elvish fish powershell zsh"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -770,20 +707,12 @@ _wukong() {
             return 0
             ;;
         wukong__config)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help list set get help"
+            opts="-v -q -h --verbose --quiet --report --canary --help list set get help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -792,20 +721,12 @@ _wukong() {
             return 0
             ;;
         wukong__config__get)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help application wukong-api-url okta-client-id"
+            opts="-v -q -h --verbose --quiet --report --canary --help wukong-api-url okta-client-id"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -884,20 +805,12 @@ _wukong() {
             return 0
             ;;
         wukong__config__list)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help"
+            opts="-v -q -h --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -906,20 +819,12 @@ _wukong() {
             return 0
             ;;
         wukong__config__set)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help application wukong-api-url okta-client-id <CONFIG_VALUE>"
+            opts="-v -q -h --verbose --quiet --report --canary --help wukong-api-url okta-client-id <CONFIG_VALUE>"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -928,20 +833,12 @@ _wukong() {
             return 0
             ;;
         wukong__deployment)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help list execute rollback help"
+            opts="-v -q -h --verbose --quiet --report --canary --help list execute rollback status help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -950,7 +847,7 @@ _wukong() {
             return 0
             ;;
         wukong__deployment__execute)
-            opts="-a -v -q -h --namespace --version --artifact --application --verbose --quiet --report --canary --help"
+            opts="-v -q -h --namespace --version --artifact --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -968,14 +865,6 @@ _wukong() {
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0
                     ;;
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -984,7 +873,7 @@ _wukong() {
             return 0
             ;;
         wukong__deployment__help)
-            opts="list execute rollback help"
+            opts="list execute rollback status help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -1053,21 +942,27 @@ _wukong() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
+        wukong__deployment__help__status)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
         wukong__deployment__list)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help"
+            opts="-v -q -h --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -1076,7 +971,7 @@ _wukong() {
             return 0
             ;;
         wukong__deployment__rollback)
-            opts="-a -v -q -h --namespace --version --application --verbose --quiet --report --canary --help"
+            opts="-v -q -h --namespace --version --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -1090,12 +985,22 @@ _wukong() {
                     COMPREPLY=($(compgen -W "blue green" -- "${cur}"))
                     return 0
                     ;;
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
+                *)
+                    COMPREPLY=()
                     ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__deployment__status)
+            opts="-v -q -h --version --verbose --quiet --report --canary --help"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                --version)
+                    COMPREPLY=($(compgen -W "blue green" -- "${cur}"))
                     return 0
                     ;;
                 *)
@@ -1106,20 +1011,12 @@ _wukong() {
             return 0
             ;;
         wukong__dev)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help config help"
+            opts="-v -q -h --verbose --quiet --report --canary --help config help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -1128,20 +1025,12 @@ _wukong() {
             return 0
             ;;
         wukong__dev__config)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help push diff pull lint help"
+            opts="-v -q -h --verbose --quiet --report --canary --help push diff pull lint help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -1150,20 +1039,12 @@ _wukong() {
             return 0
             ;;
         wukong__dev__config__diff)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help"
+            opts="-v -q -h --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -1256,20 +1137,12 @@ _wukong() {
             return 0
             ;;
         wukong__dev__config__lint)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help [PATH]"
+            opts="-v -q -h --verbose --quiet --report --canary --help [PATH]"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -1278,20 +1151,12 @@ _wukong() {
             return 0
             ;;
         wukong__dev__config__pull)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help [PATH]"
+            opts="-v -q -h --verbose --quiet --report --canary --help [PATH]"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -1300,20 +1165,12 @@ _wukong() {
             return 0
             ;;
         wukong__dev__config__push)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help"
+            opts="-v -q -h --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -1420,20 +1277,12 @@ _wukong() {
             return 0
             ;;
         wukong__google)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help login help"
+            opts="-v -q -h --verbose --quiet --report --canary --help login help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -1484,20 +1333,12 @@ _wukong() {
             return 0
             ;;
         wukong__google__login)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help"
+            opts="-v -q -h --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -1688,7 +1529,7 @@ _wukong() {
             return 0
             ;;
         wukong__help__deployment)
-            opts="list execute rollback"
+            opts="list execute rollback status"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -1730,6 +1571,20 @@ _wukong() {
             return 0
             ;;
         wukong__help__deployment__rollback)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__help__deployment__status)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -1968,20 +1823,12 @@ _wukong() {
             return 0
             ;;
         wukong__init)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help"
+            opts="-v -q -h --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -1990,20 +1837,12 @@ _wukong() {
             return 0
             ;;
         wukong__login)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help"
+            opts="-v -q -h --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -2012,20 +1851,12 @@ _wukong() {
             return 0
             ;;
         wukong__pipeline)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help list describe ci-status help"
+            opts="-v -q -h --verbose --quiet --report --canary --help list describe ci-status help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -2034,7 +1865,7 @@ _wukong() {
             return 0
             ;;
         wukong__pipeline__ci__status)
-            opts="-a -v -q -h --repo-url --branch --application --verbose --quiet --report --canary --help"
+            opts="-v -q -h --repo-url --branch --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -2048,14 +1879,6 @@ _wukong() {
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0
                     ;;
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -2064,20 +1887,12 @@ _wukong() {
             return 0
             ;;
         wukong__pipeline__describe)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help <NAME>"
+            opts="-v -q -h --verbose --quiet --report --canary --help <NAME>"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -2156,20 +1971,12 @@ _wukong() {
             return 0
             ;;
         wukong__pipeline__list)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help"
+            opts="-v -q -h --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -2178,20 +1985,12 @@ _wukong() {
             return 0
             ;;
         wukong__tui)
-            opts="-a -v -q -h --application --verbose --quiet --report --canary --help"
+            opts="-v -q -h --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --application)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
-                -a)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -2207,4 +2006,3 @@ if [[ "${BASH_VERSINFO[0]}" -eq 4 && "${BASH_VERSINFO[1]}" -ge 4 || "${BASH_VERS
 else
     complete -F _wukong -o bashdefault -o default wukong
 fi
-

@@ -17,8 +17,10 @@ pub use self::{
     },
     appsignal::{
         appsignal_apps_query, appsignal_average_error_rate_query, appsignal_average_latency_query,
-        appsignal_average_throughput_query, AppsignalAppsQuery, AppsignalAverageErrorRateQuery,
-        AppsignalAverageLatencyQuery, AppsignalAverageThroughputQuery, AppsignalTimeFrame,
+        appsignal_average_throughput_query, appsignal_deploy_markers_query,
+        appsignal_exception_incidents_query, AppsignalAppsQuery, AppsignalAverageErrorRateQuery,
+        AppsignalAverageLatencyQuery, AppsignalAverageThroughputQuery, AppsignalDeployMarkersQuery,
+        AppsignalExceptionIncidentsQuery, AppsignalTimeFrame,
     },
     changelog::{changelogs_query, ChangelogsQuery},
     deployment::{
@@ -749,16 +751,60 @@ impl WKClient {
     }
 
     pub async fn fetch_application_config(
+      &self,
+      name: &str,
+  ) -> Result<application_config_query::ResponseData, WKError> {
+      let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+      gql_client
+          .post_graphql::<ApplicationConfigQuery, _>(
+              &self.api_url,
+              application_config_query::Variables {
+                  name: name.to_string(),
+              },
+          )
+          .await
+          .map_err(|err| err.into())
+  }
+
+    /// Fetch the deploy markers from Appsignal
+    /// the default value for `limit` is 1
+    pub async fn fetch_appsignal_deploy_markers(
         &self,
-        name: &str,
-    ) -> Result<application_config_query::ResponseData, WKError> {
+        app_id: &str,
+        limit: Option<i64>,
+    ) -> Result<appsignal_deploy_markers_query::ResponseData, WKError> {
         let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
         gql_client
-            .post_graphql::<ApplicationConfigQuery, _>(
+            .post_graphql::<AppsignalDeployMarkersQuery, _>(
                 &self.api_url,
-                application_config_query::Variables {
-                    name: name.to_string(),
+                appsignal_deploy_markers_query::Variables {
+                    app_id: app_id.to_string(),
+                    limit,
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    pub async fn fetch_appsignal_exception_incidents(
+        &self,
+        app_id: &str,
+        namespaces: Vec<String>,
+        limit: Option<i64>,
+        marker: Option<String>,
+    ) -> Result<appsignal_exception_incidents_query::ResponseData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        gql_client
+            .post_graphql::<AppsignalExceptionIncidentsQuery, _>(
+                &self.api_url,
+                appsignal_exception_incidents_query::Variables {
+                    app_id: app_id.to_string(),
+                    namespaces,
+                    limit,
+                    marker,
                 },
             )
             .await

@@ -1,6 +1,7 @@
 pub mod execute;
 pub mod list;
 pub mod rollback;
+pub mod status;
 
 use execute::handle_execute;
 use list::handle_list;
@@ -8,6 +9,8 @@ use rollback::handle_rollback;
 
 use crate::WKCliError;
 use clap::{Args, Subcommand, ValueEnum};
+
+use self::status::handle_status;
 
 use super::Context;
 
@@ -43,6 +46,12 @@ pub enum DeploymentSubcommand {
         /// against.
         #[arg(long, value_enum)]
         version: Option<DeploymentVersion>,
+    },
+    /// Get the status of the latest deployment
+    Status {
+        /// The version of the deployment
+        #[arg(long, value_enum, default_value_t = DeploymentVersion::Green)]
+        version: DeploymentVersion,
     },
 }
 
@@ -88,6 +97,7 @@ impl Deployment {
             DeploymentSubcommand::Rollback { namespace, version } => {
                 handle_rollback(context, namespace, version).await
             }
+            DeploymentSubcommand::Status { version } => handle_status(context, version).await,
         }
     }
 }

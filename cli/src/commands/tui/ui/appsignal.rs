@@ -225,7 +225,7 @@ impl AppsignalWidget {
             }
             None => {
                 let widget = Paragraph::new(Text::styled(
-                    "Appsignal configs are not loaded",
+                    "Appsignal configs are not loaded or not set for the current namespace.",
                     Style::default().fg(Color::White),
                 ));
                 frame.render_widget(widget, rect);

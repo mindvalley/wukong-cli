@@ -25,7 +25,6 @@ fn test_wukong_config_list_success() {
         .write_str(
             r#"
 [core]
-application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
 
 [auth.okta]
@@ -64,7 +63,6 @@ fn test_wukong_config_list_success_without_login() {
         .write_str(
             r#"
 [core]
-application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
 
 [auth]
@@ -110,7 +108,6 @@ fn test_wukong_config_get_success() {
         .write_str(
             r#"
 [core]
-application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
 
 [auth.okta]
@@ -128,7 +125,7 @@ refresh_token = "refresh_token"
     let cmd = common::wukong_raw_command()
         .arg("config")
         .arg("get")
-        .arg("application")
+        .arg("wukong-api-url")
         .env("WUKONG_DEV_CONFIG_FILE", config_file.path())
         .assert()
         .success();
@@ -150,7 +147,6 @@ fn test_wukong_config_get_should_failed_with_non_supported_field() {
         .write_str(
             r#"
 [core]
-application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
 
 [auth.okta]
@@ -190,7 +186,6 @@ fn test_wukong_config_set_success_with_supported_field() {
         .write_str(
             r#"
 [core]
-application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
 
 [auth.okta]
@@ -208,8 +203,8 @@ refresh_token = "refresh_token"
     let cmd = common::wukong_raw_command()
         .arg("config")
         .arg("set")
-        .arg("application")
-        .arg("new-application")
+        .arg("wukong-api-url")
+        .arg("https://new-wukong-api.com")
         .env("WUKONG_DEV_CONFIG_FILE", config_file.path())
         .assert()
         .success();
@@ -220,8 +215,7 @@ refresh_token = "refresh_token"
 
     config_file.assert(
         r#"[core]
-application = "new-application"
-wukong_api_url = "https://wukong-api.com"
+wukong_api_url = "https://new-wukong-api.com"
 
 [auth.okta]
 client_id = "valid-okta-client-id"
@@ -247,7 +241,6 @@ fn test_wukong_config_set_should_failed_with_non_supported_field() {
         .write_str(
             r#"
 [core]
-application = "valid-application"
 wukong_api_url = "https://wukong-api.com"
 
 [auth.okta]

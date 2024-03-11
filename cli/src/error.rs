@@ -12,8 +12,6 @@ pub enum WKCliError {
     Io(#[from] ::std::io::Error),
     #[error(transparent)]
     AuthError(#[from] AuthError),
-    #[error("The application is not recognized for the current command.")]
-    ApplicationConfigNotDefined,
     #[error("You are un-authenticated.")]
     UnAuthenticated,
     #[error("You are un-initialised.")]
@@ -171,7 +169,7 @@ impl WKCliError {
                         String::from("Please check your application's name. It could be invalid."),
                     ),
                     APIError::ApplicationNotFound { .. } => Some(
-                        String::from("Please check your application or your repo url. It's unrecognized by wukong."),
+                        String::from("Please check your application config in \".wukong.toml\" file or your repo url. It's unrecognized by wukong."),
                     ),
                     APIError::NamespaceNotFound { .. } => Some(
                         String::from("Please check your namespace value. It could be invalid."),
@@ -183,7 +181,7 @@ impl WKCliError {
     r#"You can follow these steps to remedy this error:
 1. Confirm that you're in the correct working folder.
 2. If you're not, consider moving to the right location and run {} command again.
-If none of the above steps work for you, please contact the following people on Slack for assistance: @alex.tuan / @jk-gan / @Fadhil"#,
+If none of the above steps work for you, please contact the following people on Slack for assistance: @alex.tuan / @jk-gan / @Fadhil / @Fauzaan"#,
     "wukong pipeline ci-status".yellow()
                     )),
                     APIError::UnAuthenticated => Some(
@@ -209,14 +207,15 @@ If none of the above steps work for you, please contact the following people on 
                     "Run \"chmod +rw {path}\" to provide read and write permissions."
                 )),
                 ConfigError::BadTomlData(_) => Some(
-                    "Check if your config.toml file is in valid TOML format.\nThis usually happen when the config file is accidentally modified or there is a breaking change to the cli config in the new version.\nYou may want to run \"wukong init\" to re-initialise configuration again.".to_string()
+                    "Check if your `config.toml` file is in valid TOML format.\nThis usually happen when the config file is accidentally modified or there is a breaking change to the cli config in the new version.\nYou may want to run \"wukong init\" to re-initialise configuration again.".to_string()
                 ),
                 _ => None,
             },
             WKCliError::ApplicationConfigError(error) => match error {
-                ApplicationConfigError::NotFound { .. } => Some(String::from(
-                    "Run \"wukong application init\" to initialise the application configuration.",
-                )),
+                ApplicationConfigError::NotFound { .. } => Some(format!(
+        r#"Wukong command only works in the directory contains `.wukong.toml` file. Check if you are in the correct directory.
+If so, run {} to initialise the application configuration."#, "wukong application init".yellow())
+                ),
                 ApplicationConfigError::PermissionDenied { path, .. } => Some(format!(
                     "Run \"chmod +rw {path}\" to provide read and write permissions."
                 )),

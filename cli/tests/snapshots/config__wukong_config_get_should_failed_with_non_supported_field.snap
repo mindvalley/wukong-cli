@@ -1,9 +1,8 @@
 ---
-source: tests/config.rs
+source: cli/tests/config.rs
 expression: "std::str::from_utf8(&output.stderr).unwrap()"
 ---
 error: invalid value 'access_token' for '<CONFIG_NAME>'
-  [possible values: application, wukong-api-url, okta-client-id]
+  [possible values: wukong-api-url, okta-client-id]
 
 For more information, try '--help'.
-

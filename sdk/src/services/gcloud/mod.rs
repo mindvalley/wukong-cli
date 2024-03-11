@@ -279,7 +279,7 @@ impl GCloudClient {
         Self { access_token }
     }
 
-    pub async fn get_log_entries(
+    pub async fn fetch_log_entries(
         &self,
         options: LogEntriesOptions,
     ) -> Result<LogEntries, GCloudError> {
@@ -313,7 +313,7 @@ impl GCloudClient {
         })
     }
 
-    pub async fn get_access_token_info(&self) -> Result<TokenInfo, GCloudError> {
+    pub async fn fetch_access_token_info(&self) -> Result<TokenInfo, GCloudError> {
         let token_info_url = "https://www.googleapis.com/oauth2/v1/tokeninfo";
 
         let query_params = vec![("access_token", self.access_token.clone())];
@@ -339,7 +339,7 @@ impl GCloudClient {
     /// Here we get the database metrics from Google Cloud by sending a request using the `MetricServiceClient`
     /// for each `MetricTypeFilter` that we have defined. The responses for the requests are then extracted into
     /// a Vector of `DatabaseMetrics`s that is updated on the App's `state.databases.database_metrics`.
-    pub async fn get_database_metrics(
+    pub async fn fetch_database_metrics(
         &self,
         project_id: &str,
     ) -> Result<Vec<DatabaseMetrics>, GCloudError> {
@@ -613,35 +613,38 @@ impl GCloudClient {
 /// Functions from Google Cloud service.
 impl WKClient {
     /// Get log entries from Google Cloud.
-    pub async fn get_gcloud_log_entries(
+    pub async fn fetch_gcloud_log_entries(
         &self,
         options: LogEntriesOptions,
         access_token: String,
     ) -> Result<LogEntries, WKError> {
         let google_client = GCloudClient::new(access_token);
         google_client
-            .get_log_entries(options)
+            .fetch_log_entries(options)
             .await
             .map_err(|err| err.into())
     }
 
     // Get access token info from Google Cloud.
-    pub async fn get_access_token_info(&self, access_token: String) -> Result<TokenInfo, WKError> {
+    pub async fn fetch_access_token_info(
+        &self,
+        access_token: String,
+    ) -> Result<TokenInfo, WKError> {
         let google_client = GCloudClient::new(access_token);
         google_client
-            .get_access_token_info()
+            .fetch_access_token_info()
             .await
             .map_err(|err| err.into())
     }
 
-    pub async fn get_gcloud_database_metrics(
+    pub async fn fetch_gcloud_database_metrics(
         &self,
         project_id: &str,
         access_token: String,
     ) -> Result<Vec<DatabaseMetrics>, WKError> {
         let google_client = GCloudClient::new(access_token);
         google_client
-            .get_database_metrics(project_id)
+            .fetch_database_metrics(project_id)
             .await
             .map_err(|err| err.into())
     }

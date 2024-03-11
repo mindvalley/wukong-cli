@@ -35,7 +35,6 @@ pub enum ConfigSubcommand {
 
 #[derive(Debug, ValueEnum, Clone)]
 pub enum ConfigName {
-    Application,
     WukongApiUrl,
     OktaClientId,
 }

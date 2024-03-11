@@ -87,7 +87,7 @@ pub async fn handle_logs(
             fetch_loader.set_message("Fetching log entries ... ");
 
             let log = wk_client
-                .get_gcloud_log_entries(
+                .fetch_gcloud_log_entries(
                     LogEntriesOptions {
                         resource_names: Some(resource_names),
                         page_size: Some(*limit),
