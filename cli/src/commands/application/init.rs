@@ -49,6 +49,9 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
         .prompt()?;
     }
 
+    eprintln!();
+    eprintln!("Next is to configure the prod namespace for your application.");
+    eprintln!();
     let mut namespaces: Vec<ApplicationNamespaceConfig> = Vec::new();
     namespaces
         .push(configure_namespace("prod".to_string(), &mut wk_client, &mut appsignall_apps).await?);
@@ -220,7 +223,7 @@ async fn configure_namespace(
         .with_help_message("Leave it blank to disable Honeycomb integration")
         .prompt()?;
 
-    let cloudsql_project_id = inquire::Text::new("Google Project of your CloudSQL instance(s)")
+    let cloudsql_project_id = inquire::Text::new("Google Project ID of your CloudSQL instance(s)")
         .with_render_config(inquire_render_config())
         .with_placeholder(" Optional")
         .with_help_message("Leave it blank to disable Google CloudSQL integration")

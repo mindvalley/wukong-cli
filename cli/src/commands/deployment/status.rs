@@ -7,21 +7,23 @@ use time_humanize::HumanTime;
 use crate::{
     application_config::{
         ApplicationConfig, ApplicationConfigs, ApplicationNamespaceAppsignalConfig,
+        ApplicationNamespaceCloudsqlConfig,
     },
+    auth,
     commands::Context,
     config::Config,
     error::WKCliError,
     loader::new_spinner,
     output::{
         colored_println,
-        table::{fmt_u64_separate_with_commas, TableOutput},
+        table::{fmt_f64_separate_with_percentage, fmt_u64_separate_with_commas, TableOutput},
     },
     wukong_client::WKClient,
 };
 
 use super::DeploymentVersion;
 
-#[derive(Tabled, Serialize, Deserialize, Debug, Default)]
+#[derive(Tabled, Serialize, Deserialize, Debug, Default, Copy, Clone)]
 struct AppsignalData {
     #[tabled(rename = "Open Errors", display_with = "fmt_u64_separate_with_commas")]
     open_errors: u64,
@@ -31,10 +33,29 @@ struct AppsignalData {
     total: u64,
 }
 
+#[derive(Tabled, Serialize, Deserialize, Debug, Default, Clone)]
+struct CloudSQLInstance {
+    #[tabled(rename = "Instance")]
+    name: String,
+    #[tabled(
+        rename = "CPU Usage",
+        display_with = "fmt_f64_separate_with_percentage"
+    )]
+    cpu_usage: f64,
+    #[tabled(
+        rename = "Free Memory",
+        display_with = "fmt_f64_separate_with_percentage"
+    )]
+    free_memory: f64,
+    #[tabled(rename = "Connections", display_with = "fmt_u64_separate_with_commas")]
+    connections: u64,
+}
+
 #[derive(Default)]
 struct AllStatus {
     deployment: DisplayOrNot<DeploymentStatus, String>,
     appsignal: DisplayOrNot<AppsignalStatus, String>,
+    cloud_sql: DisplayOrNot<CloudSQLStatus, String>,
 }
 
 #[derive(Default)]
@@ -42,10 +63,15 @@ struct DeploymentStatus {
     artifact: String,
     deployed_at: Option<i64>,
 }
-#[derive(Default)]
+#[derive(Default, Clone)]
 struct AppsignalStatus {
     data: AppsignalData,
     app_id: String,
+}
+#[derive(Default, Clone)]
+struct CloudSQLStatus {
+    data: Vec<CloudSQLInstance>,
+    project: String,
 }
 enum DisplayOrNot<T, String> {
     Display(T),
@@ -101,15 +127,53 @@ pub async fn handle_status(
 
     let application_configs = ApplicationConfigs::load()?;
     let application_name = application_configs.application.name.clone();
-    let appsignal_config = get_appsignal_config(application_configs);
+    let appsignal_config = get_appsignal_config(&application_configs);
+    let cloudsql_config = get_cloudsql_config(&application_configs);
 
     match appsignal_config {
+        Ok(ApplicationNamespaceAppsignalConfig { enable: false, .. }) => {
+            all_status.appsignal = DisplayOrNot::NotDisplay(
+                "Appsignal config is not enabled for this application".to_string(),
+            );
+        }
         Ok(ApplicationNamespaceAppsignalConfig { app_id, .. }) => {
             fetch_loader.set_message("Fetching Appsignal data ... ");
             all_status.appsignal = get_appsignal_status(&mut wk_client, app_id).await?;
         }
         Err(reason) => {
             all_status.appsignal = DisplayOrNot::NotDisplay(reason);
+        }
+    }
+
+    match cloudsql_config {
+        Ok(ApplicationNamespaceCloudsqlConfig { enable: false, .. }) => {
+            all_status.cloud_sql = DisplayOrNot::NotDisplay(
+                "CloudSQL config is not enabled for this application.".to_string(),
+            );
+        }
+        Ok(ApplicationNamespaceCloudsqlConfig { project_id, .. }) => {
+            fetch_loader.set_message("Fetching CloudSQL data ... ");
+            let gcloud_access_token = auth::google_cloud::get_token_or_login(None).await;
+            let database_metrics = wk_client
+                .fetch_gcloud_database_metrics(&project_id, gcloud_access_token)
+                .await?;
+
+            all_status.cloud_sql = DisplayOrNot::Display(CloudSQLStatus {
+                data: database_metrics
+                    .iter()
+                    .map(|metrics| CloudSQLInstance {
+                        cpu_usage: metrics.cpu_utilization,
+                        free_memory: metrics.memory_free,
+                        connections: metrics.connections_count as u64,
+                        // this is assuming the name we got from the metrics is always in the format of `project_id:instance_name`
+                        name: metrics.name.clone().split(':').collect::<Vec<&str>>()[1].to_string(),
+                    })
+                    .collect(),
+                project: project_id,
+            });
+        }
+        Err(reason) => {
+            all_status.cloud_sql = DisplayOrNot::NotDisplay(reason);
         }
     }
 
@@ -132,28 +196,66 @@ pub async fn handle_status(
             );
         }
 
+        println!();
+        colored_println!("PERFORMANCE DATA");
+
         match all_status.appsignal {
-            DisplayOrNot::Display(appsignal) => {
+            DisplayOrNot::Display(ref appsignal) => {
                 let table = TableOutput {
                     title: None,
                     header: Some("APM".to_string()),
                     data: vec![appsignal.data],
                 };
 
-                println!();
-                colored_println!("PERFORMANCE DATA");
                 colored_println!("{table}");
-                colored_println!("To view more, open these magic links:");
-                colored_println!(
-                    "AppSignal: https://appsignal.com/mindvalley/sites/{}/exceptions?incident_marker=last",
-                    appsignal.app_id,
-                );
             }
-            DisplayOrNot::NotDisplay(reason) => {
+            DisplayOrNot::NotDisplay(ref reason) => {
                 println!();
                 colored_println!(
                     "* Appsignal status is not display because {}",
                     reason.bold()
+                );
+            }
+        }
+
+        match all_status.cloud_sql {
+            DisplayOrNot::Display(ref cloud_sql) => {
+                let table = TableOutput {
+                    title: None,
+                    header: Some("CloudSQL".to_string()),
+                    data: cloud_sql.data.to_vec(),
+                };
+
+                colored_println!("{table}");
+            }
+            DisplayOrNot::NotDisplay(ref reason) => {
+                println!();
+                colored_println!("* CloudSQL status is not display because {}", reason.bold());
+            }
+        }
+
+        colored_println!("To view more, open these magic links:");
+        if let DisplayOrNot::Display(ref appsignal) = all_status.appsignal {
+            colored_println!(
+                "AppSignal: https://appsignal.com/mindvalley/sites/{}/exceptions?incident_marker=last",
+                appsignal.app_id,
+            );
+        }
+        if let DisplayOrNot::Display(ref cloud_sql) = all_status.cloud_sql {
+            if cloud_sql.data.len() > 1 {
+                colored_println!("CloudSQL: ");
+                for instance in &cloud_sql.data {
+                    colored_println!(
+                    "- https://console.cloud.google.com/sql/instances/{}/system-insights?project={}",
+                    instance.name,
+                    cloud_sql.project,
+                );
+                }
+            } else {
+                colored_println!(
+                    "CloudSQL: https://console.cloud.google.com/sql/instances/{}/system-insights?project={}",
+                    cloud_sql.data[0].name,
+                    cloud_sql.project,
                 );
             }
         }
@@ -163,13 +265,13 @@ pub async fn handle_status(
 }
 
 fn get_appsignal_config(
-    application_configs: ApplicationConfigs,
+    application_configs: &ApplicationConfigs,
 ) -> Result<ApplicationNamespaceAppsignalConfig, String> {
     if let ApplicationConfig {
         enable: true,
         namespaces,
         ..
-    } = application_configs.application
+    } = &application_configs.application
     {
         let appsignal_config = namespaces
             .iter()
@@ -177,13 +279,33 @@ fn get_appsignal_config(
             .and_then(|ns| ns.appsignal.clone());
 
         if let Some(appsignal_config) = appsignal_config {
-            if !appsignal_config.enable {
-                return Err("Appsignal is not enabled for this application.".to_string());
-            }
-
             Ok(appsignal_config)
         } else {
             Err("Appsignal config not found for `prod` namespace.".to_string())
+        }
+    } else {
+        Err("Application config is not enabled.".to_string())
+    }
+}
+
+fn get_cloudsql_config(
+    application_configs: &ApplicationConfigs,
+) -> Result<ApplicationNamespaceCloudsqlConfig, String> {
+    if let ApplicationConfig {
+        enable: true,
+        namespaces,
+        ..
+    } = &application_configs.application
+    {
+        let cloudsql_config = namespaces
+            .iter()
+            .find(|ns| ns.namespace_type == "prod")
+            .and_then(|ns| ns.cloudsql.clone());
+
+        if let Some(cloudsql_config) = cloudsql_config {
+            Ok(cloudsql_config)
+        } else {
+            Err("CloudSQL config not found for `prod` namespace.".to_string())
         }
     } else {
         Err("Application config is not enabled.".to_string())

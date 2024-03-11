@@ -54,6 +54,10 @@ pub fn fmt_u64_separate_with_commas(o: &u64) -> String {
         .join(",")
 }
 
+pub fn fmt_f64_separate_with_percentage(o: &f64) -> String {
+    format!("{:.2}%", o)
+}
+
 pub fn fmt_option_milliseconds(o: &Option<i64>) -> String {
     match o {
         Some(s) => {
