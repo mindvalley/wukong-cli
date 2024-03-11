@@ -1,0 +1,34 @@
+query ApplicationConfigQuery($name: String!) {
+  applicationConfig(name: $name) {
+    name
+    enable
+    namespaces {
+      appsignal {
+        defaultNamespace
+        enable
+        environment
+      }
+      build {
+        buildWorkflow
+      }
+      cloudsql {
+        enable
+        projectId
+      }
+      delivery {
+        baseReplica
+        rolloutStrategy
+        target
+      }
+      honeycomb {
+        dataset
+        enable
+      }
+      type
+    }
+    workflows {
+      excludedWorkflows
+      provider
+    }
+  }
+}

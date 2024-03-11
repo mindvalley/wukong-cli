@@ -86,6 +86,8 @@ pub enum APIError {
     BuildNotFound,
     #[error("Github Workflow not found.")]
     GithubWorkflowNotFound,
+    #[error("Failed to get the application config.")]
+    ApplicationConfigNotFound,
 }
 
 #[derive(Debug, ThisError)]
