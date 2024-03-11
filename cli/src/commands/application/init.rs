@@ -29,7 +29,7 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
 
     println!("Welcome! Initializing per-repo configuration for your application.");
 
-    let mut application_configs = ApplicationConfigs::new()?;
+    let mut application_configs = ApplicationConfigs::new();
     let mut name: String;
 
     loop {
