@@ -19,7 +19,10 @@ use inquire::{required, CustomType};
 use std::fs;
 use wukong_sdk::{
     error::{APIError, WKError},
-    graphql::{application_config_query, appsignal_apps_query::AppsignalAppsQueryAppsignalApps},
+    graphql::{
+        application_config_query::{self, ApplicationConfigQueryApplicationConfig},
+        appsignal_apps_query::AppsignalAppsQueryAppsignalApps,
+    },
 };
 
 pub async fn handle_application_init(context: Context) -> Result<bool, WKCliError> {
@@ -42,7 +45,9 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
         let fetch_loader = new_spinner();
         fetch_loader.set_message("Validating application name ...");
 
-        let has_application_config = get_application_config(&mut wk_client, &name).await?.is_some();
+        let has_application_config = get_application_config(&mut wk_client, &name)
+            .await?
+            .is_some();
 
         fetch_loader.finish_and_clear();
 
@@ -321,7 +326,10 @@ fn get_workflows_from_current_dir() -> Result<Vec<String>, WKCliError> {
     Ok(workflow_names)
 }
 
-async fn get_application_config(wk_client: &mut WKClient, name: &str) -> Result<bool, WKCliError> {
+async fn get_application_config(
+    wk_client: &mut WKClient,
+    name: &str,
+) -> Result<Option<ApplicationConfigQueryApplicationConfig>, WKCliError> {
     let application_config = match wk_client.fetch_application_config(name).await {
         Ok(resp) => Ok(resp),
         Err(err) => match &err {
@@ -335,5 +343,5 @@ async fn get_application_config(wk_client: &mut WKClient, name: &str) -> Result<
     }?
     .application_config;
 
-    Ok(application_config.is_some())
+    Ok(application_config)
 }
