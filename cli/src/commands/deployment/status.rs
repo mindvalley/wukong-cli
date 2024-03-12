@@ -163,7 +163,7 @@ pub async fn handle_status(
                     .iter()
                     .map(|metrics| CloudSQLInstance {
                         cpu_usage: metrics.cpu_utilization,
-                        free_memory: metrics.memory_free,
+                        free_memory: metrics.memory_free + metrics.memory_cache,
                         connections: format!(
                             "{}/{}",
                             metrics.connections_count, metrics.max_connections_count
