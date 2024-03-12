@@ -47,8 +47,8 @@ struct CloudSQLInstance {
         display_with = "fmt_f64_separate_with_percentage"
     )]
     free_memory: f64,
-    #[tabled(rename = "Connections", display_with = "fmt_u64_separate_with_commas")]
-    connections: u64,
+    #[tabled(rename = "Connections")]
+    connections: String,
 }
 
 #[derive(Default)]
@@ -164,7 +164,10 @@ pub async fn handle_status(
                     .map(|metrics| CloudSQLInstance {
                         cpu_usage: metrics.cpu_utilization,
                         free_memory: metrics.memory_free,
-                        connections: metrics.connections_count as u64,
+                        connections: format!(
+                            "{}/{}",
+                            metrics.connections_count, metrics.max_connections_count
+                        ),
                         // this is assuming the name we got from the metrics is always in the format of `project_id:instance_name`
                         name: metrics.name.clone().split(':').collect::<Vec<&str>>()[1].to_string(),
                     })

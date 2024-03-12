@@ -36,9 +36,6 @@ use self::google::{
 };
 use crate::{
     error::{GCloudError, WKError},
-    services::gcloud::google::cloud::sql::{
-        sql_instances_service_client::SqlInstancesServiceClient, SqlInstancesListRequest,
-    },
     WKClient,
 };
 use chrono::{DateTime, Duration, Utc};
@@ -46,6 +43,7 @@ use google::logging::v2::{
     logging_service_v2_client::LoggingServiceV2Client, ListLogEntriesRequest,
 };
 
+use hyper::{header::HeaderValue, HeaderMap};
 use prost_types::Timestamp;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -74,6 +72,30 @@ struct CloudSQLMetrics {
     cpu_utilization: f64,
     memory_components: MetricsMemoryComponents,
     connections_count: i64,
+    max_connections_count: i64,
+}
+
+#[derive(Debug, Deserialize)]
+struct DbInstanceSetting {
+    #[serde(rename = "databaseFlags")]
+    database_flags: Vec<DbFlags>,
+}
+
+#[derive(Debug, Deserialize)]
+struct DbFlags {
+    name: String,
+    value: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct DbInstance {
+    name: String,
+    settings: Option<DbInstanceSetting>,
+}
+
+#[derive(Debug, Deserialize)]
+struct DbInstanceList {
+    items: Vec<DbInstance>,
 }
 
 impl Display for MetricType {
@@ -266,6 +288,7 @@ pub struct DatabaseMetrics {
     pub memory_free: f64,
     pub memory_cache: f64,
     pub connections_count: i64,
+    pub max_connections_count: i64,
 }
 
 pub struct GCloudClient {
@@ -356,6 +379,25 @@ impl GCloudClient {
         let mut responses: Vec<ListTimeSeriesResponse> = Vec::new();
 
         let bearer_token = format!("Bearer {}", self.access_token);
+
+        let client = reqwest::Client::new();
+        let mut headers = HeaderMap::new();
+        headers.append(
+            reqwest::header::AUTHORIZATION,
+            HeaderValue::from_str(&bearer_token).unwrap(),
+        );
+
+        let resp = client
+            .get(format!(
+                "https://sqladmin.googleapis.com/v1/projects/{}/instances",
+                project_id
+            ))
+            .headers(headers)
+            .send()
+            .await?;
+
+        let database_instances = resp.json::<DbInstanceList>().await?;
+
         let header_value: MetadataValue<_> = bearer_token.parse().unwrap();
         let channel = Channel::from_static("https://monitoring.googleapis.com")
             .connect()
@@ -569,10 +611,28 @@ impl GCloudClient {
                             // the app name (which we don't have at the moment).
                             //
                             MetricType::ConnectionsCount => {
+                                let max_connections_count = database_instances
+                                    .items
+                                    .iter()
+                                    .find(|each| {
+                                        each.name
+                                            == database_id.split(':').collect::<Vec<&str>>()[1]
+                                    })
+                                    .map_or(0, |instance| match instance.settings {
+                                        Some(ref settings) => settings
+                                            .database_flags
+                                            .iter()
+                                            .find(|flag| flag.name == "max_connections")
+                                            .map_or(0, |flag| {
+                                                flag.value.parse::<i64>().unwrap_or(0)
+                                            }),
+                                        None => 0,
+                                    });
+
                                 let count = response
                                     .time_series
                                     .iter()
-                                    .filter(|time_series| {
+                                    .find(|time_series| {
                                         time_series
                                             .resource
                                             .as_ref()
@@ -581,31 +641,30 @@ impl GCloudClient {
                                             .get("database_id")
                                             == Some(database_id)
                                     })
-                                    .fold(0.0, |acc, each| {
-                                        if let Some(first_point) = each.points.first() {
-                                            if let Some(typed_value) = &first_point.value {
-                                                let TypedValue { value } = typed_value;
-                                                match value {
-                                                    Some(google::monitoring::v3::typed_value::Value::DoubleValue(
-                                                        value,
-                                                    )) => acc + value,
-                                                    _ => acc,
+                                    .map_or(0.0, |time_series| {
+                                            if let Some(first_point) = time_series.points.first() {
+                                                if let Some(typed_value) = &first_point.value {
+                                                    let TypedValue { value } = typed_value;
+                                                    match value {
+                                                        Some(google::monitoring::v3::typed_value::Value::DoubleValue(
+                                                            value,
+                                                        )) => *value,
+                                                        _ => 0.0,
+                                                    }
+                                                } else {
+                                                    0.0
                                                 }
                                             } else {
-                                                acc
+                                                0.0
                                             }
-                                        } else {
-                                            acc
-                                        }
                                     });
 
-                                metrics_values.connections_count = count as i64;
+                                metrics_values.connections_count = count.ceil() as i64;
+                                metrics_values.max_connections_count = max_connections_count;
                             }
                         },
                         Err(_err) => continue,
                     }
-
-                    // grouped_responses.insert(database_id.to_string(), metrics_values);
                 }
             }
         }
@@ -618,6 +677,7 @@ impl GCloudClient {
                 memory_free: value.memory_components.free,
                 memory_cache: value.memory_components.cache,
                 connections_count: value.connections_count,
+                max_connections_count: value.max_connections_count,
             });
         });
 
@@ -731,8 +791,8 @@ fn generate_request_for_cloudsql(
                 nanos: 0,
             }),
             per_series_aligner: Aligner::AlignMean as i32,
-            cross_series_reducer: Reducer::ReduceNone as i32,
-            group_by_fields: Vec::new(),
+            cross_series_reducer: Reducer::ReduceSum as i32,
+            group_by_fields: vec!["resource.labels.database_id".to_string()],
         }),
         secondary_aggregation: None,
         order_by: "".to_string(),
