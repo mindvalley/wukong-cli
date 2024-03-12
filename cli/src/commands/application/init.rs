@@ -42,7 +42,7 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
         let fetch_loader = new_spinner();
         fetch_loader.set_message("Validating application name ...");
 
-        let has_application = get_application_config(&mut wk_client, &name).await?;
+        let has_application = has_application_config(&mut wk_client, &name).await?;
 
         fetch_loader.finish_and_clear();
 
@@ -321,7 +321,7 @@ fn get_workflows_from_current_dir() -> Result<Vec<String>, WKCliError> {
     Ok(workflow_names)
 }
 
-async fn get_application_config(wk_client: &mut WKClient, name: &str) -> Result<bool, WKCliError> {
+async fn has_application_config(wk_client: &mut WKClient, name: &str) -> Result<bool, WKCliError> {
     let application_config = match wk_client.fetch_application_config(name).await {
         Ok(resp) => Ok(resp),
         Err(err) => match &err {
