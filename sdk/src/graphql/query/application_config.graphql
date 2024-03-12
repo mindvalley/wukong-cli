@@ -1,4 +1,5 @@
 query ApplicationConfigQuery($name: String!) {
   applicationConfig(name: $name) {
     name
+  }
 }
