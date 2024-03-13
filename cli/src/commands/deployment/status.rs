@@ -215,7 +215,7 @@ pub async fn handle_status(
             DisplayOrNot::NotDisplay(ref reason) => {
                 println!();
                 colored_println!(
-                    "* Appsignal status is not display because {}",
+                    "* Appsignal status is not displayed because {}",
                     reason.bold()
                 );
             }
