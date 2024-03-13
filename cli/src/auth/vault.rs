@@ -230,7 +230,7 @@ async fn renew_token(
 
 fn calculate_expiry_time(lease_duration: i64) -> String {
     let current_time: DateTime<Local> = Local::now();
-    let expiry_time = current_time + Duration::seconds(lease_duration);
+    let expiry_time = current_time + Duration::try_seconds(lease_duration).unwrap();
 
     expiry_time.to_rfc3339()
 }

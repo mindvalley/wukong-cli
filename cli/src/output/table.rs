@@ -1,4 +1,4 @@
-use chrono::{DateTime, Duration, Local, NaiveDateTime, Utc};
+use chrono::{DateTime, Duration, Local};
 use chrono_tz::Tz;
 use once_cell::sync::Lazy;
 use std::fmt::Display;
@@ -57,7 +57,7 @@ pub fn fmt_u64_separate_with_commas(o: &u64) -> String {
 pub fn fmt_option_milliseconds(o: &Option<i64>) -> String {
     match o {
         Some(s) => {
-            let duration = Duration::milliseconds(*s);
+            let duration = Duration::try_milliseconds(*s).unwrap();
             let seconds = duration.num_seconds() % 60;
             let minutes = (duration.num_seconds() / 60) % 60;
             format!("{minutes} mins {seconds} secs")
@@ -74,18 +74,17 @@ pub fn fmt_option_timestamp(o: &Option<i64>) -> String {
 }
 
 pub fn fmt_timestamp(o: &i64) -> String {
-    let naive = NaiveDateTime::from_timestamp_opt(o / 1000, (o % 1000) as u32 * 1_000_000).unwrap();
+    let datetime = DateTime::from_timestamp(o / 1000, (o % 1000) as u32 * 1_000_000).unwrap();
 
     #[cfg(not(feature = "prod"))]
     {
         // if WUKONG_DEV_TIMEZONE is set, use the timezone
         // normally this is only used for development and testing purpose
         if let Some(custom_timezone) = CUSTOM_TIMEZONE.as_ref() {
-            let dt = DateTime::<Utc>::from_naive_utc_and_offset(naive, Utc)
-                .with_timezone(custom_timezone);
+            let dt = datetime.with_timezone(custom_timezone);
             format!("{}", dt.format("%Y %b %d %H:%M:%S %p"))
         } else {
-            let dt = DateTime::<Utc>::from_naive_utc_and_offset(naive, Utc).with_timezone(&Local);
+            let dt = datetime.with_timezone(&Local);
             format!("{}", dt.format("%Y %b %d %H:%M:%S %p"))
         }
     }
@@ -93,7 +92,7 @@ pub fn fmt_timestamp(o: &i64) -> String {
     #[cfg(feature = "prod")]
     {
         // prod will also use Local timezone
-        let dt = DateTime::<Utc>::from_utc(naive, Utc).with_timezone(&Local);
+        let dt = datetime.with_timezone(&Local);
         format!("{}", dt.format("%Y %b %d %H:%M:%S %p"))
     }
 }
@@ -120,22 +119,21 @@ pub fn fmt_option_human_timestamp(o: &Option<i64>) -> String {
 }
 
 pub fn fmt_human_timestamp(o: &i64) -> String {
-    let naive = NaiveDateTime::from_timestamp_opt(o / 1000, (o % 1000) as u32 * 1_000_000).unwrap();
+    let datetime = DateTime::from_timestamp(o / 1000, (o % 1000) as u32 * 1_000_000).unwrap();
 
     #[cfg(not(feature = "prod"))]
     {
         // if WUKONG_DEV_TIMEZONE is set, use the timezone
         // normally this is only used for development and testing purpose
         if let Some(custom_timezone) = CUSTOM_TIMEZONE.as_ref() {
-            let dt = DateTime::<Utc>::from_naive_utc_and_offset(naive, Utc)
-                .with_timezone(custom_timezone);
+            let dt = datetime.with_timezone(custom_timezone);
             // convert to std::time::SystemTime as the HumanTime expecting this
             format!(
                 "{}",
                 HumanTime::from(Into::<std::time::SystemTime>::into(dt))
             )
         } else {
-            let dt = DateTime::<Utc>::from_naive_utc_and_offset(naive, Utc).with_timezone(&Local);
+            let dt = datetime.with_timezone(&Local);
             // convert to std::time::SystemTime as the HumanTime expecting this
             format!(
                 "{}",
@@ -147,7 +145,7 @@ pub fn fmt_human_timestamp(o: &i64) -> String {
     #[cfg(feature = "prod")]
     {
         // prod will also use Local timezone
-        let dt = DateTime::<Utc>::from_utc(naive, Utc).with_timezone(&Local);
+        let dt = datetime.with_timezone(&Local);
         // convert to std::time::SystemTime as the HumanTime expecting this
         format!(
             "{}",
