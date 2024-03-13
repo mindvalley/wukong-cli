@@ -1,4 +1,4 @@
-use chrono::{DateTime, Local, NaiveDateTime, Utc};
+use chrono::{DateTime, Local};
 use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 use tabled::Tabled;
@@ -120,12 +120,12 @@ pub async fn handle_status(
         colored_println!("Deployed build artifact: {}", deployment.artifact);
 
         if let Some(last_deployed_at) = deployment.deployed_at {
-            let naive = NaiveDateTime::from_timestamp_opt(
+            let datetime = DateTime::from_timestamp(
                 last_deployed_at / 1000,
                 (last_deployed_at % 1000) as u32 * 1_000_000,
             )
             .unwrap();
-            let dt = DateTime::<Utc>::from_naive_utc_and_offset(naive, Utc).with_timezone(&Local);
+            let dt = datetime.with_timezone(&Local);
             colored_println!(
                 "Deployed since: {}",
                 HumanTime::from(Into::<std::time::SystemTime>::into(dt))

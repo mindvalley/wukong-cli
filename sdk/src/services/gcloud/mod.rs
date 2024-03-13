@@ -345,7 +345,7 @@ impl GCloudClient {
     ) -> Result<Vec<DatabaseMetrics>, GCloudError> {
         let mut database_metrics = Vec::new();
         let current_time = Utc::now();
-        let start_time = current_time - Duration::minutes(3);
+        let start_time = current_time - Duration::try_minutes(3).unwrap();
         let mut responses: Vec<ListTimeSeriesResponse> = Vec::new();
 
         for metric_type in MetricTypeFilter::iter() {

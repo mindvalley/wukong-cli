@@ -1,6 +1,6 @@
 use super::util::get_color;
 use crate::commands::tui::app::{App, Block, Deployment};
-use chrono::{DateTime, Local, NaiveDateTime, Utc};
+use chrono::{DateTime, Local};
 use ratatui::{
     prelude::{Backend, Constraint, Direction, Layout, Margin, Rect},
     style::{Color, Modifier, Style},
@@ -140,13 +140,11 @@ impl DeploymentWidget {
 
 fn humanize_timestamp(timestamp: &Option<i64>) -> String {
     if let Some(timestamp) = timestamp {
-        let naive = NaiveDateTime::from_timestamp_opt(
-            timestamp / 1000,
-            (timestamp % 1000) as u32 * 1_000_000,
-        )
-        .unwrap();
+        let datetime =
+            DateTime::from_timestamp(timestamp / 1000, (timestamp % 1000) as u32 * 1_000_000)
+                .unwrap();
+        let dt = datetime.with_timezone(&Local);
 
-        let dt = DateTime::<Utc>::from_naive_utc_and_offset(naive, Utc).with_timezone(&Local);
         // convert to std::time::SystemTime as the HumanTime expecting this
         format!(
             "{}",

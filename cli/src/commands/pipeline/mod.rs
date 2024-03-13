@@ -6,7 +6,7 @@ use crate::{
     error::WKCliError,
     output::table::{fmt_option_milliseconds, fmt_option_string, fmt_option_timestamp},
 };
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::DateTime;
 use clap::{Args, Subcommand};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, str};
@@ -76,12 +76,11 @@ struct JobBuild {
 
 impl Display for JobBuild {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let naive = NaiveDateTime::from_timestamp_opt(
+        let started_at = DateTime::from_timestamp(
             self.timestamp / 1000,
             (self.timestamp % 1000) as u32 * 1_000_000,
         )
         .unwrap();
-        let started_at = DateTime::<Utc>::from_naive_utc_and_offset(naive, Utc);
 
         let commit_msg = match self.commit_msg {
             Some(ref msg) => msg,

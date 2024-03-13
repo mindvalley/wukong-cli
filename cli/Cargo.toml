@@ -39,7 +39,7 @@ toml = "0.7.5"
 aion = "0.2.0"
 url = "2.3.1"
 openidconnect = "3.3.0"
-chrono = { version = "0.4.26", default-features = false, features = ["std"] }
+chrono = { version = "0.4.35", default-features = false, features = ["std"] }
 
 human-panic = "1.1.5"
 time-humanize = "0.1.3"
@@ -71,12 +71,11 @@ strum = { version = "0.26.1", features = ["derive"] }
 
 [dev-dependencies]
 httpmock = "0.6.7"
-criterion = "0.4"
-rexpect = "0.5.0"
+criterion = "0.5.1"
 assert_fs = "1.0.10"
 insta = { version = "1.28.0", features = ["filters"] }
 assert_cmd = "2.0.8"
-git2 = "0.16.1"
+git2 = "0.18.2"
 serial_test = "2.0.0"
 
 # [build.env]
