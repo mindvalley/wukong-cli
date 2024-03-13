@@ -220,7 +220,7 @@ If so, run {} to initialise the application configuration."#, "wukong applicatio
                     "Run \"chmod +rw {path}\" to provide read and write permissions."
                 )),
                 ApplicationConfigError::BadTomlData(_) => Some(
-                    format!("Check if the `.wukong.toml` file is in valid TOML format.\nThis usually happen when the config file is accidentally modified or there is a breaking change to the application config in the new version.\nYou may want to run {} to re-initialise configuration again.", "wukong application init".yellow())
+                    format!("Check if the `.wukong.toml` file is in valid TOML format.\nThis usually happens when the config file has accidentally been modified or there is a breaking change to the application config in the new version.\nYou may want to run {} to re-initialise configuration again.", "wukong application init".yellow())
                 ),
                 _ => None,
             },
