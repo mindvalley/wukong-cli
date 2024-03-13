@@ -207,7 +207,7 @@ If none of the above steps work for you, please contact the following people on 
                     "Run \"chmod +rw {path}\" to provide read and write permissions."
                 )),
                 ConfigError::BadTomlData(_) => Some(
-                    format!("Check if your `config.toml` file is in valid TOML format.\nThis usually happen when the config file is accidentally modified or there is a breaking change to the cli config in the new version.\nYou may want to run {} to re-initialise configuration again.", "wukong init".yellow())
+                    format!("Check if your `config.toml` file is in valid TOML format.\nThis usually happens when the config file has accidentally been modified or there is a breaking change to the cli config in the new version.\nYou may want to run {} to re-initialise configuration again.", "wukong init".yellow())
                 ),
                 _ => None,
             },
