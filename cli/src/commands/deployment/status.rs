@@ -233,7 +233,10 @@ pub async fn handle_status(
             }
             DisplayOrNot::NotDisplay(ref reason) => {
                 println!();
-                colored_println!("* CloudSQL status is not displayed because {}", reason.bold());
+                colored_println!(
+                    "* CloudSQL status is not displayed because {}",
+                    reason.bold()
+                );
             }
         }
 
