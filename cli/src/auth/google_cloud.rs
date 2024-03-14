@@ -156,6 +156,7 @@ pub async fn get_token_or_login(config: Option<Config>) -> String {
         .token(&[
             "https://www.googleapis.com/auth/logging.read",
             "https://www.googleapis.com/auth/cloud-platform.read-only",
+            "https://www.googleapis.com/auth/sqlservice.admin",
             "https://www.googleapis.com/auth/monitoring.read",
         ])
         .await

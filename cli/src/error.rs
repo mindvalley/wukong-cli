@@ -184,30 +184,30 @@ impl WKCliError {
 If none of the above steps work for you, please contact the following people on Slack for assistance: @alex.tuan / @jk-gan / @Fadhil / @Fauzaan"#,
     "wukong pipeline ci-status".yellow()
                     )),
-                    APIError::UnAuthenticated => Some(
-                        "Run \"wukong login\" to authenticate with your okta account.".to_string()
+                    APIError::UnAuthenticated => Some(format!(
+                        "Run {} to authenticate with your okta account.", "wukong login".yellow())
                     ),
-                    APIError::UnAuthorized => Some(
-                        "Your token might be invalid/expired. Run \"wukong login\" to authenticate with your okta account.".to_string()
+                    APIError::UnAuthorized => Some(format!(
+                        "Your token might be invalid/expired. Run {} to authenticate with your okta account.", "wukong login".yellow())
                     ),
                     _ => None,
                 }
             },
-            WKCliError::UnAuthenticated => Some(String::from(
-                "Your access token is invalid. Run \"wukong login\" to authenticate with your okta account.",
-            )),
-            WKCliError::UnInitialised => Some(String::from(
-                "Run \"wukong init\" to initialise Wukong's configuration before running other commands.",
+            WKCliError::UnAuthenticated => Some(
+                format!("Your access token is invalid. Run {} to authenticate with your okta account.", "wukong login".yellow()),
+            ),
+            WKCliError::UnInitialised => Some(format!(
+                "Run {} to initialise Wukong's configuration before running other commands.", "wukong init".yellow()
             )),
             WKCliError::ConfigError(error) => match error {
-                ConfigError::NotFound { .. } => Some(String::from(
-                    "Run \"wukong init\" to initialise Wukong's configuration.",
+                ConfigError::NotFound { .. } => Some(format!(
+                    "Run {} to initialise Wukong's configuration.", "wukong init".yellow()
                 )),
                 ConfigError::PermissionDenied { path, .. } => Some(format!(
                     "Run \"chmod +rw {path}\" to provide read and write permissions."
                 )),
                 ConfigError::BadTomlData(_) => Some(
-                    "Check if your `config.toml` file is in valid TOML format.\nThis usually happen when the config file is accidentally modified or there is a breaking change to the cli config in the new version.\nYou may want to run \"wukong init\" to re-initialise configuration again.".to_string()
+                    format!("Check if your `config.toml` file is in valid TOML format.\nThis usually happens when the config file has accidentally been modified or there is a breaking change to the cli config in the new version.\nYou may want to run {} to re-initialise configuration again.", "wukong init".yellow())
                 ),
                 _ => None,
             },
@@ -220,20 +220,20 @@ If so, run {} to initialise the application configuration."#, "wukong applicatio
                     "Run \"chmod +rw {path}\" to provide read and write permissions."
                 )),
                 ApplicationConfigError::BadTomlData(_) => Some(
-                    "Check if the `.wukong.toml` file is in valid TOML format.\nThis usually happen when the config file is accidentally modified or there is a breaking change to the application config in the new version.\nYou may want to run \"wukong application init\" to re-initialise configuration again.".to_string()
+                    format!("Check if the `.wukong.toml` file is in valid TOML format.\nThis usually happens when the config file has accidentally been modified or there is a breaking change to the application config in the new version.\nYou may want to run {} to re-initialise configuration again.", "wukong application init".yellow())
                 ),
                 _ => None,
             },
             WKCliError::DevConfigError(error) => match error {
                 DevConfigError::ConfigSecretNotFound=> Some(
-                    "Run \"wukong config dev pull\" to pull the latest dev config.\n".to_string()
+                    format!("Run {} to pull the latest dev config.\n", "wukong dev config pull".yellow())
                ),
                 DevConfigError::InvalidSecretPath { config_path, annotation } => Some(format!(
                     "Please check the {annotation} in the config file: {config_path}"
                 )),
                 _ => None,
             },
-            WKCliError::AuthError(AuthError::OktaRefreshTokenExpired { .. }) => Some("Your refresh token is expired. Run \"wukong login\" to authenticate again.".to_string()),
+            WKCliError::AuthError(AuthError::OktaRefreshTokenExpired { .. }) => Some(format!("Your refresh token is expired. Run {} to authenticate again.", "wukong login".yellow())),
             _ => None,
         }
     }
