@@ -49,7 +49,6 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
         .prompt()?;
     }
 
-    eprintln!();
     eprintln!("\nNext is to configure the prod namespace for your application.\n");
     let mut namespaces: Vec<ApplicationNamespaceConfig> = Vec::new();
     namespaces
