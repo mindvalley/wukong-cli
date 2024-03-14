@@ -82,10 +82,7 @@ enum DisplayOrNot<T, String> {
 
 impl<T> DisplayOrNot<T, String> {
     pub fn is_display(&self) -> bool {
-        match self {
-            DisplayOrNot::Display(_) => true,
-            _ => false,
-        }
+        matches!(self, DisplayOrNot::Display(_))
     }
 
     pub fn is_not_display(&self) -> bool {
