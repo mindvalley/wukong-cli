@@ -6,11 +6,14 @@ pub mod deployment_github;
 pub mod kubernetes;
 pub mod pipeline;
 
-use self::deployment::{cd_pipeline_status_query, CdPipelineStatusQuery};
+use self::{
+    application::ApplicationConfigQuery,
+    deployment::{cd_pipeline_status_query, CdPipelineStatusQuery},
+};
 pub use self::{
     application::{
-        application_query, application_with_k8s_cluster_query, applications_query,
-        ApplicationQuery, ApplicationWithK8sClusterQuery, ApplicationsQuery,
+        application_config_query, application_query, application_with_k8s_cluster_query,
+        applications_query, ApplicationQuery, ApplicationWithK8sClusterQuery, ApplicationsQuery,
     },
     appsignal::{
         appsignal_apps_query, appsignal_average_error_rate_query, appsignal_average_latency_query,
@@ -747,6 +750,23 @@ impl WKClient {
             .map_err(|err| err.into())
     }
 
+    pub async fn fetch_application_config(
+        &self,
+        name: &str,
+    ) -> Result<application_config_query::ResponseData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        gql_client
+            .post_graphql::<ApplicationConfigQuery, _>(
+                &self.api_url,
+                application_config_query::Variables {
+                    name: name.to_string(),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
     /// Fetch the deploy markers from Appsignal
     /// the default value for `limit` is 1
     pub async fn fetch_appsignal_deploy_markers(
@@ -890,6 +910,7 @@ impl ErrorHandler for CanaryErrorHandler {
             // "github_ref_not_found" => {}
             // "github_commit_history_not_found" => {}
             "github_workflow_not_found" => APIError::GithubWorkflowNotFound,
+            "application_config_not_found" => APIError::ApplicationConfigNotFound,
             // "slack_webhook_not_configured" => {}
             _ => APIError::ResponseError {
                 code: original_error_code.to_string(),

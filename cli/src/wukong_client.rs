@@ -7,13 +7,14 @@ use log::debug;
 use std::collections::HashMap;
 use wukong_sdk::{
     graphql::{
-        application_query, application_with_k8s_cluster_query, applications_query,
-        appsignal_apps_query, appsignal_average_error_rate_query, appsignal_average_latency_query,
-        appsignal_average_throughput_query, appsignal_deploy_markers_query,
-        appsignal_exception_incidents_query, cd_pipeline_for_rollback_query,
-        cd_pipeline_github_query, cd_pipeline_query, cd_pipelines_query, changelogs_query,
-        ci_status_query, deploy_livebook, deployment::cd_pipeline_status_query, destroy_livebook,
-        execute_cd_pipeline, is_authorized_query, kubernetes_pods_query, livebook_resource_query,
+        application_config_query, application_query, application_with_k8s_cluster_query,
+        applications_query, appsignal_apps_query, appsignal_average_error_rate_query,
+        appsignal_average_latency_query, appsignal_average_throughput_query,
+        appsignal_deploy_markers_query, appsignal_exception_incidents_query,
+        cd_pipeline_for_rollback_query, cd_pipeline_github_query, cd_pipeline_query,
+        cd_pipelines_query, changelogs_query, ci_status_query, deploy_livebook,
+        deployment::cd_pipeline_status_query, destroy_livebook, execute_cd_pipeline,
+        is_authorized_query, kubernetes_pods_query, livebook_resource_query,
         multi_branch_pipeline_query, pipeline_query, pipelines_query, AppsignalTimeFrame,
     },
     services::{
@@ -451,5 +452,14 @@ impl WKClient {
         self.inner
             .fetch_gcloud_database_metrics(project_id, access_token)
             .await
+    }
+
+    #[wukong_telemetry(api_event = "fetch_application_config")]
+    pub async fn fetch_application_config(
+        &mut self,
+        name: &str,
+    ) -> Result<application_config_query::ResponseData, WKCliError> {
+        self.check_and_refresh_tokens().await?;
+        self.inner.fetch_application_config(name).await
     }
 }

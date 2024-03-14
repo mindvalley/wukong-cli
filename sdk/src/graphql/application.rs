@@ -24,6 +24,14 @@ pub struct ApplicationWithK8sClusterQuery;
 )]
 pub struct ApplicationsQuery;
 
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/graphql/schema.json",
+    query_path = "src/graphql/query/application_config.graphql",
+    response_derives = "Debug, Serialize, Deserialize"
+)]
+pub struct ApplicationConfigQuery;
+
 #[cfg(test)]
 mod test {
     use crate::{ApiChannel, WKClient, WKConfig};

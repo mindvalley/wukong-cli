@@ -15,24 +15,55 @@ use crate::{
 };
 use crossterm::style::Stylize;
 use heck::ToSnakeCase;
-use inquire::{required, CustomType, Text};
+use inquire::{required, CustomType};
 use std::fs;
-use wukong_sdk::graphql::appsignal_apps_query::AppsignalAppsQueryAppsignalApps;
+use wukong_sdk::{
+    error::{APIError, WKError},
+    graphql::{
+        application_config_query::{self, ApplicationConfigQueryApplicationConfig},
+        appsignal_apps_query::AppsignalAppsQueryAppsignalApps,
+    },
+};
 
 pub async fn handle_application_init(context: Context) -> Result<bool, WKCliError> {
     let config = Config::load_from_default_path()?;
     let mut wk_client = WKClient::for_channel(&config, &context.channel)?;
-    let mut appsignall_apps = None;
+    let mut appsignal_apps = None;
 
     println!("Welcome! Initializing per-repo configuration for your application.");
 
     let mut application_configs = ApplicationConfigs::new();
+    let mut name: String;
 
-    let name = Text::new("Name of your application")
-        .with_render_config(inquire_render_config())
-        .with_validator(required!("Application name is required"))
-        .with_placeholder("my-first-application")
-        .prompt()?;
+    loop {
+        name = inquire::Text::new("Name of your application")
+            .with_render_config(inquire_render_config())
+            .with_validator(required!("Application name is required"))
+            .with_placeholder("my-first-application")
+            .prompt()?;
+
+        let fetch_loader = new_spinner();
+        fetch_loader.set_message("Validating application name ...");
+
+        let has_application_config = get_application_config(&mut wk_client, &name)
+            .await?
+            .is_some();
+
+        fetch_loader.finish_and_clear();
+
+        if has_application_config {
+            println!(
+                "{}",
+                format!(
+                    " Application '{}' already exists. Please choose a different name",
+                    name
+                )
+                .red()
+            );
+        } else {
+            break;
+        }
+    }
 
     let workflows = get_workflows_from_current_dir()?;
     let mut excluded_workflows = Vec::new();
@@ -52,7 +83,7 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
     eprintln!("\nNext is to configure the prod namespace for your application.\n");
     let mut namespaces: Vec<ApplicationNamespaceConfig> = Vec::new();
     namespaces
-        .push(configure_namespace("prod".to_string(), &mut wk_client, &mut appsignall_apps).await?);
+        .push(configure_namespace("prod".to_string(), &mut wk_client, &mut appsignal_apps).await?);
 
     let addons = ["Elixir Livebook"];
     let selected_addons = inquire::MultiSelect::new("Addons", addons.to_vec())
@@ -72,8 +103,7 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
 
     if configure_staging_namespace {
         namespaces.push(
-            configure_namespace("staging".to_string(), &mut wk_client, &mut appsignall_apps)
-                .await?,
+            configure_namespace("staging".to_string(), &mut wk_client, &mut appsignal_apps).await?,
         );
     }
 
@@ -295,4 +325,24 @@ fn get_workflows_from_current_dir() -> Result<Vec<String>, WKCliError> {
     }
 
     Ok(workflow_names)
+}
+
+async fn get_application_config(
+    wk_client: &mut WKClient,
+    name: &str,
+) -> Result<Option<ApplicationConfigQueryApplicationConfig>, WKCliError> {
+    let application_config = match wk_client.fetch_application_config(name).await {
+        Ok(resp) => Ok(resp),
+        Err(err) => match &err {
+            WKCliError::WKSdkError(WKError::APIError(APIError::ApplicationConfigNotFound)) => {
+                Ok(application_config_query::ResponseData {
+                    application_config: None,
+                })
+            }
+            _ => Err(err),
+        },
+    }?
+    .application_config;
+
+    Ok(application_config)
 }
