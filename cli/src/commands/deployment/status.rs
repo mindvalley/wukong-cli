@@ -3,6 +3,8 @@ use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 use tabled::Tabled;
 use time_humanize::HumanTime;
+use wukong_telemetry::*;
+use wukong_telemetry_macro::*;
 
 use crate::{
     application_config::{
@@ -84,6 +86,7 @@ impl<T> Default for DisplayOrNot<T, String> {
     }
 }
 
+#[wukong_telemetry(command_event = "deployment_status")]
 pub async fn handle_status(
     context: Context,
     version: &DeploymentVersion,
