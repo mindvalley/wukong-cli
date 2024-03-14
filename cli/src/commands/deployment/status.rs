@@ -80,6 +80,16 @@ enum DisplayOrNot<T, String> {
     NotDisplay(String),
 }
 
+impl<T> DisplayOrNot<T, String> {
+    pub fn is_display(&self) -> bool {
+        matches!(self, DisplayOrNot::Display(_))
+    }
+
+    pub fn is_not_display(&self) -> bool {
+        !self.is_display()
+    }
+}
+
 impl<T> Default for DisplayOrNot<T, String> {
     fn default() -> Self {
         DisplayOrNot::NotDisplay("N/A".to_string())
@@ -202,11 +212,11 @@ pub async fn handle_status(
             );
         }
 
-        println!();
-        colored_println!("PERFORMANCE DATA");
+        if all_status.appsignal.is_display() || all_status.cloud_sql.is_display() {
+            println!();
+            colored_println!("PERFORMANCE DATA");
 
-        match all_status.appsignal {
-            DisplayOrNot::Display(ref appsignal) => {
+            if let DisplayOrNot::Display(ref appsignal) = all_status.appsignal {
                 let table = TableOutput {
                     title: None,
                     header: Some("APM".to_string()),
@@ -215,17 +225,8 @@ pub async fn handle_status(
 
                 colored_println!("{table}");
             }
-            DisplayOrNot::NotDisplay(ref reason) => {
-                println!();
-                colored_println!(
-                    "* Appsignal status is not displayed because {}",
-                    reason.bold()
-                );
-            }
-        }
 
-        match all_status.cloud_sql {
-            DisplayOrNot::Display(ref cloud_sql) => {
+            if let DisplayOrNot::Display(ref cloud_sql) = all_status.cloud_sql {
                 let table = TableOutput {
                     title: None,
                     header: Some("CloudSQL".to_string()),
@@ -234,39 +235,49 @@ pub async fn handle_status(
 
                 colored_println!("{table}");
             }
-            DisplayOrNot::NotDisplay(ref reason) => {
-                println!();
-                colored_println!(
-                    "* CloudSQL status is not displayed because {}",
-                    reason.bold()
-                );
-            }
-        }
 
-        colored_println!("To view more, open these magic links:");
-        if let DisplayOrNot::Display(ref appsignal) = all_status.appsignal {
-            colored_println!(
+            colored_println!("To view more, open these magic links:");
+            if let DisplayOrNot::Display(ref appsignal) = all_status.appsignal {
+                colored_println!(
                 "AppSignal: https://appsignal.com/mindvalley/sites/{}/exceptions?incident_marker=last",
                 appsignal.app_id,
             );
-        }
-        if let DisplayOrNot::Display(ref cloud_sql) = all_status.cloud_sql {
-            if cloud_sql.data.len() > 1 {
-                colored_println!("CloudSQL: ");
-                for instance in &cloud_sql.data {
-                    colored_println!(
+            }
+            if let DisplayOrNot::Display(ref cloud_sql) = all_status.cloud_sql {
+                if cloud_sql.data.len() > 1 {
+                    colored_println!("CloudSQL: ");
+                    for instance in &cloud_sql.data {
+                        colored_println!(
                     "- https://console.cloud.google.com/sql/instances/{}/system-insights?project={}",
                     instance.name,
                     cloud_sql.project,
                 );
-                }
-            } else {
-                colored_println!(
+                    }
+                } else {
+                    colored_println!(
                     "CloudSQL: https://console.cloud.google.com/sql/instances/{}/system-insights?project={}",
                     cloud_sql.data[0].name,
                     cloud_sql.project,
                 );
+                }
             }
+        }
+
+        if all_status.appsignal.is_not_display() || all_status.cloud_sql.is_not_display() {
+            println!();
+            if let DisplayOrNot::NotDisplay(reason) = all_status.appsignal {
+                colored_println!(
+                    "{}",
+                    format!("* Appsignal status is not displayed because {}", reason).yellow()
+                );
+            }
+            if let DisplayOrNot::NotDisplay(reason) = all_status.cloud_sql {
+                colored_println!(
+                    "{}",
+                    format!("* CloudSQL status is not displayed because {}", reason).yellow()
+                );
+            }
+            println!();
         }
     }
 
