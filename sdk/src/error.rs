@@ -6,8 +6,6 @@ pub enum WKError {
     APIError(#[from] APIError),
     #[error(transparent)]
     Io(#[from] ::std::io::Error),
-    #[error(transparent)]
-    Base64(#[from] base64::DecodeError),
     #[error("Error parsing \"{value}\"")]
     ChronoParseError {
         value: String,

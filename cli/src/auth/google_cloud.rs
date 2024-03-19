@@ -1,8 +1,8 @@
 use crate::config::Config;
+use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::{future::Future, pin::Pin};
 use time::{format_description, OffsetDateTime};
-use tonic::async_trait;
 use yup_oauth2::{
     authenticator_delegate::{DefaultInstalledFlowDelegate, InstalledFlowDelegate},
     hyper, hyper_rustls,

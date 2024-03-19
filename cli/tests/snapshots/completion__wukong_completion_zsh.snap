@@ -19,20 +19,8 @@ _wukong() {
 
     local context curcontext="$curcontext" state line
     _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -52,20 +40,8 @@ By default, it'\''ll only report errors.
         case $line[1] in
             (init)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -76,20 +52,8 @@ By default, it'\''ll only report errors.
 ;;
 (application)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -108,20 +72,8 @@ By default, it'\''ll only report errors.
         case $line[1] in
             (info)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -145,20 +97,8 @@ _arguments "${_arguments_options[@]}" \
 '*--exclude=[(allow multiple flags) Logs lines to exclude]:EXCLUDE: ' \
 '--errors[Only print out logs line with severity >= ERROR]' \
 '--url-mode[Generate the URL to view the logs in browser]' \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -169,20 +109,8 @@ By default, it'\''ll only report errors.
 ;;
 (instances)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -203,20 +131,8 @@ By default, it'\''ll only report errors.
 _arguments "${_arguments_options[@]}" \
 '--namespace=[(optional) The namespace to list the running instances]:NAMESPACE:(prod staging)' \
 '--version=[(optional) The version of the application to filter the returning running instances]:VERSION:(blue green)' \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -229,20 +145,8 @@ By default, it'\''ll only report errors.
 _arguments "${_arguments_options[@]}" \
 '--namespace=[(optional) The namespace to list the running instances]:NAMESPACE:(prod staging)' \
 '--version=[(optional) The version of the application to filter the returning running instances]:VERSION:(blue green)' \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -285,20 +189,8 @@ esac
 ;;
 (init)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -369,20 +261,8 @@ esac
 ;;
 (pipeline)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -401,20 +281,8 @@ By default, it'\''ll only report errors.
         case $line[1] in
             (list)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -425,20 +293,8 @@ By default, it'\''ll only report errors.
 ;;
 (describe)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -452,20 +308,8 @@ By default, it'\''ll only report errors.
 _arguments "${_arguments_options[@]}" \
 '--repo-url=[Repository url]:REPO_URL: ' \
 '--branch=[Branch name]:BRANCH: ' \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -512,20 +356,8 @@ esac
 ;;
 (deployment)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -544,20 +376,8 @@ By default, it'\''ll only report errors.
         case $line[1] in
             (list)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -571,20 +391,8 @@ _arguments "${_arguments_options[@]}" \
 '--namespace=[The namespace to deploy to]:NAMESPACE:(prod staging)' \
 '--version=[The version that the deployment will perform against]:VERSION:(blue green)' \
 '--artifact=[The build artifact that the deployment will use]:ARTIFACT: ' \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -597,20 +405,8 @@ By default, it'\''ll only report errors.
 _arguments "${_arguments_options[@]}" \
 '--namespace=[The namespace to deploy to]:NAMESPACE:(prod staging)' \
 '--version=[The version that the deployment will perform against]:VERSION:(blue green)' \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -622,20 +418,8 @@ By default, it'\''ll only report errors.
 (status)
 _arguments "${_arguments_options[@]}" \
 '--version=[The version of the deployment]:VERSION:(blue green)' \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -686,20 +470,8 @@ esac
 ;;
 (dev)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -718,20 +490,8 @@ By default, it'\''ll only report errors.
         case $line[1] in
             (config)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -750,20 +510,8 @@ By default, it'\''ll only report errors.
         case $line[1] in
             (push)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -774,20 +522,8 @@ By default, it'\''ll only report errors.
 ;;
 (diff)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -798,20 +534,8 @@ By default, it'\''ll only report errors.
 ;;
 (pull)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -823,20 +547,8 @@ By default, it'\''ll only report errors.
 ;;
 (lint)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -944,20 +656,8 @@ esac
 ;;
 (config)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -976,20 +676,8 @@ By default, it'\''ll only report errors.
         case $line[1] in
             (list)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -1000,20 +688,8 @@ By default, it'\''ll only report errors.
 ;;
 (set)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -1026,20 +702,8 @@ By default, it'\''ll only report errors.
 ;;
 (get)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -1087,20 +751,8 @@ esac
 ;;
 (login)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -1111,20 +763,8 @@ By default, it'\''ll only report errors.
 ;;
 (google)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -1143,20 +783,8 @@ By default, it'\''ll only report errors.
         case $line[1] in
             (login)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -1195,20 +823,8 @@ esac
 ;;
 (completion)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
@@ -1220,20 +836,8 @@ By default, it'\''ll only report errors.
 ;;
 (tui)
 _arguments "${_arguments_options[@]}" \
-'*-v[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
-'*--verbose[Use verbos output. More output per occurrence.
-
-By default, it'\''ll only report errors.
-\`-v\` show warnings
-\`-vv\` show info
-\`-vvv\` show debug
-\`-vvvv\` show trace]' \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
 '(-v --verbose)*--quiet[Do not print log message]' \
 '--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
