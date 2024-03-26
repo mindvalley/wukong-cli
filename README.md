@@ -23,7 +23,7 @@
   <img alt="Wukong CLI" src="./.github/img/wukong_help.png">
 </div>
 
-## The Idea
+## THE IDEA
 
 The Wukong CLI is a set of tools to manages Mindvalley DevOps resources. Its goal is to provide a one-stop shop for developers to interact with the Mindvalley DevOps ecosystem. By centralizing different tasks on different tools into a single CLI, It will solve these problems when it comes to adopting DevOps practices:
 
@@ -33,7 +33,22 @@ The Wukong CLI is a set of tools to manages Mindvalley DevOps resources. Its goa
 > **Note**
 > You can read more from [here](https://mindvalley.atlassian.net/wiki/spaces/PXP/pages/450396161/PD2+-+A+Swiss-army+Knife+CLI+For+Mindvalley+Developers)
 
-## INSTALLATION  
+## BREAKING CHANGES !!!!
+
+In the latest version of Wukong CLI, we've made a significant change to how the CLI operates. Now, the CLI requires to be run inside a working folder that contains the `.wukong.toml` configuration file.
+
+To use the CLI, navigate to your project's root directory (or any directory containing the `.wukong.toml` file) in your terminal. Then, you can run the Wukong CLI commands as usual.
+
+For example:
+
+```sh
+cd /path/to/your/project
+wukong command
+```
+
+Read more about the reasons behind this breaking change [here](guides/upgrade_from_2.0.x_to_2.1.0.md).
+
+## INSTALLATION
 
 For installation on various platforms, you can follow the detailed instructions provided in the [Installation](https://github.com/mindvalley/wukong-cli/wiki/Installation) page. For a quick installation using Homebrew, run the following command:
 
@@ -43,7 +58,7 @@ brew update
 brew install wukong
 ```
 
-Additionally, you can enable completions on popular shell like bash/zsh by following [this guide](https://docs.brew.sh/Shell-Completion).  
+Additionally, you can enable completions on popular shell like bash/zsh by following [this guide](https://docs.brew.sh/Shell-Completion).
 
 ## GUIDES
 
