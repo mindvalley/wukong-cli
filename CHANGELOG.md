@@ -1,5 +1,81 @@
 # Changelog
 
+## [Unreleased](https://github.com/mindvalley/wukong-cli/tree/HEAD)
+
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/2.1.0...HEAD)
+
+**Merged pull requests:**
+
+- Update documentation about the breaking changes in version 2.1.0. [\#212](https://github.com/mindvalley/wukong-cli/pull/212) ([onimsha](https://github.com/onimsha))
+
+## [2.1.0](https://github.com/mindvalley/wukong-cli/tree/2.1.0) (2024-03-21)
+
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/2.0.2...2.1.0)
+
+**Implemented enhancements:**
+
+- chore: cleanup dependencies and use workspace dependencies for share … [\#210](https://github.com/mindvalley/wukong-cli/pull/210) ([jk-gan](https://github.com/jk-gan))
+- PXP-685: \[CLI\] Improve the warning when CloudSQL integration is not enabled [\#209](https://github.com/mindvalley/wukong-cli/pull/209) ([jk-gan](https://github.com/jk-gan))
+
+**Security fixes:**
+
+- deps: upgrade dependencies to patch security warnings [\#207](https://github.com/mindvalley/wukong-cli/pull/207) ([jk-gan](https://github.com/jk-gan))
+
+**Merged pull requests:**
+
+- Bump version and dependencies [\#211](https://github.com/mindvalley/wukong-cli/pull/211) ([onimsha](https://github.com/onimsha))
+- chore: add telemetry for deployment status command [\#208](https://github.com/mindvalley/wukong-cli/pull/208) ([jk-gan](https://github.com/jk-gan))
+- PXP-671: \[CLI\] Implement the CloudSQL integration to the deployment status command [\#206](https://github.com/mindvalley/wukong-cli/pull/206) ([jk-gan](https://github.com/jk-gan))
+- PXP-678: \[CLI\] Integrate application init name validation [\#205](https://github.com/mindvalley/wukong-cli/pull/205) ([mfauzaan](https://github.com/mfauzaan))
+- chore\(deps\): bump mio from 0.8.10 to 0.8.11 [\#204](https://github.com/mindvalley/wukong-cli/pull/204) ([dependabot[bot]](https://github.com/apps/dependabot))
+- PXP-676: \[CLI\] Skip workflow step on application init if empty [\#203](https://github.com/mindvalley/wukong-cli/pull/203) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-660 feat: add cloudsql database metrics panel [\#202](https://github.com/mindvalley/wukong-cli/pull/202) ([Fadhil](https://github.com/Fadhil))
+- PXP-675: \[CLI\] Make canary flag enabled by default [\#201](https://github.com/mindvalley/wukong-cli/pull/201) ([jk-gan](https://github.com/jk-gan))
+- chore\(deps\): bump mio from 0.8.8 to 0.8.11 in /sdk [\#200](https://github.com/mindvalley/wukong-cli/pull/200) ([dependabot[bot]](https://github.com/apps/dependabot))
+- PXP-672: \[CLI\] Include .yaml file types in application init workflow list [\#199](https://github.com/mindvalley/wukong-cli/pull/199) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-670: \[CLI\] Implement the AppSignal integration to the deployment status command [\#198](https://github.com/mindvalley/wukong-cli/pull/198) ([jk-gan](https://github.com/jk-gan))
+- Fix/handle broken google cloud welcome screen on tui [\#197](https://github.com/mindvalley/wukong-cli/pull/197) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-650: \[CLI\] Develop a panel on the TUI to display AppSignal data [\#196](https://github.com/mindvalley/wukong-cli/pull/196) ([jk-gan](https://github.com/jk-gan))
+- chore\(github\): update github actions [\#195](https://github.com/mindvalley/wukong-cli/pull/195) ([leylmordor](https://github.com/leylmordor))
+- Fix: Apply new clippy changes for for rust version \(1.26.0\) [\#194](https://github.com/mindvalley/wukong-cli/pull/194) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-664 refactor: replace global init with inquire library [\#193](https://github.com/mindvalley/wukong-cli/pull/193) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-644 feat: add application init command [\#192](https://github.com/mindvalley/wukong-cli/pull/192) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-659 feat: add cloud sql instances and metric clients from google protobuf… [\#191](https://github.com/mindvalley/wukong-cli/pull/191) ([Fadhil](https://github.com/Fadhil))
+- chore\(deps\): bump h2 from 0.3.19 to 0.3.24 in /sdk [\#187](https://github.com/mindvalley/wukong-cli/pull/187) ([dependabot[bot]](https://github.com/apps/dependabot))
+- PXP-638: \[CLI\] Implement new config [\#183](https://github.com/mindvalley/wukong-cli/pull/183) ([mfauzaan](https://github.com/mfauzaan))
+
+## [2.0.2](https://github.com/mindvalley/wukong-cli/tree/2.0.2) (2024-01-22)
+
+[Full Changelog](https://github.com/mindvalley/wukong-cli/compare/2.0.1...2.0.2)
+
+**Implemented enhancements:**
+
+- PXP-633: Better error handling if there is failure on JSON decode  [\#180](https://github.com/mindvalley/wukong-cli/pull/180) ([mfauzaan](https://github.com/mfauzaan))
+
+**Fixed bugs:**
+
+- PXP-639: \[CLI\] Ctrl-e stopped working on the latest codebase [\#175](https://github.com/mindvalley/wukong-cli/pull/175) ([jk-gan](https://github.com/jk-gan))
+
+**Merged pull requests:**
+
+- Add artifact download path to release workflow [\#190](https://github.com/mindvalley/wukong-cli/pull/190) ([onimsha](https://github.com/onimsha))
+- Fix a typo in the download action [\#189](https://github.com/mindvalley/wukong-cli/pull/189) ([onimsha](https://github.com/onimsha))
+- Update upload-artifact action to v4 [\#188](https://github.com/mindvalley/wukong-cli/pull/188) ([onimsha](https://github.com/onimsha))
+- Update tests and dependencies [\#186](https://github.com/mindvalley/wukong-cli/pull/186) ([onimsha](https://github.com/onimsha))
+- PXP-663: \[CLI\] Depreciate old error handling [\#185](https://github.com/mindvalley/wukong-cli/pull/185) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-662 fix: pipeline status request does not need builds [\#184](https://github.com/mindvalley/wukong-cli/pull/184) ([Fadhil](https://github.com/Fadhil))
+- PXP-638: \[CLI\] Reached API limits on Google Logging [\#182](https://github.com/mindvalley/wukong-cli/pull/182) ([jk-gan](https://github.com/jk-gan))
+- PXP-641: Handle event sender panic [\#181](https://github.com/mindvalley/wukong-cli/pull/181) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-636: \[CLI\] Support a hotkey to force reload the TUI [\#179](https://github.com/mindvalley/wukong-cli/pull/179) ([jk-gan](https://github.com/jk-gan))
+- chore\(deps\): bump openssl from 0.10.59 to 0.10.60 [\#178](https://github.com/mindvalley/wukong-cli/pull/178) ([dependabot[bot]](https://github.com/apps/dependabot))
+- chore\(deps\): bump openssl from 0.10.55 to 0.10.60 in /sdk [\#177](https://github.com/mindvalley/wukong-cli/pull/177) ([dependabot[bot]](https://github.com/apps/dependabot))
+- PXP-640: \[CLI\] Log panel panic when the start index out of bound [\#176](https://github.com/mindvalley/wukong-cli/pull/176) ([jk-gan](https://github.com/jk-gan))
+- PXP-635: \[CLI\] Terminate the TUI when there is a panic on TUI [\#174](https://github.com/mindvalley/wukong-cli/pull/174) ([mfauzaan](https://github.com/mfauzaan))
+- PXP-634:  \[CLI\] Add welcome before showing TUI panels  [\#173](https://github.com/mindvalley/wukong-cli/pull/173) ([mfauzaan](https://github.com/mfauzaan))
+- Update README to add installation steps [\#172](https://github.com/mindvalley/wukong-cli/pull/172) ([onimsha](https://github.com/onimsha))
+- Update CHANGELOG [\#171](https://github.com/mindvalley/wukong-cli/pull/171) ([onimsha](https://github.com/onimsha))
+- PXP-617: \[CLI\] Logs Panel: Support line wrapping [\#170](https://github.com/mindvalley/wukong-cli/pull/170) ([jk-gan](https://github.com/jk-gan))
+
 ## [2.0.1](https://github.com/mindvalley/wukong-cli/tree/2.0.1) (2023-11-06)
 
 [Full Changelog](https://github.com/mindvalley/wukong-cli/compare/2.0.0-alpha2...2.0.1)
