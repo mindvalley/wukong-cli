@@ -10,6 +10,12 @@ pub enum AppsignalTimeFrame {
     R30D,
 }
 
+pub enum AppsignalIncidentState {
+    OPEN,
+    WIP,
+    CLOSED,
+}
+
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "src/graphql/schema.json",
@@ -97,6 +103,18 @@ pub struct AppsignalAppsQuery;
     response_derives = "Debug, Serialize, Deserialize"
 )]
 pub struct AppsignalExceptionIncidentsQuery;
+
+impl From<AppsignalIncidentState> for appsignal_exception_incidents_query::AppsignalIncidentState {
+    fn from(value: AppsignalIncidentState) -> Self {
+        use appsignal_exception_incidents_query::AppsignalIncidentState as WukongAPIAppsignalIncidentState;
+
+        match value {
+            AppsignalIncidentState::OPEN => WukongAPIAppsignalIncidentState::OPEN,
+            AppsignalIncidentState::WIP => WukongAPIAppsignalIncidentState::WIP,
+            AppsignalIncidentState::CLOSED => WukongAPIAppsignalIncidentState::CLOSED,
+        }
+    }
+}
 
 #[derive(GraphQLQuery)]
 #[graphql(

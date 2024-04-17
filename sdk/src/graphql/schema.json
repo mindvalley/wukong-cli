@@ -1914,6 +1914,35 @@
           "possibleTypes": null
         },
         {
+          "description": "AppSignal incident state",
+          "enumValues": [
+            {
+              "deprecationReason": null,
+              "description": "Closed",
+              "isDeprecated": false,
+              "name": "CLOSED"
+            },
+            {
+              "deprecationReason": null,
+              "description": "Open",
+              "isDeprecated": false,
+              "name": "OPEN"
+            },
+            {
+              "deprecationReason": null,
+              "description": "Work in progress",
+              "isDeprecated": false,
+              "name": "WIP"
+            }
+          ],
+          "fields": null,
+          "inputFields": null,
+          "interfaces": null,
+          "kind": "ENUM",
+          "name": "AppsignalIncidentState",
+          "possibleTypes": null
+        },
+        {
           "description": null,
           "enumValues": null,
           "fields": [
@@ -4419,6 +4448,16 @@
                       }
                     }
                   }
+                },
+                {
+                  "defaultValue": "OPEN",
+                  "description": null,
+                  "name": "state",
+                  "type": {
+                    "kind": "ENUM",
+                    "name": "AppsignalIncidentState",
+                    "ofType": null
+                  }
                 }
               ],
               "deprecationReason": null,
@@ -4576,6 +4615,16 @@
                         }
                       }
                     }
+                  }
+                },
+                {
+                  "defaultValue": "OPEN",
+                  "description": null,
+                  "name": "state",
+                  "type": {
+                    "kind": "ENUM",
+                    "name": "AppsignalIncidentState",
+                    "ofType": null
                   }
                 }
               ],

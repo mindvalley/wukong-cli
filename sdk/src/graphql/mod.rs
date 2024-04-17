@@ -8,6 +8,7 @@ pub mod pipeline;
 
 use self::{
     application::ApplicationConfigQuery,
+    appsignal::AppsignalIncidentState,
     deployment::{cd_pipeline_status_query, CdPipelineStatusQuery},
 };
 pub use self::{
@@ -794,6 +795,7 @@ impl WKClient {
         namespaces: Vec<String>,
         limit: Option<i64>,
         marker: Option<String>,
+        state: Option<AppsignalIncidentState>,
     ) -> Result<appsignal_exception_incidents_query::ResponseData, WKError> {
         let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
 
@@ -805,6 +807,7 @@ impl WKClient {
                     namespaces,
                     limit,
                     marker,
+                    state: state.map(|s| s.into()),
                 },
             )
             .await
