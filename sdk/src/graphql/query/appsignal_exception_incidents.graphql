@@ -1,5 +1,17 @@
-query AppsignalExceptionIncidentsQuery($appId: String!, $namespaces: [String!]!, $limit: Int, $marker: String) {
-    appsignalExceptionIncidents(appId: $appId, namespaces: $namespaces, limit: $limit, marker: $marker) {
+query AppsignalExceptionIncidentsQuery(
+    $appId: String!
+    $namespaces: [String!]!
+    $limit: Int
+    $marker: String
+    $state: AppsignalIncidentState
+) {
+    appsignalExceptionIncidents(
+        appId: $appId
+        namespaces: $namespaces
+        limit: $limit
+        marker: $marker
+        state: $state
+    ) {
         id
         name
         count

@@ -3,6 +3,7 @@ use owo_colors::OwoColorize;
 use serde::{Deserialize, Serialize};
 use tabled::Tabled;
 use time_humanize::HumanTime;
+use wukong_sdk::graphql::appsignal::AppsignalIncidentState;
 use wukong_telemetry::*;
 use wukong_telemetry_macro::*;
 
@@ -341,18 +342,40 @@ async fn get_appsignal_status(
         .await?
         .appsignal_deploy_markers;
     if let Some(latest_deploy_marker) = appsignal_deploy_markers.first() {
-        let appsignal_exception_incidents = wk_client
+        let open_appsignal_exception_incidents = wk_client
             .fetch_appsignal_exception_incidents(
                 &app_id,
                 vec![],
                 None,
                 Some(latest_deploy_marker.id.clone()),
+                Some(AppsignalIncidentState::OPEN),
             )
             .await?
             .appsignal_exception_incidents;
 
-        let open_count = appsignal_exception_incidents.len();
-        let in_deploy_count = appsignal_exception_incidents
+        let wip_appsignal_exception_incidents = wk_client
+            .fetch_appsignal_exception_incidents(
+                &app_id,
+                vec![],
+                None,
+                Some(latest_deploy_marker.id.clone()),
+                Some(AppsignalIncidentState::WIP),
+            )
+            .await?
+            .appsignal_exception_incidents;
+
+        let open_count = open_appsignal_exception_incidents.len();
+        let mut in_deploy_count =
+            open_appsignal_exception_incidents
+                .iter()
+                .fold(0, |acc, incident| {
+                    if let Some(count) = incident.per_marker_count {
+                        acc + count
+                    } else {
+                        acc
+                    }
+                });
+        in_deploy_count += wip_appsignal_exception_incidents
             .iter()
             .fold(0, |acc, incident| {
                 if let Some(count) = incident.per_marker_count {
@@ -361,7 +384,11 @@ async fn get_appsignal_status(
                     acc
                 }
             });
-        let total_count = appsignal_exception_incidents
+
+        let mut total_count = open_appsignal_exception_incidents
+            .iter()
+            .fold(0, |acc, incident| acc + incident.count);
+        total_count += wip_appsignal_exception_incidents
             .iter()
             .fold(0, |acc, incident| acc + incident.count);
 
