@@ -2,6 +2,7 @@
 use crate::utils::{meta_ext::MetaExt, nested_meta_ext::NestedMeta};
 
 pub trait AttributeArgsExt {
+    #[allow(dead_code)]
     fn get_key_value_pair(&self) -> (String, String);
     fn get_value(&self, key: &str) -> Option<String>;
 }
