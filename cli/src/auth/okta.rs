@@ -35,14 +35,6 @@ static OKTA_CLIENT_ID: &str = "0oakfxaegyAV5JDD5357";
 struct OktaClaims;
 impl AdditionalClaims for OktaClaims {}
 
-#[derive(Debug, Clone)]
-pub struct TokenInfo {
-    pub id_token: String,
-    pub access_token: String,
-    pub expiry_time: String,
-    pub refresh_token: String,
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TokenIntrospection {
     pub active: bool,

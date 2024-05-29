@@ -103,7 +103,7 @@ async fn handle_gcloud_auth(mut config: Config) -> Result<Config, WKCliError> {
             Config::load_from_path(TMP_CONFIG_FILE.as_ref().expect("Unable to get tmp path"))
                 .expect("Unable to load tmp config");
 
-        config.auth.google_cloud = updated_config.auth.google_cloud.clone();
+        config.auth.google_cloud.clone_from(&updated_config.auth.google_cloud);
 
         tmp_config
             .remove_config_from_path()
