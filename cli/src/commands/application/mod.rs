@@ -69,13 +69,8 @@ pub enum ApplicationVersion {
 }
 
 impl Display for ApplicationVersion {
-    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ApplicationVersion::Blue => "blue".to_string(),
-            ApplicationVersion::Green => "green".to_string(),
-        };
-
-        Ok(())
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self)
     }
 }
 
@@ -86,13 +81,8 @@ pub enum ApplicationNamespace {
 }
 
 impl Display for ApplicationNamespace {
-    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ApplicationNamespace::Prod => "prod".to_string(),
-            ApplicationNamespace::Staging => "staging".to_string(),
-        };
-
-        Ok(())
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self)
     }
 }
 

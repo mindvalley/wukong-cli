@@ -64,13 +64,11 @@ pub enum DeploymentVersion {
 }
 
 impl Display for DeploymentVersion {
-    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DeploymentVersion::Blue => "Blue".to_string(),
-            DeploymentVersion::Green => "Green".to_string(),
-        };
-
-        Ok(())
+            DeploymentVersion::Blue => write!(f, "{}", "Blue".to_string()),
+            DeploymentVersion::Green=> write!(f, "{}", "Green".to_string())
+        }
     }
 }
 
@@ -81,13 +79,11 @@ pub enum DeploymentNamespace {
 }
 
 impl Display for DeploymentNamespace {
-    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DeploymentNamespace::Prod => "Prod".to_string(),
-            DeploymentNamespace::Staging => "Staging".to_string(),
-        };
-
-        Ok(())
+            DeploymentNamespace::Prod => write!(f, "{}", "Prod".to_string()),
+            DeploymentNamespace::Staging => write!(f, "{}", "Staging".to_string())
+        }
     }
 }
 
