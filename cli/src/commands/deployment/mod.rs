@@ -67,7 +67,7 @@ impl Display for DeploymentVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             DeploymentVersion::Blue => write!(f, "{}", "Blue".to_string()),
-            DeploymentVersion::Green=> write!(f, "{}", "Green".to_string())
+            DeploymentVersion::Green => write!(f, "{}", "Green".to_string()),
         }
     }
 }
@@ -82,7 +82,7 @@ impl Display for DeploymentNamespace {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             DeploymentNamespace::Prod => write!(f, "{}", "Prod".to_string()),
-            DeploymentNamespace::Staging => write!(f, "{}", "Staging".to_string())
+            DeploymentNamespace::Staging => write!(f, "{}", "Staging".to_string()),
         }
     }
 }
