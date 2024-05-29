@@ -179,13 +179,13 @@ async fn configure_namespace(
     wk_client: &mut WKClient,
     appsignal_apps: &mut Option<Vec<AppsignalAppsQueryAppsignalApps>>,
 ) -> Result<ApplicationNamespaceConfig, WKCliError> {
-    let spinnaker_application_name = inquire::Text::new("Pipeline application name")
+    let application_name = inquire::Text::new("Pipeline application name")
         .with_render_config(inquire_render_config())
         .with_placeholder(" Optional")
         .with_help_message("Leave it blank to disable Spinnaker integration")
         .prompt()?;
 
-    let spinnaker_pipeline_name = inquire::Text::new("Pipeline name")
+    let pipeline_name = inquire::Text::new("Pipeline name")
         .with_render_config(inquire_render_config())
         .with_placeholder(" Optional")
         .with_help_message("Leave it blank to disable Spinnaker integration")
@@ -279,15 +279,15 @@ async fn configure_namespace(
             target: namespace_type.clone(),
             base_replica,
             rollout_strategy: rollout_strategy.to_string().to_snake_case(),
-            spinnaker_application_name: if spinnaker_application_name.is_empty() {
+            application_name: if application_name.is_empty() {
                 None
             } else {
-                Some(spinnaker_application_name)
+                Some(application_name)
             },
-            spinnaker_pipeline_name: if spinnaker_pipeline_name.is_empty() {
+            pipeline_name: if pipeline_name.is_empty() {
                 None
             } else {
-                Some(spinnaker_pipeline_name)
+                Some(pipeline_name)
             },
         }),
         appsignal: if setup_appsignal_environment {
