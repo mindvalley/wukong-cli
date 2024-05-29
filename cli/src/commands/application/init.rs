@@ -179,13 +179,13 @@ async fn configure_namespace(
     wk_client: &mut WKClient,
     appsignal_apps: &mut Option<Vec<AppsignalAppsQueryAppsignalApps>>,
 ) -> Result<ApplicationNamespaceConfig, WKCliError> {
-    let spinnaker_application_name = inquire::Text::new("Spinnaker application name")
+    let spinnaker_application_name = inquire::Text::new("Pipeline application name")
         .with_render_config(inquire_render_config())
         .with_placeholder(" Optional")
         .with_help_message("Leave it blank to disable Spinnaker integration")
         .prompt()?;
 
-    let spinnaker_pipeline_name = inquire::Text::new("Spinnaker pipeline name")
+    let spinnaker_pipeline_name = inquire::Text::new("Pipeline name")
         .with_render_config(inquire_render_config())
         .with_placeholder(" Optional")
         .with_help_message("Leave it blank to disable Spinnaker integration")
