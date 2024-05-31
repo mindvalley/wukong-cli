@@ -173,7 +173,7 @@ impl Display for LogEntry {
                 let keys = payload.fields.keys().collect::<Vec<_>>();
                 let value = keys
                     .iter()
-                    .filter(|k| payload.fields.get(**k).is_some())
+                    .filter(|k| payload.fields.contains_key(**k))
                     .map(|k| {
                         format!(
                             "{}: {}",
@@ -216,7 +216,7 @@ fn display_prost_type_value_kind(kind: Option<prost_types::value::Kind>) -> Stri
                 let keys = value.fields.keys().collect::<Vec<_>>();
                 let value = keys
                     .iter()
-                    .filter(|k| value.fields.get(**k).is_some())
+                    .filter(|k| value.fields.contains_key(**k))
                     .map(|k| {
                         format!(
                             "{}: {}",

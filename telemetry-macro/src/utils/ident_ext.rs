@@ -2,6 +2,7 @@
 
 pub trait IdentExt {
     #[allow(clippy::wrong_self_convention)]
+    #[allow(dead_code)]
     fn from_string(&self, string: &str) -> Self;
 }
 

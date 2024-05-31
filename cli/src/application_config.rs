@@ -38,6 +38,8 @@ pub struct ApplicationNamespaceDeliveryConfig {
     pub target: String,
     pub base_replica: u32,
     pub rollout_strategy: String,
+    pub pipeline_name: Option<String>,
+    pub application_name: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]

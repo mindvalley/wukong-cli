@@ -179,6 +179,18 @@ async fn configure_namespace(
     wk_client: &mut WKClient,
     appsignal_apps: &mut Option<Vec<AppsignalAppsQueryAppsignalApps>>,
 ) -> Result<ApplicationNamespaceConfig, WKCliError> {
+    let application_name = inquire::Text::new("Pipeline application name")
+        .with_render_config(inquire_render_config())
+        .with_placeholder(" Optional")
+        .with_help_message("Leave it blank to disable Spinnaker integration")
+        .prompt()?;
+
+    let pipeline_name = inquire::Text::new("Pipeline name")
+        .with_render_config(inquire_render_config())
+        .with_placeholder(" Optional")
+        .with_help_message("Leave it blank to disable Spinnaker integration")
+        .prompt()?;
+
     let rollup_strategy_options = ["Rolling Upgrade", "Blue/Green", "Canary"];
     let rollout_strategy =
         inquire::Select::new("Rollup strategy", rollup_strategy_options.to_vec())
@@ -196,6 +208,7 @@ async fn configure_namespace(
     let mut selected_appsignal_namespace = None;
     let setup_appsignal_environment =
         inquire::Confirm::new("Do you want to setup AppSignal integration?")
+            .with_render_config(inquire_render_config())
             .with_default(false)
             .with_help_message("This is Optional. You can setup this later.")
             .prompt()?;
@@ -266,6 +279,16 @@ async fn configure_namespace(
             target: namespace_type.clone(),
             base_replica,
             rollout_strategy: rollout_strategy.to_string().to_snake_case(),
+            application_name: if application_name.is_empty() {
+                None
+            } else {
+                Some(application_name)
+            },
+            pipeline_name: if pipeline_name.is_empty() {
+                None
+            } else {
+                Some(pipeline_name)
+            },
         }),
         appsignal: if setup_appsignal_environment {
             Some(ApplicationNamespaceAppsignalConfig {

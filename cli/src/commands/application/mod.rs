@@ -3,6 +3,8 @@ mod init;
 mod instances;
 mod logs;
 
+use std::fmt::Display;
+
 pub use self::logs::generate_filter;
 use self::{init::handle_application_init, logs::handle_logs};
 use clap::{command, Args, Subcommand, ValueEnum};
@@ -66,11 +68,15 @@ pub enum ApplicationVersion {
     Green,
 }
 
-impl ToString for ApplicationVersion {
-    fn to_string(&self) -> String {
+impl Display for ApplicationVersion {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ApplicationVersion::Blue => "blue".to_string(),
-            ApplicationVersion::Green => "green".to_string(),
+            ApplicationVersion::Blue => {
+                write!(f, "Blue")
+            }
+            ApplicationVersion::Green => {
+                write!(f, "Green")
+            }
         }
     }
 }
@@ -81,11 +87,15 @@ pub enum ApplicationNamespace {
     Staging,
 }
 
-impl ToString for ApplicationNamespace {
-    fn to_string(&self) -> String {
+impl Display for ApplicationNamespace {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ApplicationNamespace::Prod => "prod".to_string(),
-            ApplicationNamespace::Staging => "staging".to_string(),
+            ApplicationNamespace::Prod => {
+                write!(f, "Prod")
+            }
+            ApplicationNamespace::Staging => {
+                write!(f, "Staging")
+            }
         }
     }
 }

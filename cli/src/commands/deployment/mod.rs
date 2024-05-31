@@ -3,6 +3,8 @@ pub mod list;
 pub mod rollback;
 pub mod status;
 
+use std::fmt::Display;
+
 use execute::handle_execute;
 use list::handle_list;
 use rollback::handle_rollback;
@@ -61,11 +63,15 @@ pub enum DeploymentVersion {
     Green,
 }
 
-impl ToString for DeploymentVersion {
-    fn to_string(&self) -> String {
+impl Display for DeploymentVersion {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DeploymentVersion::Blue => "Blue".to_string(),
-            DeploymentVersion::Green => "Green".to_string(),
+            DeploymentVersion::Blue => {
+                write!(f, "Blue")
+            }
+            DeploymentVersion::Green => {
+                write!(f, "Green")
+            }
         }
     }
 }
@@ -76,11 +82,15 @@ pub enum DeploymentNamespace {
     Staging,
 }
 
-impl ToString for DeploymentNamespace {
-    fn to_string(&self) -> String {
+impl Display for DeploymentNamespace {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DeploymentNamespace::Prod => "Prod".to_string(),
-            DeploymentNamespace::Staging => "Staging".to_string(),
+            DeploymentNamespace::Prod => {
+                write!(f, "Prod")
+            }
+            DeploymentNamespace::Staging => {
+                write!(f, "Staging")
+            }
         }
     }
 }
