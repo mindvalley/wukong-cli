@@ -26,6 +26,7 @@ pub struct ApplicationNamespaceConfig {
     pub appsignal: Option<ApplicationNamespaceAppsignalConfig>,
     pub honeycomb: Option<ApplicationNamespaceHoneycombConfig>,
     pub cloudsql: Option<ApplicationNamespaceCloudsqlConfig>,
+    pub slack_notifications: Option<ApplicationNamespaceSlackNotificationsConfig>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -54,6 +55,12 @@ pub struct ApplicationNamespaceAppsignalConfig {
 pub struct ApplicationNamespaceHoneycombConfig {
     pub enable: bool,
     pub dataset: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct ApplicationNamespaceSlackNotificationsConfig {
+    pub enable: bool,
+    pub channel: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
