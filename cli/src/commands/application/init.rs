@@ -4,7 +4,7 @@ use crate::{
         ApplicationConfigs, ApplicationNamespaceAppsignalConfig, ApplicationNamespaceBuildConfig,
         ApplicationNamespaceCloudsqlConfig, ApplicationNamespaceConfig,
         ApplicationNamespaceDeliveryConfig, ApplicationNamespaceHoneycombConfig,
-        ApplicationWorkflowConfig,
+        ApplicationNamespaceSlackNotificationsConfig, ApplicationWorkflowConfig,
     },
     commands::Context,
     config::Config,
@@ -270,6 +270,12 @@ async fn configure_namespace(
         .with_help_message("Leave it blank to disable Google CloudSQL integration")
         .prompt()?;
 
+    let slack_notifications = inquire::Text::new("Slack #channel for notifications")
+        .with_render_config(inquire_render_config())
+        .with_placeholder(" Optional")
+        .with_help_message("Leave it blank to disable Slack notifications. Use 'channel-name' format without the '#'. \n\nIt is your responsibility to ensure the channel name exists, and to add the bot integration if the channel is private.")
+        .prompt()?;
+
     Ok(ApplicationNamespaceConfig {
         namespace_type: namespace_type.clone(),
         build: Some(ApplicationNamespaceBuildConfig {
@@ -314,6 +320,14 @@ async fn configure_namespace(
             Some(ApplicationNamespaceCloudsqlConfig {
                 enable: true,
                 project_id: cloudsql_project_id,
+            })
+        },
+        slack_notifications: if slack_notifications.is_empty() {
+            None
+        } else {
+            Some(ApplicationNamespaceSlackNotificationsConfig {
+                enable: true,
+                channel: slack_notifications,
             })
         },
     })

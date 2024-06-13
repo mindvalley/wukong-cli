@@ -25,7 +25,7 @@
 
 ## THE IDEA
 
-The Wukong CLI is a set of tools to manages Mindvalley DevOps resources. Its goal is to provide a one-stop shop for developers to interact with the Mindvalley DevOps ecosystem. By centralizing different tasks on different tools into a single CLI, It will solve these problems when it comes to adopting DevOps practices:
+The Wukong CLI is a set of tools to manage Mindvalley DevOps resources. Its goal is to provide a one-stop shop for developers to interact with the Mindvalley DevOps ecosystem. By centralizing different tasks on different tools into a single CLI, it will solve the following problems when it comes to adopting DevOps practices:
 
 - Knowledge Gaps: Learning to use a new tool can be painful. Each tool has a unique UI & UX, as well as different workflows.
 - Getting Lost in the ecosystem: It’s completely normal for a company to have 20+ different DevOps tools, so knowing which tool to use and remember where to access it can be a problem. After all developers are having enough trouble dealing with their day to day tasks.
@@ -50,7 +50,7 @@ Read more about the reasons behind this breaking change [here](guides/upgrade_fr
 
 ## INSTALLATION
 
-For installation on various platforms, you can follow the detailed instructions provided in the [Installation](https://github.com/mindvalley/wukong-cli/wiki/Installation) page. For a quick installation using Homebrew, run the following command:
+For installation on various platforms, you can follow the detailed instructions provided in the [Installation](https://github.com/mindvalley/wukong-cli/wiki/Installation) page. For quick installation using Homebrew, run the following commands:
 
 ```bash
 brew tap mindvalley/wukong
@@ -58,7 +58,7 @@ brew update
 brew install wukong
 ```
 
-Additionally, you can enable completions on popular shell like bash/zsh by following [this guide](https://docs.brew.sh/Shell-Completion).
+Additionally, you can enable completions in popular shells like bash/zsh by following [this guide](https://docs.brew.sh/Shell-Completion).
 
 ## GUIDES
 
