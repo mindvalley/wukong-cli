@@ -880,9 +880,6 @@ impl ErrorHandler for CanaryErrorHandler {
             "pipeline_not_configured" | "pipeline_not_found" => APIError::UnableToGetPipeline,
             "pipeline_deployment_in_progress" => APIError::DuplicatedDeployment,
             // "pipeline_changelogs_not_provided" => {}
-            "jenkins_build_not_found" => APIError::BuildNotFound,
-            "jenkins_pipeline_not_found" => APIError::UnableToGetPipeline,
-
             "changelog_unable_to_determine" => APIError::UnableToDetermineChangelog,
             "changelog_same_commit" => APIError::ChangelogComparingSameBuild,
 
