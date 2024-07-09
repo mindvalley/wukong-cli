@@ -13,9 +13,9 @@ use wukong_sdk::{
         appsignal_average_throughput_query, appsignal_deploy_markers_query,
         appsignal_exception_incidents_query, cd_pipeline_for_rollback_query,
         cd_pipeline_github_query, cd_pipeline_query, cd_pipelines_query, changelogs_query,
-        ci_status_query, deploy_livebook, deployment::cd_pipeline_status_query, destroy_livebook,
+        deploy_livebook, deployment::cd_pipeline_status_query, destroy_livebook,
         execute_cd_pipeline, is_authorized_query, kubernetes_pods_query, livebook_resource_query,
-        multi_branch_pipeline_query, pipeline_query, pipelines_query, AppsignalTimeFrame,
+        AppsignalTimeFrame,
     },
     services::{
         gcloud::{DatabaseMetrics, LogEntries, LogEntriesOptions, TokenInfo},
@@ -97,43 +97,6 @@ impl WKClient {
     ) -> Result<application_query::ResponseData, WKCliError> {
         self.check_and_refresh_tokens().await?;
         self.inner.fetch_application(name).await
-    }
-
-    #[wukong_telemetry(api_event = "fetch_pipeline_list")]
-    pub async fn fetch_pipelines(
-        &mut self,
-        application: &str,
-    ) -> Result<pipelines_query::ResponseData, WKCliError> {
-        self.check_and_refresh_tokens().await?;
-        self.inner.fetch_pipelines(application).await
-    }
-
-    #[wukong_telemetry(api_event = "fetch_pipeline")]
-    pub async fn fetch_pipeline(
-        &mut self,
-        name: &str,
-    ) -> Result<pipeline_query::ResponseData, WKCliError> {
-        self.check_and_refresh_tokens().await?;
-        self.inner.fetch_pipeline(name).await
-    }
-
-    #[wukong_telemetry(api_event = "fetch_multi_branch_pipeline")]
-    pub async fn fetch_multi_branch_pipeline(
-        &mut self,
-        name: &str,
-    ) -> Result<multi_branch_pipeline_query::ResponseData, WKCliError> {
-        self.check_and_refresh_tokens().await?;
-        self.inner.fetch_multi_branch_pipeline(name).await
-    }
-
-    #[wukong_telemetry(api_event = "fetch_ci_status")]
-    pub async fn fetch_ci_status(
-        &mut self,
-        repo_url: &str,
-        branch: &str,
-    ) -> Result<ci_status_query::ResponseData, WKCliError> {
-        self.check_and_refresh_tokens().await?;
-        self.inner.fetch_ci_status(repo_url, branch).await
     }
 
     #[wukong_telemetry(api_event = "fetch_cd_pipeline_list")]

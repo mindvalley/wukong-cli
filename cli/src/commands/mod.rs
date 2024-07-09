@@ -21,7 +21,6 @@ mod dev;
 mod google;
 mod init;
 mod login;
-mod pipeline;
 mod tui;
 
 #[derive(Debug, Default)]
@@ -81,8 +80,6 @@ pub enum CommandGroup {
     Init,
     /// This command group contains the commands to interact with an application’s configurations
     Application(application::Application),
-    /// This command group contains the commands to view & interact with an application’s pipeline
-    Pipeline(pipeline::Pipeline),
     /// This command group contains the commands to view and interact with the
     /// Continuous Delivery pipeline of an application.
     Deployment(deployment::Deployment),
@@ -120,7 +117,6 @@ impl ClapApp {
             CommandGroup::Login => handle_login().await,
             CommandGroup::Google(google) => google.handle_command().await,
             CommandGroup::Application(application) => application.handle_command(self).await,
-            CommandGroup::Pipeline(pipeline) => pipeline.handle_command(get_context(self)?).await,
             CommandGroup::Deployment(deployment) => {
                 deployment.handle_command(get_context(self)?).await
             }

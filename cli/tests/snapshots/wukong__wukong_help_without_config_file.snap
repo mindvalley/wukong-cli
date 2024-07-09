@@ -10,8 +10,6 @@ Commands:
   init         Initialize Wukong's configurations
   application  This command group contains the commands to interact with an application’s
                    configurations
-  pipeline     This command group contains the commands to view & interact with an application’s
-                   pipeline
   deployment   This command group contains the commands to view and interact with the Continuous
                    Delivery pipeline of an application
   dev          This command group contains the commands to interact with the local development

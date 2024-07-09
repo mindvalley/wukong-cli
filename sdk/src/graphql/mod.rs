@@ -4,7 +4,6 @@ pub mod changelog;
 pub mod deployment;
 pub mod deployment_github;
 pub mod kubernetes;
-pub mod pipeline;
 
 use self::{
     application::ApplicationConfigQuery,
@@ -33,10 +32,6 @@ pub use self::{
         deploy_livebook, destroy_livebook, is_authorized_query, kubernetes_pods_query,
         livebook_resource_query, DeployLivebook, DestroyLivebook, IsAuthorizedQuery,
         KubernetesPodsQuery, LivebookResourceQuery,
-    },
-    pipeline::{
-        ci_status_query, multi_branch_pipeline_query, pipeline_query, pipelines_query,
-        CiStatusQuery, MultiBranchPipelineQuery, PipelineQuery, PipelinesQuery,
     },
 };
 use crate::{
@@ -227,98 +222,6 @@ impl WKClient {
                 &self.api_url,
                 application_query::Variables {
                     name: name.to_string(),
-                },
-            )
-            .await
-            .map_err(|err| err.into())
-    }
-
-    /// Fetch the pipelines for an application from Wukong API Proxy.
-    ///
-    /// It will return:
-    /// - [`WKError::APIError(APIError::UnableToGetPipelines)`](APIError::UnableToGetPipelines) if there is no pipelines under the `application`.
-    /// - [`WKError::APIError(APIError::ResponseError)`](APIError::ResponseError)  for the rest.
-    ///
-    /// The application name can be obtained from the [`fetch_applications`](WKClient::fetch_applications) method.
-    pub async fn fetch_pipelines(
-        &self,
-        application: &str,
-    ) -> Result<pipelines_query::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
-
-        gql_client
-            .post_graphql::<PipelinesQuery, _>(
-                &self.api_url,
-                pipelines_query::Variables {
-                    application: Some(application.to_string()),
-                },
-            )
-            .await
-            .map_err(|err| err.into())
-    }
-
-    /// Fetch the pipeline info from Wukong API Proxy.
-    ///
-    /// It will return:
-    /// - [`WKError::APIError(APIError::UnableToGetPipeline)`](APIError::UnableToGetPipeline) if the pipeline does not exist.
-    /// - [`WKError::APIError(APIError::ResponseError)`](APIError::ResponseError)  for the rest.
-    pub async fn fetch_pipeline(
-        &self,
-        name: &str,
-    ) -> Result<pipeline_query::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
-
-        gql_client
-            .post_graphql::<PipelineQuery, _>(
-                &self.api_url,
-                pipeline_query::Variables {
-                    name: name.to_string(),
-                },
-            )
-            .await
-            .map_err(|err| err.into())
-    }
-
-    /// Fetch the multi-branch pipeline info from Wukong API Proxy.
-    ///
-    /// It will return:
-    /// - [`WKError::APIError(APIError::UnableToGetPipeline)`](APIError::UnableToGetPipeline) if the pipeline does not exist.
-    /// - [`WKError::APIError(APIError::ResponseError)`](APIError::ResponseError)  for the rest.
-    pub async fn fetch_multi_branch_pipeline(
-        &self,
-        name: &str,
-    ) -> Result<multi_branch_pipeline_query::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
-
-        gql_client
-            .post_graphql::<MultiBranchPipelineQuery, _>(
-                &self.api_url,
-                multi_branch_pipeline_query::Variables {
-                    name: name.to_string(),
-                },
-            )
-            .await
-            .map_err(|err| err.into())
-    }
-
-    /// Fetch CI status from Wukong API Proxy.
-    ///
-    /// It will return:
-    /// - [`WKError::APIError(APIError::CIStatusApplicationNotFound)`](APIError::CIStatusApplicationNotFound) if the `application` does not exist.
-    /// - [`WKError::APIError(APIError::ResponseError)`](APIError::ResponseError)  for the rest.
-    pub async fn fetch_ci_status(
-        &self,
-        repo_url: &str,
-        branch: &str,
-    ) -> Result<ci_status_query::ResponseData, WKError> {
-        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
-
-        gql_client
-            .post_graphql::<CiStatusQuery, _>(
-                &self.api_url,
-                ci_status_query::Variables {
-                    repo_url: repo_url.to_string(),
-                    branch: branch.to_string(),
                 },
             )
             .await
