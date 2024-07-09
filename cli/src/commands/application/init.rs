@@ -179,6 +179,13 @@ async fn configure_namespace(
     wk_client: &mut WKClient,
     appsignal_apps: &mut Option<Vec<AppsignalAppsQueryAppsignalApps>>,
 ) -> Result<ApplicationNamespaceConfig, WKCliError> {
+    let workflows = get_workflows_from_current_dir()?;
+
+    let build_workflow = inquire::Select::new("Select a Build Workflow", workflows.to_vec())
+        .with_render_config(inquire_render_config())
+        .with_help_message("You must select one Build Workflow")
+        .prompt()?;
+
     let application_name = inquire::Text::new("Pipeline application name")
         .with_render_config(inquire_render_config())
         .with_placeholder(" Optional")
@@ -278,9 +285,7 @@ async fn configure_namespace(
 
     Ok(ApplicationNamespaceConfig {
         namespace_type: namespace_type.clone(),
-        build: Some(ApplicationNamespaceBuildConfig {
-            build_workflow: format!("{}_workflow", namespace_type.clone()),
-        }),
+        build: Some(ApplicationNamespaceBuildConfig { build_workflow }),
         delivery: Some(ApplicationNamespaceDeliveryConfig {
             target: namespace_type.clone(),
             base_replica,
