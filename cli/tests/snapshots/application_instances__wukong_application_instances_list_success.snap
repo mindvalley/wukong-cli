@@ -5,7 +5,7 @@ expression: "std::str::from_utf8(&output.stdout).unwrap()"
 ┌───────────────────────┬─────────────┬────────────────┬──────────────────────┐
 │ INSTANCE-NAME         │ INSTANCE-IP │ INSTANCE-READY │ IS_LIVEBOOK_INSTANCE │
 ├───────────────────────┼─────────────┼────────────────┼──────────────────────┤
-│ Green@Prod/the-blue-1 │             │ true           │ false                │
+│ green@prod/the-blue-1 │             │ true           │ false                │
 ├───────────────────────┼─────────────┼────────────────┼──────────────────────┤
-│ Green@Prod/the-blue-2 │             │ false          │ false                │
+│ green@prod/the-blue-2 │             │ false          │ false                │
 └───────────────────────┴─────────────┴────────────────┴──────────────────────┘
