@@ -123,6 +123,7 @@ pub const MAX_LOG_ENTRIES_LENGTH: usize = 2_000;
 
 #[derive(Debug, Default)]
 pub struct DatabasesState {
+    #[allow(dead_code)]
     pub is_active: bool,
     pub error: Option<String>,
     pub database_metrics: Vec<DatabaseMetrics>,
@@ -132,6 +133,7 @@ pub struct State {
     pub current_namespace: Option<String>,
     pub current_version: Option<String>,
     pub current_time_filter: Option<TimeFilter>,
+    #[allow(dead_code)]
     pub show_namespace_selection: bool,
 
     // appsignal config
@@ -167,6 +169,7 @@ pub struct State {
     pub is_okta_authenticated: Option<bool>,
 
     pub last_log_entry_timestamp: Option<String>,
+    #[allow(dead_code)]
     pub log_time_filter: TimeFilter,
     // ui controls
     pub logs_vertical_scroll_state: ScrollbarState,
@@ -210,6 +213,7 @@ pub struct App {
     pub state: State,
     pub namespace_selections: StatefulList<String>,
     pub version_selections: StatefulList<String>,
+    #[allow(dead_code)]
     pub time_filter_selections: StatefulList<TimeFilter>,
     pub actions: Vec<Action>,
     pub network_event_sender: Sender<NetworkEvent>,
@@ -228,6 +232,7 @@ pub struct Commit {
 }
 
 pub struct Deployment {
+    #[allow(dead_code)]
     pub name: String,
     pub environment: String,
     pub version: String,
