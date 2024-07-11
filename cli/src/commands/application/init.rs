@@ -180,11 +180,19 @@ async fn configure_namespace(
     appsignal_apps: &mut Option<Vec<AppsignalAppsQueryAppsignalApps>>,
 ) -> Result<ApplicationNamespaceConfig, WKCliError> {
     let workflows = get_workflows_from_current_dir()?;
+    let build_workflow;
+    let setup_build_workflow =
+        inquire::Confirm::new("Do you want to select a build workflow?")
+            .with_render_config(inquire_render_config())
+            .with_default(true)
+            .with_help_message("If this is a new project you can skip this and configure it later once you have a build workflow")
+            .prompt()?;
 
-    let build_workflow = inquire::Select::new("Select a Build Workflow", workflows.to_vec())
-        .with_render_config(inquire_render_config())
-        .with_help_message("You must select one Build Workflow")
-        .prompt()?;
+    if setup_build_workflow {
+        build_workflow = select_workflow(&workflows);
+    } else {
+        build_workflow = None;
+    }
 
     let application_name = inquire::Text::new("Pipeline application name")
         .with_render_config(inquire_render_config())
@@ -217,7 +225,7 @@ async fn configure_namespace(
         inquire::Confirm::new("Do you want to setup AppSignal integration?")
             .with_render_config(inquire_render_config())
             .with_default(false)
-            .with_help_message("This is Optional. You can setup this later.")
+            .with_help_message("This is Optional. You may configure this manually later.")
             .prompt()?;
 
     if setup_appsignal_environment {
@@ -285,7 +293,12 @@ async fn configure_namespace(
 
     Ok(ApplicationNamespaceConfig {
         namespace_type: namespace_type.clone(),
-        build: Some(ApplicationNamespaceBuildConfig { build_workflow }),
+        build: match build_workflow {
+            Some(workflow) => Some(ApplicationNamespaceBuildConfig {
+                build_workflow: workflow,
+            }),
+            None => None,
+        },
         delivery: Some(ApplicationNamespaceDeliveryConfig {
             target: namespace_type.clone(),
             base_replica,
@@ -336,6 +349,26 @@ async fn configure_namespace(
             })
         },
     })
+}
+
+fn select_workflow(workflows: &Vec<String>) -> Option<String> {
+    let chosen_workflow = inquire::Select::new("Select a Build Workflow", workflows.to_vec())
+        .with_render_config(inquire_render_config())
+        .with_help_message("You must select one Build Workflow")
+        .prompt();
+
+    match chosen_workflow {
+        Ok(workflow) => Some(workflow),
+        Err(_e) => {
+            println!(
+                "{}",
+                "Skipped selecting build workflow. You may configure this manually later"
+                    .red()
+                    .bold()
+            );
+            None
+        }
+    }
 }
 
 fn get_workflows_from_current_dir() -> Result<Vec<String>, WKCliError> {
