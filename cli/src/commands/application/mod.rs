@@ -72,10 +72,10 @@ impl Display for ApplicationVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ApplicationVersion::Blue => {
-                write!(f, "Blue")
+                write!(f, "blue")
             }
             ApplicationVersion::Green => {
-                write!(f, "Green")
+                write!(f, "green")
             }
         }
     }
@@ -91,10 +91,10 @@ impl Display for ApplicationNamespace {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ApplicationNamespace::Prod => {
-                write!(f, "Prod")
+                write!(f, "prod")
             }
             ApplicationNamespace::Staging => {
-                write!(f, "Staging")
+                write!(f, "staging")
             }
         }
     }
