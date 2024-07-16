@@ -180,7 +180,6 @@ async fn configure_namespace(
     appsignal_apps: &mut Option<Vec<AppsignalAppsQueryAppsignalApps>>,
 ) -> Result<ApplicationNamespaceConfig, WKCliError> {
     let workflows = get_workflows_from_current_dir()?;
-    let build_workflow;
     let setup_build_workflow =
         inquire::Confirm::new("Do you want to select a build workflow?")
             .with_render_config(inquire_render_config())
@@ -188,11 +187,11 @@ async fn configure_namespace(
             .with_help_message("If this is a new project you can skip this and configure it later once you have a build workflow")
             .prompt()?;
 
-    if setup_build_workflow {
-        build_workflow = select_workflow(&workflows);
+    let build_workflow = if setup_build_workflow {
+        select_workflow(&workflows)
     } else {
-        build_workflow = None;
-    }
+        None
+    };
 
     let application_name = inquire::Text::new("Pipeline application name")
         .with_render_config(inquire_render_config())
@@ -293,12 +292,9 @@ async fn configure_namespace(
 
     Ok(ApplicationNamespaceConfig {
         namespace_type: namespace_type.clone(),
-        build: match build_workflow {
-            Some(workflow) => Some(ApplicationNamespaceBuildConfig {
-                build_workflow: workflow,
-            }),
-            None => None,
-        },
+        build: build_workflow.map(|workflow| ApplicationNamespaceBuildConfig {
+            build_workflow: workflow,
+        }),
         delivery: Some(ApplicationNamespaceDeliveryConfig {
             target: namespace_type.clone(),
             base_replica,
@@ -351,7 +347,7 @@ async fn configure_namespace(
     })
 }
 
-fn select_workflow(workflows: &Vec<String>) -> Option<String> {
+fn select_workflow(workflows: &[String]) -> Option<String> {
     let chosen_workflow = inquire::Select::new("Select a Build Workflow", workflows.to_vec())
         .with_render_config(inquire_render_config())
         .with_help_message("You must select one Build Workflow")

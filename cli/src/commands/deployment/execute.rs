@@ -374,8 +374,6 @@ pub async fn handle_execute(
         let progress_bar = new_spinner();
         progress_bar.set_message("Fetching available build artifacts ...");
 
-        let cd_pipeline_data: Option<CdPipelineWithBuilds>;
-
         let github_cd_pipeline = get_github_cd_pipeline(
             &mut wk_client,
             &current_application,
@@ -384,7 +382,7 @@ pub async fn handle_execute(
         )
         .await?;
 
-        cd_pipeline_data = github_cd_pipeline;
+        let cd_pipeline_data = github_cd_pipeline;
 
         selected_build = match cd_pipeline_data {
             Some(cd_pipeline) => {
