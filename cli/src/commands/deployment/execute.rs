@@ -374,8 +374,6 @@ pub async fn handle_execute(
         let progress_bar = new_spinner();
         progress_bar.set_message("Fetching available build artifacts ...");
 
-        let cd_pipeline_data: Option<CdPipelineWithBuilds>;
-
         let github_cd_pipeline = get_github_cd_pipeline(
             &mut wk_client,
             &current_application,
@@ -384,19 +382,7 @@ pub async fn handle_execute(
         )
         .await?;
 
-        if github_cd_pipeline.is_none() || github_cd_pipeline.as_ref().unwrap().builds.is_empty() {
-            let jenkins_cd_pipeline = get_jenkins_cd_pipeline(
-                &mut wk_client,
-                &current_application,
-                &selected_namespace.to_lowercase(),
-                &selected_version.to_lowercase(),
-            )
-            .await?;
-
-            cd_pipeline_data = jenkins_cd_pipeline;
-        } else {
-            cd_pipeline_data = github_cd_pipeline;
-        }
+        let cd_pipeline_data = github_cd_pipeline;
 
         selected_build = match cd_pipeline_data {
             Some(cd_pipeline) => {
@@ -691,68 +677,6 @@ async fn get_deployment_status(
     }
 
     Ok(String::from("TERMINAL"))
-}
-
-async fn get_jenkins_cd_pipeline(
-    wk_client: &mut WKClient,
-    application: &str,
-    namespace: &str,
-    version: &str,
-) -> Result<Option<CdPipelineWithBuilds>, WKCliError> {
-    let jenkins_cd_pipeline = wk_client
-        .fetch_cd_pipeline(application, namespace, version)
-        .await?
-        .cd_pipeline;
-
-    match jenkins_cd_pipeline {
-        None => Ok(None),
-        Some(jenkins_cd_pipeline) => {
-            let jenkins_builds = jenkins_cd_pipeline
-                .jenkins_builds
-                .into_iter()
-                .map(|build| {
-                    let commits: Vec<Commit> = build
-                        .commits
-                        .into_iter()
-                        .map(|commit| Commit {
-                            id: commit.id,
-                            author: commit.author,
-                            message_headline: commit.message_headline,
-                        })
-                        .collect();
-
-                    CdPipelineBuild {
-                        build_duration: build.build_duration,
-                        build_number: build.build_number,
-                        build_branch: build.build_branch,
-                        build_url: build.build_url,
-                        build_artifact_name: build.build_artifact_name,
-                        name: build.name,
-                        result: build.result,
-                        timestamp: build.timestamp,
-                        total_duration: build.total_duration,
-                        wait_duration: build.wait_duration,
-                        commits,
-                    }
-                })
-                .collect();
-
-            let cd_pipeline_with_builds = CdPipelineWithBuilds {
-                name: jenkins_cd_pipeline.name,
-                version: jenkins_cd_pipeline.version,
-                enabled: jenkins_cd_pipeline.enabled,
-                deployed_ref: jenkins_cd_pipeline.deployed_ref,
-                build_artifact: jenkins_cd_pipeline.build_artifact,
-                last_successfully_deployed_artifact: jenkins_cd_pipeline
-                    .last_successfully_deployed_artifact,
-                last_deployed_at: jenkins_cd_pipeline.last_deployment,
-                status: jenkins_cd_pipeline.status,
-                builds: jenkins_builds,
-            };
-
-            Ok(Some(cd_pipeline_with_builds))
-        }
-    }
 }
 
 async fn get_github_cd_pipeline(
