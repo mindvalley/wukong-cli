@@ -25,6 +25,7 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: 1.79.0
           components: rustfmt, clippy
 
       - name: Check formatting
@@ -44,7 +45,6 @@ jobs:
       - name: Check clippy
         uses: actions-rs/cargo@v1
         with:
-          toolchain: 1.79.0
           command: clippy
           args: -- -D warnings
 
