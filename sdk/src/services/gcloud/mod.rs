@@ -1,3 +1,4 @@
+#![allow(clippy::all)]
 #[rustfmt::skip]
 #[path = "api"]
 pub mod google {

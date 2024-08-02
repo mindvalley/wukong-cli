@@ -25,7 +25,6 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.79.0
           components: rustfmt, clippy
 
       - name: Check formatting
