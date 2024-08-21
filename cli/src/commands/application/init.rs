@@ -94,7 +94,28 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
         )
         .prompt()?;
 
-    println!();
+    let elixir_livebook_enabled = selected_addons.contains(&"Elixir Livebook");
+
+    let allowed_admins = if elixir_livebook_enabled {
+        let mut admins_list = vec![];
+        println!();
+        println!("Add one or more Mindvalley emails allowed to access the Elixir Livebook.");
+        while admins_list.len() < 10 {
+            let admin = inquire::Text::new("Add an admin")
+                .with_render_config(inquire_render_config())
+                .with_placeholder("some_email@mindvalley.com")
+                .with_help_message("Type in a valid email and press enter to add another admin. Press enter on an empty line to finish.\nA maximum of 10 admins are allowed per app")
+                .prompt()?;
+            if admin.is_empty() {
+                break;
+            }
+            admins_list.push(admin);
+        }
+        println!();
+        admins_list
+    } else {
+        vec![]
+    };
 
     let configure_staging_namespace =
         inquire::Confirm::new("Do you want to configure the staging namespace?")
@@ -113,23 +134,19 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
         excluded_workflows,
     };
 
-    let elixir_livebook_enabled = selected_addons
-        .iter()
-        .find(|addon| addon == &&"Elixir livebook");
-
     application_configs.application = ApplicationConfig {
         name,
         enable: true,
         workflows: Some(workflows),
         namespaces,
         addons: Some(ApplicationAddonsConfig {
-            elixir_livebook: if elixir_livebook_enabled.is_none() {
-                None
-            } else {
+            elixir_livebook: if elixir_livebook_enabled {
                 Some(ApplicationAddonElixirLivebookConfig {
                     enable: true,
-                    allowed_admins: vec![],
+                    allowed_admins,
                 })
+            } else {
+                None
             },
         }),
     };
