@@ -13,9 +13,9 @@ use wukong_sdk::{
         appsignal_average_throughput_query, appsignal_deploy_markers_query,
         appsignal_exception_incidents_query, cd_pipeline_for_rollback_query,
         cd_pipeline_github_query, cd_pipeline_query, cd_pipelines_query, changelogs_query,
-        deploy_livebook, deployment::cd_pipeline_status_query, destroy_livebook,
-        execute_cd_pipeline, is_authorized_query, kubernetes_pods_query, livebook_resource_query,
-        AppsignalTimeFrame,
+        create_database_branch, deploy_livebook, deployment::cd_pipeline_status_query,
+        destroy_livebook, execute_cd_pipeline, is_authorized_query, kubernetes_pods_query,
+        livebook_resource_query, AppsignalTimeFrame,
     },
     services::{
         gcloud::{DatabaseMetrics, LogEntries, LogEntriesOptions, TokenInfo},
@@ -425,5 +425,17 @@ impl WKClient {
     ) -> Result<application_config_query::ResponseData, WKCliError> {
         self.check_and_refresh_tokens().await?;
         self.inner.fetch_application_config(name).await
+    }
+
+    #[wukong_telemetry(api_event = "create_database_branch")]
+    pub async fn create_database_branch(
+        &mut self,
+        application: &str,
+        branch_name: &str,
+    ) -> Result<create_database_branch::ResponseData, WKCliError> {
+        self.check_and_refresh_tokens().await?;
+        self.inner
+            .create_database_branch(application, branch_name)
+            .await
     }
 }

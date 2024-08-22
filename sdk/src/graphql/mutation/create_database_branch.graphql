@@ -1,0 +1,10 @@
+mutation CreateDatabaseBranch($application: String!, $branchName: String!) {
+    createDatabaseBranch(application: $application, branchName: $branchName) {
+        id
+        name
+        hostname
+        poolerHostname
+        username
+        password
+    }
+}

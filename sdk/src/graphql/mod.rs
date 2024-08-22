@@ -1,6 +1,7 @@
 pub mod application;
 pub mod appsignal;
 pub mod changelog;
+pub mod database_branch;
 pub mod deployment;
 pub mod deployment_github;
 pub mod kubernetes;
@@ -23,6 +24,7 @@ pub use self::{
         AppsignalExceptionIncidentsQuery, AppsignalTimeFrame,
     },
     changelog::{changelogs_query, ChangelogsQuery},
+    database_branch::{create_database_branch, CreateDatabaseBranch},
     deployment::{
         cd_pipeline_for_rollback_query, cd_pipeline_query, cd_pipelines_query, execute_cd_pipeline,
         CdPipelineForRollbackQuery, CdPipelineQuery, CdPipelinesQuery, ExecuteCdPipeline,
@@ -711,6 +713,25 @@ impl WKClient {
                     limit,
                     marker,
                     state: state.map(|s| s.into()),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    pub async fn create_database_branch(
+        &self,
+        application: &str,
+        branch_name: &str,
+    ) -> Result<create_database_branch::ResponseData, WKError> {
+        let graphql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        graphql_client
+            .post_graphql::<CreateDatabaseBranch, _>(
+                &self.api_url,
+                create_database_branch::Variables {
+                    application: application.to_string(),
+                    branch_name: branch_name.to_string(),
                 },
             )
             .await
