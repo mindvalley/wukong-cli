@@ -9,13 +9,13 @@ Usage: wukong [OPTIONS] <COMMAND>
 Commands:
   init         Initialize Wukong's configurations
   application  This command group contains the commands to interact with an application’s
-                   configurations
+               configurations
   deployment   This command group contains the commands to view and interact with the Continuous
-                   Delivery pipeline of an application
+               Delivery pipeline of an application
   dev          This command group contains the commands to interact with the local development
-                   environment
+               environment
   config       This command group contains the commands to view & interact with Wukong's
-                   configurations
+               configurations
   login        Login to start using wukong command
   google       This command group contains the commands to interact with Google services
   completion   Generate wukong cli completions for your shell to stdout

@@ -18,7 +18,7 @@ _wukong() {
     fi
 
     local context curcontext="$curcontext" state line
-    _arguments "${_arguments_options[@]}" \
+    _arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -39,7 +39,7 @@ _wukong() {
         curcontext="${curcontext%:*:*}:wukong-command-$line[1]:"
         case $line[1] in
             (init)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -51,7 +51,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (application)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -71,7 +71,7 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-application-command-$line[1]:"
         case $line[1] in
             (info)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -83,7 +83,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (logs)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '--namespace=[(optional) The namespace to deploy to]:NAMESPACE:(prod staging)' \
 '--version=[(optional) The version that the deployment will perform against]:VERSION:(blue green)' \
 '-s+[Show logs lines newer from relative duration, e.g 5m, 1h, 1d. Also accept datetime in RFC 3339 format]:SINCE: ' \
@@ -108,7 +108,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (instances)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -128,7 +128,7 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-application-instances-command-$line[1]:"
         case $line[1] in
             (list)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '--namespace=[(optional) The namespace to list the running instances]:NAMESPACE:(prod staging)' \
 '--version=[(optional) The version of the application to filter the returning running instances]:VERSION:(blue green)' \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
@@ -142,7 +142,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (connect)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '--namespace=[(optional) The namespace to list the running instances]:NAMESPACE:(prod staging)' \
 '--version=[(optional) The version of the application to filter the returning running instances]:VERSION:(blue green)' \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
@@ -156,7 +156,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_wukong__application__instances__help_commands" \
 "*::: :->help" \
 && ret=0
@@ -168,15 +168,15 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-application-instances-help-command-$line[1]:"
         case $line[1] in
             (list)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (connect)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -188,7 +188,7 @@ esac
 esac
 ;;
 (init)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -200,7 +200,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_wukong__application__help_commands" \
 "*::: :->help" \
 && ret=0
@@ -212,15 +212,15 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-application-help-command-$line[1]:"
         case $line[1] in
             (info)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (logs)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (instances)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_wukong__application__help__instances_commands" \
 "*::: :->instances" \
 && ret=0
@@ -232,11 +232,11 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-application-help-instances-command-$line[1]:"
         case $line[1] in
             (list)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (connect)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -244,11 +244,11 @@ _arguments "${_arguments_options[@]}" \
 esac
 ;;
 (init)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -260,7 +260,7 @@ esac
 esac
 ;;
 (deployment)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -280,7 +280,7 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-deployment-command-$line[1]:"
         case $line[1] in
             (list)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -292,7 +292,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (execute)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '--namespace=[The namespace to deploy to]:NAMESPACE:(prod staging)' \
 '--version=[The version that the deployment will perform against]:VERSION:(blue green)' \
 '--artifact=[The build artifact that the deployment will use]:ARTIFACT: ' \
@@ -307,7 +307,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (rollback)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '--namespace=[The namespace to deploy to]:NAMESPACE:(prod staging)' \
 '--version=[The version that the deployment will perform against]:VERSION:(blue green)' \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
@@ -321,7 +321,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (status)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '--version=[The version of the deployment]:VERSION:(blue green)' \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
@@ -334,7 +334,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_wukong__deployment__help_commands" \
 "*::: :->help" \
 && ret=0
@@ -346,23 +346,23 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-deployment-help-command-$line[1]:"
         case $line[1] in
             (list)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (execute)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (rollback)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (status)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -374,7 +374,7 @@ esac
 esac
 ;;
 (dev)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -394,7 +394,7 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-dev-command-$line[1]:"
         case $line[1] in
             (config)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -414,7 +414,7 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-dev-config-command-$line[1]:"
         case $line[1] in
             (push)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -426,7 +426,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (diff)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -438,7 +438,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (pull)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -451,7 +451,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (lint)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -464,7 +464,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_wukong__dev__config__help_commands" \
 "*::: :->help" \
 && ret=0
@@ -476,23 +476,23 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-dev-config-help-command-$line[1]:"
         case $line[1] in
             (push)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (diff)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (pull)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (lint)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -504,7 +504,7 @@ esac
 esac
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_wukong__dev__help_commands" \
 "*::: :->help" \
 && ret=0
@@ -516,7 +516,7 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-dev-help-command-$line[1]:"
         case $line[1] in
             (config)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_wukong__dev__help__config_commands" \
 "*::: :->config" \
 && ret=0
@@ -528,19 +528,19 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-dev-help-config-command-$line[1]:"
         case $line[1] in
             (push)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (diff)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (pull)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (lint)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -548,7 +548,7 @@ _arguments "${_arguments_options[@]}" \
 esac
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -560,7 +560,7 @@ esac
 esac
 ;;
 (config)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -580,7 +580,7 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-config-command-$line[1]:"
         case $line[1] in
             (list)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -592,7 +592,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (set)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -606,7 +606,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (get)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -619,7 +619,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_wukong__config__help_commands" \
 "*::: :->help" \
 && ret=0
@@ -631,19 +631,19 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-config-help-command-$line[1]:"
         case $line[1] in
             (list)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (set)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (get)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -655,7 +655,7 @@ esac
 esac
 ;;
 (login)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -667,7 +667,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (google)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -687,7 +687,7 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-google-command-$line[1]:"
         case $line[1] in
             (login)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -699,7 +699,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_wukong__google__help_commands" \
 "*::: :->help" \
 && ret=0
@@ -711,11 +711,11 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-google-help-command-$line[1]:"
         case $line[1] in
             (login)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -727,7 +727,7 @@ esac
 esac
 ;;
 (completion)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -740,7 +740,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (tui)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
 '(-v --verbose)*-q[Do not print log message]' \
@@ -752,7 +752,7 @@ _arguments "${_arguments_options[@]}" \
 && ret=0
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_wukong__help_commands" \
 "*::: :->help" \
 && ret=0
@@ -764,11 +764,11 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-help-command-$line[1]:"
         case $line[1] in
             (init)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (application)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_wukong__help__application_commands" \
 "*::: :->application" \
 && ret=0
@@ -780,15 +780,15 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-help-application-command-$line[1]:"
         case $line[1] in
             (info)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (logs)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (instances)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_wukong__help__application__instances_commands" \
 "*::: :->instances" \
 && ret=0
@@ -800,11 +800,11 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-help-application-instances-command-$line[1]:"
         case $line[1] in
             (list)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (connect)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -812,7 +812,7 @@ _arguments "${_arguments_options[@]}" \
 esac
 ;;
 (init)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -820,7 +820,7 @@ _arguments "${_arguments_options[@]}" \
 esac
 ;;
 (deployment)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_wukong__help__deployment_commands" \
 "*::: :->deployment" \
 && ret=0
@@ -832,19 +832,19 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-help-deployment-command-$line[1]:"
         case $line[1] in
             (list)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (execute)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (rollback)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (status)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -852,7 +852,7 @@ _arguments "${_arguments_options[@]}" \
 esac
 ;;
 (dev)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_wukong__help__dev_commands" \
 "*::: :->dev" \
 && ret=0
@@ -864,7 +864,7 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-help-dev-command-$line[1]:"
         case $line[1] in
             (config)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_wukong__help__dev__config_commands" \
 "*::: :->config" \
 && ret=0
@@ -876,19 +876,19 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-help-dev-config-command-$line[1]:"
         case $line[1] in
             (push)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (diff)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (pull)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (lint)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -900,7 +900,7 @@ esac
 esac
 ;;
 (config)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_wukong__help__config_commands" \
 "*::: :->config" \
 && ret=0
@@ -912,15 +912,15 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-help-config-command-$line[1]:"
         case $line[1] in
             (list)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (set)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (get)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -928,11 +928,11 @@ _arguments "${_arguments_options[@]}" \
 esac
 ;;
 (login)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (google)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_wukong__help__google_commands" \
 "*::: :->google" \
 && ret=0
@@ -944,7 +944,7 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:wukong-help-google-command-$line[1]:"
         case $line[1] in
             (login)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -952,15 +952,15 @@ _arguments "${_arguments_options[@]}" \
 esac
 ;;
 (completion)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (tui)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -999,197 +999,6 @@ _wukong__application_commands() {
     )
     _describe -t commands 'wukong application commands' commands "$@"
 }
-(( $+functions[_wukong__help__application_commands] )) ||
-_wukong__help__application_commands() {
-    local commands; commands=(
-'info:Show the application’s relevant informations' \
-'logs:Getting the logs of the applications from the Google Cloud Logging' \
-'instances:This command group contains the commands to interact with an application’s instances' \
-'init:' \
-    )
-    _describe -t commands 'wukong help application commands' commands "$@"
-}
-(( $+functions[_wukong__completion_commands] )) ||
-_wukong__completion_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong completion commands' commands "$@"
-}
-(( $+functions[_wukong__help__completion_commands] )) ||
-_wukong__help__completion_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong help completion commands' commands "$@"
-}
-(( $+functions[_wukong__config_commands] )) ||
-_wukong__config_commands() {
-    local commands; commands=(
-'list:List the configurations' \
-'set:Set the value of a configuration' \
-'get:Print the value of a configuration' \
-'help:Print this message or the help of the given subcommand(s)' \
-    )
-    _describe -t commands 'wukong config commands' commands "$@"
-}
-(( $+functions[_wukong__dev__config_commands] )) ||
-_wukong__dev__config_commands() {
-    local commands; commands=(
-'push:Push the current configuration changes to the Bunker' \
-'diff:Show changes between the local configuration and the Bunker' \
-'pull:Pull the development config file from Bunker' \
-'lint:Linting the config and show possible warnings, as well as suggestion how to fix the config file' \
-'help:Print this message or the help of the given subcommand(s)' \
-    )
-    _describe -t commands 'wukong dev config commands' commands "$@"
-}
-(( $+functions[_wukong__dev__help__config_commands] )) ||
-_wukong__dev__help__config_commands() {
-    local commands; commands=(
-'push:Push the current configuration changes to the Bunker' \
-'diff:Show changes between the local configuration and the Bunker' \
-'pull:Pull the development config file from Bunker' \
-'lint:Linting the config and show possible warnings, as well as suggestion how to fix the config file' \
-    )
-    _describe -t commands 'wukong dev help config commands' commands "$@"
-}
-(( $+functions[_wukong__help__config_commands] )) ||
-_wukong__help__config_commands() {
-    local commands; commands=(
-'list:List the configurations' \
-'set:Set the value of a configuration' \
-'get:Print the value of a configuration' \
-    )
-    _describe -t commands 'wukong help config commands' commands "$@"
-}
-(( $+functions[_wukong__help__dev__config_commands] )) ||
-_wukong__help__dev__config_commands() {
-    local commands; commands=(
-'push:Push the current configuration changes to the Bunker' \
-'diff:Show changes between the local configuration and the Bunker' \
-'pull:Pull the development config file from Bunker' \
-'lint:Linting the config and show possible warnings, as well as suggestion how to fix the config file' \
-    )
-    _describe -t commands 'wukong help dev config commands' commands "$@"
-}
-(( $+functions[_wukong__application__help__instances__connect_commands] )) ||
-_wukong__application__help__instances__connect_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong application help instances connect commands' commands "$@"
-}
-(( $+functions[_wukong__application__instances__connect_commands] )) ||
-_wukong__application__instances__connect_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong application instances connect commands' commands "$@"
-}
-(( $+functions[_wukong__application__instances__help__connect_commands] )) ||
-_wukong__application__instances__help__connect_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong application instances help connect commands' commands "$@"
-}
-(( $+functions[_wukong__help__application__instances__connect_commands] )) ||
-_wukong__help__application__instances__connect_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong help application instances connect commands' commands "$@"
-}
-(( $+functions[_wukong__deployment_commands] )) ||
-_wukong__deployment_commands() {
-    local commands; commands=(
-'list:List the current available deployment pipelines of an application' \
-'execute:Start the deployment pipeline' \
-'rollback:Rollback the deployment pipeline' \
-'status:Get the status of the latest deployment' \
-'help:Print this message or the help of the given subcommand(s)' \
-    )
-    _describe -t commands 'wukong deployment commands' commands "$@"
-}
-(( $+functions[_wukong__help__deployment_commands] )) ||
-_wukong__help__deployment_commands() {
-    local commands; commands=(
-'list:List the current available deployment pipelines of an application' \
-'execute:Start the deployment pipeline' \
-'rollback:Rollback the deployment pipeline' \
-'status:Get the status of the latest deployment' \
-    )
-    _describe -t commands 'wukong help deployment commands' commands "$@"
-}
-(( $+functions[_wukong__dev_commands] )) ||
-_wukong__dev_commands() {
-    local commands; commands=(
-'config:This command group contains the commands to interact with the config secrets with bunker' \
-'help:Print this message or the help of the given subcommand(s)' \
-    )
-    _describe -t commands 'wukong dev commands' commands "$@"
-}
-(( $+functions[_wukong__help__dev_commands] )) ||
-_wukong__help__dev_commands() {
-    local commands; commands=(
-'config:This command group contains the commands to interact with the config secrets with bunker' \
-    )
-    _describe -t commands 'wukong help dev commands' commands "$@"
-}
-(( $+functions[_wukong__dev__config__diff_commands] )) ||
-_wukong__dev__config__diff_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong dev config diff commands' commands "$@"
-}
-(( $+functions[_wukong__dev__config__help__diff_commands] )) ||
-_wukong__dev__config__help__diff_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong dev config help diff commands' commands "$@"
-}
-(( $+functions[_wukong__dev__help__config__diff_commands] )) ||
-_wukong__dev__help__config__diff_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong dev help config diff commands' commands "$@"
-}
-(( $+functions[_wukong__help__dev__config__diff_commands] )) ||
-_wukong__help__dev__config__diff_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong help dev config diff commands' commands "$@"
-}
-(( $+functions[_wukong__deployment__execute_commands] )) ||
-_wukong__deployment__execute_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong deployment execute commands' commands "$@"
-}
-(( $+functions[_wukong__deployment__help__execute_commands] )) ||
-_wukong__deployment__help__execute_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong deployment help execute commands' commands "$@"
-}
-(( $+functions[_wukong__help__deployment__execute_commands] )) ||
-_wukong__help__deployment__execute_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong help deployment execute commands' commands "$@"
-}
-(( $+functions[_wukong__config__get_commands] )) ||
-_wukong__config__get_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong config get commands' commands "$@"
-}
-(( $+functions[_wukong__config__help__get_commands] )) ||
-_wukong__config__help__get_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong config help get commands' commands "$@"
-}
-(( $+functions[_wukong__help__config__get_commands] )) ||
-_wukong__help__config__get_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong help config get commands' commands "$@"
-}
-(( $+functions[_wukong__google_commands] )) ||
-_wukong__google_commands() {
-    local commands; commands=(
-'login:Login to Google' \
-'help:Print this message or the help of the given subcommand(s)' \
-    )
-    _describe -t commands 'wukong google commands' commands "$@"
-}
-(( $+functions[_wukong__help__google_commands] )) ||
-_wukong__help__google_commands() {
-    local commands; commands=(
-'login:Login to Google' \
-    )
-    _describe -t commands 'wukong help google commands' commands "$@"
-}
 (( $+functions[_wukong__application__help_commands] )) ||
 _wukong__application__help_commands() {
     local commands; commands=(
@@ -1206,6 +1015,63 @@ _wukong__application__help__help_commands() {
     local commands; commands=()
     _describe -t commands 'wukong application help help commands' commands "$@"
 }
+(( $+functions[_wukong__application__help__info_commands] )) ||
+_wukong__application__help__info_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong application help info commands' commands "$@"
+}
+(( $+functions[_wukong__application__help__init_commands] )) ||
+_wukong__application__help__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong application help init commands' commands "$@"
+}
+(( $+functions[_wukong__application__help__instances_commands] )) ||
+_wukong__application__help__instances_commands() {
+    local commands; commands=(
+'list:Listing the currently running Elixir instances, normally under a GKE Pod' \
+'connect:Start the interactive session to connect to the remote Elixir instance' \
+    )
+    _describe -t commands 'wukong application help instances commands' commands "$@"
+}
+(( $+functions[_wukong__application__help__instances__connect_commands] )) ||
+_wukong__application__help__instances__connect_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong application help instances connect commands' commands "$@"
+}
+(( $+functions[_wukong__application__help__instances__list_commands] )) ||
+_wukong__application__help__instances__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong application help instances list commands' commands "$@"
+}
+(( $+functions[_wukong__application__help__logs_commands] )) ||
+_wukong__application__help__logs_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong application help logs commands' commands "$@"
+}
+(( $+functions[_wukong__application__info_commands] )) ||
+_wukong__application__info_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong application info commands' commands "$@"
+}
+(( $+functions[_wukong__application__init_commands] )) ||
+_wukong__application__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong application init commands' commands "$@"
+}
+(( $+functions[_wukong__application__instances_commands] )) ||
+_wukong__application__instances_commands() {
+    local commands; commands=(
+'list:Listing the currently running Elixir instances, normally under a GKE Pod' \
+'connect:Start the interactive session to connect to the remote Elixir instance' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong application instances commands' commands "$@"
+}
+(( $+functions[_wukong__application__instances__connect_commands] )) ||
+_wukong__application__instances__connect_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong application instances connect commands' commands "$@"
+}
 (( $+functions[_wukong__application__instances__help_commands] )) ||
 _wukong__application__instances__help_commands() {
     local commands; commands=(
@@ -1215,10 +1081,50 @@ _wukong__application__instances__help_commands() {
     )
     _describe -t commands 'wukong application instances help commands' commands "$@"
 }
+(( $+functions[_wukong__application__instances__help__connect_commands] )) ||
+_wukong__application__instances__help__connect_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong application instances help connect commands' commands "$@"
+}
 (( $+functions[_wukong__application__instances__help__help_commands] )) ||
 _wukong__application__instances__help__help_commands() {
     local commands; commands=()
     _describe -t commands 'wukong application instances help help commands' commands "$@"
+}
+(( $+functions[_wukong__application__instances__help__list_commands] )) ||
+_wukong__application__instances__help__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong application instances help list commands' commands "$@"
+}
+(( $+functions[_wukong__application__instances__list_commands] )) ||
+_wukong__application__instances__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong application instances list commands' commands "$@"
+}
+(( $+functions[_wukong__application__logs_commands] )) ||
+_wukong__application__logs_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong application logs commands' commands "$@"
+}
+(( $+functions[_wukong__completion_commands] )) ||
+_wukong__completion_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong completion commands' commands "$@"
+}
+(( $+functions[_wukong__config_commands] )) ||
+_wukong__config_commands() {
+    local commands; commands=(
+'list:List the configurations' \
+'set:Set the value of a configuration' \
+'get:Print the value of a configuration' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong config commands' commands "$@"
+}
+(( $+functions[_wukong__config__get_commands] )) ||
+_wukong__config__get_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config get commands' commands "$@"
 }
 (( $+functions[_wukong__config__help_commands] )) ||
 _wukong__config__help_commands() {
@@ -1230,10 +1136,51 @@ _wukong__config__help_commands() {
     )
     _describe -t commands 'wukong config help commands' commands "$@"
 }
+(( $+functions[_wukong__config__help__get_commands] )) ||
+_wukong__config__help__get_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config help get commands' commands "$@"
+}
 (( $+functions[_wukong__config__help__help_commands] )) ||
 _wukong__config__help__help_commands() {
     local commands; commands=()
     _describe -t commands 'wukong config help help commands' commands "$@"
+}
+(( $+functions[_wukong__config__help__list_commands] )) ||
+_wukong__config__help__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config help list commands' commands "$@"
+}
+(( $+functions[_wukong__config__help__set_commands] )) ||
+_wukong__config__help__set_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config help set commands' commands "$@"
+}
+(( $+functions[_wukong__config__list_commands] )) ||
+_wukong__config__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config list commands' commands "$@"
+}
+(( $+functions[_wukong__config__set_commands] )) ||
+_wukong__config__set_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong config set commands' commands "$@"
+}
+(( $+functions[_wukong__deployment_commands] )) ||
+_wukong__deployment_commands() {
+    local commands; commands=(
+'list:List the current available deployment pipelines of an application' \
+'execute:Start the deployment pipeline' \
+'rollback:Rollback the deployment pipeline' \
+'status:Get the status of the latest deployment' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong deployment commands' commands "$@"
+}
+(( $+functions[_wukong__deployment__execute_commands] )) ||
+_wukong__deployment__execute_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong deployment execute commands' commands "$@"
 }
 (( $+functions[_wukong__deployment__help_commands] )) ||
 _wukong__deployment__help_commands() {
@@ -1246,10 +1193,69 @@ _wukong__deployment__help_commands() {
     )
     _describe -t commands 'wukong deployment help commands' commands "$@"
 }
+(( $+functions[_wukong__deployment__help__execute_commands] )) ||
+_wukong__deployment__help__execute_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong deployment help execute commands' commands "$@"
+}
 (( $+functions[_wukong__deployment__help__help_commands] )) ||
 _wukong__deployment__help__help_commands() {
     local commands; commands=()
     _describe -t commands 'wukong deployment help help commands' commands "$@"
+}
+(( $+functions[_wukong__deployment__help__list_commands] )) ||
+_wukong__deployment__help__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong deployment help list commands' commands "$@"
+}
+(( $+functions[_wukong__deployment__help__rollback_commands] )) ||
+_wukong__deployment__help__rollback_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong deployment help rollback commands' commands "$@"
+}
+(( $+functions[_wukong__deployment__help__status_commands] )) ||
+_wukong__deployment__help__status_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong deployment help status commands' commands "$@"
+}
+(( $+functions[_wukong__deployment__list_commands] )) ||
+_wukong__deployment__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong deployment list commands' commands "$@"
+}
+(( $+functions[_wukong__deployment__rollback_commands] )) ||
+_wukong__deployment__rollback_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong deployment rollback commands' commands "$@"
+}
+(( $+functions[_wukong__deployment__status_commands] )) ||
+_wukong__deployment__status_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong deployment status commands' commands "$@"
+}
+(( $+functions[_wukong__dev_commands] )) ||
+_wukong__dev_commands() {
+    local commands; commands=(
+'config:This command group contains the commands to interact with the config secrets with bunker' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong dev commands' commands "$@"
+}
+(( $+functions[_wukong__dev__config_commands] )) ||
+_wukong__dev__config_commands() {
+    local commands; commands=(
+'push:Push the current configuration changes to the Bunker' \
+'diff:Show changes between the local configuration and the Bunker' \
+'pull:Pull the development config file from Bunker' \
+'lint:Linting the config and show possible warnings, as well as suggestion how to fix the config file' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong dev config commands' commands "$@"
+}
+(( $+functions[_wukong__dev__config__diff_commands] )) ||
+_wukong__dev__config__diff_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong dev config diff commands' commands "$@"
 }
 (( $+functions[_wukong__dev__config__help_commands] )) ||
 _wukong__dev__config__help_commands() {
@@ -1262,10 +1268,45 @@ _wukong__dev__config__help_commands() {
     )
     _describe -t commands 'wukong dev config help commands' commands "$@"
 }
+(( $+functions[_wukong__dev__config__help__diff_commands] )) ||
+_wukong__dev__config__help__diff_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong dev config help diff commands' commands "$@"
+}
 (( $+functions[_wukong__dev__config__help__help_commands] )) ||
 _wukong__dev__config__help__help_commands() {
     local commands; commands=()
     _describe -t commands 'wukong dev config help help commands' commands "$@"
+}
+(( $+functions[_wukong__dev__config__help__lint_commands] )) ||
+_wukong__dev__config__help__lint_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong dev config help lint commands' commands "$@"
+}
+(( $+functions[_wukong__dev__config__help__pull_commands] )) ||
+_wukong__dev__config__help__pull_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong dev config help pull commands' commands "$@"
+}
+(( $+functions[_wukong__dev__config__help__push_commands] )) ||
+_wukong__dev__config__help__push_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong dev config help push commands' commands "$@"
+}
+(( $+functions[_wukong__dev__config__lint_commands] )) ||
+_wukong__dev__config__lint_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong dev config lint commands' commands "$@"
+}
+(( $+functions[_wukong__dev__config__pull_commands] )) ||
+_wukong__dev__config__pull_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong dev config pull commands' commands "$@"
+}
+(( $+functions[_wukong__dev__config__push_commands] )) ||
+_wukong__dev__config__push_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong dev config push commands' commands "$@"
 }
 (( $+functions[_wukong__dev__help_commands] )) ||
 _wukong__dev__help_commands() {
@@ -1275,10 +1316,48 @@ _wukong__dev__help_commands() {
     )
     _describe -t commands 'wukong dev help commands' commands "$@"
 }
+(( $+functions[_wukong__dev__help__config_commands] )) ||
+_wukong__dev__help__config_commands() {
+    local commands; commands=(
+'push:Push the current configuration changes to the Bunker' \
+'diff:Show changes between the local configuration and the Bunker' \
+'pull:Pull the development config file from Bunker' \
+'lint:Linting the config and show possible warnings, as well as suggestion how to fix the config file' \
+    )
+    _describe -t commands 'wukong dev help config commands' commands "$@"
+}
+(( $+functions[_wukong__dev__help__config__diff_commands] )) ||
+_wukong__dev__help__config__diff_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong dev help config diff commands' commands "$@"
+}
+(( $+functions[_wukong__dev__help__config__lint_commands] )) ||
+_wukong__dev__help__config__lint_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong dev help config lint commands' commands "$@"
+}
+(( $+functions[_wukong__dev__help__config__pull_commands] )) ||
+_wukong__dev__help__config__pull_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong dev help config pull commands' commands "$@"
+}
+(( $+functions[_wukong__dev__help__config__push_commands] )) ||
+_wukong__dev__help__config__push_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong dev help config push commands' commands "$@"
+}
 (( $+functions[_wukong__dev__help__help_commands] )) ||
 _wukong__dev__help__help_commands() {
     local commands; commands=()
     _describe -t commands 'wukong dev help help commands' commands "$@"
+}
+(( $+functions[_wukong__google_commands] )) ||
+_wukong__google_commands() {
+    local commands; commands=(
+'login:Login to Google' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'wukong google commands' commands "$@"
 }
 (( $+functions[_wukong__google__help_commands] )) ||
 _wukong__google__help_commands() {
@@ -1292,6 +1371,16 @@ _wukong__google__help_commands() {
 _wukong__google__help__help_commands() {
     local commands; commands=()
     _describe -t commands 'wukong google help help commands' commands "$@"
+}
+(( $+functions[_wukong__google__help__login_commands] )) ||
+_wukong__google__help__login_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong google help login commands' commands "$@"
+}
+(( $+functions[_wukong__google__login_commands] )) ||
+_wukong__google__login_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong google login commands' commands "$@"
 }
 (( $+functions[_wukong__help_commands] )) ||
 _wukong__help_commands() {
@@ -1309,67 +1398,25 @@ _wukong__help_commands() {
     )
     _describe -t commands 'wukong help commands' commands "$@"
 }
-(( $+functions[_wukong__help__help_commands] )) ||
-_wukong__help__help_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong help help commands' commands "$@"
-}
-(( $+functions[_wukong__application__help__info_commands] )) ||
-_wukong__application__help__info_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong application help info commands' commands "$@"
-}
-(( $+functions[_wukong__application__info_commands] )) ||
-_wukong__application__info_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong application info commands' commands "$@"
+(( $+functions[_wukong__help__application_commands] )) ||
+_wukong__help__application_commands() {
+    local commands; commands=(
+'info:Show the application’s relevant informations' \
+'logs:Getting the logs of the applications from the Google Cloud Logging' \
+'instances:This command group contains the commands to interact with an application’s instances' \
+'init:' \
+    )
+    _describe -t commands 'wukong help application commands' commands "$@"
 }
 (( $+functions[_wukong__help__application__info_commands] )) ||
 _wukong__help__application__info_commands() {
     local commands; commands=()
     _describe -t commands 'wukong help application info commands' commands "$@"
 }
-(( $+functions[_wukong__application__help__init_commands] )) ||
-_wukong__application__help__init_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong application help init commands' commands "$@"
-}
-(( $+functions[_wukong__application__init_commands] )) ||
-_wukong__application__init_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong application init commands' commands "$@"
-}
 (( $+functions[_wukong__help__application__init_commands] )) ||
 _wukong__help__application__init_commands() {
     local commands; commands=()
     _describe -t commands 'wukong help application init commands' commands "$@"
-}
-(( $+functions[_wukong__help__init_commands] )) ||
-_wukong__help__init_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong help init commands' commands "$@"
-}
-(( $+functions[_wukong__init_commands] )) ||
-_wukong__init_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong init commands' commands "$@"
-}
-(( $+functions[_wukong__application__help__instances_commands] )) ||
-_wukong__application__help__instances_commands() {
-    local commands; commands=(
-'list:Listing the currently running Elixir instances, normally under a GKE Pod' \
-'connect:Start the interactive session to connect to the remote Elixir instance' \
-    )
-    _describe -t commands 'wukong application help instances commands' commands "$@"
-}
-(( $+functions[_wukong__application__instances_commands] )) ||
-_wukong__application__instances_commands() {
-    local commands; commands=(
-'list:Listing the currently running Elixir instances, normally under a GKE Pod' \
-'connect:Start the interactive session to connect to the remote Elixir instance' \
-'help:Print this message or the help of the given subcommand(s)' \
-    )
-    _describe -t commands 'wukong application instances commands' commands "$@"
 }
 (( $+functions[_wukong__help__application__instances_commands] )) ||
 _wukong__help__application__instances_commands() {
@@ -1379,205 +1426,158 @@ _wukong__help__application__instances_commands() {
     )
     _describe -t commands 'wukong help application instances commands' commands "$@"
 }
-(( $+functions[_wukong__dev__config__help__lint_commands] )) ||
-_wukong__dev__config__help__lint_commands() {
+(( $+functions[_wukong__help__application__instances__connect_commands] )) ||
+_wukong__help__application__instances__connect_commands() {
     local commands; commands=()
-    _describe -t commands 'wukong dev config help lint commands' commands "$@"
-}
-(( $+functions[_wukong__dev__config__lint_commands] )) ||
-_wukong__dev__config__lint_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong dev config lint commands' commands "$@"
-}
-(( $+functions[_wukong__dev__help__config__lint_commands] )) ||
-_wukong__dev__help__config__lint_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong dev help config lint commands' commands "$@"
-}
-(( $+functions[_wukong__help__dev__config__lint_commands] )) ||
-_wukong__help__dev__config__lint_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong help dev config lint commands' commands "$@"
-}
-(( $+functions[_wukong__application__help__instances__list_commands] )) ||
-_wukong__application__help__instances__list_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong application help instances list commands' commands "$@"
-}
-(( $+functions[_wukong__application__instances__help__list_commands] )) ||
-_wukong__application__instances__help__list_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong application instances help list commands' commands "$@"
-}
-(( $+functions[_wukong__application__instances__list_commands] )) ||
-_wukong__application__instances__list_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong application instances list commands' commands "$@"
-}
-(( $+functions[_wukong__config__help__list_commands] )) ||
-_wukong__config__help__list_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong config help list commands' commands "$@"
-}
-(( $+functions[_wukong__config__list_commands] )) ||
-_wukong__config__list_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong config list commands' commands "$@"
-}
-(( $+functions[_wukong__deployment__help__list_commands] )) ||
-_wukong__deployment__help__list_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong deployment help list commands' commands "$@"
-}
-(( $+functions[_wukong__deployment__list_commands] )) ||
-_wukong__deployment__list_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong deployment list commands' commands "$@"
+    _describe -t commands 'wukong help application instances connect commands' commands "$@"
 }
 (( $+functions[_wukong__help__application__instances__list_commands] )) ||
 _wukong__help__application__instances__list_commands() {
     local commands; commands=()
     _describe -t commands 'wukong help application instances list commands' commands "$@"
 }
-(( $+functions[_wukong__help__config__list_commands] )) ||
-_wukong__help__config__list_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong help config list commands' commands "$@"
-}
-(( $+functions[_wukong__help__deployment__list_commands] )) ||
-_wukong__help__deployment__list_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong help deployment list commands' commands "$@"
-}
-(( $+functions[_wukong__google__help__login_commands] )) ||
-_wukong__google__help__login_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong google help login commands' commands "$@"
-}
-(( $+functions[_wukong__google__login_commands] )) ||
-_wukong__google__login_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong google login commands' commands "$@"
-}
-(( $+functions[_wukong__help__google__login_commands] )) ||
-_wukong__help__google__login_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong help google login commands' commands "$@"
-}
-(( $+functions[_wukong__help__login_commands] )) ||
-_wukong__help__login_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong help login commands' commands "$@"
-}
-(( $+functions[_wukong__login_commands] )) ||
-_wukong__login_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong login commands' commands "$@"
-}
-(( $+functions[_wukong__application__help__logs_commands] )) ||
-_wukong__application__help__logs_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong application help logs commands' commands "$@"
-}
-(( $+functions[_wukong__application__logs_commands] )) ||
-_wukong__application__logs_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong application logs commands' commands "$@"
-}
 (( $+functions[_wukong__help__application__logs_commands] )) ||
 _wukong__help__application__logs_commands() {
     local commands; commands=()
     _describe -t commands 'wukong help application logs commands' commands "$@"
 }
-(( $+functions[_wukong__dev__config__help__pull_commands] )) ||
-_wukong__dev__config__help__pull_commands() {
+(( $+functions[_wukong__help__completion_commands] )) ||
+_wukong__help__completion_commands() {
     local commands; commands=()
-    _describe -t commands 'wukong dev config help pull commands' commands "$@"
+    _describe -t commands 'wukong help completion commands' commands "$@"
 }
-(( $+functions[_wukong__dev__config__pull_commands] )) ||
-_wukong__dev__config__pull_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong dev config pull commands' commands "$@"
+(( $+functions[_wukong__help__config_commands] )) ||
+_wukong__help__config_commands() {
+    local commands; commands=(
+'list:List the configurations' \
+'set:Set the value of a configuration' \
+'get:Print the value of a configuration' \
+    )
+    _describe -t commands 'wukong help config commands' commands "$@"
 }
-(( $+functions[_wukong__dev__help__config__pull_commands] )) ||
-_wukong__dev__help__config__pull_commands() {
+(( $+functions[_wukong__help__config__get_commands] )) ||
+_wukong__help__config__get_commands() {
     local commands; commands=()
-    _describe -t commands 'wukong dev help config pull commands' commands "$@"
+    _describe -t commands 'wukong help config get commands' commands "$@"
 }
-(( $+functions[_wukong__help__dev__config__pull_commands] )) ||
-_wukong__help__dev__config__pull_commands() {
+(( $+functions[_wukong__help__config__list_commands] )) ||
+_wukong__help__config__list_commands() {
     local commands; commands=()
-    _describe -t commands 'wukong help dev config pull commands' commands "$@"
-}
-(( $+functions[_wukong__dev__config__help__push_commands] )) ||
-_wukong__dev__config__help__push_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong dev config help push commands' commands "$@"
-}
-(( $+functions[_wukong__dev__config__push_commands] )) ||
-_wukong__dev__config__push_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong dev config push commands' commands "$@"
-}
-(( $+functions[_wukong__dev__help__config__push_commands] )) ||
-_wukong__dev__help__config__push_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong dev help config push commands' commands "$@"
-}
-(( $+functions[_wukong__help__dev__config__push_commands] )) ||
-_wukong__help__dev__config__push_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong help dev config push commands' commands "$@"
-}
-(( $+functions[_wukong__deployment__help__rollback_commands] )) ||
-_wukong__deployment__help__rollback_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong deployment help rollback commands' commands "$@"
-}
-(( $+functions[_wukong__deployment__rollback_commands] )) ||
-_wukong__deployment__rollback_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong deployment rollback commands' commands "$@"
-}
-(( $+functions[_wukong__help__deployment__rollback_commands] )) ||
-_wukong__help__deployment__rollback_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong help deployment rollback commands' commands "$@"
-}
-(( $+functions[_wukong__config__help__set_commands] )) ||
-_wukong__config__help__set_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong config help set commands' commands "$@"
-}
-(( $+functions[_wukong__config__set_commands] )) ||
-_wukong__config__set_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong config set commands' commands "$@"
+    _describe -t commands 'wukong help config list commands' commands "$@"
 }
 (( $+functions[_wukong__help__config__set_commands] )) ||
 _wukong__help__config__set_commands() {
     local commands; commands=()
     _describe -t commands 'wukong help config set commands' commands "$@"
 }
-(( $+functions[_wukong__deployment__help__status_commands] )) ||
-_wukong__deployment__help__status_commands() {
-    local commands; commands=()
-    _describe -t commands 'wukong deployment help status commands' commands "$@"
+(( $+functions[_wukong__help__deployment_commands] )) ||
+_wukong__help__deployment_commands() {
+    local commands; commands=(
+'list:List the current available deployment pipelines of an application' \
+'execute:Start the deployment pipeline' \
+'rollback:Rollback the deployment pipeline' \
+'status:Get the status of the latest deployment' \
+    )
+    _describe -t commands 'wukong help deployment commands' commands "$@"
 }
-(( $+functions[_wukong__deployment__status_commands] )) ||
-_wukong__deployment__status_commands() {
+(( $+functions[_wukong__help__deployment__execute_commands] )) ||
+_wukong__help__deployment__execute_commands() {
     local commands; commands=()
-    _describe -t commands 'wukong deployment status commands' commands "$@"
+    _describe -t commands 'wukong help deployment execute commands' commands "$@"
+}
+(( $+functions[_wukong__help__deployment__list_commands] )) ||
+_wukong__help__deployment__list_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help deployment list commands' commands "$@"
+}
+(( $+functions[_wukong__help__deployment__rollback_commands] )) ||
+_wukong__help__deployment__rollback_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help deployment rollback commands' commands "$@"
 }
 (( $+functions[_wukong__help__deployment__status_commands] )) ||
 _wukong__help__deployment__status_commands() {
     local commands; commands=()
     _describe -t commands 'wukong help deployment status commands' commands "$@"
 }
+(( $+functions[_wukong__help__dev_commands] )) ||
+_wukong__help__dev_commands() {
+    local commands; commands=(
+'config:This command group contains the commands to interact with the config secrets with bunker' \
+    )
+    _describe -t commands 'wukong help dev commands' commands "$@"
+}
+(( $+functions[_wukong__help__dev__config_commands] )) ||
+_wukong__help__dev__config_commands() {
+    local commands; commands=(
+'push:Push the current configuration changes to the Bunker' \
+'diff:Show changes between the local configuration and the Bunker' \
+'pull:Pull the development config file from Bunker' \
+'lint:Linting the config and show possible warnings, as well as suggestion how to fix the config file' \
+    )
+    _describe -t commands 'wukong help dev config commands' commands "$@"
+}
+(( $+functions[_wukong__help__dev__config__diff_commands] )) ||
+_wukong__help__dev__config__diff_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help dev config diff commands' commands "$@"
+}
+(( $+functions[_wukong__help__dev__config__lint_commands] )) ||
+_wukong__help__dev__config__lint_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help dev config lint commands' commands "$@"
+}
+(( $+functions[_wukong__help__dev__config__pull_commands] )) ||
+_wukong__help__dev__config__pull_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help dev config pull commands' commands "$@"
+}
+(( $+functions[_wukong__help__dev__config__push_commands] )) ||
+_wukong__help__dev__config__push_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help dev config push commands' commands "$@"
+}
+(( $+functions[_wukong__help__google_commands] )) ||
+_wukong__help__google_commands() {
+    local commands; commands=(
+'login:Login to Google' \
+    )
+    _describe -t commands 'wukong help google commands' commands "$@"
+}
+(( $+functions[_wukong__help__google__login_commands] )) ||
+_wukong__help__google__login_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help google login commands' commands "$@"
+}
+(( $+functions[_wukong__help__help_commands] )) ||
+_wukong__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help help commands' commands "$@"
+}
+(( $+functions[_wukong__help__init_commands] )) ||
+_wukong__help__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help init commands' commands "$@"
+}
+(( $+functions[_wukong__help__login_commands] )) ||
+_wukong__help__login_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help login commands' commands "$@"
+}
 (( $+functions[_wukong__help__tui_commands] )) ||
 _wukong__help__tui_commands() {
     local commands; commands=()
     _describe -t commands 'wukong help tui commands' commands "$@"
+}
+(( $+functions[_wukong__init_commands] )) ||
+_wukong__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong init commands' commands "$@"
+}
+(( $+functions[_wukong__login_commands] )) ||
+_wukong__login_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong login commands' commands "$@"
 }
 (( $+functions[_wukong__tui_commands] )) ||
 _wukong__tui_commands() {

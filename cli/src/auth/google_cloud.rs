@@ -130,7 +130,6 @@ pub async fn get_token_or_login(config: Option<Config>) -> String {
     let client = hyper::Client::builder().build(
         hyper_rustls::HttpsConnectorBuilder::new()
             .with_native_roots()
-            .expect("no native root CA certificates found")
             .https_only()
             .enable_http1()
             .enable_http2()
