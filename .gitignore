@@ -17,3 +17,5 @@ sdk/crates/*/target/
 /src/env/local.toml
 
 .wukong.toml
+
+.vscode/

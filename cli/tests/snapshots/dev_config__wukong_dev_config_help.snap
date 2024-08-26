@@ -10,8 +10,8 @@ Commands:
   push  Push the current configuration changes to the Bunker
   diff  Show changes between the local configuration and the Bunker
   pull  Pull the development config file from Bunker
-  lint  Linting the config and show possible warnings, as well as suggestion how to fix the
-            config file
+  lint  Linting the config and show possible warnings, as well as suggestion how to fix the config
+        file
   help  Print this message or the help of the given subcommand(s)
 
 Options:
