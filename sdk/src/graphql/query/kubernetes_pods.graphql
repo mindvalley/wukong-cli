@@ -10,7 +10,10 @@ query KubernetesPodsQuery(
   ) {
     name
     podIp
+    nodeName
+    cookie
     ready
     labels
+
   }
 }
