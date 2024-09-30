@@ -115,10 +115,7 @@ impl Telemetry {
         let telemetry_data = {
             let content = std::fs::read_to_string(telemetry_file_path);
             match content {
-                Ok(data) => match serde_json::from_str::<Vec<TelemetryData>>(&data) {
-                    Ok(data) => data,
-                    Err(_) => Vec::new(),
-                },
+                Ok(data) => serde_json::from_str::<Vec<TelemetryData>>(&data).unwrap_or_default(),
                 Err(_) => Vec::new(),
             }
         };

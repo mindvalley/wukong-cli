@@ -315,9 +315,8 @@ pub async fn handle_connect(
         let _ = wk_client
             .destroy_livebook(&application, &namespace, &version)
             .await
-            .map_err(|err| {
+            .inspect_err(|_err| {
                 eprintln!("Failed to destroy the livebook instance.");
-                err
             })?;
 
         exiting_loader.finish_and_clear();
