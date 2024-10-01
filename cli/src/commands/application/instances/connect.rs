@@ -281,12 +281,15 @@ pub async fn handle_connect(
             &instance_object.cookie,
         ) {
             (Some(node_name), Some(pod_ip), Some(cookie)) => {
-                eprintln!(
-                    "To connect to mv-wukong-api-proxy, start a new Notebook and click on `+Smart`\nand select `Remote Execution`. Follow the instructions that pop up to restart the Notebook.\nEnter these values into the `NODE` and `COOKIE` input boxes:"
-                );
+                eprintln!("To connect to mv-wukong-api-proxy:");
+                eprintln!("\t1. start a new Notebook");
+                eprintln!("\t2. click on `+Smart`");
+                eprintln!("\t3. select `Remote Execution`");
+                eprintln!("\t4. follow the instructions that pop up to restart the Notebook");
+                eprintln!("\t5. enter these values into the `NODE` and `COOKIE` input boxes:");
+                eprintln!("\t\tNODE: 🖥️: {}@{}", node_name.cyan(), pod_ip.cyan());
+                eprintln!("\t\tCOOKIE: 🍪: {}", cookie.yellow());
                 eprintln!();
-                eprintln!("NODE: 🖥️: {}@{}", node_name.cyan(), pod_ip.cyan());
-                eprintln!("COOKIE: 🍪: {}", cookie.yellow());
             }
             (None, ..) => {
                 eprintln!("We were unable to determine the node name for the app node you wish to connect to. Please contact your administrator for assistance.")
