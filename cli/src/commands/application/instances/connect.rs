@@ -282,13 +282,13 @@ pub async fn handle_connect(
         ) {
             (Some(node_name), Some(pod_ip), Some(cookie)) => {
                 eprintln!("To connect to mv-wukong-api-proxy:");
-                eprintln!("\t1. start a new Notebook");
-                eprintln!("\t2. click on `+Smart`");
-                eprintln!("\t3. select `Remote Execution`");
-                eprintln!("\t4. follow the instructions that pop up to restart the Notebook");
-                eprintln!("\t5. enter these values into the `NODE` and `COOKIE` input boxes:");
-                eprintln!("\t\tNODE: 🖥️: {}@{}", node_name.cyan(), pod_ip.cyan());
-                eprintln!("\t\tCOOKIE: 🍪: {}", cookie.yellow());
+                eprintln!("  1. start a new Notebook");
+                eprintln!("  2. click on `+Smart`");
+                eprintln!("  3. select `Remote Execution`");
+                eprintln!("  4. follow the instructions that pop up to restart the Notebook");
+                eprintln!("  5. enter these values into the `NODE` and `COOKIE` input boxes:");
+                eprintln!("    NODE: 🖥️: {}@{}", node_name.cyan(), pod_ip.cyan());
+                eprintln!("    COOKIE: 🍪: {}", cookie.yellow());
                 eprintln!();
             }
             (None, ..) => {
