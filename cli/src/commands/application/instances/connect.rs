@@ -34,6 +34,9 @@ struct Status {
 struct KubernetesPod {
     name: String,
     ready: bool,
+    pod_ip: Option<String>,
+    node_name: Option<String>,
+    cookie: Option<String>,
     is_livebook: Option<bool>,
 }
 
@@ -142,6 +145,7 @@ pub async fn handle_connect(
         .interact()?;
 
     let instance_name = k8s_pods[instance_name_idx].name.clone();
+    let instance_object = &k8s_pods[instance_name_idx];
 
     let preparing_loader = new_spinner();
     preparing_loader.set_style(spinner_style.clone());
@@ -271,6 +275,36 @@ pub async fn handle_connect(
         );
         eprintln!();
 
+        match (
+            &instance_object.node_name,
+            &instance_object.pod_ip,
+            &instance_object.cookie,
+        ) {
+            (Some(node_name), Some(pod_ip), Some(cookie)) => {
+                eprintln!("To connect to mv-wukong-api-proxy:");
+                eprintln!("  1. start a new Notebook");
+                eprintln!("  2. click on `+Smart`");
+                eprintln!("  3. select `Remote Execution`");
+                eprintln!("  4. follow the instructions that pop up to restart the Notebook");
+                eprintln!("  5. enter these values into the `NODE` and `COOKIE` input boxes:");
+                eprintln!("    NODE: 🖥️: {}@{}", node_name.cyan(), pod_ip.cyan());
+                eprintln!("    COOKIE: 🍪: {}", cookie.yellow());
+                eprintln!();
+            }
+            (None, ..) => {
+                eprintln!("We were unable to determine the node name for the app node you wish to connect to. Please contact your administrator for assistance.")
+            }
+            (_, None, _) => {
+                eprintln!("We were unable to determine the ip for the app node you wish to connect to. Please contact your administrator for assistance.")
+            }
+            (.., None) => {
+                eprintln!("We were unable to determine the cookie for the app node you wish to connect to. Please contact your administrator for assistance.")
+            }
+        }
+
+        eprintln!();
+        eprintln!();
+
         let running_loader = new_spinner();
         running_loader
             .set_message("Your livebook instance is running. Press Ctrl-C to terminate...");
@@ -284,9 +318,8 @@ pub async fn handle_connect(
         let _ = wk_client
             .destroy_livebook(&application, &namespace, &version)
             .await
-            .map_err(|err| {
+            .inspect_err(|_err| {
                 eprintln!("Failed to destroy the livebook instance.");
-                err
             })?;
 
         exiting_loader.finish_and_clear();
@@ -369,6 +402,9 @@ async fn get_ready_k8s_pods(
         .map(|pod| KubernetesPod {
             name: pod.name,
             ready: pod.ready,
+            pod_ip: pod.pod_ip,
+            node_name: pod.node_name,
+            cookie: pod.cookie,
             is_livebook: Some(pod.labels.contains(&"livebook".to_string())),
         })
         .filter(|pod| pod.ready && !pod.is_livebook.unwrap_or_default())
