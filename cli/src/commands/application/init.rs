@@ -123,8 +123,7 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
     eprintln!("\nNext is to configure the prod namespace for your application.\n");
     let mut namespaces: Vec<ApplicationNamespaceConfig> = Vec::new();
 
-    let modified_prod_build_workflow =
-        modify_workflow_env(prod_build_workflow, &name, "prod").unwrap();
+    let modified_prod_build_workflow = modify_workflow_env(prod_build_workflow, &name, "prod")?;
     let workflow_path = ".github/workflows/gar-build-image-prod.yaml";
     fs::write(workflow_path, modified_prod_build_workflow)?;
     eprintln!(
@@ -175,7 +174,7 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
 
     if configure_staging_namespace {
         let modified_staging_build_workflow =
-            modify_workflow_env(staging_build_workflow, &name, "staging").unwrap();
+            modify_workflow_env(staging_build_workflow, &name, "staging")?;
         let workflow_path = ".github/workflows/gar-build-image-staging.yaml";
         fs::write(workflow_path, modified_staging_build_workflow)?;
         eprintln!(
@@ -521,8 +520,9 @@ fn modify_workflow_env(
     application: &str,
     namespace: &str,
 ) -> Result<String, WKCliError> {
-    let yaml_str = String::from_utf8(yaml_bytes).unwrap();
-    let mut docs = YamlLoader::load_from_str(&yaml_str).unwrap();
+    let yaml_str = String::from_utf8(yaml_bytes).map_err(|_| WKCliError::UnableToParseYmlFile)?;
+    let mut docs =
+        YamlLoader::load_from_str(&yaml_str).map_err(|_| WKCliError::UnableToParseYmlFile)?;
 
     if let Some(doc) = docs.get_mut(0) {
         if let Some(env) = doc["env"].as_mut_hash() {
@@ -556,8 +556,8 @@ fn modify_workflow_env(
             emitter.dump(doc).unwrap(); // dump the YAML object to a String
         }
 
-        return Ok(out_str);
+        Ok(out_str)
+    } else {
+        Err(WKCliError::UnableToParseYmlFile)
     }
-
-    todo!()
 }
