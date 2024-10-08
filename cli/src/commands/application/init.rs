@@ -14,6 +14,7 @@ use crate::{
     utils::inquire::inquire_render_config,
     wukong_client::WKClient,
 };
+use base64::prelude::*;
 use crossterm::style::Stylize;
 use heck::ToSnakeCase;
 use inquire::{required, CustomType};
@@ -25,6 +26,7 @@ use wukong_sdk::{
         appsignal_apps_query::AppsignalAppsQueryAppsignalApps,
     },
 };
+use yaml_rust2::{Yaml, YamlEmitter, YamlLoader};
 
 pub async fn handle_application_init(context: Context) -> Result<bool, WKCliError> {
     let config = Config::load_from_default_path()?;
@@ -66,6 +68,43 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
         }
     }
 
+    let fetch_loader = new_spinner();
+    fetch_loader.set_message("Fetching GitHub workflow templates ...");
+    let github_workflow_templates = wk_client
+        .fetch_github_workflow_templates()
+        .await?
+        .github_workflow_templates;
+
+    let prod_build_workflow = BASE64_STANDARD
+        .decode(
+            github_workflow_templates
+                .build
+                .prod
+                .content
+                .replace("\n", ""),
+        )
+        .unwrap();
+
+    let staging_build_workflow = BASE64_STANDARD
+        .decode(
+            github_workflow_templates
+                .build
+                .staging
+                .content
+                .replace("\n", ""),
+        )
+        .unwrap();
+
+    let deploy_workflow = BASE64_STANDARD
+        .decode(github_workflow_templates.deploy.content.replace("\n", ""))
+        .unwrap();
+
+    let destroy_workflow = BASE64_STANDARD
+        .decode(github_workflow_templates.destroy.content.replace("\n", ""))
+        .unwrap();
+
+    fetch_loader.finish_and_clear();
+
     let workflows = get_workflows_from_current_dir()?;
     let mut excluded_workflows = Vec::new();
 
@@ -83,6 +122,16 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
 
     eprintln!("\nNext is to configure the prod namespace for your application.\n");
     let mut namespaces: Vec<ApplicationNamespaceConfig> = Vec::new();
+
+    let modified_prod_build_workflow = modify_workflow_env(prod_build_workflow, &name, "prod")?;
+    let workflow_path = ".github/workflows/gar-build-image-prod.yaml";
+    fs::write(workflow_path, modified_prod_build_workflow)?;
+    eprintln!(
+        "  {} build workflow at {}",
+        "Created".green().bold(),
+        workflow_path.blue()
+    );
+
     namespaces
         .push(configure_namespace("prod".to_string(), &mut wk_client, &mut appsignal_apps).await?);
 
@@ -124,10 +173,38 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
             .prompt()?;
 
     if configure_staging_namespace {
+        let modified_staging_build_workflow =
+            modify_workflow_env(staging_build_workflow, &name, "staging")?;
+        let workflow_path = ".github/workflows/gar-build-image-staging.yaml";
+        fs::write(workflow_path, modified_staging_build_workflow)?;
+        eprintln!(
+            "  {} build workflow at {}",
+            "Created".green().bold(),
+            workflow_path.blue()
+        );
+
         namespaces.push(
             configure_namespace("staging".to_string(), &mut wk_client, &mut appsignal_apps).await?,
         );
     }
+
+    eprintln!("Setting up deploy and destroy workflows...");
+
+    let deploy_workflow_path = ".github/workflows/deploy.yaml";
+    let destroy_workflow_path = ".github/workflows/destroy.yaml";
+
+    fs::write(deploy_workflow_path, deploy_workflow)?;
+    eprintln!(
+        "  {} deploy workflows at {} ...",
+        "Created".green().bold(),
+        deploy_workflow_path.blue()
+    );
+    fs::write(destroy_workflow_path, destroy_workflow)?;
+    eprintln!(
+        "  {} destroy workflows at {} ...",
+        "Created".green().bold(),
+        destroy_workflow_path.blue()
+    );
 
     let workflows = ApplicationWorkflowConfig {
         provider: "github_actions".to_string(),
@@ -199,7 +276,7 @@ async fn configure_namespace(
 ) -> Result<ApplicationNamespaceConfig, WKCliError> {
     let workflows = get_workflows_from_current_dir()?;
     let setup_build_workflow =
-        inquire::Confirm::new("Do you want to select a build workflow?")
+        inquire::Confirm::new("Do you want to setup a build workflow?")
             .with_render_config(inquire_render_config())
             .with_default(true)
             .with_help_message("If this is a new project you can skip this and configure it later once you have a build workflow")
@@ -436,4 +513,51 @@ async fn get_application_config(
     .application_config;
 
     Ok(application_config)
+}
+
+fn modify_workflow_env(
+    yaml_bytes: Vec<u8>,
+    application: &str,
+    namespace: &str,
+) -> Result<String, WKCliError> {
+    let yaml_str = String::from_utf8(yaml_bytes).map_err(|_| WKCliError::UnableToParseYmlFile)?;
+    let mut docs =
+        YamlLoader::load_from_str(&yaml_str).map_err(|_| WKCliError::UnableToParseYmlFile)?;
+
+    if let Some(doc) = docs.get_mut(0) {
+        if let Some(env) = doc["env"].as_mut_hash() {
+            // Modify the environment variables
+            env.insert(
+                Yaml::String("GAR_PROJECT_ID".to_string()),
+                Yaml::String("mv-auxiliary".to_string()),
+            );
+            env.insert(
+                Yaml::String("GAR_REPO".to_string()),
+                Yaml::String(application.to_string()),
+            );
+            env.insert(
+                Yaml::String("GAR_PROJECT_NAMESPACE".to_string()),
+                Yaml::String(format!("{}-{}-gke", namespace, application)),
+            );
+            env.insert(
+                Yaml::String("GAR_CACHE_REPO".to_string()),
+                Yaml::String("mv-apps-container-cache".to_string()),
+            );
+            env.insert(
+                Yaml::String("MIX_ENV".to_string()),
+                Yaml::String("prod".to_string()),
+            );
+        }
+
+        // Dump the YAML object
+        let mut out_str = String::new();
+        {
+            let mut emitter = YamlEmitter::new(&mut out_str);
+            emitter.dump(doc).unwrap(); // dump the YAML object to a String
+        }
+
+        Ok(out_str)
+    } else {
+        Err(WKCliError::UnableToParseYmlFile)
+    }
 }

@@ -3,6 +3,7 @@ pub mod appsignal;
 pub mod changelog;
 pub mod deployment;
 pub mod deployment_github;
+pub mod github;
 pub mod kubernetes;
 
 use self::{
@@ -28,6 +29,7 @@ pub use self::{
         CdPipelineForRollbackQuery, CdPipelineQuery, CdPipelinesQuery, ExecuteCdPipeline,
     },
     deployment_github::{cd_pipeline_github_query, CdPipelineGithubQuery},
+    github::{github_workflow_templates_query, GithubWorkflowTemplatesQuery},
     kubernetes::{
         deploy_livebook, destroy_livebook, is_authorized_query, kubernetes_pods_query,
         livebook_resource_query, DeployLivebook, DestroyLivebook, IsAuthorizedQuery,
@@ -712,6 +714,20 @@ impl WKClient {
                     marker,
                     state: state.map(|s| s.into()),
                 },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    pub async fn fetch_github_workflow_templates(
+        &self,
+    ) -> Result<github_workflow_templates_query::ResponseData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        gql_client
+            .post_graphql::<GithubWorkflowTemplatesQuery, _>(
+                &self.api_url,
+                github_workflow_templates_query::Variables {},
             )
             .await
             .map_err(|err| err.into())
