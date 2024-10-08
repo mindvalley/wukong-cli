@@ -1,0 +1,22 @@
+query GithubWorkflowTemplatesQuery {
+    githubWorkflowTemplates {
+        build {
+            prod {
+                name
+                content
+            }
+            staging {
+                name
+                content
+            }
+        }
+        deploy {
+            name
+            content
+        }
+        destroy {
+            name
+            content
+        }
+    }
+}

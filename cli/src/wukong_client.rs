@@ -14,8 +14,8 @@ use wukong_sdk::{
         appsignal_exception_incidents_query, cd_pipeline_for_rollback_query,
         cd_pipeline_github_query, cd_pipeline_query, cd_pipelines_query, changelogs_query,
         deploy_livebook, deployment::cd_pipeline_status_query, destroy_livebook,
-        execute_cd_pipeline, is_authorized_query, kubernetes_pods_query, livebook_resource_query,
-        AppsignalTimeFrame,
+        execute_cd_pipeline, github_workflow_templates_query, is_authorized_query,
+        kubernetes_pods_query, livebook_resource_query, AppsignalTimeFrame,
     },
     services::{
         gcloud::{DatabaseMetrics, LogEntries, LogEntriesOptions, TokenInfo},
@@ -425,5 +425,13 @@ impl WKClient {
     ) -> Result<application_config_query::ResponseData, WKCliError> {
         self.check_and_refresh_tokens().await?;
         self.inner.fetch_application_config(name).await
+    }
+
+    #[wukong_telemetry(api_event = "fetch_github_workflow_templates")]
+    pub async fn fetch_github_workflow_templates(
+        &mut self,
+    ) -> Result<github_workflow_templates_query::ResponseData, WKCliError> {
+        self.check_and_refresh_tokens().await?;
+        self.inner.fetch_github_workflow_templates().await
     }
 }
