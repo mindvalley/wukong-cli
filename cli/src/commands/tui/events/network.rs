@@ -280,7 +280,7 @@ async fn get_builds(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Result<()
     let mut builds = vec![];
 
     let cd_pipeline_data = match wk_client
-        .fetch_cd_pipeline(&application, &namespace, &version)
+        .fetch_cd_pipeline_github(&application, &namespace, &version)
         .await
     {
         Ok(resp) => Ok(resp),
@@ -294,7 +294,7 @@ async fn get_builds(app: Arc<Mutex<App>>, wk_client: &mut WKClient) -> Result<()
 
     if let Some(cd_pipeline_data) = cd_pipeline_data {
         builds = cd_pipeline_data
-            .jenkins_builds
+            .github_builds
             .into_iter()
             .map(|build| {
                 let commits = build

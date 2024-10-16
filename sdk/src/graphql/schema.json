@@ -113,7 +113,18 @@
           "enumValues": null,
           "fields": [
             {
-              "args": [],
+              "args": [
+                {
+                  "defaultValue": "false",
+                  "description": null,
+                  "name": "includeDeprecated",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                }
+              ],
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
@@ -444,7 +455,18 @@
           "enumValues": null,
           "fields": [
             {
-              "args": [],
+              "args": [
+                {
+                  "defaultValue": "false",
+                  "description": null,
+                  "name": "includeDeprecated",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                }
+              ],
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
@@ -567,11 +589,39 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
+              "name": "deprecationReason",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
               "name": "description",
               "type": {
                 "kind": "SCALAR",
                 "name": "String",
                 "ofType": null
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "isDeprecated",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                }
               }
             },
             {
@@ -799,7 +849,18 @@
               }
             },
             {
-              "args": [],
+              "args": [
+                {
+                  "defaultValue": "false",
+                  "description": null,
+                  "name": "includeDeprecated",
+                  "type": {
+                    "kind": "SCALAR",
+                    "name": "Boolean",
+                    "ofType": null
+                  }
+                }
+              ],
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
@@ -2812,6 +2873,113 @@
           "possibleTypes": null
         },
         {
+          "description": "DB Branch",
+          "enumValues": null,
+          "fields": [
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "hostname",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "id",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "name",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "password",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "poolerHostname",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "username",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              }
+            }
+          ],
+          "inputFields": null,
+          "interfaces": [],
+          "kind": "OBJECT",
+          "name": "DatabaseBranch",
+          "possibleTypes": null
+        },
+        {
           "description": null,
           "enumValues": null,
           "fields": [
@@ -2909,9 +3077,9 @@
             },
             {
               "args": [],
-              "deprecationReason": null,
+              "deprecationReason": "This field is deprecated and will be removed in the future",
               "description": null,
-              "isDeprecated": false,
+              "isDeprecated": true,
               "name": "jenkinsBuilds",
               "type": {
                 "kind": "NON_NULL",
@@ -3081,6 +3249,151 @@
           "interfaces": null,
           "kind": "SCALAR",
           "name": "Float",
+          "possibleTypes": null
+        },
+        {
+          "description": "Github workflow template",
+          "enumValues": null,
+          "fields": [
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "content",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "name",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              }
+            }
+          ],
+          "inputFields": null,
+          "interfaces": [],
+          "kind": "OBJECT",
+          "name": "GithubWorkflowTemplate",
+          "possibleTypes": null
+        },
+        {
+          "description": "Github workflow template environment",
+          "enumValues": null,
+          "fields": [
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "prod",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "GithubWorkflowTemplate",
+                  "ofType": null
+                }
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "staging",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "GithubWorkflowTemplate",
+                  "ofType": null
+                }
+              }
+            }
+          ],
+          "inputFields": null,
+          "interfaces": [],
+          "kind": "OBJECT",
+          "name": "GithubWorkflowTemplateEnvironment",
+          "possibleTypes": null
+        },
+        {
+          "description": "Github workflow templates",
+          "enumValues": null,
+          "fields": [
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "build",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "GithubWorkflowTemplateEnvironment",
+                  "ofType": null
+                }
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "deploy",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "GithubWorkflowTemplate",
+                  "ofType": null
+                }
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "destroy",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "GithubWorkflowTemplate",
+                  "ofType": null
+                }
+              }
+            }
+          ],
+          "inputFields": null,
+          "interfaces": [],
+          "kind": "OBJECT",
+          "name": "GithubWorkflowTemplates",
           "possibleTypes": null
         },
         {
@@ -3294,6 +3607,18 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
+              "name": "cookie",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
               "name": "createdAt",
               "type": {
                 "kind": "NON_NULL",
@@ -3378,6 +3703,18 @@
               "deprecationReason": null,
               "description": null,
               "isDeprecated": false,
+              "name": "nodeName",
+              "type": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
               "name": "password",
               "type": {
                 "kind": "SCALAR",
@@ -3391,30 +3728,6 @@
               "description": null,
               "isDeprecated": false,
               "name": "podIp",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "args": [],
-              "deprecationReason": null,
-              "description": null,
-              "isDeprecated": false,
-              "name": "nodeName",
-              "type": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            {
-              "args": [],
-              "deprecationReason": null,
-              "description": null,
-              "isDeprecated": false,
-              "name": "cookie",
               "type": {
                 "kind": "SCALAR",
                 "name": "String",
@@ -3825,6 +4138,51 @@
           "description": null,
           "enumValues": null,
           "fields": [
+            {
+              "args": [
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "application",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "branchName",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                }
+              ],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "createDatabaseBranch",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "DatabaseBranch",
+                  "ofType": null
+                }
+              }
+            },
             {
               "args": [
                 {
@@ -4973,9 +5331,9 @@
                   }
                 }
               ],
-              "deprecationReason": null,
+              "deprecationReason": "This field is deprecated and will be removed in the future.",
               "description": null,
-              "isDeprecated": false,
+              "isDeprecated": true,
               "name": "ciStatus",
               "type": {
                 "kind": "OBJECT",
@@ -5062,6 +5420,22 @@
               }
             },
             {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "githubWorkflowTemplates",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "GithubWorkflowTemplates",
+                  "ofType": null
+                }
+              }
+            },
+            {
               "args": [
                 {
                   "defaultValue": null,
@@ -5137,9 +5511,9 @@
                   }
                 }
               ],
-              "deprecationReason": null,
+              "deprecationReason": "This field is deprecated and will be removed in the future.",
               "description": null,
-              "isDeprecated": false,
+              "isDeprecated": true,
               "name": "job",
               "type": {
                 "kind": "OBJECT",
@@ -5286,9 +5660,9 @@
                   }
                 }
               ],
-              "deprecationReason": null,
+              "deprecationReason": "This field is deprecated and will be removed in the future.",
               "description": null,
-              "isDeprecated": false,
+              "isDeprecated": true,
               "name": "multiBranchPipeline",
               "type": {
                 "kind": "OBJECT",
@@ -5313,9 +5687,9 @@
                   }
                 }
               ],
-              "deprecationReason": null,
+              "deprecationReason": "This field is deprecated, use `github_pipeline` instead.",
               "description": null,
-              "isDeprecated": false,
+              "isDeprecated": true,
               "name": "pipeline",
               "type": {
                 "kind": "INTERFACE",
@@ -5336,9 +5710,9 @@
                   }
                 }
               ],
-              "deprecationReason": null,
+              "deprecationReason": "This field is deprecated, use `github_pipelines` instead.",
               "description": null,
-              "isDeprecated": false,
+              "isDeprecated": true,
               "name": "pipelines",
               "type": {
                 "kind": "NON_NULL",

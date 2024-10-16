@@ -67,6 +67,7 @@ heck = "0.4.1"
 serde_yaml = "0.9.31"
 inquire = { version = "0.6.2", features = ["editor"] }
 strum.workspace = true
+yaml-rust2 = "0.9"
 
 [dev-dependencies]
 httpmock = "0.6.7"
