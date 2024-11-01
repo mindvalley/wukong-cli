@@ -173,10 +173,15 @@ pub async fn handle_connect(
     let instance_name = if instance_name_idx < main_pods.len() + 1 {
         main_pods[instance_name_idx - 1].name.clone()
     } else {
-        preview_pods[instance_name_idx - main_pods.len() - 2].name.clone()
+        preview_pods[instance_name_idx - main_pods.len() - 2]
+            .name
+            .clone()
     };
 
-    let instance_object = k8s_pods.iter().find(|pod| pod.name == instance_name).unwrap();
+    let instance_object = k8s_pods
+        .iter()
+        .find(|pod| pod.name == instance_name)
+        .unwrap();
 
     let preparing_loader = new_spinner();
     preparing_loader.set_style(spinner_style.clone());
