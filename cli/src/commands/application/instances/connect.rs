@@ -31,7 +31,6 @@ struct Status {
     service: bool,
 }
 
-#[derive(Debug)]
 struct KubernetesPod {
     name: String,
     ready: bool,
