@@ -38,6 +38,7 @@ struct KubernetesPod {
     node_name: Option<String>,
     cookie: Option<String>,
     is_livebook: Option<bool>,
+    is_preview: Option<bool>,
 }
 
 #[wukong_telemetry(command_event = "application_instances_connect")]
@@ -121,31 +122,65 @@ pub async fn handle_connect(
 
     let k8s_pods = get_ready_k8s_pods(&mut wk_client, &application, &namespace, &version).await?;
 
-    debug!("Found {} pods", k8s_pods.len());
     if k8s_pods.is_empty() {
         eprintln!("Found 0 instances. Either there's no running instances, or the instances are not ready to connect to using Livebook remote shell.");
 
         return Ok(false);
     }
 
+    let main_pods = k8s_pods
+        .iter()
+        .filter(|pod| !pod.is_preview.unwrap_or_default())
+        .collect::<Vec<&KubernetesPod>>();
+
+    let preview_pods = k8s_pods
+        .iter()
+        .filter(|pod| pod.is_preview.unwrap_or_default())
+        .collect::<Vec<&KubernetesPod>>();
+
     fetch_instance_loader.finish_with_message(format!(
         "Finding the available instances to connect to in the {} version...✅",
         version.bright_green()
     ));
 
-    let instance_name_idx = Select::with_theme(&ColorfulTheme::default())
-        .with_prompt("Please choose the instance you want to connect")
-        .default(0)
-        .items(
-            &k8s_pods
-                .iter()
-                .map(|pod| pod.name.clone())
-                .collect::<Vec<String>>(),
-        )
-        .interact()?;
+    let mut items = Vec::new();
+    if !main_pods.is_empty() {
+        items.push("Main:".to_string());
+        items.extend(main_pods.iter().map(|pod| format!("  {}", pod.name)));
+    }
+    if !preview_pods.is_empty() {
+        items.push("Preview:".to_string());
+        items.extend(preview_pods.iter().map(|pod| format!("  {}", pod.name)));
+    }
 
-    let instance_name = k8s_pods[instance_name_idx].name.clone();
-    let instance_object = &k8s_pods[instance_name_idx];
+    let instance_name_idx = loop {
+        let instance_name_idx = Select::with_theme(&ColorfulTheme::default())
+            .with_prompt("Please choose the instance you want to connect")
+            .default(0)
+            .items(&items)
+            .interact()?;
+
+        if instance_name_idx == 0 || instance_name_idx == main_pods.len() + 1 {
+            // If "Main pods" or "Preview pods" is selected, continue the loop
+            continue;
+        } else {
+            // Otherwise, break the loop and return the selected index
+            break instance_name_idx;
+        }
+    };
+
+    let instance_name = if instance_name_idx < main_pods.len() + 1 {
+        main_pods[instance_name_idx - 1].name.clone()
+    } else {
+        preview_pods[instance_name_idx - main_pods.len() - 2]
+            .name
+            .clone()
+    };
+
+    let instance_object = k8s_pods
+        .iter()
+        .find(|pod| pod.name == instance_name)
+        .unwrap();
 
     let preparing_loader = new_spinner();
     preparing_loader.set_style(spinner_style.clone());
@@ -406,6 +441,7 @@ async fn get_ready_k8s_pods(
             node_name: pod.node_name,
             cookie: pod.cookie,
             is_livebook: Some(pod.labels.contains(&"livebook".to_string())),
+            is_preview: Some(pod.labels.contains(&"preview".to_string())),
         })
         .filter(|pod| pod.ready && !pod.is_livebook.unwrap_or_default())
         .collect();
