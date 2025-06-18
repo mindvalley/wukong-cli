@@ -108,7 +108,7 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
     let workflows = get_workflows_from_current_dir()?;
     let mut excluded_workflows = Vec::new();
 
-    if !workflows.is_empty() {
+    if (!workflows.is_empty()) {
         excluded_workflows = inquire::MultiSelect::new(
             "Workflows to exclude from the Wukong CLI & TUI",
             workflows.to_vec(),
@@ -385,6 +385,11 @@ async fn configure_namespace(
         .with_help_message("Leave it blank to disable Slack notifications. Use 'channel-name' format without the '#'. \n\nIt is your responsibility to ensure the channel name exists, and to add the bot integration if the channel is private.")
         .prompt()?;
 
+    let continuous_delivery = inquire::Confirm::new("Do you want to enable continuous delivery?")
+        .with_render_config(inquire_render_config())
+        .with_default(false)
+        .prompt()?;
+
     Ok(ApplicationNamespaceConfig {
         namespace_type: namespace_type.clone(),
         build: build_workflow.map(|workflow| ApplicationNamespaceBuildConfig {
@@ -441,6 +446,7 @@ async fn configure_namespace(
                 }),
             })
         },
+        continuous_delivery,
     })
 }
 
