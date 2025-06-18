@@ -27,8 +27,6 @@ pub struct ApplicationNamespaceConfig {
     pub honeycomb: Option<ApplicationNamespaceHoneycombConfig>,
     pub cloudsql: Option<ApplicationNamespaceCloudsqlConfig>,
     pub notifications: Option<ApplicationNamespaceNotificationsConfig>,
-    /// The `continuous_delivery` flag indicates whether continuous delivery is enabled for the namespace.
-    pub continuous_delivery: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
