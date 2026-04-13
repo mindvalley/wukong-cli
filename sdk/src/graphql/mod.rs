@@ -784,10 +784,12 @@ impl WKClient {
 
         let secrets = data
             .iter()
-            .map(|(k, v)| update_application_secrets::ApplicationSecretInput {
-                key: (*k).to_string(),
-                value: (*v).to_string(),
-            })
+            .map(
+                |(k, v)| update_application_secrets::ApplicationSecretInput {
+                    key: (*k).to_string(),
+                    value: (*v).to_string(),
+                },
+            )
             .collect();
 
         let response = gql_client

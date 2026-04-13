@@ -111,8 +111,7 @@ impl SecretExtractor for WKTomlConfigExtractor {
                                     if splited_source_and_path.len() != 2 {
                                         continue;
                                     }
-                                    let path_with_engine =
-                                        splited_source_and_path[1].to_string();
+                                    let path_with_engine = splited_source_and_path[1].to_string();
 
                                     let splited_engine_and_path =
                                         path_with_engine.split('/').collect::<Vec<&str>>();
@@ -129,8 +128,7 @@ impl SecretExtractor for WKTomlConfigExtractor {
                                 "wukong" => {
                                     // Expect: wukong:APPLICATION/NAMESPACE/PATH...#KEY
                                     // (`#KEY` was already split into `secret_name`)
-                                    let scheme_split =
-                                        source.split(':').collect::<Vec<&str>>();
+                                    let scheme_split = source.split(':').collect::<Vec<&str>>();
                                     if scheme_split.len() != 2 || scheme_split[0] != "wukong" {
                                         eprintln!(
                                             "⚠️  [wukong_toml] The {} entry has provider = \"wukong\" but {} does not match {}. It will be ignored.",
@@ -142,9 +140,7 @@ impl SecretExtractor for WKTomlConfigExtractor {
                                     }
                                     let segments =
                                         scheme_split[1].split('/').collect::<Vec<&str>>();
-                                    if segments.len() < 3
-                                        || segments.iter().any(|s| s.is_empty())
-                                    {
+                                    if segments.len() < 3 || segments.iter().any(|s| s.is_empty()) {
                                         eprintln!(
                                             "⚠️  [wukong_toml] The {} entry needs at least application/namespace/path after the {} scheme. It will be ignored.",
                                             key.cyan(),

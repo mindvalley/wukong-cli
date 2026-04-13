@@ -17,7 +17,9 @@ use crate::{
     wukong_client::WKClient,
 };
 
-use super::utils::{extract_secret_infos, get_secret_config_files, parse_wukong_src, vault_token_for};
+use super::utils::{
+    extract_secret_infos, get_secret_config_files, parse_wukong_src, vault_token_for,
+};
 use wukong_telemetry::*;
 use wukong_telemetry_macro::*;
 
