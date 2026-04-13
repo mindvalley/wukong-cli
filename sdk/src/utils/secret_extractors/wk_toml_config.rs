@@ -117,8 +117,8 @@ impl SecretExtractor for WKTomlConfigExtractor {
                                         path_with_engine.split('/').collect::<Vec<&str>>();
                                     let (engine, path) = splited_engine_and_path.split_at(1);
 
-                                    if (splited_source_and_path[0] != "vault")
-                                        || (engine[0] != "secret")
+                                    if splited_source_and_path[0] != "vault"
+                                        || engine[0] != "secret"
                                     {
                                         continue;
                                     }
@@ -163,8 +163,8 @@ impl SecretExtractor for WKTomlConfigExtractor {
                                 }
                             };
 
-                            if (destination_file.starts_with("~/"))
-                                || (destination_file.starts_with('/'))
+                            if destination_file.starts_with("~/")
+                                || destination_file.starts_with('/')
                             {
                                 eprintln!(
                                 "⚠️  [wukong_toml] The destination {} is not under the project directory. It will be ignored.",
