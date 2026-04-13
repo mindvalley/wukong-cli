@@ -66,7 +66,7 @@ jobs:
         with:
           target: ${{ matrix.job.target }}
           components: rustfmt, clippy
-          toolchain: 1.81.0
+          toolchain: stable
 
       - name: Install protoc for Linux
         if: contains(matrix.job.target, 'linux')
