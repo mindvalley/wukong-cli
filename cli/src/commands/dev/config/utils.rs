@@ -11,12 +11,54 @@ use wukong_sdk::secret_extractors::{
 
 use super::diff::has_diff;
 use crate::{
+    auth::vault,
+    config::Config,
     error::{DevConfigError, WKCliError},
     wukong_client::WKClient,
 };
 
+/// Acquire a Vault (bunker) token only when at least one extracted entry
+/// actually needs it. Returns an empty string for the pure-`wukong` case so
+/// callers can pass it through unchanged.
+pub async fn vault_token_for(
+    extracted_infos: &[(String, Vec<SecretInfo>)],
+    config: &mut Config,
+) -> Result<String, WKCliError> {
+    let needs_bunker = extracted_infos
+        .iter()
+        .any(|(_, infos)| infos.iter().any(|i| i.provider == "bunker"));
+    if needs_bunker {
+        vault::get_token_or_login(config).await
+    } else {
+        Ok(String::new())
+    }
+}
+
+/// Split a wukong-provider `src` (`APPLICATION/NAMESPACE/PATH...`) into its
+/// three components.
+///
+/// Relies on `WKTomlConfigExtractor` having already validated at least three
+/// non-empty segments; panics otherwise rather than forwarding empty strings
+/// to the backend.
+pub fn parse_wukong_src(src: &str) -> (String, String, String) {
+    let mut parts = src.splitn(3, '/');
+    let application = parts
+        .next()
+        .expect("parse_wukong_src: application segment missing")
+        .to_string();
+    let namespace = parts
+        .next()
+        .expect("parse_wukong_src: namespace segment missing")
+        .to_string();
+    let path = parts
+        .next()
+        .expect("parse_wukong_src: path segment missing")
+        .to_string();
+    (application, namespace, path)
+}
+
 pub async fn get_updated_configs<'a>(
-    wk_client: &WKClient,
+    wk_client: &mut WKClient,
     vault_token: &str,
     config_files: &'a Vec<(String, Vec<SecretInfo>)>,
 ) -> Result<Vec<(&'a SecretInfo, String, String, String)>, WKCliError> {
@@ -28,7 +70,12 @@ pub async fn get_updated_configs<'a>(
     for config_file in config_files {
         let (config_path, secret_infos) = config_file;
         for info in secret_infos {
-            let remote_secrets = wk_client.get_secrets(vault_token, &info.src).await?.data;
+            let remote_secrets = if info.provider == "wukong" {
+                let (app, ns, path) = parse_wukong_src(&info.src);
+                wk_client.get_wukong_secrets(&app, &ns, &path).await?.data
+            } else {
+                wk_client.get_secrets(vault_token, &info.src).await?.data
+            };
 
             let local_config = match get_local_config_as_string(&info.destination_file, config_path)
             {
@@ -48,9 +95,12 @@ pub async fn get_updated_configs<'a>(
                 }
             };
 
-            // Get only one key from hashmap
+            // Get only one key from hashmap. For the `wukong` provider, a
+            // missing key means the path is new — treat it as an empty remote
+            // and let `push` upsert. Bunker keeps the existing strict behavior.
             let remote_config = match remote_secrets.get(&info.name) {
-                Some(config) => config,
+                Some(config) => config.clone(),
+                None if info.provider == "wukong" => String::new(),
                 None => {
                     return Err(WKCliError::DevConfigError(
                         DevConfigError::InvalidSecretPath {
@@ -61,13 +111,8 @@ pub async fn get_updated_configs<'a>(
                 }
             };
 
-            if has_diff(remote_config, &local_config) {
-                updated_configs.push((
-                    info,
-                    remote_config.clone(),
-                    local_config,
-                    config_path.clone(),
-                ));
+            if has_diff(&remote_config, &local_config) {
+                updated_configs.push((info, remote_config, local_config, config_path.clone()));
             }
         }
     }

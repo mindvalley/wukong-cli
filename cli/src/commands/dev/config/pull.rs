@@ -11,14 +11,13 @@ use owo_colors::OwoColorize;
 use wukong_sdk::services::vault::client::FetchSecretsData;
 
 use crate::{
-    auth::vault,
     commands::{dev::config::utils::get_local_config_path, Context},
     config::Config,
     error::WKCliError,
     wukong_client::WKClient,
 };
 
-use super::utils::{extract_secret_infos, get_secret_config_files};
+use super::utils::{extract_secret_infos, get_secret_config_files, parse_wukong_src, vault_token_for};
 use wukong_telemetry::*;
 use wukong_telemetry_macro::*;
 
@@ -42,11 +41,11 @@ pub async fn handle_config_pull(context: Context, path: &Path) -> Result<bool, W
     let extracted_infos = extract_secret_infos(secret_config_files)?;
 
     let mut config = Config::load_from_default_path()?;
-    let wk_client = WKClient::for_channel(&config, &context.channel)?;
-    let vault_token = vault::get_token_or_login(&mut config).await?;
+    let mut wk_client = WKClient::for_channel(&config, &context.channel)?;
+    let vault_token = vault_token_for(&extracted_infos, &mut config).await?;
 
     let mut has_error = false;
-    let mut secrets_cache: HashMap<String, FetchSecretsData> = HashMap::new();
+    let mut secrets_cache: HashMap<(String, String), FetchSecretsData> = HashMap::new();
 
     for info in extracted_infos {
         eprintln!();
@@ -55,12 +54,13 @@ pub async fn handle_config_pull(context: Context, path: &Path) -> Result<bool, W
         for annotation in info.1 {
             let source_path = annotation.src.clone();
             let destination_path = annotation.destination_file.clone();
+            let cache_key = (annotation.provider.clone(), source_path.clone());
 
             let file_path = get_local_config_path(&destination_path, &info.0);
 
-            // cache the secrets so we don't call vault api multiple times for the same
-            // path
-            let secret = match secrets_cache.get(&source_path) {
+            // cache the secrets so we don't call the remote multiple times for the
+            // same (provider, path)
+            let secret = match secrets_cache.get(&cache_key) {
                 Some(secrets) => match secrets.data.get(&annotation.name) {
                     Some(secret) => secret.to_string(),
                     None => {
@@ -77,7 +77,13 @@ pub async fn handle_config_pull(context: Context, path: &Path) -> Result<bool, W
                     }
                 },
                 None => {
-                    let secrets = match wk_client.get_secrets(&vault_token, &source_path).await {
+                    let fetch_result = if annotation.provider == "wukong" {
+                        let (app, ns, path) = parse_wukong_src(&source_path);
+                        wk_client.get_wukong_secrets(&app, &ns, &path).await
+                    } else {
+                        wk_client.get_secrets(&vault_token, &source_path).await
+                    };
+                    let secrets = match fetch_result {
                         Ok(secrets) => secrets,
                         Err(err) => {
                             debug!("Error while fetching secrets: {:?}", &source_path);
@@ -92,10 +98,10 @@ pub async fn handle_config_pull(context: Context, path: &Path) -> Result<bool, W
                             continue;
                         }
                     };
-                    secrets_cache.insert(source_path.clone(), secrets);
+                    secrets_cache.insert(cache_key.clone(), secrets);
 
                     match secrets_cache
-                        .get(&source_path)
+                        .get(&cache_key)
                         .unwrap()
                         .data
                         .get(&annotation.name)

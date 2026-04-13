@@ -5,7 +5,6 @@ use owo_colors::OwoColorize;
 use wukong_sdk::secret_extractors::SecretInfo;
 
 use crate::{
-    auth::vault,
     commands::{dev::config::utils::make_path_relative, Context},
     config::Config,
     error::{DevConfigError, WKCliError},
@@ -17,8 +16,8 @@ use crate::{
 use super::{
     diff::print_diff,
     utils::{
-        extract_secret_infos, get_local_config_as_string, get_local_config_path,
-        get_secret_config_files, get_updated_configs,
+        extract_secret_infos, get_local_config_path, get_secret_config_files, get_updated_configs,
+        parse_wukong_src, vault_token_for,
     },
 };
 use wukong_telemetry::*;
@@ -46,14 +45,15 @@ pub async fn handle_config_push(context: Context) -> Result<bool, WKCliError> {
     }
 
     let mut config = Config::load_from_default_path()?;
-    let wk_client = WKClient::for_channel(&config, &context.channel)?;
-    let vault_token = vault::get_token_or_login(&mut config).await?;
+    let mut wk_client = WKClient::for_channel(&config, &context.channel)?;
+    let vault_token = vault_token_for(&extracted_infos, &mut config).await?;
 
-    let updated_configs = get_updated_configs(&wk_client, &vault_token, &extracted_infos).await?;
+    let updated_configs =
+        get_updated_configs(&mut wk_client, &vault_token, &extracted_infos).await?;
 
     if updated_configs.is_empty() {
         println!(
-            "The config file is already up to date with the Vault Bunker. There are no changes to push."
+            "The config file is already up to date with the remote. There are no changes to push."
         );
 
         return Ok(true);
@@ -64,36 +64,48 @@ pub async fn handle_config_push(context: Context) -> Result<bool, WKCliError> {
             "{}",
             "There is only one config file to update...".bright_yellow()
         );
-        let (annotation, _, _, config_path) = updated_configs.first().unwrap();
+        let (annotation, remote_config, local_config, config_path) =
+            updated_configs.first().unwrap();
 
-        update_secrets(&wk_client, &vault_token, &(config_path.clone(), annotation)).await?;
+        update_secrets(
+            &mut wk_client,
+            &vault_token,
+            annotation,
+            config_path,
+            remote_config,
+            local_config,
+        )
+        .await?;
     } else {
-        let config_to_update = select_config(&updated_configs).await;
-        update_secrets(&wk_client, &vault_token, &config_to_update).await?;
+        let (annotation, remote_config, local_config, config_path) =
+            select_config(&updated_configs).await;
+        update_secrets(
+            &mut wk_client,
+            &vault_token,
+            annotation,
+            &config_path,
+            &remote_config,
+            &local_config,
+        )
+        .await?;
     }
 
     Ok(true)
 }
 
 async fn update_secrets(
-    wk_client: &WKClient,
+    wk_client: &mut WKClient,
     vault_token: &str,
-    config_to_update: &(String, &SecretInfo),
+    secret_info: &SecretInfo,
+    config_path: &str,
+    remote_config: &str,
+    local_config_string: &str,
 ) -> Result<(), WKCliError> {
-    let (config_path, secret_info) = config_to_update;
-
-    let local_config_string =
-        get_local_config_as_string(&secret_info.destination_file, config_path)?;
-
-    let remote_config = wk_client
-        .get_secret(vault_token, &secret_info.src, &secret_info.name)
-        .await?;
-
     let local_config_path = get_local_config_path(config_path, &secret_info.destination_file);
 
     print_diff(
-        &remote_config,
-        &local_config_string,
+        remote_config,
+        local_config_string,
         &local_config_path.to_string_lossy(),
     );
 
@@ -103,15 +115,22 @@ async fn update_secrets(
         .interact()?;
 
     let mut secrets_ref: HashMap<&str, &str> = HashMap::new();
-    secrets_ref.insert(&secret_info.name, &local_config_string);
+    secrets_ref.insert(&secret_info.name, local_config_string);
 
     if agree_to_update {
         let loader = new_spinner();
         loader.set_message("Updating secrets... ");
 
-        wk_client
-            .update_secret(vault_token, &secret_info.src, &secrets_ref)
-            .await?;
+        if secret_info.provider == "wukong" {
+            let (app, ns, path) = parse_wukong_src(&secret_info.src);
+            wk_client
+                .update_wukong_secrets(&app, &ns, &path, &secrets_ref)
+                .await?;
+        } else {
+            wk_client
+                .update_secret(vault_token, &secret_info.src, &secrets_ref)
+                .await?;
+        }
 
         colored_println!("Successfully updated the secrets.");
     }
@@ -121,7 +140,7 @@ async fn update_secrets(
 
 async fn select_config<'a>(
     available_config: &[(&'a SecretInfo, String, String, String)],
-) -> (String, &'a SecretInfo) {
+) -> (&'a SecretInfo, String, String, String) {
     let selection = Select::with_theme(&ColorfulTheme::default())
         .items(
             &available_config
@@ -130,11 +149,16 @@ async fn select_config<'a>(
                     let local_config_path =
                         get_local_config_path(config_path, &secret_info.destination_file);
 
+                    let remote_display = if secret_info.provider == "wukong" {
+                        format!("wukong:{}#{}", secret_info.src, secret_info.name)
+                    } else {
+                        format!("vault:secret/{}#{}", secret_info.src, secret_info.name)
+                    };
+
                     format!(
-                        "{:<50}vault:secret/{}#{}",
+                        "{:<50}{}",
                         make_path_relative(&local_config_path.to_string_lossy()),
-                        secret_info.src,
-                        secret_info.name,
+                        remote_display,
                     )
                 })
                 .collect::<Vec<String>>(),
@@ -150,8 +174,14 @@ async fn select_config<'a>(
 
     return match selection {
         Some(index) => {
-            let (secret_info, _, _, config_path) = available_config.get(index).unwrap();
-            (config_path.clone(), secret_info)
+            let (secret_info, remote_config, local_config, config_path) =
+                available_config.get(index).unwrap();
+            (
+                secret_info,
+                remote_config.clone(),
+                local_config.clone(),
+                config_path.clone(),
+            )
         }
         None => {
             println!("No selection made, exiting...");

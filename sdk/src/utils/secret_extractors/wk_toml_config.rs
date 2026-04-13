@@ -90,12 +90,13 @@ impl SecretExtractor for WKTomlConfigExtractor {
                                 }
                             };
 
-                            // we are ignoring configs if provider is not "bunker" and kind is not
-                            // "generic" for now
-                            if provider != "bunker" || kind != "generic" {
+                            if kind != "generic" {
                                 continue;
                             }
 
+                            // Split the `#fragment` off `src` to get the secret name.
+                            // This is shared between bunker (`vault:secret/PATH#NAME`)
+                            // and url (`https://HOST/PATH#NAME`) providers.
                             let value_part = source.split('#').collect::<Vec<&str>>();
                             if value_part.len() != 2 {
                                 continue;
@@ -103,19 +104,68 @@ impl SecretExtractor for WKTomlConfigExtractor {
                             let source = value_part[0].to_string();
                             let secret_name = value_part[1].to_string();
 
-                            let splited_source_and_path = source.split(':').collect::<Vec<&str>>();
-                            if splited_source_and_path.len() != 2 {
-                                continue;
-                            }
-                            let path_with_engine = splited_source_and_path[1].to_string();
+                            let src = match provider.as_str() {
+                                "bunker" => {
+                                    let splited_source_and_path =
+                                        source.split(':').collect::<Vec<&str>>();
+                                    if splited_source_and_path.len() != 2 {
+                                        continue;
+                                    }
+                                    let path_with_engine =
+                                        splited_source_and_path[1].to_string();
 
-                            let splited_engine_and_path =
-                                path_with_engine.split('/').collect::<Vec<&str>>();
-                            let (engine, path) = splited_engine_and_path.split_at(1);
+                                    let splited_engine_and_path =
+                                        path_with_engine.split('/').collect::<Vec<&str>>();
+                                    let (engine, path) = splited_engine_and_path.split_at(1);
 
-                            if (splited_source_and_path[0] != "vault") || (engine[0] != "secret") {
-                                continue;
-                            }
+                                    if (splited_source_and_path[0] != "vault")
+                                        || (engine[0] != "secret")
+                                    {
+                                        continue;
+                                    }
+
+                                    path.join("/")
+                                }
+                                "wukong" => {
+                                    // Expect: wukong:APPLICATION/NAMESPACE/PATH...#KEY
+                                    // (`#KEY` was already split into `secret_name`)
+                                    let scheme_split =
+                                        source.split(':').collect::<Vec<&str>>();
+                                    if scheme_split.len() != 2 || scheme_split[0] != "wukong" {
+                                        eprintln!(
+                                            "⚠️  [wukong_toml] The {} entry has provider = \"wukong\" but {} does not match {}. It will be ignored.",
+                                            key.cyan(),
+                                            "src".cyan(),
+                                            "wukong:APPLICATION/NAMESPACE/PATH#KEY".cyan()
+                                        );
+                                        continue;
+                                    }
+                                    let segments =
+                                        scheme_split[1].split('/').collect::<Vec<&str>>();
+                                    if segments.len() < 3
+                                        || segments.iter().any(|s| s.is_empty())
+                                    {
+                                        eprintln!(
+                                            "⚠️  [wukong_toml] The {} entry needs at least application/namespace/path after the {} scheme. It will be ignored.",
+                                            key.cyan(),
+                                            "wukong:".cyan()
+                                        );
+                                        continue;
+                                    }
+                                    // Store the slash-joined APP/NS/PATH form in `src`;
+                                    // the dispatch sites split it back into the
+                                    // (application, namespace, path) tuple.
+                                    scheme_split[1].to_string()
+                                }
+                                _ => {
+                                    eprintln!(
+                                        "⚠️  [wukong_toml] Unknown provider {:?} under {} table. It will be ignored.",
+                                        provider,
+                                        key.cyan()
+                                    );
+                                    continue;
+                                }
+                            };
 
                             if (destination_file.starts_with("~/"))
                                 || (destination_file.starts_with('/'))
@@ -126,8 +176,6 @@ impl SecretExtractor for WKTomlConfigExtractor {
                                 );
                                 continue;
                             }
-
-                            let src = path.join("/");
 
                             extracted.push(SecretInfo {
                                 key: key.to_string(),
@@ -199,6 +247,54 @@ dst = "priv/files/kubeconfig"
         assert_eq!(secret_infos[1].provider, "bunker");
         assert_eq!(secret_infos[1].kind, "generic");
         assert_eq!(secret_infos[1].annotated_file, dev_config_path);
+
+        dir.close().unwrap();
+    }
+
+    #[test]
+    fn test_wk_toml_config_extractor_wukong_provider() {
+        let dir = assert_fs::TempDir::new().unwrap();
+        let dev_config_path = dir.path().join(".wukong.toml");
+
+        let mut dev_config = File::create(&dev_config_path).unwrap();
+        writeln!(
+            dev_config,
+            r#"
+[[secrets]]
+
+[secrets.dotenv]
+provider = "wukong"
+kind = "generic"
+src = "wukong:mv-platform/staging/wukong-cli/development#dotenv"
+dst = ".env"
+
+[secrets.too_short]
+provider = "wukong"
+kind = "generic"
+src = "wukong:onlyone#foo"
+dst = "foo.txt"
+
+[secrets.bad_scheme]
+provider = "wukong"
+kind = "generic"
+src = "vault:secret/wukong-cli/development#bar"
+dst = "bar.txt"
+            "#
+        )
+        .unwrap();
+
+        let secret_infos = WKTomlConfigExtractor::extract(&dev_config_path).unwrap();
+
+        assert_eq!(secret_infos.len(), 1);
+        assert_eq!(secret_infos[0].key, "dotenv");
+        assert_eq!(secret_infos[0].name, "dotenv");
+        assert_eq!(
+            secret_infos[0].src,
+            "mv-platform/staging/wukong-cli/development"
+        );
+        assert_eq!(secret_infos[0].destination_file, ".env");
+        assert_eq!(secret_infos[0].provider, "wukong");
+        assert_eq!(secret_infos[0].kind, "generic");
 
         dir.close().unwrap();
     }

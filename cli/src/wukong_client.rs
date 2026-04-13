@@ -327,6 +327,39 @@ impl WKClient {
         self.inner.update_secret(api_token, path, data).await
     }
 
+    #[wukong_telemetry(api_event = "fetch_wukong_secrets")]
+    pub async fn get_wukong_secrets(
+        &mut self,
+        application: &str,
+        namespace: &str,
+        path: &str,
+    ) -> Result<FetchSecretsData, WKCliError> {
+        self.check_and_refresh_tokens().await?;
+        let result: Result<FetchSecretsData, WKCliError> = self
+            .inner
+            .get_wukong_secrets(application, namespace, path)
+            .await
+            .map_err(WKCliError::from);
+        result
+    }
+
+    #[wukong_telemetry(api_event = "update_wukong_secrets")]
+    pub async fn update_wukong_secrets(
+        &mut self,
+        application: &str,
+        namespace: &str,
+        path: &str,
+        data: &HashMap<&str, &str>,
+    ) -> Result<bool, WKCliError> {
+        self.check_and_refresh_tokens().await?;
+        let result: Result<bool, WKCliError> = self
+            .inner
+            .update_wukong_secrets(application, namespace, path, data)
+            .await
+            .map_err(WKCliError::from);
+        result
+    }
+
     #[wukong_telemetry(api_event = "fetch_appsignal_average_error_rate")]
     pub async fn fetch_appsignal_average_error_rate(
         &mut self,
