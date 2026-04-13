@@ -4427,6 +4427,87 @@
                   "ofType": null
                 }
               }
+            },
+            {
+              "args": [
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "application",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "namespace",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "path",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "secrets",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "LIST",
+                      "name": null,
+                      "ofType": {
+                        "kind": "NON_NULL",
+                        "name": null,
+                        "ofType": {
+                          "kind": "INPUT_OBJECT",
+                          "name": "ApplicationSecretInput",
+                          "ofType": null
+                        }
+                      }
+                    }
+                  }
+                }
+              ],
+              "deprecationReason": null,
+              "description": "Upsert vault-powered secrets for an application/namespace/path.",
+              "isDeprecated": false,
+              "name": "updateApplicationSecrets",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                }
+              }
             }
           ],
           "inputFields": null,
@@ -5731,6 +5812,73 @@
                   }
                 }
               }
+            },
+            {
+              "args": [
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "application",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "namespace",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                {
+                  "defaultValue": null,
+                  "description": null,
+                  "name": "path",
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                }
+              ],
+              "deprecationReason": null,
+              "description": "List vault-powered secrets for an application/namespace/path.",
+              "isDeprecated": false,
+              "name": "applicationSecrets",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "OBJECT",
+                      "name": "ApplicationSecret",
+                      "ofType": null
+                    }
+                  }
+                }
+              }
             }
           ],
           "inputFields": null,
@@ -5925,6 +6073,88 @@
           "interfaces": [],
           "kind": "OBJECT",
           "name": "Throughput",
+          "possibleTypes": null
+        },
+        {
+          "description": "A single application secret (vault-powered provider).",
+          "enumValues": null,
+          "fields": [
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "key",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              }
+            },
+            {
+              "args": [],
+              "deprecationReason": null,
+              "description": null,
+              "isDeprecated": false,
+              "name": "value",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              }
+            }
+          ],
+          "inputFields": null,
+          "interfaces": [],
+          "kind": "OBJECT",
+          "name": "ApplicationSecret",
+          "possibleTypes": null
+        },
+        {
+          "description": null,
+          "enumValues": null,
+          "fields": null,
+          "inputFields": [
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "key",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              }
+            },
+            {
+              "defaultValue": null,
+              "description": null,
+              "name": "value",
+              "type": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              }
+            }
+          ],
+          "interfaces": null,
+          "kind": "INPUT_OBJECT",
+          "name": "ApplicationSecretInput",
           "possibleTypes": null
         }
       ]

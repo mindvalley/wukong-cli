@@ -1,8 +1,8 @@
 use super::utils::{
     extract_secret_infos, get_local_config_path, get_secret_config_files, get_updated_configs,
+    vault_token_for,
 };
 use crate::{
-    auth::vault,
     commands::{dev::config::utils::make_path_relative, Context},
     config::Config,
     error::{DevConfigError, WKCliError},
@@ -38,13 +38,14 @@ pub async fn handle_config_diff(context: Context) -> Result<bool, WKCliError> {
     }
 
     let mut config = Config::load_from_default_path()?;
-    let wk_client = WKClient::for_channel(&config, &context.channel)?;
-    let vault_token = vault::get_token_or_login(&mut config).await?;
+    let mut wk_client = WKClient::for_channel(&config, &context.channel)?;
+    let vault_token = vault_token_for(&extracted_infos, &mut config).await?;
 
-    let updated_configs = get_updated_configs(&wk_client, &vault_token, &extracted_infos).await?;
+    let updated_configs =
+        get_updated_configs(&mut wk_client, &vault_token, &extracted_infos).await?;
 
     if updated_configs.is_empty() {
-        println!("The config file is already up to date with the Vault Bunker.");
+        println!("The config file is already up to date with the remote.");
         return Ok(true);
     }
 

@@ -1,4 +1,5 @@
 pub mod application;
+pub mod application_secret;
 pub mod appsignal;
 pub mod changelog;
 pub mod deployment;
@@ -15,6 +16,10 @@ pub use self::{
     application::{
         application_config_query, application_query, application_with_k8s_cluster_query,
         applications_query, ApplicationQuery, ApplicationWithK8sClusterQuery, ApplicationsQuery,
+    },
+    application_secret::{
+        application_secrets_query, update_application_secrets, ApplicationSecretsQuery,
+        UpdateApplicationSecrets,
     },
     appsignal::{
         appsignal_apps_query, appsignal_average_error_rate_query, appsignal_average_latency_query,
@@ -38,11 +43,13 @@ pub use self::{
 };
 use crate::{
     error::{APIError, WKError},
+    services::vault::client::FetchSecretsData,
     ApiChannel, WKClient,
 };
 use graphql_client::{GraphQLQuery, Response};
 use log::debug;
 use reqwest::header;
+use std::collections::HashMap;
 use std::fmt::Debug;
 use std::{thread, time};
 
@@ -731,6 +738,73 @@ impl WKClient {
             )
             .await
             .map_err(|err| err.into())
+    }
+
+    /// Fetch all secrets stored under (`application`, `namespace`, `path`)
+    /// from the Wukong API Proxy. Returned as [`FetchSecretsData`] so the
+    /// shape matches the bunker provider for downstream consumption.
+    pub async fn get_wukong_secrets(
+        &self,
+        application: &str,
+        namespace: &str,
+        path: &str,
+    ) -> Result<FetchSecretsData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        let response = gql_client
+            .post_graphql::<ApplicationSecretsQuery, _>(
+                &self.api_url,
+                application_secrets_query::Variables {
+                    application: application.to_string(),
+                    namespace: namespace.to_string(),
+                    path: path.to_string(),
+                },
+            )
+            .await?;
+
+        let data = response
+            .application_secrets
+            .into_iter()
+            .map(|s| (s.key, s.value))
+            .collect::<HashMap<String, String>>();
+
+        Ok(FetchSecretsData { data })
+    }
+
+    /// Upsert secrets at (`application`, `namespace`, `path`) on the Wukong
+    /// API Proxy. Keys not in `data` are left untouched (merge semantics).
+    pub async fn update_wukong_secrets(
+        &self,
+        application: &str,
+        namespace: &str,
+        path: &str,
+        data: &HashMap<&str, &str>,
+    ) -> Result<bool, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        let secrets = data
+            .iter()
+            .map(
+                |(k, v)| update_application_secrets::ApplicationSecretInput {
+                    key: (*k).to_string(),
+                    value: (*v).to_string(),
+                },
+            )
+            .collect();
+
+        let response = gql_client
+            .post_graphql::<UpdateApplicationSecrets, _>(
+                &self.api_url,
+                update_application_secrets::Variables {
+                    application: application.to_string(),
+                    namespace: namespace.to_string(),
+                    path: path.to_string(),
+                    secrets,
+                },
+            )
+            .await?;
+
+        Ok(response.update_application_secrets)
     }
 }
 
