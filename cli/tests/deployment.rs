@@ -95,6 +95,7 @@ enable = true
 
 [[application.namespaces]]
 type = "prod"
+continuous_delivery = false
 "#,
         )
         .unwrap();
@@ -151,6 +152,7 @@ enable = true
 
 [[application.namespaces]]
 type = "prod"
+continuous_delivery = false
 "#,
         )
         .unwrap();
