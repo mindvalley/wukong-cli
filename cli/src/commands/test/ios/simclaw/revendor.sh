@@ -27,17 +27,9 @@ OLD_FILES=$(cd "$HERE" && find bin lib -type f 2>/dev/null | sort)
 echo "==> Clearing existing bin/ and lib/"
 rm -rf "$HERE/bin" "$HERE/lib"
 
-echo "==> Copying bin/"
-mkdir -p "$HERE/bin"
-cp "$UPSTREAM/bin/sim" "$HERE/bin/sim"
-
-echo "==> Copying lib/simclaw/"
-mkdir -p "$HERE/lib/simclaw"
-cp "$UPSTREAM"/lib/simclaw/*.sh "$HERE/lib/simclaw/"
-if [[ -d "$UPSTREAM/lib/simclaw/swift" ]]; then
-  mkdir -p "$HERE/lib/simclaw/swift"
-  cp "$UPSTREAM"/lib/simclaw/swift/*.swift "$HERE/lib/simclaw/swift/" 2>/dev/null || true
-fi
+echo "==> Copying bin/ and lib/"
+cp -R "$UPSTREAM/bin" "$HERE/bin"
+cp -R "$UPSTREAM/lib" "$HERE/lib"
 
 echo "==> Diffing file list"
 NEW_FILES=$(cd "$HERE" && find bin lib -type f 2>/dev/null | sort)

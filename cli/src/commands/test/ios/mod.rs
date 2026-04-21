@@ -15,71 +15,33 @@ use super::platform::{Element, LayoutMap, PlatformBackend};
 /// a `swift/` subtree used by the inspection pipeline. We embed every file
 /// at compile time and extract the whole tree to disk before dispatching
 /// so the script's own `$SIM_LIB` resolution works unchanged.
-const SIMCLAW_FILES: &[(&str, &str)] = &[
-    ("bin/sim", include_str!("simclaw/bin/sim")),
-    (
-        "lib/simclaw/bootstrap.sh",
-        include_str!("simclaw/lib/simclaw/bootstrap.sh"),
-    ),
-    (
-        "lib/simclaw/coords.sh",
-        include_str!("simclaw/lib/simclaw/coords.sh"),
-    ),
-    (
-        "lib/simclaw/core.sh",
-        include_str!("simclaw/lib/simclaw/core.sh"),
-    ),
-    (
-        "lib/simclaw/device.sh",
-        include_str!("simclaw/lib/simclaw/device.sh"),
-    ),
-    (
-        "lib/simclaw/inspect.sh",
-        include_str!("simclaw/lib/simclaw/inspect.sh"),
-    ),
-    (
-        "lib/simclaw/layout_map.sh",
-        include_str!("simclaw/lib/simclaw/layout_map.sh"),
-    ),
-    (
-        "lib/simclaw/misc.sh",
-        include_str!("simclaw/lib/simclaw/misc.sh"),
-    ),
-    (
-        "lib/simclaw/nav.sh",
-        include_str!("simclaw/lib/simclaw/nav.sh"),
-    ),
-    (
-        "lib/simclaw/setup.sh",
-        include_str!("simclaw/lib/simclaw/setup.sh"),
-    ),
-    (
-        "lib/simclaw/touch.sh",
-        include_str!("simclaw/lib/simclaw/touch.sh"),
-    ),
-    (
-        "lib/simclaw/type.sh",
-        include_str!("simclaw/lib/simclaw/type.sh"),
-    ),
-    (
-        "lib/simclaw/wait.sh",
-        include_str!("simclaw/lib/simclaw/wait.sh"),
-    ),
-    (
-        "lib/simclaw/wda.sh",
-        include_str!("simclaw/lib/simclaw/wda.sh"),
-    ),
-    (
-        "lib/simclaw/swift/pickwindow.swift",
-        include_str!("simclaw/lib/simclaw/swift/pickwindow.swift"),
-    ),
-];
+macro_rules! simclaw_files {
+    ($($rel:literal),+ $(,)?) => {
+        &[$(($rel, include_str!(concat!("simclaw/", $rel)))),+]
+    };
+}
 
-/// Path under `~/.config/wukong/scripts/` where the simClaw tree lives.
+const SIMCLAW_FILES: &[(&str, &str)] = simclaw_files!(
+    "bin/sim",
+    "lib/simclaw/bootstrap.sh",
+    "lib/simclaw/coords.sh",
+    "lib/simclaw/core.sh",
+    "lib/simclaw/device.sh",
+    "lib/simclaw/inspect.sh",
+    "lib/simclaw/layout_map.sh",
+    "lib/simclaw/misc.sh",
+    "lib/simclaw/nav.sh",
+    "lib/simclaw/setup.sh",
+    "lib/simclaw/touch.sh",
+    "lib/simclaw/type.sh",
+    "lib/simclaw/wait.sh",
+    "lib/simclaw/wda.sh",
+    "lib/simclaw/swift/pickwindow.swift",
+);
+
 const EXTRACT_SUBDIR: &str = "simclaw";
-
-/// Entry script relative to `EXTRACT_SUBDIR`.
 const ENTRY_SCRIPT: &str = "bin/sim";
+const VERSION_MARKER: &str = ".wukong-version";
 
 pub struct IosBackend {
     device: Option<String>,
@@ -95,10 +57,11 @@ impl IosBackend {
     }
 
     /// Extract the bundled simClaw tree to `~/.config/wukong/scripts/simclaw/`
-    /// and return the path to its `bin/sim` entry script. Every file is
-    /// rewritten on each call so a Wukong upgrade always ships the matching
-    /// backend — stale copies aren't possible. Only `bin/sim` needs the
-    /// executable bit; the `.sh` helpers are sourced, not invoked.
+    /// and return the path to its `bin/sim` entry script. A `.wukong-version`
+    /// marker lets us skip the 15 writes when the on-disk tree already matches
+    /// this build — upgrades still force a re-extract because the marker
+    /// disagrees. Only `bin/sim` needs the executable bit; the `.sh` helpers
+    /// are sourced, not invoked.
     fn script_path() -> Result<PathBuf, WKCliError> {
         let extract_err =
             |e: std::io::Error| WKCliError::TestError(TestError::ScriptExtractionFailed(e.to_string()));
@@ -109,6 +72,15 @@ impl IosBackend {
             ))
         })?;
         root.extend([".config", "wukong", "scripts", EXTRACT_SUBDIR]);
+        let entry = root.join(ENTRY_SCRIPT);
+        let marker = root.join(VERSION_MARKER);
+        let expected_version = env!("CARGO_PKG_VERSION");
+
+        if std::fs::read_to_string(&marker).ok().as_deref() == Some(expected_version)
+            && entry.exists()
+        {
+            return Ok(entry);
+        }
 
         for (rel, contents) in SIMCLAW_FILES {
             let dest = root.join(rel);
@@ -118,14 +90,14 @@ impl IosBackend {
             std::fs::write(&dest, contents).map_err(extract_err)?;
         }
 
-        let entry = root.join(ENTRY_SCRIPT);
-
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
             std::fs::set_permissions(&entry, std::fs::Permissions::from_mode(0o755))
                 .map_err(extract_err)?;
         }
+
+        std::fs::write(&marker, expected_version).map_err(extract_err)?;
 
         Ok(entry)
     }
@@ -421,8 +393,9 @@ mod tests {
                 let rel = path
                     .strip_prefix(base)
                     .expect("child under base")
-                    .to_string_lossy()
-                    .into_owned();
+                    .to_str()
+                    .expect("simclaw paths must be valid UTF-8")
+                    .to_string();
                 out.push(rel);
             }
         }
