@@ -378,3 +378,60 @@ impl PlatformBackend for IosBackend {
         self.run_streaming("health-check", &[]).await
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::SIMCLAW_FILES;
+    use std::collections::HashSet;
+    use std::path::{Path, PathBuf};
+
+    /// Guards against re-vendoring drift: every file under `simclaw/` that
+    /// the script needs at runtime must be listed in `SIMCLAW_FILES`.
+    /// Upstream files not in the manifest would compile fine but fail at
+    /// runtime when `bin/sim` tries to source them.
+    #[test]
+    fn manifest_matches_tree() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("src/commands/test/ios/simclaw");
+        let on_disk: HashSet<String> = collect_tree(&root, &root)
+            .into_iter()
+            .filter(|rel| is_runtime_file(rel))
+            .collect();
+        let in_manifest: HashSet<String> =
+            SIMCLAW_FILES.iter().map(|(rel, _)| rel.to_string()).collect();
+
+        let missing_from_manifest: Vec<_> = on_disk.difference(&in_manifest).collect();
+        let missing_from_disk: Vec<_> = in_manifest.difference(&on_disk).collect();
+
+        assert!(
+            missing_from_manifest.is_empty() && missing_from_disk.is_empty(),
+            "SIMCLAW_FILES drifted from simclaw/ tree.\n  files on disk but not in manifest: {:?}\n  files in manifest but not on disk: {:?}",
+            missing_from_manifest,
+            missing_from_disk,
+        );
+    }
+
+    fn collect_tree(root: &Path, base: &Path) -> Vec<String> {
+        let mut out = Vec::new();
+        for entry in std::fs::read_dir(root).expect("read simclaw dir") {
+            let path = entry.expect("dir entry").path();
+            if path.is_dir() {
+                out.extend(collect_tree(&path, base));
+            } else {
+                let rel = path
+                    .strip_prefix(base)
+                    .expect("child under base")
+                    .to_string_lossy()
+                    .into_owned();
+                out.push(rel);
+            }
+        }
+        out
+    }
+
+    /// Metadata files (VENDORED.md, revendor.sh, READMEs) are not runtime
+    /// inputs — they must NOT be in `SIMCLAW_FILES`.
+    fn is_runtime_file(rel: &str) -> bool {
+        rel.starts_with("bin/") || rel.starts_with("lib/")
+    }
+}
