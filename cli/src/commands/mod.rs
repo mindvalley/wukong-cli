@@ -21,6 +21,7 @@ mod dev;
 mod google;
 mod init;
 mod login;
+mod test;
 mod tui;
 
 #[derive(Debug, Default)]
@@ -98,6 +99,8 @@ pub enum CommandGroup {
     },
     /// Start TUI session
     Tui,
+    /// This command group contains the commands to drive device simulators/emulators for app testing.
+    Test(test::Test),
 }
 
 impl ClapApp {
@@ -123,6 +126,7 @@ impl ClapApp {
             CommandGroup::Config(config) => config.handle_command(),
             CommandGroup::Dev(dev) => dev.handle_command(self).await,
             CommandGroup::Tui => handle_tui(channel).await,
+            CommandGroup::Test(test) => test.handle_command().await,
         };
 
         // Check for CLI updates:
@@ -178,7 +182,7 @@ fn get_context_without_application(clap_app: &ClapApp) -> Result<Context, WKCliE
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use super::ClapApp;
 
     #[test]

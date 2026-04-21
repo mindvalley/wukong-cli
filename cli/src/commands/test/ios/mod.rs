@@ -1,0 +1,305 @@
+use std::path::PathBuf;
+use std::process::Stdio;
+
+use async_trait::async_trait;
+use serde::de::DeserializeOwned;
+use tokio::io::AsyncReadExt;
+use tokio::process::Command;
+
+use crate::error::{TestError, WKCliError};
+
+use super::platform::{Element, LayoutMap, PlatformBackend};
+
+const SIM_SCRIPT: &str = include_str!("sim.sh");
+const SCRIPT_FILENAME: &str = "sim.sh";
+
+pub struct IosBackend {
+    device: Option<String>,
+    source_timeout: Option<u32>,
+}
+
+impl IosBackend {
+    pub fn new(device: Option<String>, source_timeout: Option<u32>) -> Self {
+        Self {
+            device,
+            source_timeout,
+        }
+    }
+
+    /// The bundled sim.sh is rewritten on every call so a Wukong upgrade
+    /// always ships the matching backend — stale copies aren't possible.
+    /// chmod runs only on first creation; overwrites preserve the inode mode.
+    fn script_path() -> Result<PathBuf, WKCliError> {
+        let extract_err =
+            |e: std::io::Error| WKCliError::TestError(TestError::ScriptExtractionFailed(e.to_string()));
+
+        let mut dir = dirs::home_dir().ok_or_else(|| {
+            WKCliError::TestError(TestError::ScriptExtractionFailed(
+                "could not resolve home directory".into(),
+            ))
+        })?;
+        dir.extend([".config", "wukong", "scripts"]);
+        std::fs::create_dir_all(&dir).map_err(extract_err)?;
+
+        let path = dir.join(SCRIPT_FILENAME);
+        let newly_created = !path.exists();
+        std::fs::write(&path, SIM_SCRIPT).map_err(extract_err)?;
+
+        #[cfg(unix)]
+        if newly_created {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755))
+                .map_err(extract_err)?;
+        }
+
+        Ok(path)
+    }
+
+    fn build_command(&self, subcommand: &str, args: &[String]) -> Result<Command, WKCliError> {
+        let script = Self::script_path()?;
+        let mut cmd = Command::new("bash");
+        cmd.arg(&script);
+        if let Some(device) = &self.device {
+            cmd.arg("--device").arg(device);
+        }
+        if let Some(t) = self.source_timeout {
+            cmd.arg("--source-timeout").arg(t.to_string());
+        }
+        cmd.arg(subcommand);
+        for a in args {
+            cmd.arg(a);
+        }
+        Ok(cmd)
+    }
+
+    /// `run_capture` is for commands whose stdout the Rust layer parses;
+    /// `run_streaming` is for commands whose output goes straight to the
+    /// user. Both forward stderr directly to the terminal.
+    async fn run_capture(
+        &self,
+        subcommand: &str,
+        args: &[String],
+    ) -> Result<String, WKCliError> {
+        let mut cmd = self.build_command(subcommand, args)?;
+        cmd.stdout(Stdio::piped());
+        cmd.stderr(Stdio::inherit());
+
+        let mut child = cmd.spawn().map_err(WKCliError::Io)?;
+        let mut stdout = child
+            .stdout
+            .take()
+            .expect("stdout piped when building command");
+        let mut collected = String::new();
+        stdout
+            .read_to_string(&mut collected)
+            .await
+            .map_err(WKCliError::Io)?;
+
+        let status = child.wait().await.map_err(WKCliError::Io)?;
+        if !status.success() {
+            return Err(WKCliError::TestError(TestError::ScriptFailed {
+                subcommand: subcommand.to_string(),
+                exit_code: status.code(),
+            }));
+        }
+        Ok(collected)
+    }
+
+    async fn run_streaming(
+        &self,
+        subcommand: &str,
+        args: &[String],
+    ) -> Result<(), WKCliError> {
+        let mut cmd = self.build_command(subcommand, args)?;
+        cmd.stdout(Stdio::inherit());
+        cmd.stderr(Stdio::inherit());
+        let status = cmd.status().await.map_err(WKCliError::Io)?;
+        if !status.success() {
+            return Err(WKCliError::TestError(TestError::ScriptFailed {
+                subcommand: subcommand.to_string(),
+                exit_code: status.code(),
+            }));
+        }
+        Ok(())
+    }
+
+    async fn run_json<T: DeserializeOwned>(
+        &self,
+        subcommand: &str,
+        args: &[String],
+    ) -> Result<T, WKCliError> {
+        let stdout = self.run_capture(subcommand, args).await?;
+        serde_json::from_str::<T>(stdout.trim()).map_err(|e| {
+            WKCliError::TestError(TestError::InvalidScriptOutput {
+                subcommand: subcommand.to_string(),
+                reason: e.to_string(),
+            })
+        })
+    }
+}
+
+fn opt(value: &Option<f64>) -> Option<String> {
+    value.map(|v| v.to_string())
+}
+
+#[async_trait]
+impl PlatformBackend for IosBackend {
+    async fn setup(&self, app: &str, port: u16) -> Result<(), WKCliError> {
+        self.run_streaming("setup", &[app.to_string(), "--port".into(), port.to_string()])
+            .await
+    }
+
+    async fn wda_start(&self, port: u16) -> Result<(), WKCliError> {
+        self.run_streaming("wda-start", &[port.to_string()]).await
+    }
+
+    async fn status(&self) -> Result<(), WKCliError> {
+        self.run_streaming("status", &[]).await
+    }
+
+    async fn layout_map(&self) -> Result<LayoutMap, WKCliError> {
+        self.run_json("layout-map", &[]).await
+    }
+
+    async fn tap(&self, x: f64, y: f64) -> Result<(), WKCliError> {
+        self.run_streaming("tap", &[x.to_string(), y.to_string()])
+            .await
+    }
+
+    async fn tap_element(&self, label: &str) -> Result<(), WKCliError> {
+        self.run_streaming("tap-element", &[label.to_string()]).await
+    }
+
+    async fn tap_and_wait(
+        &self,
+        label: &str,
+        expected: Option<&str>,
+        timeout: u32,
+    ) -> Result<LayoutMap, WKCliError> {
+        // nav.sh reads `expected` as `${2:-}`, so an empty string is the
+        // script's "skip expected" sentinel. Timeout must stay in $3.
+        let expected = expected.unwrap_or("");
+        self.run_json(
+            "tap-and-wait",
+            &[label.to_string(), expected.to_string(), timeout.to_string()],
+        )
+        .await
+    }
+
+    async fn swipe(
+        &self,
+        x1: f64,
+        y1: f64,
+        x2: f64,
+        y2: f64,
+        steps: u32,
+        step_ms: u32,
+    ) -> Result<(), WKCliError> {
+        self.run_streaming(
+            "swipe",
+            &[
+                x1.to_string(),
+                y1.to_string(),
+                x2.to_string(),
+                y2.to_string(),
+                steps.to_string(),
+                step_ms.to_string(),
+            ],
+        )
+        .await
+    }
+
+    async fn scroll_up(
+        &self,
+        x: Option<f64>,
+        from_y: Option<f64>,
+        to_y: Option<f64>,
+    ) -> Result<(), WKCliError> {
+        let args: Vec<String> = [opt(&x), opt(&from_y), opt(&to_y)]
+            .into_iter()
+            .flatten()
+            .collect();
+        self.run_streaming("scroll-up", &args).await
+    }
+
+    async fn scroll_down(
+        &self,
+        x: Option<f64>,
+        from_y: Option<f64>,
+        to_y: Option<f64>,
+    ) -> Result<(), WKCliError> {
+        let args: Vec<String> = [opt(&x), opt(&from_y), opt(&to_y)]
+            .into_iter()
+            .flatten()
+            .collect();
+        self.run_streaming("scroll-down", &args).await
+    }
+
+    async fn scroll_to_visible(&self, label: &str, max_swipes: u32) -> Result<(), WKCliError> {
+        self.run_streaming(
+            "scroll-to-visible",
+            &[label.to_string(), max_swipes.to_string()],
+        )
+        .await
+    }
+
+    async fn type_text(&self, text: &str) -> Result<(), WKCliError> {
+        self.run_streaming("type", &[text.to_string()]).await
+    }
+
+    async fn wait_for(&self, label: &str, timeout: u32) -> Result<(), WKCliError> {
+        self.run_streaming("wait-for", &[label.to_string(), timeout.to_string()])
+            .await
+    }
+
+    async fn wait_for_stable(&self, timeout: u32) -> Result<(), WKCliError> {
+        self.run_streaming("wait-for-stable", &[timeout.to_string()])
+            .await
+    }
+
+    async fn screen_title(&self) -> Result<String, WKCliError> {
+        let out = self.run_capture("screen-title", &[]).await?;
+        Ok(out.trim().to_string())
+    }
+
+    async fn find_element(&self, label: &str) -> Result<Element, WKCliError> {
+        self.run_json("find-element", &[label.to_string()]).await
+    }
+
+    async fn describe_point(&self, x: f64, y: f64) -> Result<serde_json::Value, WKCliError> {
+        self.run_json("describe-point", &[x.to_string(), y.to_string()])
+            .await
+    }
+
+    async fn describe(
+        &self,
+        depth: Option<u32>,
+        interactive: bool,
+    ) -> Result<serde_json::Value, WKCliError> {
+        let mut args = Vec::new();
+        if let Some(d) = depth {
+            args.push(d.to_string());
+        }
+        if interactive {
+            args.push("--interactive".into());
+        }
+        self.run_json("describe", &args).await
+    }
+
+    async fn screenshot(&self, output: &str) -> Result<(), WKCliError> {
+        self.run_streaming("screenshot", &[output.to_string()]).await
+    }
+
+    async fn ensure_foreground_app(&self, bundle_id: Option<&str>) -> Result<(), WKCliError> {
+        let args: Vec<String> = bundle_id.map(|b| vec![b.to_string()]).unwrap_or_default();
+        self.run_streaming("ensure-foreground-app", &args).await
+    }
+
+    async fn cleanup(&self) -> Result<(), WKCliError> {
+        self.run_streaming("cleanup", &[]).await
+    }
+
+    async fn health_check(&self) -> Result<(), WKCliError> {
+        self.run_streaming("health-check", &[]).await
+    }
+}
