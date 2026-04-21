@@ -43,6 +43,16 @@ const EXTRACT_SUBDIR: &str = "simclaw";
 const ENTRY_SCRIPT: &str = "bin/sim";
 const VERSION_MARKER: &str = ".wukong-version";
 
+/// Upstream simClaw applies `snapshotMaxDepth=15, snapshotMaxChildren=25` when
+/// creating the WDA session (see `lib/simclaw/wda.sh`). Those caps are too
+/// tight for anything larger than a hello-world screen — Settings.app's root
+/// alone has >25 children and the tree gets truncated before reaching the
+/// cells, so `layout-map` / `find-element` / `tap-on` return empty. Post
+/// permissive settings after the session is live. Remove this workaround
+/// when the upstream script raises (or exposes) the caps.
+const PERMISSIVE_SNAPSHOT_BODY: &str =
+    r#"{"settings":{"snapshotMaxDepth":60,"snapshotMaxChildren":200}}"#;
+
 pub struct IosBackend {
     device: Option<String>,
     source_timeout: Option<u32>,
@@ -176,7 +186,15 @@ impl IosBackend {
         args: &[String],
     ) -> Result<T, WKCliError> {
         let stdout = self.run_capture(subcommand, args).await?;
-        serde_json::from_str::<T>(stdout.trim()).map_err(|e| {
+        // Some compound script commands (e.g. tap-and-wait) print progress
+        // lines like "READY: <label>" on stdout before emitting the final
+        // JSON payload. Slice from the first `{` or `[` so the caller's
+        // deserializer sees only the structured tail.
+        let json_start = stdout.find(|c: char| c == '{' || c == '[');
+        let payload = json_start
+            .map(|i| stdout[i..].trim())
+            .unwrap_or(stdout.trim());
+        serde_json::from_str::<T>(payload).map_err(|e| {
             WKCliError::TestError(TestError::InvalidScriptOutput {
                 subcommand: subcommand.to_string(),
                 reason: e.to_string(),
@@ -189,15 +207,59 @@ fn opt(value: &Option<f64>) -> Option<String> {
     value.map(|v| v.to_string())
 }
 
+/// Read the WDA session ID from whichever bootstrap cache the script wrote.
+/// Upstream simClaw occasionally keys the cache by `"default"` instead of the
+/// UDID, so we check both the UDID-keyed file and the `_default` fallback.
+fn read_wda_session() -> Option<String> {
+    let dir = std::path::Path::new("/tmp");
+    let entries = std::fs::read_dir(dir).ok()?;
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        if !name.starts_with("sim_bootstrap_cache_") || !name.ends_with(".json") {
+            continue;
+        }
+        let body = std::fs::read_to_string(entry.path()).ok()?;
+        let parsed: serde_json::Value = serde_json::from_str(&body).ok()?;
+        if let Some(session) = parsed.get("wda_session").and_then(|v| v.as_str()) {
+            if !session.is_empty() {
+                return Some(session.to_string());
+            }
+        }
+    }
+    None
+}
+
+/// Best-effort: raise WDA's snapshot caps so `layout-map` returns real trees
+/// on non-trivial apps. Silently no-ops if WDA isn't reachable yet — this is
+/// called as a post-setup nicety, not a hard requirement.
+async fn apply_permissive_snapshot_settings(port: u16) {
+    let Some(session) = read_wda_session() else {
+        return;
+    };
+    let url = format!("http://localhost:{port}/session/{session}/appium/settings");
+    let _ = reqwest::Client::new()
+        .post(&url)
+        .header("Content-Type", "application/json")
+        .body(PERMISSIVE_SNAPSHOT_BODY)
+        .timeout(std::time::Duration::from_secs(3))
+        .send()
+        .await;
+}
+
 #[async_trait]
 impl PlatformBackend for IosBackend {
     async fn setup(&self, app: &str, port: u16) -> Result<(), WKCliError> {
         self.run_streaming("setup", &[app.to_string(), "--port".into(), port.to_string()])
-            .await
+            .await?;
+        apply_permissive_snapshot_settings(port).await;
+        Ok(())
     }
 
     async fn wda_start(&self, port: u16) -> Result<(), WKCliError> {
-        self.run_streaming("wda-start", &[port.to_string()]).await
+        self.run_streaming("wda-start", &[port.to_string()]).await?;
+        apply_permissive_snapshot_settings(port).await;
+        Ok(())
     }
 
     async fn status(&self) -> Result<(), WKCliError> {
