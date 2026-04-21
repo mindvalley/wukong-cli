@@ -10,8 +10,76 @@ use crate::error::{TestError, WKCliError};
 
 use super::platform::{Element, LayoutMap, PlatformBackend};
 
-const SIM_SCRIPT: &str = include_str!("sim.sh");
-const SCRIPT_FILENAME: &str = "sim.sh";
+/// The simClaw bash backend is vendored in `simclaw/` as a tree of files:
+/// a `bin/sim` entry point that sources the `lib/simclaw/*.sh` helpers, and
+/// a `swift/` subtree used by the inspection pipeline. We embed every file
+/// at compile time and extract the whole tree to disk before dispatching
+/// so the script's own `$SIM_LIB` resolution works unchanged.
+const SIMCLAW_FILES: &[(&str, &str)] = &[
+    ("bin/sim", include_str!("simclaw/bin/sim")),
+    (
+        "lib/simclaw/bootstrap.sh",
+        include_str!("simclaw/lib/simclaw/bootstrap.sh"),
+    ),
+    (
+        "lib/simclaw/coords.sh",
+        include_str!("simclaw/lib/simclaw/coords.sh"),
+    ),
+    (
+        "lib/simclaw/core.sh",
+        include_str!("simclaw/lib/simclaw/core.sh"),
+    ),
+    (
+        "lib/simclaw/device.sh",
+        include_str!("simclaw/lib/simclaw/device.sh"),
+    ),
+    (
+        "lib/simclaw/inspect.sh",
+        include_str!("simclaw/lib/simclaw/inspect.sh"),
+    ),
+    (
+        "lib/simclaw/layout_map.sh",
+        include_str!("simclaw/lib/simclaw/layout_map.sh"),
+    ),
+    (
+        "lib/simclaw/misc.sh",
+        include_str!("simclaw/lib/simclaw/misc.sh"),
+    ),
+    (
+        "lib/simclaw/nav.sh",
+        include_str!("simclaw/lib/simclaw/nav.sh"),
+    ),
+    (
+        "lib/simclaw/setup.sh",
+        include_str!("simclaw/lib/simclaw/setup.sh"),
+    ),
+    (
+        "lib/simclaw/touch.sh",
+        include_str!("simclaw/lib/simclaw/touch.sh"),
+    ),
+    (
+        "lib/simclaw/type.sh",
+        include_str!("simclaw/lib/simclaw/type.sh"),
+    ),
+    (
+        "lib/simclaw/wait.sh",
+        include_str!("simclaw/lib/simclaw/wait.sh"),
+    ),
+    (
+        "lib/simclaw/wda.sh",
+        include_str!("simclaw/lib/simclaw/wda.sh"),
+    ),
+    (
+        "lib/simclaw/swift/pickwindow.swift",
+        include_str!("simclaw/lib/simclaw/swift/pickwindow.swift"),
+    ),
+];
+
+/// Path under `~/.config/wukong/scripts/` where the simClaw tree lives.
+const EXTRACT_SUBDIR: &str = "simclaw";
+
+/// Entry script relative to `EXTRACT_SUBDIR`.
+const ENTRY_SCRIPT: &str = "bin/sim";
 
 pub struct IosBackend {
     device: Option<String>,
@@ -26,33 +94,40 @@ impl IosBackend {
         }
     }
 
-    /// The bundled sim.sh is rewritten on every call so a Wukong upgrade
-    /// always ships the matching backend — stale copies aren't possible.
-    /// chmod runs only on first creation; overwrites preserve the inode mode.
+    /// Extract the bundled simClaw tree to `~/.config/wukong/scripts/simclaw/`
+    /// and return the path to its `bin/sim` entry script. Every file is
+    /// rewritten on each call so a Wukong upgrade always ships the matching
+    /// backend — stale copies aren't possible. Only `bin/sim` needs the
+    /// executable bit; the `.sh` helpers are sourced, not invoked.
     fn script_path() -> Result<PathBuf, WKCliError> {
         let extract_err =
             |e: std::io::Error| WKCliError::TestError(TestError::ScriptExtractionFailed(e.to_string()));
 
-        let mut dir = dirs::home_dir().ok_or_else(|| {
+        let mut root = dirs::home_dir().ok_or_else(|| {
             WKCliError::TestError(TestError::ScriptExtractionFailed(
                 "could not resolve home directory".into(),
             ))
         })?;
-        dir.extend([".config", "wukong", "scripts"]);
-        std::fs::create_dir_all(&dir).map_err(extract_err)?;
+        root.extend([".config", "wukong", "scripts", EXTRACT_SUBDIR]);
 
-        let path = dir.join(SCRIPT_FILENAME);
-        let newly_created = !path.exists();
-        std::fs::write(&path, SIM_SCRIPT).map_err(extract_err)?;
+        for (rel, contents) in SIMCLAW_FILES {
+            let dest = root.join(rel);
+            if let Some(parent) = dest.parent() {
+                std::fs::create_dir_all(parent).map_err(extract_err)?;
+            }
+            std::fs::write(&dest, contents).map_err(extract_err)?;
+        }
+
+        let entry = root.join(ENTRY_SCRIPT);
 
         #[cfg(unix)]
-        if newly_created {
+        {
             use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755))
+            std::fs::set_permissions(&entry, std::fs::Permissions::from_mode(0o755))
                 .map_err(extract_err)?;
         }
 
-        Ok(path)
+        Ok(entry)
     }
 
     fn build_command(&self, subcommand: &str, args: &[String]) -> Result<Command, WKCliError> {

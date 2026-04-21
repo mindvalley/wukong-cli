@@ -1,0 +1,445 @@
+#!/bin/bash
+# sim
+#
+# Standalone CLI tool for interacting with a running iOS Simulator.
+# Uses WebDriverAgent (WDA) for touch injection and xcrun simctl.
+# WDA runs inside each simulator via XCUITest, connected via UDID-scoped
+# testmanagerd socket — no window-focus dependency, parallel-tap safe.
+#
+# ── QUICK START FOR AI AGENTS ─────────────────────────────────────────────────
+#
+# STEP 0 — Start WDA (required once per simulator session, before any tap/swipe):
+#   sim --device <UDID> wda-start <port>
+#   WDA (WebDriverAgent) runs inside the simulator as an XCUITest runner.
+#   All taps and swipes are routed through WDA's W3C Actions API →
+#   XCTest → testmanagerd → synthetic IOHIDEvent. This is fully UDID-scoped
+#   (no window focus dependency) so parallel taps to different simulators work.
+#   Each simulator needs its own port (e.g. 8100, 8101). The session ID is
+#   cached automatically in /tmp/sim_bootstrap_cache_<UDID>.json.
+#   You do NOT need a global queue or serialization — taps are already isolated.
+#
+# STEP 1 — Call `layout-map` on any screen — it returns everything you need in
+#   one shot: screen title, back button, tab bar, all interactive elements,
+#   visible text, scroll hints, a context classifier, and suggested_actions
+#   with pre-validated labels ready for your next tap-and-wait call.
+#
+# STEP 2 — Use `tap-and-wait` to navigate in a single tool call:
+#   it finds the element by label, taps it, waits for the next screen,
+#   then returns a fresh layout-map of the resulting screen.
+#   This collapses find-element + tap + wait-for + layout-map into ONE call.
+#
+# STEP 3 — Batch all sequential commands into ONE Bash tool call using &&.
+#   Each separate Bash tool call costs ~10s of API round-trip latency on top
+#   of the ~1–2s the command itself takes. Batching 20 calls into 5 cuts
+#   total time from ~240s to ~60s.
+#
+# ── COMMON MISTAKES TO AVOID ──────────────────────────────────────────────────
+#
+# ✗ WRONG — using `screenshot` to inspect state:
+#   screenshot output is a PNG for human eyes. It tells YOU nothing actionable.
+#   Use `layout-map` instead — it gives structured JSON with labels, coordinates,
+#   scroll hints, and suggested_actions. It's always faster and more useful.
+#
+#   WRONG:  sim screenshot /tmp/s.png   ← then read the image to decide next step
+#   RIGHT:  sim layout-map              ← JSON tells you exactly what's on screen
+#
+# ✗ WRONG — verifying navigation with an intermediate screenshot:
+#   After `tap-element` or `tap-and-wait`, agents often take a screenshot to
+#   confirm the screen changed. This wastes 2 tool calls (Bash + Read).
+#   The tool output IS your confirmation:
+#     tap-element prints "NOTE: 'X' no longer visible — navigation likely succeeded"
+#     tap-and-wait returns the layout-map of the NEW screen directly
+#   No screenshot needed. Trust the output.
+#
+# ✗ WRONG — tapping an element that may not be on screen yet:
+#   `tap-element` searches WDA /source (viewport only). If the element is
+#   scrolled out of view, tap-element will FAIL. Always use `scroll-to-visible`
+#   first when unsure, then `tap-element`.
+#
+#   WRONG:  sim tap-element "Deep Sleep"         ← fails if off-screen
+#   RIGHT:  sim scroll-to-visible "Deep Sleep" && sim tap-element "Deep Sleep"
+#
+# ── OPTIMAL NAVIGATION PATTERN ────────────────────────────────────────────────
+#
+#   Goal: navigate to tab, tap a card that may be scrolled off-screen.
+#
+#   INEFFICIENT (observed: 7–9 tool calls):
+#     call 1: screenshot → Read image                    ← 2 calls wasted
+#     call 2: tap-element "Settings"
+#     call 3: screenshot → Read image                    ← 2 more calls wasted
+#     call 4: scroll-to-visible "Privacy"
+#     call 5: tap-element "Privacy"
+#     call 6: screenshot → Read image                    ← 2 more calls wasted
+#
+#   OPTIMAL (3 tool calls for the same result):
+#     call 1: sim layout-map                             ← see current state
+#     call 2: sim tap-and-wait "Settings" "Settings" 5 && \
+#             sim scroll-to-visible "Privacy" && \
+#             sim tap-and-wait "Privacy"                 ← navigate + scroll + tap, chained
+#     call 3: (only needed if you want to inspect the result screen)
+#             sim layout-map
+#
+#   Taps are UDID-scoped via WDA — no global serialization needed. Two simulators
+#   can receive taps concurrently without interfering with each other.
+#
+#   Use labels from suggested_actions in your tap-and-wait calls — they are
+#   pre-validated as present on screen and will match without fuzzy search.
+#
+# layout-map output schema:
+#   {
+#     "screen": "Account",          -- nav title; "~text" = heuristic; "unknown" = modal/sheet
+#     "modal": false,               -- true when no nav bar + close button present
+#     "navigation": {
+#       "title": "Account",
+#       "back": {"label":"Back","x":27,"y":76},       -- null if no back button
+#       "tabs": [{"label":"Home","x":39,"y":795,"selected":true}, ...]
+#     },
+#     "interactive": [              -- x,y are TOP-LEFT; tap center = x+w/2, y+h/2
+#       {"role":"AXButton","label":"Sign In","x":33,"y":234,"w":121,"h":40,"value":null,"enabled":true}
+#     ],
+#     "content": {
+#       "headings": ["Welcome"],
+#       "texts": ["Jane Smith", "Settings", ...]
+#     },
+#     "scroll": {
+#       "vertical": true,           -- true if scrollable content exists
+#       "horizontal": false,
+#       "above_fold": [],           -- labels of interactive/heading elements above current view
+#       "below_fold": ["Notifications","Privacy","Help"]  -- labels reachable by scrolling down
+#     },
+#     "context": "tab_screen",      -- screen type classifier:
+#                                   --   "media_player" | "modal_sheet" | "search" | "form"
+#                                   --   "tab_screen" | "list" | "detail_screen" | "unknown"
+#     "suggested_actions": [        -- pre-validated labels ready for tap-and-wait; prefer these
+#       "tap 'Sign In' at (93, 254)",
+#       "tap tab 'Home' at (196, 795)",
+#       "scroll down to reveal: Notifications, Help",
+#       "tap back 'Back' at (27, 76) to return"
+#     ]
+#   }
+#
+# Only split into separate Bash tool calls when you need to inspect output to
+# decide what to run next. Otherwise chain everything with &&.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Requirements:
+#   - Xcode Simulator running with a booted device
+#   - macOS Accessibility permission granted to Terminal/iTerm (System Settings > Privacy & Security > Accessibility)
+#   - xcrun (Xcode command-line tools)
+#   - jq (brew install jq)
+#   - swift (included with Xcode)
+
+set -euo pipefail
+
+# ── Resolve library directory ────────────────────────────────────────────────
+# Handles Homebrew symlinks, direct repo checkout, and curl install.
+_SIM_SELF="${BASH_SOURCE[0]}"
+while [[ -L "$_SIM_SELF" ]]; do
+  _SIM_LINK="$(readlink "$_SIM_SELF")"
+  if [[ "$_SIM_LINK" == /* ]]; then
+    _SIM_SELF="$_SIM_LINK"
+  else
+    _SIM_SELF="$(dirname "$_SIM_SELF")/$_SIM_LINK"
+  fi
+done
+_SIM_DIR="$(cd "$(dirname "$_SIM_SELF")" && pwd)"
+
+# Try: <bin>/../lib/simclaw (repo layout)
+# Then: <bin>/../share/simclaw/lib (Homebrew layout)
+if [[ -d "$_SIM_DIR/../lib/simclaw" ]]; then
+  SIM_LIB="$(cd "$_SIM_DIR/../lib/simclaw" && pwd)"
+elif [[ -d "$_SIM_DIR/../share/simclaw/lib" ]]; then
+  SIM_LIB="$(cd "$_SIM_DIR/../share/simclaw/lib" && pwd)"
+else
+  echo "ERROR: simclaw library not found. Expected at:" >&2
+  echo "  $_SIM_DIR/../lib/simclaw (repo)" >&2
+  echo "  $_SIM_DIR/../share/simclaw/lib (Homebrew)" >&2
+  exit 1
+fi
+export SIM_LIB
+
+# Always load core helpers (die, _is_integer)
+source "$SIM_LIB/core.sh"
+
+# ── Globals (populated by detect_* functions) ────────────────────────────────
+SIM_UDID=""
+SIM_NAME=""
+SIM_DEVICE_TYPE=""
+SIM_OS=""
+SIM_LOGICAL_W=""
+SIM_LOGICAL_H=""
+SIM_SCALE=""
+SIM_SCREEN_X=""
+SIM_SCREEN_Y=""
+SIM_SCREEN_W=""
+SIM_SCREEN_H=""
+SIM_ZOOM=""
+SIM_TARGET_UDID=""
+WDA_PORT=""
+WDA_SESSION=""
+# layout-map tuning: timeout (s) for the WDA /source fetch.
+# Large AX trees (e.g. Mindvalley) can exceed 8s; raise via --source-timeout N or env.
+LAYOUT_MAP_SOURCE_TIMEOUT="${LAYOUT_MAP_SOURCE_TIMEOUT:-8}"
+
+# ── Usage ────────────────────────────────────────────────────────────────────
+
+usage() {
+  cat <<'EOF'
+Usage: sim [--device <UDID>] <command> [args]
+
+Options:
+  --device <UDID>    Target a specific simulator by UDID (default: most recently booted)
+
+── START HERE (AI agents) ────────────────────────────────────────────────────
+
+  layout-map                              ★ Call this first on any screen. Returns a single
+                                            JSON snapshot: screen title, back button, tab bar,
+                                            all interactive elements (with top-left x,y,w,h),
+                                            visible text, below/above-fold scroll labels,
+                                            a "context" string classifying the screen type
+                                            (e.g. "media_player", "home", "settings"), and
+                                            "suggested_actions": an array of human-readable
+                                            strings like "tap 'Label' at (x, y)" and
+                                            "scroll down to reveal: ...".
+                                            Labels in suggested_actions are pre-validated as
+                                            present on screen — prefer them in your next
+                                            tap-and-wait call over labels you derive yourself.
+                                            Replaces screen-title + describe + find-element.
+
+  tap-and-wait <label> [expected] [secs]  ★ Compound navigation in one call. Finds element by
+                                            label, taps it, optionally waits for <expected>
+                                            element to appear (default timeout 10s), then
+                                            returns a full layout-map of the resulting screen.
+                                            Replaces find-element + tap + wait-for + layout-map
+                                            (4 separate calls → 1 call).
+                                            Usage: tap-and-wait "Sign In" "Home" 10
+                                            Example: tap-and-wait "View Profile" "Profile" 8
+
+── Interaction ───────────────────────────────────────────────────────────────
+
+  tap <x> <y>                             Tap at iOS logical coordinates
+  tap-element <label>                     Tap a UI element by its accessibility label
+  swipe <x1> <y1> <x2> <y2> [steps] [ms] Swipe between two points
+  scroll-up [x] [from_y] [to_y]          Scroll up (finger moves down = reveals content above)
+  scroll-down [x] [from_y] [to_y]        Scroll down (finger moves up = reveals content below)
+  scroll-to-visible <label> [max_swipes]  Scroll until element is visible (default 10 swipes)
+  type <text>                             Type text into focused field. Uses WDA setValue (preferred)
+                                          if WDA is running, else falls back to AX direct-value API
+
+── Waiting ───────────────────────────────────────────────────────────────────
+
+  wait-for <label> [timeout]              Block until element appears (default: 10s, event-driven)
+  wait-for-stable [timeout]              Block until UI stops changing (default: 5s)
+
+── Inspection (use when layout-map isn't enough) ─────────────────────────────
+
+  screen-title                            Current screen/nav title only
+  find-element <label>                    Find element by label → JSON {role,label,x,y,w,h} or exit 1
+  describe-point <x> <y>                  Hit-test AX element at coordinate → JSON (works on tab bars)
+  describe [depth] [--interactive|-i]     Dump AX tree as JSON; --interactive = buttons/links only
+  screenshot <output.png>                 Capture screen to PNG (use sparingly — prefer AX commands)
+
+── WDA (WebDriverAgent) ──────────────────────────────────────────────────────
+
+  setup <app_path_or_bundle_id>           ★ One-shot setup: boots simulator, builds WDA (if
+        [--port <wda_port>]               needed), installs app (if .app path given), starts
+                                          WDA, and launches the app. Run once to go from a
+                                          cold state to a fully interactive session.
+                                          If app_path ends in .app it is installed via simctl;
+                                          otherwise the argument is treated as a bundle ID
+                                          (app assumed already installed). Default port: 8100.
+                                          Requires /tmp/WebDriverAgent to be cloned first.
+                                          Usage: sim --device <UDID> setup /path/to/App.app
+                                                 sim --device <UDID> setup com.example.app --port 8101
+
+  wda-start [port]                        ★ REQUIRED before any tap or swipe command.
+                                          Starts WDA inside the target simulator using a
+                                          pre-built binary from /tmp/WDA_DerivedData, then
+                                          creates a W3C session and caches the port + session
+                                          ID in /tmp/sim_bootstrap_cache_<UDID>.json.
+                                          Each simulator needs its own port (default 8100).
+                                          Run once per simulator session; subsequent taps
+                                          reuse the cached session automatically.
+                                          Usage: sim --device <UDID> wda-start 8100
+
+── Diagnostics ───────────────────────────────────────────────────────────────
+
+  status                                  Print booted device info and screen bounds
+  install-skills                          Copy bundled Claude Code skills to ~/.claude/skills/
+
+All x/y coordinates are iOS logical points.
+Tap center of a layout-map element: x + w/2, y + h/2
+
+── Agent pattern (fewest tool calls) ─────────────────────────────────────────
+
+  STARTING FROM SCRATCH (cold simulator or unknown state):
+
+  # Step 0 — one-shot setup: boots sim, builds WDA if needed, installs + launches app:
+  sim --device <UDID> setup /path/to/App.app
+  # or, if app is already installed:
+  sim --device <UDID> setup com.example.myapp --port 8100
+
+  STARTING FROM A WARM SESSION (sim already booted, app installed, WDA may be running):
+
+  # Step 0 — start WDA only (skip if setup was already run):
+  sim --device <UDID> wda-start 8100
+
+  THEN NAVIGATE (applies to both flows above):
+
+  # Step 1 — understand current screen (includes suggested_actions):
+  sim --device <UDID> layout-map
+
+  # Step 2 — navigate using tap-and-wait (find + tap + wait + read = 1 call):
+  sim --device <UDID> tap-and-wait "Sign In" "Home" 10
+
+  # Step 3 — navigate again using a label from the new layout-map's suggested_actions:
+  sim --device <UDID> tap-and-wait "View Profile" "Profile" 8
+
+  # tip: tap-and-wait + layout-map together enable compound navigation steps —
+  # each call does: find element + tap + wait for next screen + read new screen.
+  # This is 1 tool call instead of 4 (find-element + tap + wait-for + layout-map).
+
+  # When tap-and-wait is not suitable (e.g. raw coordinate tap), use:
+  sim --device <UDID> tap 35 81 && sim --device <UDID> wait-for "Next Screen" 10
+
+  RUNNING MULTIPLE SIMULATORS IN PARALLEL:
+
+  # Each simulator needs its own WDA port and its own --device flag:
+  sim --device <UDID1> setup com.example.myapp --port 8100
+  sim --device <UDID2> setup com.example.myapp --port 8101
+  # Tap commands to each simulator are fully independent (no global serialisation needed)
+
+EOF
+}
+
+# ── Main Dispatch ─────────────────────────────────────────────────────────────
+
+# Accept UDID env var as a shorthand for --device (e.g. UDID=<udid> bash sim <cmd>)
+[[ -z "$SIM_TARGET_UDID" && -n "${UDID:-}" ]] && SIM_TARGET_UDID="$UDID"
+
+# Parse optional --device and --source-timeout flags (in any order) before the command name
+while true; do
+  case "${1:-}" in
+    --device)
+      [[ $# -ge 2 ]] || die "Usage: sim --device <UDID> <command> [args]"
+      SIM_TARGET_UDID="$2"
+      shift 2
+      ;;
+    --source-timeout)
+      [[ $# -ge 2 ]] || die "--source-timeout requires a value in seconds"
+      LAYOUT_MAP_SOURCE_TIMEOUT="$2"
+      shift 2
+      ;;
+    *) break ;;
+  esac
+done
+
+CMD="${1:-}"
+shift || true  # 'shift' exits non-zero on empty args under set -e; || true guards this
+
+case "$CMD" in
+  layout-map)
+    source "$SIM_LIB/layout_map.sh"
+    cmd_layout_map "$@"
+    ;;
+  tap-and-wait)
+    source "$SIM_LIB/nav.sh"
+    cmd_tap_and_wait "$@"
+    ;;
+  tap)
+    source "$SIM_LIB/touch.sh"
+    cmd_tap "$@"
+    ;;
+  tap-element)
+    source "$SIM_LIB/nav.sh"
+    cmd_tap_element "$@"
+    ;;
+  swipe)
+    source "$SIM_LIB/touch.sh"
+    cmd_swipe "$@"
+    ;;
+  scroll-up)
+    source "$SIM_LIB/touch.sh"
+    cmd_scroll_up "$@"
+    ;;
+  scroll-down)
+    source "$SIM_LIB/touch.sh"
+    cmd_scroll_down "$@"
+    ;;
+  scroll-to-visible)
+    source "$SIM_LIB/touch.sh"
+    cmd_scroll_to_visible "$@"
+    ;;
+  type)
+    source "$SIM_LIB/type.sh"
+    cmd_type "$@"
+    ;;
+  wait-for)
+    source "$SIM_LIB/wait.sh"
+    cmd_wait_for "$@"
+    ;;
+  wait-for-stable)
+    source "$SIM_LIB/wait.sh"
+    cmd_wait_for_stable "$@"
+    ;;
+  describe)
+    source "$SIM_LIB/inspect.sh"
+    cmd_describe "$@"
+    ;;
+  screen-title)
+    source "$SIM_LIB/inspect.sh"
+    cmd_screen_title "$@"
+    ;;
+  find-element)
+    source "$SIM_LIB/inspect.sh"
+    cmd_find_element "$@"
+    ;;
+  describe-point)
+    source "$SIM_LIB/inspect.sh"
+    cmd_describe_point "$@"
+    ;;
+  screenshot)
+    source "$SIM_LIB/misc.sh"
+    cmd_screenshot "$@"
+    ;;
+  status)
+    source "$SIM_LIB/misc.sh"
+    cmd_status
+    ;;
+  setup)
+    source "$SIM_LIB/setup.sh"
+    cmd_setup "$@"
+    ;;
+  wda-start)
+    source "$SIM_LIB/wda.sh"
+    cmd_wda_start "$@"
+    ;;
+  ensure-foreground-app)
+    source "$SIM_LIB/misc.sh"
+    cmd_ensure_foreground_app "$@"
+    ;;
+  install-skills)
+    source "$SIM_LIB/misc.sh"
+    cmd_install_skills
+    ;;
+  cleanup)
+    source "$SIM_LIB/misc.sh"
+    cmd_cleanup
+    ;;
+  wda-session)
+    source "$SIM_LIB/misc.sh"
+    cmd_wda_session
+    ;;
+  health-check)
+    source "$SIM_LIB/misc.sh"
+    cmd_health_check
+    ;;
+  ""|--help|-h)
+    usage
+    exit 0
+    ;;
+  *)
+    die "Unknown command: $CMD. Run sim --help for usage."
+    ;;
+esac
