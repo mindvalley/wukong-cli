@@ -3,27 +3,14 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::WKCliError;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Element {
-    pub role: String,
-    pub label: String,
-    pub x: f64,
-    pub y: f64,
-    pub w: f64,
-    pub h: f64,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct LayoutMap {
-    pub screen_title: Option<String>,
-    pub back_button: Option<Element>,
-    pub tab_bar: Vec<serde_json::Value>,
-    pub elements: Vec<Element>,
-    pub visible_text: Vec<String>,
-    pub scroll_hints: serde_json::Value,
-    pub context: Option<String>,
-    pub suggested_actions: Vec<String>,
-}
+// The JSON schemas from `layout-map`, `find-element`, `describe`, and
+// `describe-point` are owned by the simClaw team and haven't been frozen
+// into a stable contract yet. We pass the JSON through unchanged so the
+// consumer (pipe to `jq`, `from json` in nushell, etc.) can work with
+// whatever shape the script produces today. Tighten to typed structs
+// once the schema is contracted in the simClaw repo.
+pub type LayoutMap = serde_json::Value;
+pub type Element = serde_json::Value;
 
 #[async_trait]
 pub trait PlatformBackend: Send + Sync {
