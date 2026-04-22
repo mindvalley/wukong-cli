@@ -108,7 +108,7 @@ pub async fn handle_application_init(context: Context) -> Result<bool, WKCliErro
     let workflows = get_workflows_from_current_dir()?;
     let mut excluded_workflows = Vec::new();
 
-    if (!workflows.is_empty()) {
+    if !workflows.is_empty() {
         excluded_workflows = inquire::MultiSelect::new(
             "Workflows to exclude from the Wukong CLI & TUI",
             workflows.to_vec(),

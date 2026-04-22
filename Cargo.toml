@@ -6,6 +6,7 @@ lto = true
 opt-level = 3
 
 [workspace]
+resolver = "2"
 members = ["cli", "sdk", "telemetry", "telemetry-macro"]
 
 [workspace.dependencies]
