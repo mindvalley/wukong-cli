@@ -8,12 +8,12 @@ with a remote skills registry will be added later.
 
 ## Subcommands
 
-### `wukong skills init [name]`
+### `wukong skills init`
 
-Scaffold a new skill at `./.claude/skills/<name>/SKILL.md`.
+Interactively scaffold a new skill at `./.claude/skills/<name>/SKILL.md`.
 
-- `<name>` is optional; if omitted it defaults to the current working
-  directory's basename.
+- Prompts for the skill name (default: current working directory's basename).
+- Asks for confirmation before writing anything to disk.
 - Creates the parent directory tree (`./.claude/skills/<name>/`) if missing.
 - Writes a starter `SKILL.md` (frontmatter + `When to use` + `Instructions`
   sections) modeled after the [`vercel-labs/skills`][vercel-skills] template.

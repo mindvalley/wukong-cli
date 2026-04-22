@@ -1,27 +1,30 @@
 use std::{env, fs, path::PathBuf};
 
 use crossterm::style::Stylize;
+use inquire::required;
 
-use crate::{commands::Context, error::WKCliError};
+use crate::{commands::Context, error::WKCliError, utils::inquire::inquire_render_config};
 
 use wukong_telemetry::*;
 use wukong_telemetry_macro::*;
 
 #[wukong_telemetry(command_event = "skills_init")]
-pub async fn handle_skills_init(
-    context: Context,
-    name: Option<String>,
-) -> Result<bool, WKCliError> {
+pub async fn handle_skills_init(context: Context) -> Result<bool, WKCliError> {
     let cwd = env::current_dir()?;
 
-    let skill_name = match name {
-        Some(n) if !n.trim().is_empty() => n,
-        _ => cwd
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("skill")
-            .to_string(),
-    };
+    let skill_name = inquire::Text::new("Skill name")
+        .with_render_config(inquire_render_config())
+        .with_validator(required!("Skill name is required"))
+        .with_placeholder("my-skill")
+        .with_help_message("Used as the folder name under ./.claude/skills/")
+        .prompt()?
+        .trim()
+        .to_string();
+
+    if skill_name.is_empty() {
+        println!("{}", "Skill name is required.".red());
+        return Ok(false);
+    }
 
     let skill_dir: PathBuf = cwd.join(".claude").join("skills").join(&skill_name);
     let skill_file = skill_dir.join("SKILL.md");
@@ -32,6 +35,16 @@ pub async fn handle_skills_init(
             "Skill already exists at".yellow(),
             skill_file.display().to_string().blue()
         );
+        return Ok(false);
+    }
+
+    let confirm = inquire::Confirm::new(&format!("Create new skill at {} ?", skill_file.display()))
+        .with_render_config(inquire_render_config())
+        .with_default(true)
+        .prompt()?;
+
+    if !confirm {
+        println!("Aborted.");
         return Ok(false);
     }
 

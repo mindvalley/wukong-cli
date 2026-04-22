@@ -17,11 +17,8 @@ pub struct Skills {
 
 #[derive(Debug, Subcommand)]
 pub enum SkillsSubcommand {
-    /// Scaffold a new skill at ./.claude/skills/<name>/SKILL.md
-    Init {
-        /// The skill name. Defaults to the current directory name.
-        name: Option<String>,
-    },
+    /// Scaffold a new skill at ./.claude/skills/<name>/SKILL.md (interactive)
+    Init,
     /// Remove installed skills from local and global skill directories
     Remove,
 }
@@ -29,7 +26,7 @@ pub enum SkillsSubcommand {
 impl Skills {
     pub async fn handle_command(&self, context: Context) -> Result<bool, WKCliError> {
         match &self.subcommand {
-            SkillsSubcommand::Init { name } => handle_skills_init(context, name.clone()).await,
+            SkillsSubcommand::Init => handle_skills_init(context).await,
             SkillsSubcommand::Remove => handle_skills_remove(context).await,
         }
     }
