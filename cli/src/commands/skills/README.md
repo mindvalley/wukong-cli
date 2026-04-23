@@ -10,14 +10,23 @@ with a remote skills registry will be added later.
 
 ### `wukong skills init`
 
-Interactively scaffold a new skill at `./.claude/skills/<name>/SKILL.md`.
+Interactively scaffold a new skill.
 
-- Prompts for the skill name (default: current working directory's basename).
-- Asks for confirmation before writing anything to disk.
-- Creates the parent directory tree (`./.claude/skills/<name>/`) if missing.
-- Writes a starter `SKILL.md` (frontmatter + `When to use` + `Instructions`
-  sections) modeled after the [`vercel-labs/skills`][vercel-skills] template.
-- Refuses to overwrite an existing `SKILL.md`.
+Flow:
+
+1. Prompts for **scope** — `Project` (current directory) or `Global` (home
+   directory).
+2. Prompts for the **skill name** (required, non-empty).
+3. Asks for confirmation showing both target paths.
+4. Writes the source `SKILL.md` to `<root>/.agents/skills/<name>/SKILL.md`
+   using a [`vercel-labs/skills`][vercel-skills]-style template.
+5. Creates a symlink at `<root>/.claude/skills/<name>/SKILL.md` pointing to
+   the source file (relative target, Unix only).
+
+`<root>` is `./` for project scope, `~/` for global scope.
+
+Refuses if either the source file or the Claude symlink already exists.
+Symlinking is Unix-only — the command exits early on non-Unix platforms.
 
 ### `wukong skills remove`
 
