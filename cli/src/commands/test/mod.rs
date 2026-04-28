@@ -207,11 +207,7 @@ async fn dispatch(
             y2,
             steps,
             step_ms,
-        } => {
-            backend
-                .swipe(*x1, *y1, *x2, *y2, *steps, *step_ms)
-                .await?
-        }
+        } => backend.swipe(*x1, *y1, *x2, *y2, *steps, *step_ms).await?,
         TestSubcommand::Scroll { kind } => match kind {
             ScrollKind::Up { x, from, to } => backend.scroll_up(*x, *from, *to).await?,
             ScrollKind::Down { x, from, to } => backend.scroll_down(*x, *from, *to).await?,
@@ -240,10 +236,9 @@ async fn dispatch(
         },
         TestSubcommand::FindElement { label } => print_json(&backend.find_element(label).await?)?,
         TestSubcommand::HitTest { x, y } => print_json(&backend.describe_point(*x, *y).await?)?,
-        TestSubcommand::Describe {
-            depth,
-            interactive,
-        } => print_json(&backend.describe(*depth, *interactive).await?)?,
+        TestSubcommand::Describe { depth, interactive } => {
+            print_json(&backend.describe(*depth, *interactive).await?)?
+        }
         TestSubcommand::Screenshot { output } => backend.screenshot(output).await?,
     }
     Ok(true)

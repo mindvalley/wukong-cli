@@ -73,8 +73,9 @@ impl IosBackend {
     /// disagrees. Only `bin/sim` needs the executable bit; the `.sh` helpers
     /// are sourced, not invoked.
     fn script_path() -> Result<PathBuf, WKCliError> {
-        let extract_err =
-            |e: std::io::Error| WKCliError::TestError(TestError::ScriptExtractionFailed(e.to_string()));
+        let extract_err = |e: std::io::Error| {
+            WKCliError::TestError(TestError::ScriptExtractionFailed(e.to_string()))
+        };
 
         let mut root = dirs::home_dir().ok_or_else(|| {
             WKCliError::TestError(TestError::ScriptExtractionFailed(
@@ -132,11 +133,7 @@ impl IosBackend {
     /// `run_capture` is for commands whose stdout the Rust layer parses;
     /// `run_streaming` is for commands whose output goes straight to the
     /// user. Both forward stderr directly to the terminal.
-    async fn run_capture(
-        &self,
-        subcommand: &str,
-        args: &[String],
-    ) -> Result<String, WKCliError> {
+    async fn run_capture(&self, subcommand: &str, args: &[String]) -> Result<String, WKCliError> {
         let mut cmd = self.build_command(subcommand, args)?;
         cmd.stdout(Stdio::piped());
         cmd.stderr(Stdio::inherit());
@@ -162,11 +159,7 @@ impl IosBackend {
         Ok(collected)
     }
 
-    async fn run_streaming(
-        &self,
-        subcommand: &str,
-        args: &[String],
-    ) -> Result<(), WKCliError> {
+    async fn run_streaming(&self, subcommand: &str, args: &[String]) -> Result<(), WKCliError> {
         let mut cmd = self.build_command(subcommand, args)?;
         cmd.stdout(Stdio::inherit());
         cmd.stderr(Stdio::inherit());
@@ -250,8 +243,11 @@ async fn apply_permissive_snapshot_settings(port: u16) {
 #[async_trait]
 impl PlatformBackend for IosBackend {
     async fn setup(&self, app: &str, port: u16) -> Result<(), WKCliError> {
-        self.run_streaming("setup", &[app.to_string(), "--port".into(), port.to_string()])
-            .await?;
+        self.run_streaming(
+            "setup",
+            &[app.to_string(), "--port".into(), port.to_string()],
+        )
+        .await?;
         apply_permissive_snapshot_settings(port).await;
         Ok(())
     }
@@ -276,7 +272,8 @@ impl PlatformBackend for IosBackend {
     }
 
     async fn tap_element(&self, label: &str) -> Result<(), WKCliError> {
-        self.run_streaming("tap-element", &[label.to_string()]).await
+        self.run_streaming("tap-element", &[label.to_string()])
+            .await
     }
 
     async fn tap_and_wait(
@@ -396,7 +393,8 @@ impl PlatformBackend for IosBackend {
     }
 
     async fn screenshot(&self, output: &str) -> Result<(), WKCliError> {
-        self.run_streaming("screenshot", &[output.to_string()]).await
+        self.run_streaming("screenshot", &[output.to_string()])
+            .await
     }
 
     async fn ensure_foreground_app(&self, bundle_id: Option<&str>) -> Result<(), WKCliError> {
@@ -425,14 +423,15 @@ mod tests {
     /// runtime when `bin/sim` tries to source them.
     #[test]
     fn manifest_matches_tree() {
-        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("src/commands/test/ios/simclaw");
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/commands/test/ios/simclaw");
         let on_disk: HashSet<String> = collect_tree(&root, &root)
             .into_iter()
             .filter(|rel| is_runtime_file(rel))
             .collect();
-        let in_manifest: HashSet<String> =
-            SIMCLAW_FILES.iter().map(|(rel, _)| rel.to_string()).collect();
+        let in_manifest: HashSet<String> = SIMCLAW_FILES
+            .iter()
+            .map(|(rel, _)| rel.to_string())
+            .collect();
 
         let missing_from_manifest: Vec<_> = on_disk.difference(&in_manifest).collect();
         let missing_from_disk: Vec<_> = in_manifest.difference(&on_disk).collect();
