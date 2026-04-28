@@ -183,7 +183,7 @@ impl IosBackend {
         // lines like "READY: <label>" on stdout before emitting the final
         // JSON payload. Slice from the first `{` or `[` so the caller's
         // deserializer sees only the structured tail.
-        let json_start = stdout.find(|c: char| c == '{' || c == '[');
+        let json_start = stdout.find(['{', '[']);
         let payload = json_start
             .map(|i| stdout[i..].trim())
             .unwrap_or(stdout.trim());
