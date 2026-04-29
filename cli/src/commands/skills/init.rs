@@ -14,6 +14,15 @@ enum Scope {
     Global,
 }
 
+impl Scope {
+    fn tag(&self) -> &'static str {
+        match self {
+            Scope::Project => "project",
+            Scope::Global => "global",
+        }
+    }
+}
+
 impl std::fmt::Display for Scope {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -65,32 +74,44 @@ pub async fn handle_skills_init(context: Context) -> Result<bool, WKCliError> {
         return Ok(false);
     }
 
-    let agents_dir = root.join(".agents").join("skills").join(&skill_name);
-    let agents_file = agents_dir.join("SKILL.md");
-    let claude_dir = root.join(".claude").join("skills").join(&skill_name);
-    let claude_file = claude_dir.join("SKILL.md");
+    let agents_rel: PathBuf = PathBuf::from(".agents")
+        .join("skills")
+        .join(&skill_name)
+        .join("SKILL.md");
+    let claude_rel: PathBuf = PathBuf::from(".claude")
+        .join("skills")
+        .join(&skill_name)
+        .join("SKILL.md");
+
+    let agents_file = root.join(&agents_rel);
+    let claude_file = root.join(&claude_rel);
+    let agents_dir = agents_file.parent().unwrap().to_path_buf();
+    let claude_dir = claude_file.parent().unwrap().to_path_buf();
+
+    let scope_tag = format!("[{}]", scope.tag());
 
     if agents_file.exists() {
         println!(
-            "{} {}",
+            "{} {} {}",
             "Skill source already exists at".yellow(),
-            agents_file.display().to_string().blue()
+            scope_tag.clone().dark_grey(),
+            agents_rel.display().to_string().blue()
         );
         return Ok(false);
     }
     if claude_file.exists() || claude_file.symlink_metadata().is_ok() {
         println!(
-            "{} {}",
+            "{} {} {}",
             "Skill symlink already exists at".yellow(),
-            claude_file.display().to_string().blue()
+            scope_tag.clone().dark_grey(),
+            claude_rel.display().to_string().blue()
         );
         return Ok(false);
     }
 
     let confirm = inquire::Confirm::new(&format!(
-        "Create skill at {} (symlinked from {}) ?",
-        agents_file.display(),
-        claude_file.display()
+        "Create skill '{}' in {} scope?",
+        skill_name, scope_tag
     ))
     .with_render_config(inquire_render_config())
     .with_default(true)
@@ -121,21 +142,23 @@ pub async fn handle_skills_init(context: Context) -> Result<bool, WKCliError> {
     std::os::unix::fs::symlink(&relative_target, &claude_file)?;
 
     println!(
-        "  {} skill at {}",
-        "Created".green().bold(),
-        agents_file.display().to_string().blue()
+        "{} {} {}",
+        "Initialized skill".green().bold(),
+        scope_tag.dark_grey(),
+        skill_name.clone().bold()
     );
+    println!();
+    println!("Created:");
+    println!("  {}", agents_rel.display().to_string().blue());
     println!(
-        "  {} symlink at {}",
-        "Linked".green().bold(),
-        claude_file.display().to_string().blue()
+        "  {}  {}  {}",
+        claude_rel.display().to_string().blue(),
+        "→".dark_grey(),
+        relative_target.display().to_string().dark_grey()
     );
     println!();
     println!("Next steps:");
-    println!(
-        "  1. Edit {} to define your skill instructions",
-        agents_file.display().to_string().blue()
-    );
+    println!("  1. Edit SKILL.md to define your skill instructions");
     println!("  2. Update the name and description in the frontmatter");
 
     Ok(true)
