@@ -1,0 +1,11 @@
+mutation PublishSkill(
+  $slug: String!
+  $content: String!
+  $commitMessage: String
+) {
+  publishSkill(slug: $slug, content: $content, commitMessage: $commitMessage) {
+    path
+    commitSha
+    htmlUrl
+  }
+}

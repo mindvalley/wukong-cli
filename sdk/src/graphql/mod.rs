@@ -6,6 +6,7 @@ pub mod deployment;
 pub mod deployment_github;
 pub mod github;
 pub mod kubernetes;
+pub mod skill;
 
 use self::{
     application::ApplicationConfigQuery,
@@ -40,6 +41,7 @@ pub use self::{
         livebook_resource_query, DeployLivebook, DestroyLivebook, IsAuthorizedQuery,
         KubernetesPodsQuery, LivebookResourceQuery,
     },
+    skill::{publish_skill, PublishSkill},
 };
 use crate::{
     error::{APIError, WKError},
@@ -805,6 +807,30 @@ impl WKClient {
             .await?;
 
         Ok(response.update_application_secrets)
+    }
+
+    /// Publish a skill to the internal skills registry repo via the Wukong API
+    /// Proxy. The proxy writes `<slug>/SKILL.md` on a per-skill branch, opens
+    /// (or reuses) a PR, and queues auto-merge.
+    pub async fn publish_skill(
+        &self,
+        slug: &str,
+        content: &str,
+        commit_message: Option<String>,
+    ) -> Result<publish_skill::ResponseData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        gql_client
+            .post_graphql::<PublishSkill, _>(
+                &self.api_url,
+                publish_skill::Variables {
+                    slug: slug.to_string(),
+                    content: content.to_string(),
+                    commit_message,
+                },
+            )
+            .await
+            .map_err(|err| err.into())
     }
 }
 
