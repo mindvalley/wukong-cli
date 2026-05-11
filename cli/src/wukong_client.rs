@@ -15,7 +15,7 @@ use wukong_sdk::{
         cd_pipeline_github_query, cd_pipeline_query, cd_pipelines_query, changelogs_query,
         deploy_livebook, deployment::cd_pipeline_status_query, destroy_livebook,
         execute_cd_pipeline, github_workflow_templates_query, is_authorized_query,
-        kubernetes_pods_query, livebook_resource_query, AppsignalTimeFrame,
+        kubernetes_pods_query, livebook_resource_query, publish_skill, AppsignalTimeFrame,
     },
     services::{
         gcloud::{DatabaseMetrics, LogEntries, LogEntriesOptions, TokenInfo},
@@ -466,5 +466,19 @@ impl WKClient {
     ) -> Result<github_workflow_templates_query::ResponseData, WKCliError> {
         self.check_and_refresh_tokens().await?;
         self.inner.fetch_github_workflow_templates().await
+    }
+
+    #[wukong_telemetry(api_event = "publish_skill")]
+    pub async fn publish_skill(
+        &mut self,
+        slug: &str,
+        content: &str,
+        commit_message: Option<String>,
+    ) -> Result<publish_skill::ResponseData, WKCliError> {
+        self.check_and_refresh_tokens().await?;
+        self.inner
+            .publish_skill(slug, content, commit_message)
+            .await
+            .map_err(WKCliError::from)
     }
 }

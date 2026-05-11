@@ -771,6 +771,18 @@ _arguments "${_arguments_options[@]}" : \
 '--help[Print help]' \
 && ret=0
 ;;
+(publish)
+_arguments "${_arguments_options[@]}" : \
+'*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'*--verbose[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
+'(-v --verbose)*-q[Do not print log message]' \
+'(-v --verbose)*--quiet[Do not print log message]' \
+'--report[Store the debugging log in the log file, which is located at ~/.config/wukong]' \
+'--canary[Use the Canary channel API]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
 (remove)
 _arguments "${_arguments_options[@]}" : \
 '*-v[Use verbos output. More output per occurrence.  By default, it'\''ll only report errors. \`-v\` show warnings \`-vv\` show info \`-vvv\` show debug \`-vvvv\` show trace]' \
@@ -796,6 +808,10 @@ _arguments "${_arguments_options[@]}" : \
         curcontext="${curcontext%:*:*}:wukong-skills-help-command-$line[1]:"
         case $line[1] in
             (init)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(publish)
 _arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
@@ -1044,6 +1060,10 @@ _arguments "${_arguments_options[@]}" : \
         curcontext="${curcontext%:*:*}:wukong-help-skills-command-$line[1]:"
         case $line[1] in
             (init)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(publish)
 _arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
@@ -1670,6 +1690,7 @@ _wukong__help__login_commands() {
 _wukong__help__skills_commands() {
     local commands; commands=(
 'init:Scaffold a new skill at ./.claude/skills/<name>/SKILL.md (interactive)' \
+'publish:Publish a local skill to the internal skills registry repo' \
 'remove:Remove installed skills from local and global skill directories' \
     )
     _describe -t commands 'wukong help skills commands' commands "$@"
@@ -1678,6 +1699,11 @@ _wukong__help__skills_commands() {
 _wukong__help__skills__init_commands() {
     local commands; commands=()
     _describe -t commands 'wukong help skills init commands' commands "$@"
+}
+(( $+functions[_wukong__help__skills__publish_commands] )) ||
+_wukong__help__skills__publish_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong help skills publish commands' commands "$@"
 }
 (( $+functions[_wukong__help__skills__remove_commands] )) ||
 _wukong__help__skills__remove_commands() {
@@ -1703,6 +1729,7 @@ _wukong__login_commands() {
 _wukong__skills_commands() {
     local commands; commands=(
 'init:Scaffold a new skill at ./.claude/skills/<name>/SKILL.md (interactive)' \
+'publish:Publish a local skill to the internal skills registry repo' \
 'remove:Remove installed skills from local and global skill directories' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
@@ -1712,6 +1739,7 @@ _wukong__skills_commands() {
 _wukong__skills__help_commands() {
     local commands; commands=(
 'init:Scaffold a new skill at ./.claude/skills/<name>/SKILL.md (interactive)' \
+'publish:Publish a local skill to the internal skills registry repo' \
 'remove:Remove installed skills from local and global skill directories' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
@@ -1727,6 +1755,11 @@ _wukong__skills__help__init_commands() {
     local commands; commands=()
     _describe -t commands 'wukong skills help init commands' commands "$@"
 }
+(( $+functions[_wukong__skills__help__publish_commands] )) ||
+_wukong__skills__help__publish_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong skills help publish commands' commands "$@"
+}
 (( $+functions[_wukong__skills__help__remove_commands] )) ||
 _wukong__skills__help__remove_commands() {
     local commands; commands=()
@@ -1736,6 +1769,11 @@ _wukong__skills__help__remove_commands() {
 _wukong__skills__init_commands() {
     local commands; commands=()
     _describe -t commands 'wukong skills init commands' commands "$@"
+}
+(( $+functions[_wukong__skills__publish_commands] )) ||
+_wukong__skills__publish_commands() {
+    local commands; commands=()
+    _describe -t commands 'wukong skills publish commands' commands "$@"
 }
 (( $+functions[_wukong__skills__remove_commands] )) ||
 _wukong__skills__remove_commands() {
