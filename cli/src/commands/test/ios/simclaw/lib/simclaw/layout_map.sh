@@ -3,6 +3,7 @@
 
 source "$SIM_LIB/bootstrap.sh"
 source "$SIM_LIB/wda.sh"
+source "$SIM_LIB/inspect.sh"
 
 # Each class-name query completes in <1s vs the multi-second /source serialization.
 _layout_map_elements_fallback() {
@@ -742,6 +743,163 @@ PYEOF
   if [[ $py_exit -ne 0 ]] || [[ -z "$enriched" ]]; then
     # Python failed — fall back to original Swift output unchanged
     echo "$result"
+    return 0
+  fi
+
+  # ── Spot-check WDA's reported coordinates against the live AX hit-test ──────
+  # XCUITest's snapshot() (which feeds WDA /source) returns layout-intended
+  # frames. SwiftUI flex layouts (Spacer, .frame(maxHeight:.infinity), etc.)
+  # collapse at render time, leaving WDA's reported y for elements after the
+  # spacer way below their actual on-screen position. macOS AX hit-test
+  # (describe-point) returns the rendered position, which is what taps
+  # actually need.
+  #
+  # Strategy: ALWAYS hit-test every interactive element via the batched
+  # describe-point helper (one swift invocation, ~300ms even for 50 points).
+  # If WDA's reported center for an element doesn't match the AX hit-test
+  # there, replace its rect with the AX-correct one and mark the response
+  # `"layout_corrected": true` so consumers know we patched it.
+  #
+  # When the initial probe at WDA's cy misses, we look up to ±150pt around it
+  # in the SAME batched call (extra coords appended up front so the swift
+  # invocation count stays at one). This covers both the SwiftUI Spacer-
+  # collapse case (button rendered HIGHER than reported) and rarer cases
+  # where elements render lower than reported.
+  local interactive_count
+  interactive_count=$(echo "$enriched" | python3 -c "
+import json, sys
+try: d = json.loads(sys.stdin.read())
+except Exception: sys.exit(0)
+print(len(d.get('interactive', [])))
+" 2>/dev/null)
+
+  if [[ -z "$interactive_count" || "$interactive_count" -eq 0 ]]; then
+    echo "$enriched"
+    return 0
+  fi
+
+  # ── Phase 1: hit-test each element's WDA-reported center (one batched call)
+  # Cost: N AX hit-tests + 1 swift cold-start ≈ 200-400ms regardless of N.
+  # Output is one JSON-or-"null" per input line, in order.
+  local phase1_input phase1_results
+  phase1_input=$(echo "$enriched" | python3 -c "
+import json, sys
+d = json.loads(sys.stdin.read())
+for el in d.get('interactive', []):
+    cx = int(el.get('x', 0) + el.get('w', 0) / 2)
+    cy = int(el.get('y', 0) + el.get('h', 0) / 2)
+    print(cx, cy)
+" 2>/dev/null)
+
+  phase1_results=$(printf '%s\n' "$phase1_input" | _describe_points_batch)
+
+  # Identify which element indices failed phase 1. Build the phase-2 input
+  # plan: for each failed element, emit 20 walk probes (±30..±300 in 30pt
+  # steps). Skip phase 2 entirely when nothing failed.
+  local need_phase2 phase2_plan
+  need_phase2=$(echo "$enriched" | NEED_RES="$phase1_results" python3 -c "
+import json, os, sys
+data = json.loads(sys.stdin.read())
+results = []
+for line in os.environ.get('NEED_RES', '').split('\n'):
+    line = line.strip()
+    if not line or line == 'null':
+        results.append(None)
+    else:
+        try: results.append(json.loads(line))
+        except Exception: results.append(None)
+
+# Failed = WDA hit-test returned a different label than expected.
+failed = []
+for idx, el in enumerate(data.get('interactive', [])):
+    if idx >= len(results):
+        failed.append(idx); continue
+    expected = (el.get('label') or '').lower()
+    if not expected:
+        continue
+    hit = results[idx]
+    if not hit:
+        failed.append(idx); continue
+    if (hit.get('label') or '').lower() != expected:
+        failed.append(idx)
+
+print(','.join(str(i) for i in failed))
+" 2>/dev/null)
+
+  if [[ -z "$need_phase2" ]]; then
+    # All elements verified clean — return raw enriched (no correction needed).
+    echo "$enriched"
+    return 0
+  fi
+
+  # ── Phase 2: walk ±300pt around each failed element's WDA y in 30pt steps
+  # ±300pt covers SwiftUI Spacer heights up to a full screen third, enough for
+  # every real-world flex layout we've seen (Mindvalley's worst case = 226pt).
+  # 20 probes × failed_element_count, one batched call.
+  local phase2_input phase2_results
+  phase2_input=$(echo "$enriched" | FAILED="$need_phase2" python3 -c "
+import json, os, sys
+data = json.loads(sys.stdin.read())
+failed = set(int(x) for x in os.environ.get('FAILED', '').split(',') if x)
+for idx, el in enumerate(data.get('interactive', [])):
+    if idx not in failed:
+        continue
+    cx = int(el.get('x', 0) + el.get('w', 0) / 2)
+    cy = int(el.get('y', 0) + el.get('h', 0) / 2)
+    for off in (-30, -60, -90, -120, -150, -180, -210, -240, -270, -300,
+                 30,  60,  90, 120, 150, 180, 210, 240, 270, 300):
+        sy = cy + off
+        if sy < 50:
+            print('')
+        else:
+            print(cx, sy)
+" 2>/dev/null)
+
+  phase2_results=$(printf '%s\n' "$phase2_input" | _describe_points_batch)
+
+  # Apply corrections: for each failed element, take the first phase-2 probe
+  # whose label matches and use its AX-reported rect. Mark layout_corrected.
+  local corrected
+  corrected=$(echo "$enriched" | FAILED="$need_phase2" P2RES="$phase2_results" python3 -c "
+import json, os, sys
+data = json.loads(sys.stdin.read())
+failed = [int(x) for x in os.environ.get('FAILED', '').split(',') if x]
+results = []
+for line in os.environ.get('P2RES', '').split('\n'):
+    line = line.strip()
+    if not line or line == 'null':
+        results.append(None)
+    else:
+        try: results.append(json.loads(line))
+        except Exception: results.append(None)
+
+WALKS_PER_ELEMENT = 20
+n_fixed = 0
+interactive = data.get('interactive', [])
+for slot, idx in enumerate(failed):
+    if idx >= len(interactive):
+        continue
+    el = interactive[idx]
+    expected = (el.get('label') or '').lower()
+    if not expected:
+        continue
+    base = slot * WALKS_PER_ELEMENT
+    block = results[base:base + WALKS_PER_ELEMENT]
+    for probe in block:
+        if probe and (probe.get('label') or '').lower() == expected:
+            for k in ('x', 'y', 'w', 'h'):
+                el[k] = probe.get(k, el.get(k, 0))
+            n_fixed += 1
+            break
+
+if n_fixed > 0:
+    data['layout_corrected'] = True
+    data['_layout_correction_count'] = n_fixed
+print(json.dumps(data, indent=2))
+" 2>/dev/null)
+
+  if [[ -n "$corrected" ]]; then
+    echo "$corrected"
   else
     echo "$enriched"
   fi

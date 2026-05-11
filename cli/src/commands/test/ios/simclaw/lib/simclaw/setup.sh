@@ -72,7 +72,10 @@ cmd_setup() {
   echo "==> [2/5] Checking WDA build..."
 
   local wda_source="/tmp/WebDriverAgent"
-  local wda_runner="/tmp/WDA_DerivedData/Build/Products/Debug-iphonesimulator/WebDriverAgentRunner-Runner.app"
+  local wda_derived
+  wda_derived=$(_wda_derived_path)
+  local wda_runner="$wda_derived/Build/Products/Debug-iphonesimulator/WebDriverAgentRunner-Runner.app"
+  local patch_stamp="$wda_derived/.patch_version"
 
   if [[ ! -d "$wda_source" ]]; then
     echo ""
@@ -81,25 +84,40 @@ cmd_setup() {
     exit 1
   fi
 
-  if [[ -d "$wda_runner" ]]; then
-    echo "    WDA already built at $wda_runner — skipping build."
+  # Cache reuse is gated on TWO conditions: the runner app exists AND the cached
+  # patch version matches WDA_PATCH_VERSION. If either fails we rebuild + re-patch
+  # so a stale cache (e.g. built before _wda_patch_ios_compat existed, or against
+  # the wrong iOS SDK) can't silently break WDA launch on the current runtime.
+  local cached_stamp=""
+  [[ -f "$patch_stamp" ]] && cached_stamp=$(cat "$patch_stamp" 2>/dev/null || true)
+
+  if [[ -d "$wda_runner" && "$cached_stamp" == "$WDA_PATCH_VERSION" ]]; then
+    echo "    WDA already built and patched (v$WDA_PATCH_VERSION) for $SIM_OS — skipping build."
   else
-    echo "    Building WDA (this may take a few minutes)..."
+    if [[ -d "$wda_runner" && "$cached_stamp" != "$WDA_PATCH_VERSION" ]]; then
+      echo "    WDA cache patch version mismatch (cached='$cached_stamp', current='$WDA_PATCH_VERSION') for $SIM_OS — rebuilding."
+      rm -rf "$wda_derived"
+    fi
+    echo "    Building WDA for $SIM_OS (this may take a few minutes)..."
     xcodebuild build-for-testing \
       -project "$wda_source/WebDriverAgent.xcodeproj" \
       -scheme WebDriverAgentRunner \
       -destination "platform=iOS Simulator,id=${SIM_UDID}" \
-      -derivedDataPath /tmp/WDA_DerivedData \
+      -derivedDataPath "$wda_derived" \
       CODE_SIGNING_ALLOWED=NO 2>&1 | tail -5
     [[ -d "$wda_runner" ]] \
       || die "setup: WDA build completed but runner app not found at $wda_runner"
     echo "    WDA build complete."
 
-    # Patch WebDriverAgentLib to weak-link _LocationEssentials so WDA works on
-    # older iOS versions (< 26) where that framework does not exist. Without this
-    # patch, dyld crashes on launch because _LocationEssentials is a hard dependency
-    # introduced when CoreLocation is compiled against the iOS 26+ SDK.
-    _wda_patch_ios_compat "/tmp/WDA_DerivedData/Build/Products"
+    # Patch WebDriverAgentLib to weak-link _LocationEssentials so a binary built
+    # against the iOS 26+ SDK still launches on older iOS simulator runtimes
+    # (< 26) where that framework does not exist. Also rewrites LC_BUILD_VERSION
+    # minos to 13.0 so xcodebuild won't reject the binary for older sims.
+    _wda_patch_ios_compat "$wda_derived/Build/Products"
+
+    # Stamp the build with the current patch version so subsequent setup runs
+    # can detect whether a re-patch (or full rebuild) is required.
+    echo "$WDA_PATCH_VERSION" > "$patch_stamp"
   fi
 
   # ── Step 3: Install app (if a .app path was given) ──────────────────────────

@@ -29,6 +29,7 @@ const SIMCLAW_FILES: &[(&str, &str)] = simclaw_files!(
     "lib/simclaw/device.sh",
     "lib/simclaw/inspect.sh",
     "lib/simclaw/layout_map.sh",
+    "lib/simclaw/login.sh",
     "lib/simclaw/misc.sh",
     "lib/simclaw/nav.sh",
     "lib/simclaw/setup.sh",

@@ -2,7 +2,7 @@
 # Re-vendor the simClaw tree from a local checkout of the upstream repo.
 #
 # Usage:
-#   ./revendor.sh <path-to-homebrew-simClaw>
+#   ./revendor.sh <path-to-mv-simclaw-ios>
 #
 # Copies bin/ + lib/simclaw/ from the upstream checkout into this directory,
 # then prints the upstream HEAD SHA and a diff of file names so you know
@@ -11,7 +11,7 @@
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
-  echo "Usage: $0 <path-to-homebrew-simClaw>" >&2
+  echo "Usage: $0 <path-to-mv-simclaw-ios>" >&2
   exit 2
 fi
 
@@ -19,7 +19,7 @@ UPSTREAM="$1"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
 [[ -d "$UPSTREAM/bin" && -d "$UPSTREAM/lib/simclaw" ]] \
-  || { echo "ERROR: $UPSTREAM does not look like homebrew-simClaw (missing bin/ or lib/simclaw/)" >&2; exit 1; }
+  || { echo "ERROR: $UPSTREAM does not look like mv-simclaw-ios (missing bin/ or lib/simclaw/)" >&2; exit 1; }
 
 echo "==> Snapshotting old file list"
 OLD_FILES=$(cd "$HERE" && find bin lib -type f 2>/dev/null | sort)

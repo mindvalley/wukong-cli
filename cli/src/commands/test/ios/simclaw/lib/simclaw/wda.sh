@@ -4,6 +4,24 @@
 source "$SIM_LIB/bootstrap.sh"
 source "$SIM_LIB/coords.sh"
 
+# WDA cache version. Bump this whenever `_wda_patch_ios_compat` changes so any
+# existing cached WDA build gets wiped and re-built + re-patched on next setup.
+# Cached builds carry a `.patch_version` stamp inside their derived data dir;
+# a mismatch triggers a clean rebuild in cmd_setup.
+WDA_PATCH_VERSION="2"
+
+# _wda_derived_path
+# Returns the per-iOS-version WDA DerivedData path so each iOS runtime gets its
+# own cache. Without this, a WDA build patched for one runtime (say iOS 26) gets
+# silently reused on a different runtime (say iOS 18), where it either fails to
+# launch or behaves incorrectly. Per-iOS caches also let qa-branch test across
+# multiple iOS versions in parallel without the caches colliding.
+# Requires SIM_OS to be populated (call after `_bootstrap`).
+_wda_derived_path() {
+  local slug="${SIM_OS// /-}"   # "iOS 26.2" → "iOS-26.2"
+  echo "/tmp/WDA_DerivedData_${slug}"
+}
+
 # ── WDA Touch Backend ─────────────────────────────────────────────────────────
 #
 # All touch injection goes through WebDriverAgent (WDA), which runs as an
@@ -320,7 +338,7 @@ _wda_patch_ios_compat() {
 # commands in this tool use WDA as their touch backend.
 #
 # This command uses `xcodebuild test-without-building` against a pre-built WDA
-# binary located at /tmp/WDA_DerivedData. The DerivedData directory must already
+# binary located at /tmp/WDA_DerivedData_<iOS-X.Y> (per-iOS-version cache). The DerivedData directory must already
 # exist (built once via `xcodebuild build` against the WebDriverAgent project).
 # This avoids re-compiling WDA on every invocation.
 #
@@ -338,9 +356,10 @@ cmd_wda_start() {
   local port="${1:-8100}"
   _bootstrap
 
-  local wda_derived="/tmp/WDA_DerivedData"
+  local wda_derived
+  wda_derived=$(_wda_derived_path)
   # WDA must be pre-built — this path is created by building WebDriverAgent once.
-  [[ -d "$wda_derived" ]] || die "WDA DerivedData not found at $wda_derived — build WDA first"
+  [[ -d "$wda_derived" ]] || die "WDA DerivedData not found at $wda_derived — run 'sim setup' first to build WDA for $SIM_OS"
 
   # Find the WDA test runner app bundle inside the pre-built DerivedData
   local wda_bundle

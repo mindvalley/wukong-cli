@@ -384,13 +384,12 @@ except: pass
 " 2>/dev/null)
   fi
 
-  [[ -n "$element_id" ]] || die "find-element: '$search_label' not found"
+  if [[ -n "$element_id" ]]; then
+    # Get the element's bounding rect (WDA returns iOS logical coordinates directly)
+    local rect_resp
+    rect_resp=$(curl -s "http://localhost:${WDA_PORT}/session/${WDA_SESSION}/element/${element_id}/rect" 2>/dev/null)
 
-  # Get the element's bounding rect (WDA returns iOS logical coordinates directly)
-  local rect_resp
-  rect_resp=$(curl -s "http://localhost:${WDA_PORT}/session/${WDA_SESSION}/element/${element_id}/rect" 2>/dev/null)
-
-  echo "$rect_resp" | _FIND_LABEL="$search_label" python3 -c "
+    echo "$rect_resp" | _FIND_LABEL="$search_label" python3 -c "
 import sys, json, os
 data = json.load(sys.stdin)
 r = data.get('value', {})
@@ -401,6 +400,83 @@ h = int(r.get('height', 0))
 label = os.environ.get('_FIND_LABEL', '')
 print(json.dumps({'role': 'XCUIElement', 'label': label, 'x': x, 'y': y, 'w': w, 'h': h}))
 " 2>/dev/null || die "find-element: failed to get rect for '$search_label'"
+    return 0
+  fi
+
+  # ── AX-grid fallback ────────────────────────────────────────────────────────
+  # WDA /source didn't include this label. Same gap that hits cmd_tap_element
+  # on system dialogs, swipe-revealed actions, custom toggles like Settings >
+  # Maps > Air Quality Index, etc. Run the same coarse-grid AX hit-test so
+  # find-element returns a usable rect for those elements too. Picks the best
+  # label match (exact > prefix > contains) over interactive + static-text
+  # roles. Static text is included here because find-element is also used as
+  # a "is this label visible?" probe by callers like scroll-to-visible.
+  local lw="${SIM_LOGICAL_W:-402}"
+  local lh="${SIM_LOGICAL_H:-874}"
+  local grid_input=""
+  local gx gy
+  # 40pt step starting at y=20 / x=20. The 20pt offset puts probes in the
+  # MIDDLE of typical 44pt-tall iOS HIG control bands rather than on their
+  # edges; AX hit-test at the exact rect edge sometimes returns the parent
+  # AXGroup instead of the control (we observed this on the Settings root
+  # search field at y=802-840, which AX returns as AXGroup at y=800/840 but
+  # AXTextField at y=820).
+  for ((gy = 20; gy < lh; gy += 40)); do
+    for ((gx = 20; gx < lw; gx += 40)); do
+      grid_input+="$gx $gy"$'\n'
+    done
+  done
+
+  local grid_results
+  grid_results=$(printf '%s' "$grid_input" | _describe_points_batch)
+
+  local needle_lower
+  needle_lower=$(echo "$search_label" | tr '[:upper:]' '[:lower:]')
+  local ax_match
+  ax_match=$(echo "$grid_results" | NEEDLE="$needle_lower" python3 -c "
+import json, os, sys
+needle = os.environ.get('NEEDLE', '')
+ROLES = {'AXButton', 'AXTextField', 'AXSecureTextField', 'AXSearchField',
+         'AXSwitch', 'AXSlider', 'AXLink', 'AXMenuItem', 'AXCheckBox',
+         'AXStaticText'}
+best = None
+best_score = -1
+seen = set()
+for line in sys.stdin:
+    line = line.strip()
+    if not line or line == 'null': continue
+    try: hit = json.loads(line)
+    except Exception: continue
+    if hit.get('role') not in ROLES: continue
+    lbl = (hit.get('label') or '').lower()
+    if not lbl: continue
+    key = (hit.get('role'), lbl, hit.get('x'), hit.get('y'))
+    if key in seen: continue
+    seen.add(key)
+    if lbl == needle: score = 3
+    elif lbl.startswith(needle): score = 2
+    elif needle in lbl: score = 1
+    else: continue
+    if score > best_score:
+        best_score = score
+        best = hit
+if best:
+    print(json.dumps({
+        'role': best.get('role'),
+        'label': best.get('label'),
+        'x': best.get('x', 0),
+        'y': best.get('y', 0),
+        'w': best.get('w', 0),
+        'h': best.get('h', 0),
+    }))
+" 2>/dev/null)
+
+  if [[ -n "$ax_match" ]]; then
+    echo "$ax_match"
+    return 0
+  fi
+
+  die "find-element: '$search_label' not found in WDA /source or in AX grid scan"
 }
 
 cmd_describe_point() {
@@ -504,4 +580,132 @@ SWIFTEOF
     die "describe-point: ${result:-no element found at ($1, $2)}"
   fi
   echo "$result"
+}
+
+# _describe_points_batch
+# Hit-test many points in one swift invocation. Reads "logical_x logical_y"
+# pairs from stdin (one per line) and writes one result per line to stdout —
+# either a {role,label,x,y,w,h} JSON object for hits or the literal string
+# "null" for points where AX returned no element.
+#
+# WHY: every cmd_describe_point call pays ~150ms swift cold-start. Calling it
+# in a loop for 50+ points takes ~7s. Batching amortizes the swift startup
+# across all points so the same workload runs in ~300-800ms (200ms startup +
+# ~5-15ms per AX hit-test). Used by layout-map's verify pass.
+#
+# The output is positional — N input lines produce N output lines, even when
+# some hit-tests fail. Callers can zip input and output by line index.
+_describe_points_batch() {
+  _bootstrap
+
+  local sim_orientation
+  sim_orientation=$(plutil -extract "DevicePreferences.${SIM_UDID}.SimulatorWindowOrientation" raw \
+    ~/Library/Preferences/com.apple.iphonesimulator.plist 2>/dev/null || echo "Portrait")
+
+  # Convert each "logical_x logical_y" line on stdin to a "screen_x screen_y"
+  # line in bash before sending to swift. _ios_to_screen handles the orientation
+  # / zoom / origin transform; doing it here keeps the swift script focused on
+  # just the AX hit-test loop. Note: _ios_to_screen prints without a trailing
+  # newline, so we wrap with echo to ensure one line per pair.
+  local screen_pairs
+  screen_pairs=$(while read -r lx ly; do
+    if [[ -z "$lx" || -z "$ly" ]]; then
+      echo ""
+    else
+      echo "$(_ios_to_screen "$lx" "$ly")"
+    fi
+  done)
+
+  # Stage the swift script in a temp file so the input pipe can deliver coord
+  # pairs to swift's stdin (a heredoc on `swift -` would shadow the pipe).
+  local swift_script
+  swift_script=$(mktemp -t sim_describe_batch).swift
+  : > "$swift_script"
+  cat > "$swift_script" << 'SWIFTEOF'
+import ApplicationServices
+import AppKit
+import Foundation
+
+let args = CommandLine.arguments
+let originX     = Double(args[1])!
+let originY     = Double(args[2])!
+let zoom        = Double(args[3])!
+let orientation = args.count > 4 ? args[4] : "Portrait"
+let logicalW    = Double(args.count > 5 ? args[5] : "390") ?? 390.0
+let logicalH    = Double(args.count > 6 ? args[6] : "844") ?? 844.0
+
+guard let simApp = NSWorkspace.shared.runningApplications
+    .first(where: { $0.bundleIdentifier == "com.apple.iphonesimulator" }) else {
+    fputs("ERROR: Simulator not running\n", stderr); exit(1)
+}
+let pid = simApp.processIdentifier
+let axApp = AXUIElementCreateApplication(pid)
+
+func getAttr(_ el: AXUIElement, _ attr: String) -> AnyObject? {
+    var v: CFTypeRef?
+    guard AXUIElementCopyAttributeValue(el, attr as CFString, &v) == .success else { return nil }
+    return v as AnyObject
+}
+func getLabel(_ el: AXUIElement) -> String {
+    for a in ["AXDescription", "AXTitle", "AXLabel", "AXValue"] {
+        if let s = getAttr(el, a) as? String, !s.isEmpty { return s }
+    }
+    return ""
+}
+func getRole(_ el: AXUIElement) -> String {
+    return (getAttr(el, kAXRoleAttribute) as? String) ?? ""
+}
+
+while let line = readLine() {
+    let trimmed = line.trimmingCharacters(in: .whitespaces)
+    if trimmed.isEmpty { print("null"); continue }
+    let parts = trimmed.split(separator: " ")
+    guard parts.count >= 2,
+          let sx = Double(parts[0]),
+          let sy = Double(parts[1]) else {
+        print("null"); continue
+    }
+    var element: AXUIElement?
+    let err = AXUIElementCopyElementAtPosition(axApp, Float(sx), Float(sy), &element)
+    guard err == .success, let el = element else {
+        print("null"); continue
+    }
+    let role  = getRole(el)
+    let label = getLabel(el)
+    var lx = 0, ly = 0, lw = 0, lh = 0
+    if let posVal = getAttr(el, kAXPositionAttribute),
+       let sizeVal = getAttr(el, kAXSizeAttribute) {
+        var pt = CGPoint.zero; var sz = CGSize.zero
+        AXValueGetValue(posVal as! AXValue, .cgPoint, &pt)
+        AXValueGetValue(sizeVal as! AXValue, .cgSize, &sz)
+        let wrx = (Double(pt.x) - originX) / zoom
+        let wry = (Double(pt.y) - originY) / zoom
+        let wrw = Double(sz.width)  / zoom
+        let wrh = Double(sz.height) / zoom
+        switch orientation {
+        case "PortraitUpsideDown":
+            lx = Int(logicalW - wrx - wrw + 0.5); ly = Int(logicalH - wry - wrh + 0.5)
+            lw = Int(wrw + 0.5);                  lh = Int(wrh + 0.5)
+        case "LandscapeLeft":
+            lx = Int(wry + 0.5);                            ly = Int(logicalH - wrx - wrw + 0.5)
+            lw = Int(wrh + 0.5);                            lh = Int(wrw + 0.5)
+        case "LandscapeRight":
+            lx = Int(logicalW - wry - wrh + 0.5);           ly = Int(wrx + 0.5)
+            lw = Int(wrh + 0.5);                            lh = Int(wrw + 0.5)
+        default:
+            lx = Int(wrx + 0.5); ly = Int(wry + 0.5)
+            lw = Int(wrw + 0.5); lh = Int(wrh + 0.5)
+        }
+    }
+    let safeLabel = label
+        .replacingOccurrences(of: "\\", with: "\\\\")
+        .replacingOccurrences(of: "\"", with: "\\\"")
+    print("{\"role\":\"\(role)\",\"label\":\"\(safeLabel)\",\"x\":\(lx),\"y\":\(ly),\"w\":\(lw),\"h\":\(lh)}")
+}
+SWIFTEOF
+
+  printf '%s\n' "$screen_pairs" | swift "$swift_script" \
+    "$SIM_SCREEN_X" "$SIM_SCREEN_Y" "$SIM_ZOOM" "$sim_orientation" \
+    "$SIM_LOGICAL_W" "$SIM_LOGICAL_H" 2>/dev/null
+  rm -f "$swift_script"
 }

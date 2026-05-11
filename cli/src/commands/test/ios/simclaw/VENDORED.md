@@ -7,10 +7,10 @@ delegate to `bin/sim`, which is bundled into the Wukong binary via
 
 ## Upstream
 
-- **Repo:** https://github.com/justinchampappilly-mindvalley/homebrew-simClaw
-- **Commit:** `2381b2da5139a49f063a6e0a4d907c113771ecab`
-- **Ref:** `[bump] - Bump formula to v1.0.6`
-- **Vendored on:** 2026-04-21
+- **Repo:** https://github.com/mindvalley/mv-simclaw-ios
+- **Commit:** `572a587935b55acb234cafc969c37b1417b9b408`
+- **Ref:** `[fix] - Stage bundled skills + harden installer against existing symlinks (#2)`
+- **Vendored on:** 2026-05-11
 
 ## Updating
 

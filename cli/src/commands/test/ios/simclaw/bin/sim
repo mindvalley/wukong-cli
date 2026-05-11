@@ -255,7 +255,7 @@ Options:
 
   wda-start [port]                        ★ REQUIRED before any tap or swipe command.
                                           Starts WDA inside the target simulator using a
-                                          pre-built binary from /tmp/WDA_DerivedData, then
+                                          pre-built binary from /tmp/WDA_DerivedData_<iOS-X.Y>, then
                                           creates a W3C session and caches the port + session
                                           ID in /tmp/sim_bootstrap_cache_<UDID>.json.
                                           Each simulator needs its own port (default 8100).
@@ -434,6 +434,10 @@ case "$CMD" in
   health-check)
     source "$SIM_LIB/misc.sh"
     cmd_health_check
+    ;;
+  login)
+    source "$SIM_LIB/login.sh"
+    cmd_login "$@"
     ;;
   ""|--help|-h)
     usage
