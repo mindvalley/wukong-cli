@@ -1,0 +1,7 @@
+query CheckSkillUpdates($skills: [SkillUpdateCheckInput!]!) {
+  checkSkillUpdates(skills: $skills) {
+    slug
+    status
+    latestHash
+  }
+}

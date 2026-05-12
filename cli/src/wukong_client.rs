@@ -13,9 +13,10 @@ use wukong_sdk::{
         appsignal_average_throughput_query, appsignal_deploy_markers_query,
         appsignal_exception_incidents_query, cd_pipeline_for_rollback_query,
         cd_pipeline_github_query, cd_pipeline_query, cd_pipelines_query, changelogs_query,
-        deploy_livebook, deployment::cd_pipeline_status_query, destroy_livebook,
-        execute_cd_pipeline, github_workflow_templates_query, is_authorized_query,
-        kubernetes_pods_query, livebook_resource_query, publish_skill, AppsignalTimeFrame,
+        check_skill_updates, deploy_livebook, deployment::cd_pipeline_status_query,
+        destroy_livebook, execute_cd_pipeline, github_workflow_templates_query,
+        is_authorized_query, kubernetes_pods_query, livebook_resource_query, publish_skill,
+        skill_by_slug, skills_list, AppsignalTimeFrame,
     },
     services::{
         gcloud::{DatabaseMetrics, LogEntries, LogEntriesOptions, TokenInfo},
@@ -478,6 +479,39 @@ impl WKClient {
         self.check_and_refresh_tokens().await?;
         self.inner
             .publish_skill(slug, content, commit_message)
+            .await
+            .map_err(WKCliError::from)
+    }
+
+    #[wukong_telemetry(api_event = "fetch_skills")]
+    pub async fn fetch_skills(
+        &mut self,
+        query: Option<&str>,
+    ) -> Result<skills_list::ResponseData, WKCliError> {
+        self.check_and_refresh_tokens().await?;
+        self.inner
+            .fetch_skills(query)
+            .await
+            .map_err(WKCliError::from)
+    }
+
+    #[wukong_telemetry(api_event = "fetch_skill")]
+    pub async fn fetch_skill(
+        &mut self,
+        slug: &str,
+    ) -> Result<skill_by_slug::ResponseData, WKCliError> {
+        self.check_and_refresh_tokens().await?;
+        self.inner.fetch_skill(slug).await.map_err(WKCliError::from)
+    }
+
+    #[wukong_telemetry(api_event = "check_skill_updates")]
+    pub async fn check_skill_updates(
+        &mut self,
+        skills: Vec<check_skill_updates::SkillUpdateCheckInput>,
+    ) -> Result<check_skill_updates::ResponseData, WKCliError> {
+        self.check_and_refresh_tokens().await?;
+        self.inner
+            .check_skill_updates(skills)
             .await
             .map_err(WKCliError::from)
     }

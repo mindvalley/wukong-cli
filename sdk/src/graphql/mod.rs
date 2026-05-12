@@ -41,7 +41,10 @@ pub use self::{
         livebook_resource_query, DeployLivebook, DestroyLivebook, IsAuthorizedQuery,
         KubernetesPodsQuery, LivebookResourceQuery,
     },
-    skill::{publish_skill, PublishSkill},
+    skill::{
+        check_skill_updates, publish_skill, skill_by_slug, skills_list, CheckSkillUpdates,
+        PublishSkill, SkillBySlug, SkillsList,
+    },
 };
 use crate::{
     error::{APIError, WKError},
@@ -828,6 +831,55 @@ impl WKClient {
                     content: content.to_string(),
                     commit_message,
                 },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    /// List all skills from the registry, optionally filtered by a keyword query.
+    pub async fn fetch_skills(
+        &self,
+        query: Option<&str>,
+    ) -> Result<skills_list::ResponseData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        gql_client
+            .post_graphql::<SkillsList, _>(
+                &self.api_url,
+                skills_list::Variables {
+                    query: query.map(|s| s.to_string()),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    /// Fetch the raw SKILL.md content for a single skill from the registry.
+    pub async fn fetch_skill(&self, slug: &str) -> Result<skill_by_slug::ResponseData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        gql_client
+            .post_graphql::<SkillBySlug, _>(
+                &self.api_url,
+                skill_by_slug::Variables {
+                    slug: slug.to_string(),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    /// Check whether installed skills have updates available in the registry.
+    pub async fn check_skill_updates(
+        &self,
+        skills: Vec<check_skill_updates::SkillUpdateCheckInput>,
+    ) -> Result<check_skill_updates::ResponseData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        gql_client
+            .post_graphql::<CheckSkillUpdates, _>(
+                &self.api_url,
+                check_skill_updates::Variables { skills },
             )
             .await
             .map_err(|err| err.into())

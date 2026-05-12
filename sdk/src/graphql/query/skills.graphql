@@ -1,0 +1,8 @@
+query SkillsList($query: String) {
+  skills(query: $query) {
+    slug
+    name
+    description
+    contentHash
+  }
+}
