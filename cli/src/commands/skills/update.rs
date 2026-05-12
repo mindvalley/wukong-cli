@@ -1,4 +1,4 @@
-use std::{env, fs, path::Path};
+use std::{env, fs, path::{Path, PathBuf}};
 
 use crossterm::style::Stylize;
 

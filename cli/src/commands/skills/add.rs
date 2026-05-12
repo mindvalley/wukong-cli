@@ -1,4 +1,4 @@
-use std::{env, fs, path::PathBuf};
+use std::{env, fs, path::{Path, PathBuf}};
 
 use crossterm::style::Stylize;
 use inquire::{MultiSelect, Select};
@@ -223,7 +223,7 @@ pub async fn handle_skills_add(
     Ok(true)
 }
 
-fn update_manifest(root: &PathBuf, slug: &str, content_hash: &str) -> Result<(), WKCliError> {
+fn update_manifest(root: &Path, slug: &str, content_hash: &str) -> Result<(), WKCliError> {
     let manifest_path = root.join(".agents").join("skills").join(MANIFEST_FILE);
 
     let mut manifest: std::collections::HashMap<String, String> = if manifest_path.exists() {
