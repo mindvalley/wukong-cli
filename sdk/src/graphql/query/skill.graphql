@@ -1,0 +1,7 @@
+query SkillBySlug($slug: String!) {
+  skill(slug: $slug) {
+    slug
+    content
+    contentHash
+  }
+}
