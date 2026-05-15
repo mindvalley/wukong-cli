@@ -1,10 +1,8 @@
-use std::{
-    env, fs,
-    path::{Path, PathBuf},
-};
+use std::{env, fs, path::PathBuf};
 
 use crossterm::style::Stylize;
 
+use super::common::{create_skill_symlink, update_manifest};
 use crate::{
     commands::Context, config::Config, error::WKCliError, loader::new_spinner,
     wukong_client::WKClient,
@@ -14,8 +12,6 @@ use wukong_sdk::graphql::check_skill_updates::SkillUpdateState;
 
 use wukong_telemetry::*;
 use wukong_telemetry_macro::*;
-
-const MANIFEST_FILE: &str = "mv-manifest.json";
 
 #[derive(Debug)]
 struct ManifestSkill {
@@ -94,13 +90,8 @@ pub async fn handle_skills_update(context: Context) -> Result<bool, WKCliError> 
 
                         if claude_file.exists() || claude_file.symlink_metadata().is_ok() {
                             let _ = fs::remove_file(&claude_file);
-                            let relative_target: PathBuf = PathBuf::from("../../../.agents/skills")
-                                .join(&status.slug)
-                                .join("SKILL.md");
-
-                            #[cfg(unix)]
-                            let _ = std::os::unix::fs::symlink(&relative_target, &claude_file);
                         }
+                        let _ = create_skill_symlink(&agents_file, &claude_file);
 
                         update_manifest(&skill.root, &status.slug, &data.skill.content_hash)?;
 
@@ -188,34 +179,11 @@ fn discover_manifest_skills() -> Vec<ManifestSkill> {
     skills
 }
 
-fn read_manifest(root: &Path) -> Option<std::collections::HashMap<String, String>> {
-    let manifest_path = root.join(".agents").join("skills").join(MANIFEST_FILE);
+fn read_manifest(root: &std::path::Path) -> Option<std::collections::HashMap<String, String>> {
+    let manifest_path = root.join(".agents").join("skills").join("mv-manifest.json");
     if !manifest_path.exists() {
         return None;
     }
     let content = fs::read_to_string(&manifest_path).ok()?;
     serde_json::from_str(&content).ok()
-}
-
-fn update_manifest(root: &Path, slug: &str, content_hash: &str) -> Result<(), WKCliError> {
-    let manifest_path = root.join(".agents").join("skills").join(MANIFEST_FILE);
-
-    let mut manifest: std::collections::HashMap<String, String> = if manifest_path.exists() {
-        let content = fs::read_to_string(&manifest_path)?;
-        serde_json::from_str(&content).unwrap_or_default()
-    } else {
-        std::collections::HashMap::new()
-    };
-
-    manifest.insert(slug.to_string(), content_hash.to_string());
-
-    let json = serde_json::to_string_pretty(&manifest).map_err(|e| {
-        WKCliError::Io(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            e.to_string(),
-        ))
-    })?;
-    fs::write(&manifest_path, json)?;
-
-    Ok(())
 }

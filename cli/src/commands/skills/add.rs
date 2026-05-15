@@ -1,11 +1,9 @@
-use std::{
-    env, fs,
-    path::{Path, PathBuf},
-};
+use std::{env, fs, path::PathBuf};
 
 use crossterm::style::Stylize;
 use inquire::{MultiSelect, Select};
 
+use super::common::{create_skill_symlink, update_manifest};
 use crate::{
     commands::Context, config::Config, error::WKCliError, loader::new_spinner,
     utils::inquire::inquire_render_config, wukong_client::WKClient,
@@ -13,8 +11,6 @@ use crate::{
 
 use wukong_telemetry::*;
 use wukong_telemetry_macro::*;
-
-const MANIFEST_FILE: &str = "mv-manifest.json";
 
 #[derive(Debug, Clone)]
 struct SkillChoice {
@@ -151,7 +147,7 @@ pub async fn handle_skills_add(
         let agents_file = agents_dir.join("SKILL.md");
         let claude_file = claude_dir.join("SKILL.md");
 
-        if agents_file.exists() {
+        if agents_file.exists() || claude_file.exists() || claude_file.symlink_metadata().is_ok() {
             println!(
                 "  {} {} {} — already installed",
                 "Skipping".yellow().bold(),
@@ -185,12 +181,7 @@ pub async fn handle_skills_add(
         fs::create_dir_all(&claude_dir)?;
         fs::write(&agents_file, &skill_data.skill.content)?;
 
-        let relative_target: PathBuf = PathBuf::from("../../../.agents/skills")
-            .join(&choice.slug)
-            .join("SKILL.md");
-
-        #[cfg(unix)]
-        std::os::unix::fs::symlink(&relative_target, &claude_file)?;
+        create_skill_symlink(&agents_file, &claude_file)?;
 
         update_manifest(&root, &choice.slug, &skill_data.skill.content_hash)?;
 
@@ -224,27 +215,4 @@ pub async fn handle_skills_add(
     }
 
     Ok(true)
-}
-
-fn update_manifest(root: &Path, slug: &str, content_hash: &str) -> Result<(), WKCliError> {
-    let manifest_path = root.join(".agents").join("skills").join(MANIFEST_FILE);
-
-    let mut manifest: std::collections::HashMap<String, String> = if manifest_path.exists() {
-        let content = fs::read_to_string(&manifest_path)?;
-        serde_json::from_str(&content).unwrap_or_default()
-    } else {
-        std::collections::HashMap::new()
-    };
-
-    manifest.insert(slug.to_string(), content_hash.to_string());
-
-    let json = serde_json::to_string_pretty(&manifest).map_err(|e| {
-        WKCliError::Io(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            e.to_string(),
-        ))
-    })?;
-    fs::write(&manifest_path, json)?;
-
-    Ok(())
 }

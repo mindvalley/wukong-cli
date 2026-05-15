@@ -190,6 +190,7 @@ fn read_skill_name_from_file(slug: &str) -> String {
 }
 
 fn parse_frontmatter_name(content: &str) -> Option<String> {
+    let content = content.replace("\r\n", "\n");
     if !content.starts_with("---\n") {
         return None;
     }
