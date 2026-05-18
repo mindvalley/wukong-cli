@@ -239,11 +239,12 @@ jobs:
       - name: Create a new PR to bump version
         env:
           DEBUG: api
+          GH_EMAIL: ${{ vars.GH_EMAIL }}
         run: |
           VERSION=${{ env.TAG_NAME }}
           NEW_BRANCH_NAME="release/${VERSION}"
 
-          git config --global user.email "mvwebmaster@mindvalley.com"
+          git config --global user.email "${GH_EMAIL}"
           git config --global user.name "mvwebmaster"
 
           git branch
