@@ -243,8 +243,8 @@ jobs:
           VERSION=${{ env.TAG_NAME }}
           NEW_BRANCH_NAME="release/${VERSION}"
 
-          git config --global user.email "junkai.gan@mindvalley.com"
-          git config --global user.name "Gan Jun Kai"
+          git config --global user.email "mvwebmaster@mindvalley.com"
+          git config --global user.name "mvwebmaster"
 
           git branch
           git switch -c "${NEW_BRANCH_NAME}"
