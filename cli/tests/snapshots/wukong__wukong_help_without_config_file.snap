@@ -19,6 +19,7 @@ Commands:
   login        Login to start using wukong command
   google       This command group contains the commands to interact with Google services
   completion   Generate wukong cli completions for your shell to stdout
+  skills       This command group contains the commands to manage agent skills locally
   tui          Start TUI session
   test         This command group contains the commands to drive device simulators/emulators for app
                testing

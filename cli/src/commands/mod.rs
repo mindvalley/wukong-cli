@@ -21,6 +21,7 @@ mod dev;
 mod google;
 mod init;
 mod login;
+mod skills;
 mod test;
 mod tui;
 
@@ -97,6 +98,8 @@ pub enum CommandGroup {
         #[arg(value_enum)]
         shell: Shell,
     },
+    /// This command group contains the commands to manage agent skills locally
+    Skills(skills::Skills),
     /// Start TUI session
     Tui,
     /// This command group contains the commands to drive device simulators/emulators for app testing.
@@ -125,6 +128,11 @@ impl ClapApp {
             }
             CommandGroup::Config(config) => config.handle_command(),
             CommandGroup::Dev(dev) => dev.handle_command(self).await,
+            CommandGroup::Skills(skills) => {
+                skills
+                    .handle_command(get_context_without_application(self)?)
+                    .await
+            }
             CommandGroup::Tui => handle_tui(channel).await,
             CommandGroup::Test(test) => test.handle_command().await,
         };

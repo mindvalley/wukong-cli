@@ -6,6 +6,7 @@ pub mod deployment;
 pub mod deployment_github;
 pub mod github;
 pub mod kubernetes;
+pub mod skill;
 
 use self::{
     application::ApplicationConfigQuery,
@@ -39,6 +40,10 @@ pub use self::{
         deploy_livebook, destroy_livebook, is_authorized_query, kubernetes_pods_query,
         livebook_resource_query, DeployLivebook, DestroyLivebook, IsAuthorizedQuery,
         KubernetesPodsQuery, LivebookResourceQuery,
+    },
+    skill::{
+        check_skill_updates, publish_skill, skill_by_slug, skills_list, CheckSkillUpdates,
+        PublishSkill, SkillBySlug, SkillsList,
     },
 };
 use crate::{
@@ -805,6 +810,79 @@ impl WKClient {
             .await?;
 
         Ok(response.update_application_secrets)
+    }
+
+    /// Publish a skill to the internal skills registry repo via the Wukong API
+    /// Proxy. The proxy writes `<slug>/SKILL.md` on a per-skill branch, opens
+    /// (or reuses) a PR, and queues auto-merge.
+    pub async fn publish_skill(
+        &self,
+        slug: &str,
+        content: &str,
+        commit_message: Option<String>,
+    ) -> Result<publish_skill::ResponseData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        gql_client
+            .post_graphql::<PublishSkill, _>(
+                &self.api_url,
+                publish_skill::Variables {
+                    slug: slug.to_string(),
+                    content: content.to_string(),
+                    commit_message,
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    /// List all skills from the registry, optionally filtered by a keyword query.
+    pub async fn fetch_skills(
+        &self,
+        query: Option<&str>,
+    ) -> Result<skills_list::ResponseData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        gql_client
+            .post_graphql::<SkillsList, _>(
+                &self.api_url,
+                skills_list::Variables {
+                    query: query.map(|s| s.to_string()),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    /// Fetch the raw SKILL.md content for a single skill from the registry.
+    pub async fn fetch_skill(&self, slug: &str) -> Result<skill_by_slug::ResponseData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        gql_client
+            .post_graphql::<SkillBySlug, _>(
+                &self.api_url,
+                skill_by_slug::Variables {
+                    slug: slug.to_string(),
+                },
+            )
+            .await
+            .map_err(|err| err.into())
+    }
+
+    /// Check whether installed skills have updates available in the registry.
+    pub async fn check_skill_updates(
+        &self,
+        skills: Vec<check_skill_updates::SkillUpdateCheckInput>,
+    ) -> Result<check_skill_updates::ResponseData, WKError> {
+        let gql_client = setup_gql_client(&self.access_token, &self.channel)?;
+
+        gql_client
+            .post_graphql::<CheckSkillUpdates, _>(
+                &self.api_url,
+                check_skill_updates::Variables { skills },
+            )
+            .await
+            .map_err(|err| err.into())
     }
 }
 
