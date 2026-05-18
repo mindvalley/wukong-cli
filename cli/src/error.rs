@@ -46,6 +46,23 @@ pub enum WKCliError {
     UnableToParseYmlFile,
     #[error(transparent)]
     InquireError(#[from] inquire::error::InquireError),
+    #[error(transparent)]
+    TestError(#[from] TestError),
+}
+
+#[derive(Debug, ThisError)]
+pub enum TestError {
+    #[error("Failed to extract the test backend script: {0}")]
+    ScriptExtractionFailed(String),
+    #[error("`wukong test {subcommand}` failed (exit code: {exit_code:?})")]
+    ScriptFailed {
+        subcommand: String,
+        exit_code: Option<i32>,
+    },
+    #[error("`wukong test {subcommand}` produced unparseable output: {reason}")]
+    InvalidScriptOutput { subcommand: String, reason: String },
+    #[error("{0}")]
+    InvalidInvocation(String),
 }
 
 #[derive(Debug, ThisError)]
