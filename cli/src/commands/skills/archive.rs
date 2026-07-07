@@ -5,7 +5,7 @@ use std::{
 
 use crossterm::style::Stylize;
 
-use super::common::{SKILLS_ARCHIVE_DIR, SKILLS_DIR};
+use super::common::{ensure_archive_readme, SKILLS_ARCHIVE_DIR, SKILLS_DIR};
 use crate::{commands::Context, error::WKCliError, utils::inquire::inquire_render_config};
 
 use wukong_telemetry::*;
@@ -25,6 +25,11 @@ impl std::fmt::Display for ArchiveEntry {
     }
 }
 
+enum ArchiveOutcome {
+    Archived,
+    AlreadyArchived,
+}
+
 fn remove_claude_link(root: &Path, slug: &str) -> std::io::Result<()> {
     let claude = root.join(".claude").join(SKILLS_DIR).join(slug);
     let meta = match claude.symlink_metadata() {
@@ -36,6 +41,24 @@ fn remove_claude_link(root: &Path, slug: &str) -> std::io::Result<()> {
     } else {
         fs::remove_file(&claude)
     }
+}
+
+/// Move an active skill into the archive folder and drop its `.claude` link.
+/// Returns `AlreadyArchived` (without touching the active copy) if the slug is
+/// already present in the archive, so re-runs never clobber archived skills.
+fn archive_skill(root: &Path, slug: &str, agents_path: &Path) -> std::io::Result<ArchiveOutcome> {
+    let archive_root = root.join(".agents").join(SKILLS_ARCHIVE_DIR);
+    let archive_dir = archive_root.join(slug);
+
+    if archive_dir.exists() {
+        return Ok(ArchiveOutcome::AlreadyArchived);
+    }
+
+    fs::create_dir_all(&archive_root)?;
+    ensure_archive_readme(&archive_root)?;
+    fs::rename(agents_path, &archive_dir)?;
+    remove_claude_link(root, slug)?;
+    Ok(ArchiveOutcome::Archived)
 }
 
 #[wukong_telemetry(command_event = "skills_archive")]
@@ -94,30 +117,18 @@ pub async fn handle_skills_archive(context: Context) -> Result<bool, WKCliError>
 
     let mut failures: Vec<String> = Vec::new();
     for entry in &selected {
-        let archive_root = entry.root.join(".agents").join(SKILLS_ARCHIVE_DIR);
-        let archive_dir = archive_root.join(&entry.slug);
-
-        if archive_dir.exists() {
-            println!(
-                "  {} {} — already archived",
-                "Skipping".yellow().bold(),
-                entry.label.clone().blue()
-            );
-            continue;
-        }
-
-        let result = (|| -> std::io::Result<()> {
-            fs::create_dir_all(&archive_root)?;
-            fs::rename(&entry.agents_path, &archive_dir)?;
-            remove_claude_link(&entry.root, &entry.slug)?;
-            Ok(())
-        })();
-
-        match result {
-            Ok(_) => {
+        match archive_skill(&entry.root, &entry.slug, &entry.agents_path) {
+            Ok(ArchiveOutcome::Archived) => {
                 println!(
                     "  {} {}",
                     "Archived".green().bold(),
+                    entry.label.clone().blue()
+                );
+            }
+            Ok(ArchiveOutcome::AlreadyArchived) => {
+                println!(
+                    "  {} {} — already archived",
+                    "Skipping".yellow().bold(),
                     entry.label.clone().blue()
                 );
             }
@@ -134,4 +145,61 @@ pub async fn handle_skills_archive(context: Context) -> Result<bool, WKCliError>
     }
 
     Ok(failures.is_empty())
+}
+
+#[cfg(all(test, unix))]
+mod tests {
+    use super::*;
+    use std::os::unix::fs::symlink;
+
+    fn write_active_skill(root: &Path, slug: &str) {
+        let agents = root.join(".agents").join("skills").join(slug);
+        fs::create_dir_all(&agents).unwrap();
+        fs::write(agents.join("SKILL.md"), "# skill\n").unwrap();
+        let claude = root.join(".claude").join("skills").join(slug);
+        fs::create_dir_all(&claude).unwrap();
+        symlink(
+            format!("../../../.agents/skills/{slug}/SKILL.md"),
+            claude.join("SKILL.md"),
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn archive_moves_skill_removes_link_and_writes_readme() {
+        let tmp = assert_fs::TempDir::new().unwrap();
+        let root = tmp.path();
+        write_active_skill(root, "foo");
+        let agents_path = root.join(".agents/skills/foo");
+
+        let outcome = archive_skill(root, "foo", &agents_path).unwrap();
+        assert!(matches!(outcome, ArchiveOutcome::Archived));
+
+        assert!(root.join(".agents/skills-archive/foo/SKILL.md").is_file());
+        assert!(!agents_path.exists());
+        assert!(root
+            .join(".claude/skills/foo/SKILL.md")
+            .symlink_metadata()
+            .is_err());
+        assert!(root.join(".agents/skills-archive/README.md").is_file());
+    }
+
+    #[test]
+    fn archive_skips_and_preserves_active_when_already_archived() {
+        let tmp = assert_fs::TempDir::new().unwrap();
+        let root = tmp.path();
+        write_active_skill(root, "foo");
+        let archived = root.join(".agents/skills-archive/foo");
+        fs::create_dir_all(&archived).unwrap();
+        fs::write(archived.join("SKILL.md"), "# old\n").unwrap();
+        let agents_path = root.join(".agents/skills/foo");
+
+        let outcome = archive_skill(root, "foo", &agents_path).unwrap();
+        assert!(matches!(outcome, ArchiveOutcome::AlreadyArchived));
+        assert!(agents_path.join("SKILL.md").is_file());
+        assert_eq!(
+            fs::read_to_string(archived.join("SKILL.md")).unwrap(),
+            "# old\n"
+        );
+    }
 }
