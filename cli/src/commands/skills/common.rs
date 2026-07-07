@@ -7,6 +7,32 @@ use crate::error::WKCliError;
 
 const MANIFEST_FILE: &str = "mv-manifest.json";
 
+pub const SKILLS_DIR: &str = "skills";
+pub const SKILLS_ARCHIVE_DIR: &str = "skills-archive";
+
+const ARCHIVE_README: &str = "README.md";
+const ARCHIVE_README_BODY: &str = "# skills-archive
+
+This folder was created by the Wukong CLI (`wukong skills archive`).
+
+It holds skills that have been archived — moved out of the active
+`.agents/skills/` folder so agents no longer load them, without deleting them.
+
+Archiving is reversible: run `wukong skills restore` to move a skill back into
+`.agents/skills/` and recreate its `.claude/skills/<name>/SKILL.md` symlink.
+
+You can safely delete a subfolder here to remove an archived skill permanently.
+";
+
+/// Write an explanatory README into the archive folder if one isn't there yet.
+pub fn ensure_archive_readme(archive_root: &Path) -> std::io::Result<()> {
+    let readme = archive_root.join(ARCHIVE_README);
+    if readme.exists() {
+        return Ok(());
+    }
+    fs::write(readme, ARCHIVE_README_BODY)
+}
+
 pub fn update_manifest(root: &Path, slug: &str, content_hash: &str) -> Result<(), WKCliError> {
     let manifest_path = root.join(".agents").join("skills").join(MANIFEST_FILE);
 

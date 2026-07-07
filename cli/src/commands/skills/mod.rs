@@ -1,10 +1,12 @@
 mod add;
+mod archive;
 mod common;
 mod find;
 mod init;
 mod list;
 mod publish;
 mod remove;
+mod restore;
 mod update;
 
 use clap::{Args, Subcommand};
@@ -12,9 +14,9 @@ use clap::{Args, Subcommand};
 use crate::error::WKCliError;
 
 use self::{
-    add::handle_skills_add, find::handle_skills_find, init::handle_skills_init,
-    list::handle_skills_list, publish::handle_skills_publish, remove::handle_skills_remove,
-    update::handle_skills_update,
+    add::handle_skills_add, archive::handle_skills_archive, find::handle_skills_find,
+    init::handle_skills_init, list::handle_skills_list, publish::handle_skills_publish,
+    remove::handle_skills_remove, restore::handle_skills_restore, update::handle_skills_update,
 };
 
 use super::Context;
@@ -53,6 +55,10 @@ pub enum SkillsSubcommand {
     Remove,
     /// Update all outdated installed skills from the registry
     Update,
+    /// Archive installed skills (move out of active folder, reversible)
+    Archive,
+    /// Restore previously archived skills
+    Restore,
 }
 
 impl Skills {
@@ -69,6 +75,8 @@ impl Skills {
             } => handle_skills_add(context, name, *global, *project).await,
             SkillsSubcommand::Remove => handle_skills_remove(context).await,
             SkillsSubcommand::Update => handle_skills_update(context).await,
+            SkillsSubcommand::Archive => handle_skills_archive(context).await,
+            SkillsSubcommand::Restore => handle_skills_restore(context).await,
         }
     }
 }

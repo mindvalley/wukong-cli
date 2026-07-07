@@ -1,5 +1,6 @@
 ---
 source: cli/tests/completion.rs
+assertion_line: 26
 expression: "std::str::from_utf8(&output.stdout).unwrap()"
 ---
 _wukong() {
@@ -322,6 +323,9 @@ _wukong() {
             wukong__help__skills,add)
                 cmd="wukong__help__skills__add"
                 ;;
+            wukong__help__skills,archive)
+                cmd="wukong__help__skills__archive"
+                ;;
             wukong__help__skills,find)
                 cmd="wukong__help__skills__find"
                 ;;
@@ -336,6 +340,9 @@ _wukong() {
                 ;;
             wukong__help__skills,remove)
                 cmd="wukong__help__skills__remove"
+                ;;
+            wukong__help__skills,restore)
+                cmd="wukong__help__skills__restore"
                 ;;
             wukong__help__skills,update)
                 cmd="wukong__help__skills__update"
@@ -406,6 +413,9 @@ _wukong() {
             wukong__skills,add)
                 cmd="wukong__skills__add"
                 ;;
+            wukong__skills,archive)
+                cmd="wukong__skills__archive"
+                ;;
             wukong__skills,find)
                 cmd="wukong__skills__find"
                 ;;
@@ -424,11 +434,17 @@ _wukong() {
             wukong__skills,remove)
                 cmd="wukong__skills__remove"
                 ;;
+            wukong__skills,restore)
+                cmd="wukong__skills__restore"
+                ;;
             wukong__skills,update)
                 cmd="wukong__skills__update"
                 ;;
             wukong__skills__help,add)
                 cmd="wukong__skills__help__add"
+                ;;
+            wukong__skills__help,archive)
+                cmd="wukong__skills__help__archive"
                 ;;
             wukong__skills__help,find)
                 cmd="wukong__skills__help__find"
@@ -447,6 +463,9 @@ _wukong() {
                 ;;
             wukong__skills__help,remove)
                 cmd="wukong__skills__help__remove"
+                ;;
+            wukong__skills__help,restore)
+                cmd="wukong__skills__help__restore"
                 ;;
             wukong__skills__help,update)
                 cmd="wukong__skills__help__update"
@@ -2005,7 +2024,7 @@ _wukong() {
             return 0
             ;;
         wukong__help__skills)
-            opts="list find init publish add remove update"
+            opts="list find init publish add remove update archive restore"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -2019,6 +2038,20 @@ _wukong() {
             return 0
             ;;
         wukong__help__skills__add)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__help__skills__archive)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -2089,6 +2122,20 @@ _wukong() {
             return 0
             ;;
         wukong__help__skills__remove)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__help__skills__restore)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -2467,7 +2514,7 @@ _wukong() {
             return 0
             ;;
         wukong__skills)
-            opts="-v -q -h --verbose --quiet --report --canary --help list find init publish add remove update help"
+            opts="-v -q -h --verbose --quiet --report --canary --help list find init publish add remove update archive restore help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -2482,6 +2529,20 @@ _wukong() {
             ;;
         wukong__skills__add)
             opts="-v -q -h --global --project --verbose --quiet --report --canary --help [NAME]"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__skills__archive)
+            opts="-v -q -h --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -2509,7 +2570,7 @@ _wukong() {
             return 0
             ;;
         wukong__skills__help)
-            opts="list find init publish add remove update help"
+            opts="list find init publish add remove update archive restore help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -2523,6 +2584,20 @@ _wukong() {
             return 0
             ;;
         wukong__skills__help__add)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__skills__help__archive)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -2620,6 +2695,20 @@ _wukong() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
+        wukong__skills__help__restore)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
         wukong__skills__help__update)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
@@ -2677,6 +2766,20 @@ _wukong() {
             return 0
             ;;
         wukong__skills__remove)
+            opts="-v -q -h --verbose --quiet --report --canary --help"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        wukong__skills__restore)
             opts="-v -q -h --verbose --quiet --report --canary --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )

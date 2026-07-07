@@ -97,7 +97,8 @@ cli/src/commands/skills/
 └── remove.rs   — handle_skills_remove
 ```
 
-All three handlers take a `Context` (via `get_context_without_application`) and
+All three handlers take a `Context` (via `get_skills_context`, which tolerates a
+missing config file so local-only commands work without `wukong init`) and
 are annotated with `#[wukong_telemetry(command_event = "skills_init" |
 "skills_publish" | "skills_remove")]` so they emit telemetry events using the
 existing macro. `publish` additionally calls

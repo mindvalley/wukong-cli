@@ -128,11 +128,7 @@ impl ClapApp {
             }
             CommandGroup::Config(config) => config.handle_command(),
             CommandGroup::Dev(dev) => dev.handle_command(self).await,
-            CommandGroup::Skills(skills) => {
-                skills
-                    .handle_command(get_context_without_application(self)?)
-                    .await
-            }
+            CommandGroup::Skills(skills) => skills.handle_command(get_skills_context(self)).await,
             CommandGroup::Tui => handle_tui(channel).await,
             CommandGroup::Test(test) => test.handle_command().await,
         };
@@ -187,6 +183,27 @@ fn get_context_without_application(clap_app: &ClapApp) -> Result<Context, WKCliE
     };
 
     Ok(context)
+}
+
+// Skills commands act on local files. The registry-backed ones (list/find/add/
+// update/publish) load their own config and surface a clear error if it's
+// missing, while the local-only ones (init/remove/archive/restore) must work
+// without requiring `wukong init` first — so build a best-effort context that
+// tolerates a missing config file instead of failing up front.
+fn get_skills_context(clap_app: &ClapApp) -> Context {
+    let sub = Config::load_from_default_path()
+        .ok()
+        .and_then(|config| config.auth.okta.map(|auth_config| auth_config.subject));
+
+    Context {
+        current_application: "unknown".to_string(),
+        sub,
+        channel: if clap_app.canary {
+            ApiChannel::Canary
+        } else {
+            ApiChannel::Stable
+        },
+    }
 }
 
 #[cfg(test)]
