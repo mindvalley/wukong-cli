@@ -1,0 +1,21 @@
+---
+source: cli/tests/skills.rs
+assertion_line: 41
+expression: "std::str::from_utf8(&output.stdout).unwrap()"
+---
+Restore previously archived skills
+
+Usage: wukong skills restore [OPTIONS]
+
+Options:
+  -v, --verbose...  Use verbos output. More output per occurrence.
+                    
+                    By default, it'll only report errors.
+                    `-v` show warnings
+                    `-vv` show info
+                    `-vvv` show debug
+                    `-vvvv` show trace
+  -q, --quiet...    Do not print log message
+      --report      Store the debugging log in the log file, which is located at ~/.config/wukong
+      --canary      Use the Canary channel API
+  -h, --help        Print help

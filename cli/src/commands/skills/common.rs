@@ -7,6 +7,9 @@ use crate::error::WKCliError;
 
 const MANIFEST_FILE: &str = "mv-manifest.json";
 
+pub const SKILLS_DIR: &str = "skills";
+pub const SKILLS_ARCHIVE_DIR: &str = "skills-archive";
+
 pub fn update_manifest(root: &Path, slug: &str, content_hash: &str) -> Result<(), WKCliError> {
     let manifest_path = root.join(".agents").join("skills").join(MANIFEST_FILE);
 
