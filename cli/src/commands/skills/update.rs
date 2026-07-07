@@ -151,6 +151,9 @@ fn discover_manifest_skills() -> Vec<ManifestSkill> {
     if let Ok(cwd) = env::current_dir() {
         if let Some(entries) = read_manifest(&cwd) {
             for (slug, hash) in entries {
+                if !is_active_skill(&cwd, &slug) {
+                    continue;
+                }
                 skills.push(ManifestSkill {
                     slug,
                     hash,
@@ -164,6 +167,9 @@ fn discover_manifest_skills() -> Vec<ManifestSkill> {
     if let Some(home) = dirs::home_dir() {
         if let Some(entries) = read_manifest(&home) {
             for (slug, hash) in entries {
+                if !is_active_skill(&home, &slug) {
+                    continue;
+                }
                 if !skills.iter().any(|s| s.slug == slug) {
                     skills.push(ManifestSkill {
                         slug,
@@ -179,6 +185,17 @@ fn discover_manifest_skills() -> Vec<ManifestSkill> {
     skills
 }
 
+/// A manifest entry is only actionable if the skill is still active. Archived or
+/// removed skills keep their manifest entry, but updating them would recreate
+/// (resurrect) their `.agents/skills/<slug>` folder, so they are skipped here.
+fn is_active_skill(root: &std::path::Path, slug: &str) -> bool {
+    root.join(".agents")
+        .join("skills")
+        .join(slug)
+        .join("SKILL.md")
+        .is_file()
+}
+
 fn read_manifest(root: &std::path::Path) -> Option<std::collections::HashMap<String, String>> {
     let manifest_path = root.join(".agents").join("skills").join("mv-manifest.json");
     if !manifest_path.exists() {
@@ -186,4 +203,24 @@ fn read_manifest(root: &std::path::Path) -> Option<std::collections::HashMap<Str
     }
     let content = fs::read_to_string(&manifest_path).ok()?;
     serde_json::from_str(&content).ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn is_active_skill_true_only_when_source_present() {
+        let tmp = assert_fs::TempDir::new().unwrap();
+        let root = tmp.path();
+
+        // No source yet -> not active (e.g. archived or removed).
+        assert!(!is_active_skill(root, "foo"));
+
+        let dir = root.join(".agents/skills/foo");
+        fs::create_dir_all(&dir).unwrap();
+        assert!(!is_active_skill(root, "foo")); // dir exists but no SKILL.md
+        fs::write(dir.join("SKILL.md"), "# foo\n").unwrap();
+        assert!(is_active_skill(root, "foo"));
+    }
 }
