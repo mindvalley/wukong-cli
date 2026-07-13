@@ -10,6 +10,8 @@ env:
   CARGO_TERM_COLOR: always
   CICD_INTERMEDIATES_DIR: "_cicd-intermediates"
   WUKONG_HONEYCOMB_API_KEY: ${{ secrets.WUKONG_HONEYCOMB_API_KEY }}
+  GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
+  GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
   CI: true
 
 jobs:
