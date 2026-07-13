@@ -49,9 +49,24 @@ impl InstalledFlowDelegate for InstalledFlowBrowserDelegate {
     }
 }
 
-const GOOGLE_CLIENT_ID: &str =
-    "16448589901-ccrhj03hhg6adn9uv8vi2trnpmd62k6n.apps.googleusercontent.com";
-const GOOGLE_CLIENT_SECRET: &str = "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";
+// Injected at compile time from the WUKONG_GOOGLE_CLIENT_ID / WUKONG_GOOGLE_CLIENT_SECRET
+// secrets in CI (same pattern as WUKONG_HONEYCOMB_API_KEY in the telemetry crate).
+// Prod builds fail if the env vars are missing; dev builds fall back to empty
+// (set both locally to test the Google login flow).
+#[cfg(feature = "prod")]
+const GOOGLE_CLIENT_ID: &str = env!("WUKONG_GOOGLE_CLIENT_ID");
+#[cfg(not(feature = "prod"))]
+const GOOGLE_CLIENT_ID: &str = match option_env!("WUKONG_GOOGLE_CLIENT_ID") {
+    Some(client_id) => client_id,
+    None => "",
+};
+#[cfg(feature = "prod")]
+const GOOGLE_CLIENT_SECRET: &str = env!("WUKONG_GOOGLE_CLIENT_SECRET");
+#[cfg(not(feature = "prod"))]
+const GOOGLE_CLIENT_SECRET: &str = match option_env!("WUKONG_GOOGLE_CLIENT_SECRET") {
+    Some(secret) => secret,
+    None => "",
+};
 const TOKEN_URI: &str = "https://oauth2.googleapis.com/token";
 const AUTH_URI: &str = "https://accounts.google.com/o/oauth2/auth";
 const REDIRECT_URI: &str = "http://127.0.0.1/8855";
