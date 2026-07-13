@@ -1,5 +1,11 @@
 [build.env]
-passthrough = ["WUKONG_HONEYCOMB_API_KEY", "OKTA_CLIENT_ID", "WUKONG_API_URL"]
+passthrough = [
+  "WUKONG_HONEYCOMB_API_KEY",
+  "OKTA_CLIENT_ID",
+  "WUKONG_API_URL",
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_CLIENT_SECRET",
+]
 
 [target.x86_64-unknown-linux-gnu]
 pre-build = [

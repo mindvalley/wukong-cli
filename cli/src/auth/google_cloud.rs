@@ -49,24 +49,38 @@ impl InstalledFlowDelegate for InstalledFlowBrowserDelegate {
     }
 }
 
-// Injected at compile time from the WUKONG_GOOGLE_CLIENT_ID / WUKONG_GOOGLE_CLIENT_SECRET
+// Injected at compile time from the GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET
 // secrets in CI (same pattern as WUKONG_HONEYCOMB_API_KEY in the telemetry crate).
-// Prod builds fail if the env vars are missing; dev builds fall back to empty
-// (set both locally to test the Google login flow).
+// Prod builds fail if the env vars are missing or empty; dev builds fall back
+// to empty (set both locally to test the Google login flow).
 #[cfg(feature = "prod")]
-const GOOGLE_CLIENT_ID: &str = env!("WUKONG_GOOGLE_CLIENT_ID");
+const GOOGLE_CLIENT_ID: &str = env!("GOOGLE_CLIENT_ID");
 #[cfg(not(feature = "prod"))]
-const GOOGLE_CLIENT_ID: &str = match option_env!("WUKONG_GOOGLE_CLIENT_ID") {
+const GOOGLE_CLIENT_ID: &str = match option_env!("GOOGLE_CLIENT_ID") {
     Some(client_id) => client_id,
     None => "",
 };
 #[cfg(feature = "prod")]
-const GOOGLE_CLIENT_SECRET: &str = env!("WUKONG_GOOGLE_CLIENT_SECRET");
+const GOOGLE_CLIENT_SECRET: &str = env!("GOOGLE_CLIENT_SECRET");
 #[cfg(not(feature = "prod"))]
-const GOOGLE_CLIENT_SECRET: &str = match option_env!("WUKONG_GOOGLE_CLIENT_SECRET") {
+const GOOGLE_CLIENT_SECRET: &str = match option_env!("GOOGLE_CLIENT_SECRET") {
     Some(secret) => secret,
     None => "",
 };
+
+// A missing GitHub Actions secret expands to an empty string rather than an
+// undefined env var, which env!() would happily accept. Guard against
+// releasing a binary with blank credentials.
+#[cfg(feature = "prod")]
+const _: () = assert!(
+    !GOOGLE_CLIENT_ID.is_empty(),
+    "GOOGLE_CLIENT_ID must not be empty in prod builds"
+);
+#[cfg(feature = "prod")]
+const _: () = assert!(
+    !GOOGLE_CLIENT_SECRET.is_empty(),
+    "GOOGLE_CLIENT_SECRET must not be empty in prod builds"
+);
 const TOKEN_URI: &str = "https://oauth2.googleapis.com/token";
 const AUTH_URI: &str = "https://accounts.google.com/o/oauth2/auth";
 const REDIRECT_URI: &str = "http://127.0.0.1/8855";
