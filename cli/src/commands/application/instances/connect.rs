@@ -1,4 +1,4 @@
-use dialoguer::{theme::ColorfulTheme, Select};
+use dialoguer::{theme::ColorfulTheme, Confirm, Select};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use log::debug;
 use owo_colors::OwoColorize;
@@ -143,44 +143,52 @@ pub async fn handle_connect(
         version.bright_green()
     ));
 
-    let mut items = Vec::new();
-    if !main_pods.is_empty() {
-        items.push("Main:".to_string());
-        items.extend(main_pods.iter().map(|pod| format!("  {}", pod.name)));
-    }
-    if !preview_pods.is_empty() {
-        items.push("Preview:".to_string());
-        items.extend(preview_pods.iter().map(|pod| format!("  {}", pod.name)));
+    // Each item is paired with the pod it represents; section headers map to `None`.
+    let mut items: Vec<String> = Vec::new();
+    let mut item_pods: Vec<Option<&KubernetesPod>> = Vec::new();
+    for (header, pods) in [("Main:", &main_pods), ("Preview:", &preview_pods)] {
+        if pods.is_empty() {
+            continue;
+        }
+        items.push(header.to_string());
+        item_pods.push(None);
+        for pod in pods.iter() {
+            items.push(format!("  {}", pod.name));
+            item_pods.push(Some(*pod));
+        }
     }
 
-    let instance_name_idx = loop {
+    // Default to the first selectable pod, not the section header.
+    let default_idx = item_pods.iter().position(Option::is_some).unwrap_or(0);
+
+    let instance_object = loop {
         let instance_name_idx = Select::with_theme(&ColorfulTheme::default())
             .with_prompt("Please choose the instance you want to connect")
-            .default(0)
+            .default(default_idx)
             .items(&items)
             .interact()?;
 
-        if instance_name_idx == 0 || instance_name_idx == main_pods.len() + 1 {
-            // If "Main pods" or "Preview pods" is selected, continue the loop
-            continue;
-        } else {
-            // Otherwise, break the loop and return the selected index
-            break instance_name_idx;
+        // Selecting a section header re-prompts; selecting a pod returns it.
+        if let Some(pod) = item_pods[instance_name_idx] {
+            break pod;
         }
     };
 
-    let instance_name = if instance_name_idx < main_pods.len() + 1 {
-        main_pods[instance_name_idx - 1].name.clone()
-    } else {
-        preview_pods[instance_name_idx - main_pods.len() - 2]
-            .name
-            .clone()
-    };
+    let instance_name = instance_object.name.clone();
 
-    let instance_object = k8s_pods
-        .iter()
-        .find(|pod| pod.name == instance_name)
-        .unwrap();
+    // The Livebook URL is only reachable over Tailscale. Confirm before provisioning
+    // so the user doesn't wait on a connectivity test that can never succeed.
+    if !Confirm::with_theme(&ColorfulTheme::default())
+        .with_prompt(format!(
+            "The Livebook instance is only reachable over {}. Are you connected to Tailscale?",
+            "Tailscale".bold()
+        ))
+        .default(true)
+        .interact()?
+    {
+        eprintln!("Please connect to Tailscale first, then run this command again.");
+        return Ok(false);
+    }
 
     let preparing_loader = new_spinner();
     preparing_loader.set_style(spinner_style.clone());
@@ -259,7 +267,8 @@ pub async fn handle_connect(
         let connection_test_loader = new_spinner();
         connection_test_loader.set_style(spinner_style.clone());
         connection_test_loader.set_prefix("[2/2]");
-        connection_test_loader.set_message("Testing connectivity to your livebook instance...");
+        connection_test_loader
+            .set_message("Testing connectivity to your livebook instance (requires Tailscale)...");
 
         let url = new_instance.url.unwrap_or_default();
 
@@ -293,6 +302,7 @@ pub async fn handle_connect(
                 .destroy_livebook(&application, &namespace, &version)
                 .await?;
             destroy_loader.finish_and_clear();
+            eprintln!("Unable to reach your livebook instance. Make sure you're connected to Tailscale, then try again.");
             eprintln!("The session has been terminated.");
             return Ok(false);
         }
